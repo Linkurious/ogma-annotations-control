@@ -4,7 +4,9 @@
   "description": "A react component to add ogma annotations with  react",
   "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "keywords": [
     "react",
@@ -19,9 +21,20 @@
     "@linkurious/ogma": "^4.5.6"
   },
   "devDependencies": {
+    "@types/react": "^18.2.39",
+    "@types/react-dom": "^18.2.17",
+    "@typescript-eslint/eslint-plugin": "^6.13.1",
+    "@typescript-eslint/parser": "^6.13.1",
+    "@vitejs/plugin-react": "^4.2.0",
+    "eslint": "^8.54.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.4",
     "typescript": "^5.3.2",
     "vite": "^5.0.2",
     "vitest": "^0.34.6"
   },
-  "dependencies": {}
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
 }
