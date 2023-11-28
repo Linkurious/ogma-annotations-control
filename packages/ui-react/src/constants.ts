@@ -40,20 +40,6 @@ export const lineWidthItems = [
   { value: 20, title: "xl" },
 ];
 
-export const colors = [
-  "#FFFFFF",
-  "#F44E3B",
-  "#FE9200",
-  "#FCDC00",
-  "#A4DD00",
-  "#68CCCA",
-  "#73D8FF",
-  "#AEA1FF",
-  "#1E88E5",
-  "#333333",
-  "#808080",
-  "#cccccc",
-];
 
 export const TRANSPARENT = "none";
 export const BLACK = "#333333";
@@ -61,24 +47,7 @@ export const BLACK = "#333333";
 export const rgbaToString = ({ r, g, b, a }: RgbaColor) =>
   `rgba(${r},${g},${b},${a})`;
 
-export const backgroundColors = [TRANSPARENT, ...colors];
-
-// darkened colors
-export const colorsDark = [
-  "#C42E1F",
-  "#D47300",
-  "#C8B700",
-  "#B0B800",
-  "#68BC00",
-  "#16A5A5",
-  "#009CE0",
-  "#7B64C8",
-  "#B779D7",
-  "#000000",
-  "#666666",
-  "#999999",
-  "#cccccc",
-];
+// export const backgroundColors = [TRANSPARENT, ...colors];
 
 export enum ArrowDirection {
   BOTH = "both",
@@ -88,7 +57,7 @@ export enum ArrowDirection {
 
 export const defaultArrowStyle: ArrowStyles = {
   head: "arrow",
-  strokeColor: colors[1],
+  strokeColor: 'black',
   strokeWidth: lineWidthItems[1].value,
 };
 
