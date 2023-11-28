@@ -109,8 +109,6 @@ const annotations = {
           ]
         ]
       }
-      // size: { width: 400, height: 150 },
-      // position: { x: -200, y: -200 }
     },
     // {
     //   //   head: 'arrow-plain'
