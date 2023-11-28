@@ -1,0 +1,19 @@
+{
+  "name": "@linkurious/ogma-annotations-react",
+  "version": "1.0.0",
+  "description": "A react component to add ogma annotations with  react",
+  "main": "dist/index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "ogma",
+    "annotations",
+    "text",
+    "arrow"
+  ],
+  "author": "Leo Nicolle",
+  "license": "Apache-2.0"
+}
