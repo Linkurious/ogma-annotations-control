@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Ogma } from '@linkurious/ogma-react';
 import './App.css';
 import { RawGraph } from '@linkurious/ogma/umd';
+import { Control } from "@linkurious/ogma-annotations";
 
+const a = new Control();
 function App() {
   const [graph] = useState<RawGraph>({
     nodes: [

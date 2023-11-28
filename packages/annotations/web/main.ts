@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Ogma, { RawNode } from '@linkurious/ogma';
-import { Control, createArrow, createText } from '.';
+import { Control, createArrow, createText } from '../src/index';
 const ogma = new Ogma({
   container: 'app'
 });
