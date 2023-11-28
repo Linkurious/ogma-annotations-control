@@ -20,7 +20,6 @@ describe('Arrows', () => {
       return ogma.getNodes().get(0).getId();
     });
     expect(id).toBe('test');
-    await new Promise<void>((resolve) => setTimeout(resolve, 10000));
   });
 
 });
