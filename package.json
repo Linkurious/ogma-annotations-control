@@ -4,9 +4,8 @@
   "description": "A tool to draw texts and arrows on top of Ogma",
   "main": "index.js",
   "scripts": {
-    "builds": "npm run build -ws --if-present",
-    "tests:e2e": "npm run e2e:test -ws --if-present",
-    "test:unit": ""
+    "build": "npm run build -ws --if-present",
+    "tests:e2e": "npm run e2e:test -ws --if-present"
   },
   "repository": {
     "type": "git",
@@ -26,7 +25,6 @@
   },
   "homepage": "https://github.com/Linkurious/ogma-annotations-control#readme",
   "workspaces": [
-    "packages/annotations",
-    "packages/ui-react"
+    "packages/**"
   ]
 }

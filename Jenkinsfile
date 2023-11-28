@@ -2,7 +2,7 @@
 
 nodeJob {
   // General
-  projectName = "linkurious/ogma-prototype"
+  projectName = "linkurious/ogma-annotations-control"
   createGitTag = true
   gitTagPrefix = 'v'
   runBookeeping = false
