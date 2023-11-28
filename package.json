@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run build -ws --if-present",
     "test:unit": "npm run test:unit -ws --if-present",
-    "e2e:test": "npm -ws run e2e:test  --if-present"
+    "e2e:test": "npm run e2e:test -ws --if-present"
   },
   "repository": {
     "type": "git",
