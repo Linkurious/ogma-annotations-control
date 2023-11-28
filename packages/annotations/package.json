@@ -34,7 +34,7 @@
     "preview": "vite preview",
     "test:unit": "vitest run -c test/unit/vitest.config.mts",
     "test:watch": "vitest watch -c test/unit/vitest.config.mts",
-    "e2e:test": "vitest run -c test/e2e/vitest.config.mts",
+    "test:e2e": "vitest run -c test/e2e/vitest.config.mts",
     "test:e2e:watch": "vitest watch -c test/e2e/vitest.config.mts"
   },
   "repository": {
