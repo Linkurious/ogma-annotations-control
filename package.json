@@ -27,5 +27,8 @@
   "homepage": "https://github.com/Linkurious/ogma-annotations-control#readme",
   "workspaces": [
     "packages/**"
-  ]
+  ],
+  "devDependencies": {
+    "playwright": "^1.40.0"
+  }
 }
