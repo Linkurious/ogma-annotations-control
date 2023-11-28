@@ -2,9 +2,44 @@
   "name": "@linkurious/ogma-annotations",
   "version": "1.0.0",
   "description": "Headless annotation controller",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
+  "module": "dist/index.mjs",
+  "browser": "dist/index.umd.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.umd.js",
+      "default": "./dist/index.mjs"
+    },
+    "./style.css": {
+      "import": "./dist/style.css",
+      "require": "./dist/style.css"
+    },
+    "./umd": "./dist/index.umd.js",
+    "./esm": "./dist/index.mjs"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run dev",
+    "dev": "vite",
+    "build:ui": "vite build -c vite.config-ui.ts",
+    "prebuild": "rm -rf dist",
+    "build": "tsc && vite build && npm run types",
+    "lint:ci": "eslint --ext .ts,.tsx src",
+    "lint": "eslint --ext .ts,.tsx --fix src",
+    "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
+    "preview": "vite preview",
+    "test:unit": "vitest run -c test/unit/vitest.config.mts",
+    "test:watch": "vitest watch -c test/unit/vitest.config.mts",
+    "test:e2e": "vitest run -c test/e2e/vitest.config.mts",
+    "test:e2e:watch": "vitest watch -c test/e2e/vitest.config.mts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Linkurious/ogma-prototype.git"
   },
   "keywords": [
     "annotations",
@@ -13,6 +48,22 @@
     "ogma",
     "text"
   ],
-  "author": "Leo Nicolle",
-  "license": "ISC"
+  "author": "Linkurious SAS",
+  "license": "Apache-2.0",
+  "peerDependencies": {
+    "@linkurious/ogma": "^4.5.6"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.2",
+    "vite": "^5.0.2",
+    "vitest": "^0.34.6"
+  },
+  "dependencies": {
+    "@borgar/textbox": "^1.6.0",
+    "@types/geojson": "^7946.0.13",
+    "@types/vector2js": "^2.0.2",
+    "annotations": "^1.1.2",
+    "eventemitter3": "^5.0.1",
+    "vector2js": "^2.0.1"
+  }
 }
