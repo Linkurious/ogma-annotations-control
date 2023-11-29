@@ -7,12 +7,13 @@ import { createSVGElement, getArrowEndPoints } from '../../utils';
  * @param arrow The arrow to measure
  * @returns The height of the bounding box of the arrow
  */
-export function getArrowHeight(arrow: Arrow, min = 20, max = 30): number {
+export function getArrowHeight(arrow: Arrow, min = 5, max = 30): number {
   const { start, end } = getArrowEndPoints(arrow);
   const a = new Vec2(start.x, start.y);
   const b = new Vec2(end.x, end.y);
   const vec = b.sub(a);
-  return Math.max(max, Math.min(vec.length() / 100, min));
+  const strokeW = arrow.properties.style && arrow.properties.style.strokeWidth ? arrow.properties.style?.strokeWidth : 0;
+  return Math.min(max, Math.max(3 * strokeW, vec.length() * 0.1, min));
 }
 
 /**
@@ -34,9 +35,8 @@ function drawExt(
   const p2 = point.clone().add(delta.rotateRadians(-Math.PI / 8));
 
   const pt = `${point.x} ${point.y}`;
-  return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${
-    type === 'arrow' ? '' : `${p1.x} ${p1.y}`
-  }`;
+  return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${type === 'arrow' ? '' : `${p1.x} ${p1.y}`
+    }`;
 }
 
 /**
@@ -58,6 +58,7 @@ export default function draw(
   const b = new Vec2(end.x, end.y);
   const vec = b.clone().sub(a);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
+  console.log('tipLength', tipLength);
 
   const path = createSVGElement<SVGPathElement>('path');
   path.setAttribute('data-annotation', `${arrow.id}`);

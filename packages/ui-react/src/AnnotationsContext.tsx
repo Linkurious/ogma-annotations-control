@@ -106,17 +106,18 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!ogma) return;
-    const newEditor = new AnnotationsEditor(ogma);
+    const newEditor = new AnnotationsEditor(ogma, {
+      minArrowHeight: 1
+    });
 
     // adjust the default style of the annotations based on the graph
     const newTextSizeFactor =
       mean(ogma.getNodes().getAttribute("radius") as number[]) / 5;
     const newArrowWidthFactor = arrowWidthFactor;
-
-    // setArrowStyle({
-    //   ...arrowStyle,
-    //   strokeWidth: (arrowStyle.strokeWidth || 1) * newArrowWidthFactor,
-    // });
+    setArrowStyle({
+      ...arrowStyle,
+      strokeWidth: (arrowStyle.strokeWidth || 1) * newArrowWidthFactor,
+    });
     setArrowWidthFactor(newArrowWidthFactor);
     setTextSizeFactor(newTextSizeFactor);
     // setTextStyle({
@@ -169,15 +170,15 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
   }, [ogma]);
 
   // update the style of the current arrow annotation when the style changes
-  // useEffect(() => {
-  //   if (
-  //     editor &&
-  //     currentAnnotation &&
-  //     currentAnnotation?.properties.type === "arrow"
-  //   ) {
-  //     editor.updateStyle(currentAnnotation.id, arrowStyle);
-  //   }
-  // }, [editor, arrowStyle]);
+  useEffect(() => {
+    if (
+      editor &&
+      currentAnnotation &&
+      currentAnnotation?.properties.type === "arrow"
+    ) {
+      editor.updateStyle(currentAnnotation.id, arrowStyle);
+    }
+  }, [editor, arrowStyle]);
 
   // update the style of the current text annotation when the style changes
   useEffect(() => {

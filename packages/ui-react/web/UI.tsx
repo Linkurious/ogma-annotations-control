@@ -110,7 +110,7 @@ const MenuAdd = (
 export const UI = (
 ) => {
   const { currentAnnotation, arrowStyle, setArrowStyle, textStyle, setTextStyle } = useAnnotationsContext();
-  function setExt(arrowStyle: ArrowStyles, ext: 'one' | 'none' | 'both') {
+  function setExt(ext: 'one' | 'none' | 'both') {
     const style: ArrowStyles = {
       head: 'none',
       tail: 'none',
@@ -128,6 +128,7 @@ export const UI = (
   const maxThickness = 10;
   function setWidth(w: number) {
     const strokeWidth = interpolate(normalize(w, 0, 100), minThickness, maxThickness);
+    console.log(strokeWidth);
     setArrowStyle({ ...arrowStyle, strokeWidth });
   }
   function setColor(strokeColor: string) {
@@ -155,14 +156,14 @@ export const UI = (
   // <Layer>
   return (
     <Layer>
-      <>
+      <div className='ui'>
         {
           !currentAnnotation &&
           (<span className='add-buttons'>
             <MenuAdd />
           </span>)
         }
-        <div className='ui' onMouseUp={stopEvent} onMouseDown={stopEvent} onClick={stopEvent}>
+        <div className='tweakpanel' onMouseUp={stopEvent} onMouseDown={stopEvent} onClick={stopEvent}>
           {
             currentAnnotation &&
             isArrow(currentAnnotation) &&
@@ -211,7 +212,7 @@ export const UI = (
             )
           }
         </div>
-      </>
+      </div>
     </Layer >
   );
 };
