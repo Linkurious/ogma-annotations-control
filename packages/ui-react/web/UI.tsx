@@ -8,7 +8,7 @@ import './UI.css';
 import { DirectionBoth } from './icons/direction-both';
 import { DirectionOne } from './icons/direction-one';
 import { interpolate, normalize } from '../src/utils';
-import { AnnotationFeature, AnnotationProps, ArrowStyles, createArrow } from '@linkurious/ogma-annotations';
+import { ArrowStyles, createArrow, createText, isArrow, isText } from '@linkurious/ogma-annotations';
 import { useOgma } from '@linkurious/ogma-react';
 const defaultColors = [
   "#FFFFFF",
@@ -62,11 +62,55 @@ const ColorPicker = ({ color, setColor }: ColorPickerProps) => {
 };
 
 
+const MenuAdd = (
+) => {
+  const { editor, arrowStyle, textStyle } = useAnnotationsContext();
+  const ogma = useOgma();
+  function addAnnotation(type: 'arrow' | 'text') {
+    const opts = ogma.getOptions();
+    ogma.setOptions({ cursor: { default: 'crosshair' } });
+    ogma.events.once('click', (evt) => {
+      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+      const annotation = type === 'arrow' ? createArrow(x, y, x, y, {
+        strokeWidth: arrowStyle.strokeWidth,
+        strokeColor: arrowStyle.strokeColor,
+        strokeType: 'plain'
+      }) : createText(x, y, 0, 0, '...', {
+        strokeWidth: arrowStyle.strokeWidth,
+        strokeColor: arrowStyle.strokeColor,
+        strokeType: 'plain'
+      });
+      setTimeout(() => {
+        if (isArrow(annotation)) {
+          editor.startArrow(x, y, annotation);
+        }
+        if (isText(annotation)) {
+          editor.startText(x, y, annotation);
+        }
+      }, 50);
+      editor.once('add', () => {
+        ogma.setOptions(opts);
+      });
+    });
+  }
+  return (
+    <span>
+      <Button onClick={() => addAnnotation('arrow')}>
+        Add arrow
+      </Button>
+      <Button onClick={() => addAnnotation('text')}>
+        Add text
+      </Button>
+    </span >
+  );
+};
+
+
+
 export const UI = (
 ) => {
-  const { editor, arrowStyle, setArrowStyle, textStyle } = useAnnotationsContext();
-
-  function setExt(ext: 'one' | 'none' | 'both') {
+  const { currentAnnotation, arrowStyle, setArrowStyle, textStyle, setTextStyle } = useAnnotationsContext();
+  function setExt(arrowStyle: ArrowStyles, ext: 'one' | 'none' | 'both') {
     const style: ArrowStyles = {
       head: 'none',
       tail: 'none',
@@ -79,32 +123,28 @@ export const UI = (
       style.tail = 'arrow';
     }
     setArrowStyle({ ...arrowStyle, ...style });
-  };
+  }
   const minThickness = 0.1;
   const maxThickness = 10;
   function setWidth(w: number) {
     const strokeWidth = interpolate(normalize(w, 0, 100), minThickness, maxThickness);
     setArrowStyle({ ...arrowStyle, strokeWidth });
   }
-  function setColor(c: string) {
-    setArrowStyle({ ...arrowStyle, strokeColor: c });
+  function setColor(strokeColor: string) {
+    setArrowStyle({ ...arrowStyle, strokeColor });
   }
-
-  let started = false;
-  useEffect(() => {
-    if (!editor || started) return;
-    const x = 10;
-    const y = 10;
-    const arrow = createArrow(x, y, x, y, {
-      strokeWidth: 2,
-      strokeColor: '#3b3',
-      strokeType: 'plain'
-    });
-    //control.add(arrow);
-    editor.startArrow(x, y, arrow);
-    started = true;
-  }, [editor]);
-
+  function setFont(font: string) {
+    setTextStyle({ ...textStyle, font });
+  }
+  function setSize(f: string) {
+    setTextStyle({ ...textStyle, fontSize: `${f}px` });
+  }
+  function setBgColor(background: string) {
+    setTextStyle({ ...textStyle, background });
+  }
+  function setTextColor(color: string) {
+    setTextStyle({ ...textStyle, color });
+  }
   function stopEvent(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
@@ -112,36 +152,56 @@ export const UI = (
   }
 
 
+  // <Layer>
   return (
     <Layer>
-      <div className='ui' onMouseUp={stopEvent} onMouseDown={stopEvent} onClick={stopEvent}>
-        <span className='rows'>
-          <ButtonGroup>
-            <Button onClick={() => setExt('none')} icon={<DirectionNone />}></Button>
-            <Button onClick={() => setExt('one')} icon={<DirectionOne />}></Button>
-            <Button onClick={() => setExt('both')} icon={<DirectionBoth />}></Button>
-          </ButtonGroup>
-          <ColorPicker color={arrowStyle.strokeColor} setColor={c => setColor(c)} />
-          <Slider min={0} max={100} onChange={val => setWidth(val)}
-            initialValue={Math.floor(interpolate(normalize(arrowStyle.strokeWidth, minThickness, maxThickness), 0, 100))} />
-        </span>
+      <>
+        <MenuAdd />
 
-        <span className='rows'>
-          <Select>
-            {
-              fonts.map(f => <Select.Option key={f.value} value={f.value}>{f.label}</Select.Option>)
-            }
-          </Select>
-          <Select>
-            {
-              sizes.map(f => <Select.Option key={f.value} value={f.value}>{f.label}</Select.Option>)
-            }
-          </Select>
-          {/* <ColorPicker /> */}
-          {/* <ColorPicker /> */}
-        </span>
-      </div>
-    </Layer >
+        <div className='ui' onMouseUp={stopEvent} onMouseDown={stopEvent} onClick={stopEvent}>
+          {
+            currentAnnotation &&
+            isArrow(currentAnnotation) &&
+            (
+              <span className='rows'>
+                <ButtonGroup>
+                  <Button onClick={() => setExt('none')} icon={<DirectionNone />}></Button>
+                  <Button onClick={() => setExt('one')} icon={<DirectionOne />}></Button>
+                  <Button onClick={() => setExt('both')} icon={<DirectionBoth />}></Button>
+                </ButtonGroup>
+                <ColorPicker color={arrowStyle.strokeColor} setColor={c => setColor(c)} />
+                <Slider min={0} max={100} onChange={val => setWidth(val)}
+                  initialValue={Math.floor(interpolate(normalize(arrowStyle.strokeWidth, minThickness, maxThickness), 0, 100))} />
+              </span>
+            )
+          }
+          {
+            currentAnnotation &&
+            isText(currentAnnotation) &&
+            (
+              <span className='rows'>
+                <Select onChange={f => setFont(f as string)}
+                  initialValue={textStyle.font}
+                >
+                  {
+                    fonts.map(f => <Select.Option key={f.value} value={f.value}>{f.label}</Select.Option>)
+                  }
+                </Select>
+                <Select onChange={s => setSize(s as string)}
+                  initialValue={textStyle.fontSize}
+                >
+                  {
+                    sizes.map(s => <Select.Option key={s.value} value={s.value}>{s.label}</Select.Option>)
+                  }
+                </Select>
+                <ColorPicker color={textStyle.color} setColor={c => setTextColor(c)} />
+                <ColorPicker color={textStyle.background} setColor={c => setBgColor(c)} />
+              </span>
+            )
+          }
+        </div>
+      </>
+    </Layer>
   );
 };
 

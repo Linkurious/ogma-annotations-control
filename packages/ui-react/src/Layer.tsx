@@ -1,38 +1,18 @@
 import {
-  useEffect,
-  useState,
   ReactElement,
-  Ref,
-  forwardRef,
-  useImperativeHandle,
 } from "react";
-import { Layer as L } from "@linkurious/ogma";
 import { useOgma } from "@linkurious/ogma-react";
-import { createRoot } from "react-dom/client";
+import { createPortal } from "react-dom";
 
-interface PopupProps {
+interface LayerProps {
   children?: ReactElement;
 }
-
-const LayerComponent = (
+export const Layer = (
   {
     children,
-  }: PopupProps,
-  ref?: Ref<L>
-) => {
+  }: LayerProps) => {
   const ogma = useOgma();
   const elt = document.createElement('div');
-  const root = createRoot(elt);
-  const [layer, setLayer] = useState<L | null>(null);
-  useImperativeHandle(ref, () => layer as L, [layer]);
-  useEffect(() => {
-    if (!layer) {
-      setLayer(ogma.layers.addLayer(elt));
-    }
-    root.render(children);
-  }, [children]);
-
-  return null;
+  ogma.layers.addLayer(elt);
+  return <>{createPortal(children, elt)}</>;
 };
-
-export const Layer = forwardRef(LayerComponent);
