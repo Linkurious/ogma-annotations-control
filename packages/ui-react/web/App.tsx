@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Ogma } from '@linkurious/ogma-react';
 import './App.css';
 import { Options, RawGraph } from '@linkurious/ogma/umd';
-import { AnnotationsControl } from '../src/AnnotationControll';
 import { AnnotationsContextProvider, useAnnotationsContext } from '../src/AnnotationsContext';
 import { UI } from './UI';
 

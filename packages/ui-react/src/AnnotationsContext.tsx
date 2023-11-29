@@ -147,6 +147,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
         setCurrentAnnotation(annotation);
       })
       .on("unselect", () => {
+        console.log('unselect');
         // TODO: maybe set back the styles to the default options
         setCurrentAnnotation(null);
       })

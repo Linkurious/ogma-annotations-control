@@ -26,26 +26,13 @@ const LayerComponent = (
   const [layer, setLayer] = useState<L | null>(null);
   useImperativeHandle(ref, () => layer as L, [layer]);
   useEffect(() => {
-    // register listener
     if (!layer) {
       setLayer(ogma.layers.addLayer(elt));
     }
     root.render(children);
-    return () => {
-      // unregister listener
-      if (layer) {
-        layer.destroy();
-        setLayer(null);
-      }
-    };
   }, [children]);
 
   return null;
 };
 
-/**
- * A popup component.
- * Use it to display information statically on top of your visualisation
- * or to display a modal dialog.
- */
 export const Layer = forwardRef(LayerComponent);
