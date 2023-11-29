@@ -94,14 +94,14 @@ const MenuAdd = (
     });
   }
   return (
-    <span>
+    <>
       <Button onClick={() => addAnnotation('arrow')}>
         Add arrow
       </Button>
       <Button onClick={() => addAnnotation('text')}>
         Add text
       </Button>
-    </span >
+    </>
   );
 };
 
@@ -156,20 +156,27 @@ export const UI = (
   return (
     <Layer>
       <>
-        <MenuAdd />
-
+        {
+          !currentAnnotation &&
+          (<span className='add-buttons'>
+            <MenuAdd />
+          </span>)
+        }
         <div className='ui' onMouseUp={stopEvent} onMouseDown={stopEvent} onClick={stopEvent}>
           {
             currentAnnotation &&
             isArrow(currentAnnotation) &&
             (
               <span className='rows'>
+                <span>Shape</span>
                 <ButtonGroup>
                   <Button onClick={() => setExt('none')} icon={<DirectionNone />}></Button>
                   <Button onClick={() => setExt('one')} icon={<DirectionOne />}></Button>
                   <Button onClick={() => setExt('both')} icon={<DirectionBoth />}></Button>
                 </ButtonGroup>
+                <span>Color</span>
                 <ColorPicker color={arrowStyle.strokeColor} setColor={c => setColor(c)} />
+                <span>Thickness</span>
                 <Slider min={0} max={100} onChange={val => setWidth(val)}
                   initialValue={Math.floor(interpolate(normalize(arrowStyle.strokeWidth, minThickness, maxThickness), 0, 100))} />
               </span>
@@ -180,6 +187,7 @@ export const UI = (
             isText(currentAnnotation) &&
             (
               <span className='rows'>
+                <span>Font</span>
                 <Select onChange={f => setFont(f as string)}
                   initialValue={textStyle.font}
                 >
@@ -187,6 +195,7 @@ export const UI = (
                     fonts.map(f => <Select.Option key={f.value} value={f.value}>{f.label}</Select.Option>)
                   }
                 </Select>
+                <span>Size</span>
                 <Select onChange={s => setSize(s as string)}
                   initialValue={textStyle.fontSize}
                 >
@@ -194,14 +203,16 @@ export const UI = (
                     sizes.map(s => <Select.Option key={s.value} value={s.value}>{s.label}</Select.Option>)
                   }
                 </Select>
+                <span>Color</span>
                 <ColorPicker color={textStyle.color} setColor={c => setTextColor(c)} />
+                <span>Background</span>
                 <ColorPicker color={textStyle.background} setColor={c => setBgColor(c)} />
               </span>
             )
           }
         </div>
       </>
-    </Layer>
+    </Layer >
   );
 };
 
