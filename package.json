@@ -12,7 +12,10 @@
     "publish:packages": "npm publish -ws",
     "prepublishOnly": "npm pack -ws && npm publish -ws --dry-run",
     "build": "npm run build -ws --if-present",
-    "postversion": "sync_versions"
+    "postversion": "sync_versions",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "repository": {
     "type": "git",
@@ -41,6 +44,8 @@
   ],
   "devDependencies": {
     "@linkurious/code-tools": "^0.0.14",
-    "playwright": "1.40.0"
+    "playwright": "1.40.0",
+    "vitepress": "^1.0.0-rc.31",
+    "vitest": "^0.34.6"
   }
 }
