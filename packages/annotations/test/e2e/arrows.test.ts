@@ -4,7 +4,7 @@ import { BrowserSession } from "./utils";
 describe('Arrows', () => {
   const session = new BrowserSession();
   beforeAll(async () => {
-    await session.start(false);
+    await session.start();
   });
 
   afterAll(async () => {
