@@ -44,7 +44,7 @@ describe('Snapping', () => {
     nodeBottom = pts.nodeBottom;
   });
 
-  it.skip('should snap to a node', async () => {
+  it('should snap to a node', async () => {
     // attach the arrow to the node
     await session.page.mouse.move(nodeBottom.x, nodeBottom.y, { steps: 10 });
     await session.page.mouse.up();
@@ -105,7 +105,6 @@ describe('Snapping', () => {
       const dx = x1 - x;
       const dy = y1 - y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      console.log(x, y, x1, y1, dist > 10);
       return dist > 10;
     })).toBe(true);
   }, 5000);
