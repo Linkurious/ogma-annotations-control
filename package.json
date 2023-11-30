@@ -1,0 +1,35 @@
+{
+  "name": "@linkurious/ogma-annotations-control",
+  "version": "1.0.0",
+  "description": "A tool to draw texts and arrows on top of Ogma",
+  "main": "index.js",
+  "scripts": {
+    "postinstall": "playwright install",
+    "build": "npm run build -ws --if-present",
+    "test:unit": "npm run test:unit -ws --if-present",
+    "e2e:test": "npm run test:e2e -ws --if-present"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/Linkurious/ogma-annotations-control.git"
+  },
+  "keywords": [
+    "Ogma",
+    "annotations",
+    "layer",
+    "react",
+    "headless"
+  ],
+  "author": "Linkurious SAS",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Linkurious/ogma-annotations-control/issues"
+  },
+  "homepage": "https://github.com/Linkurious/ogma-annotations-control#readme",
+  "workspaces": [
+    "packages/**"
+  ],
+  "devDependencies": {
+    "playwright": "^1.36.0"
+  }
+}
