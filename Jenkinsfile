@@ -1,4 +1,4 @@
-@Library('linkurious-shared@feature/monorepo-publish')_
+@Library('linkurious-shared@update-monorepo')_
 
 nodeJob {
   // General
