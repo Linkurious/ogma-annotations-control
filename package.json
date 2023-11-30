@@ -4,17 +4,24 @@
   "description": "A tool to draw texts and arrows on top of Ogma",
   "main": "index.js",
   "scripts": {
-    "postinstall": "playwright install",
-    "build": "npm run build -ws --if-present",
-    "test:unit": "npm run test:unit -ws --if-present",
     "prepack": "npm publish -ws",
+    "e2e:test": "npm run test:e2e -ws --if-present",
+    "test": "npm run test -ws --if-present",
+    "test:unit": "npm run test:unit -ws --if-present",
+    "publish:packages": "npm publish -ws",
     "prepublishOnly": "npm pack -ws && npm publish -ws --dry-run",
-    "e2e:test": "npm run test:e2e -ws --if-present"
+    "build": "npm run build -ws --if-present",
+    "postversion": "sync_versions"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/Linkurious/ogma-annotations-control.git"
   },
+  "files": [
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "Ogma",
     "annotations",
@@ -32,6 +39,7 @@
     "packages/**"
   ],
   "devDependencies": {
-    "playwright": "^1.36.0"
+    "playwright": "^1.36.0",
+    "@playwright/browser-chromium": "1.38.0"
   }
 }
