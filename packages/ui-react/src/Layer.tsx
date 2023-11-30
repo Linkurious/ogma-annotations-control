@@ -1,5 +1,5 @@
 import {
-  ReactElement,
+  ReactElement, useEffect,
 } from "react";
 import { useOgma } from "@linkurious/ogma-react";
 import { createPortal } from "react-dom";
@@ -13,6 +13,13 @@ export const Layer = (
   }: LayerProps) => {
   const ogma = useOgma();
   const elt = document.createElement('div');
-  ogma.layers.addLayer(elt);
+  const layer = ogma.layers.addLayer(elt);
+  window.ogma = ogma;
+  useEffect(() => {
+    return () => {
+      console.log('destroying layer');
+      layer.destroy();
+    };
+  }, [children]);
   return <>{createPortal(children, elt)}</>;
 };

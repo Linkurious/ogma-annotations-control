@@ -10,34 +10,26 @@ import { DirectionOne } from './icons/direction-one';
 import { interpolate, normalize } from '../src/utils';
 import { ArrowStyles, createArrow, createText, isArrow, isText } from '@linkurious/ogma-annotations';
 import { useOgma } from '@linkurious/ogma-react';
-const defaultColors = [
-  "#FFFFFF",
-  "#F44E3B",
-  "#FE9200",
-  "#FCDC00",
-  "#A4DD00",
-  "#68CCCA",
-  "#73D8FF",
-  "#AEA1FF",
-  "#1E88E5",
-  "#333333",
-  "#808080",
-  "#cccccc",
-];
-const fonts = [
-  // normal serif monospace
-  { value: 'serif', label: 'Serif' },
-  { value: 'sans-serif', label: 'Sans-serif' },
-  { value: 'monospace', label: 'Monospace' },
-];
-const sizes = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 64, 72].map(v => ({ value: `${v}`, label: v }));
+import {
+  fontSizes, fonts, defaultColors,
+  defaultArrowStyle,
+  defaultTextStyle,
+} from '../src/constants';
+const fontOptions = fonts.map(f => ({ value: f, label: f }));
+const fontSizeOptions = fontSizes.map(v => ({ value: `${v}`, label: v }));
 
 type ColorPickerProps = {
   color?: string;
+  hasTransparent?: boolean;
   setColor?: (c: string) => void;
 };
-const ColorPicker = ({ color, setColor }: ColorPickerProps) => {
-  const [colors] = useState(defaultColors);
+const ColorPicker = ({ color, setColor, hasTransparent }: ColorPickerProps) => {
+  const [colors, setColors] = useState(defaultColors);
+  useEffect(() => {
+    if (hasTransparent) setColors(['none', ...defaultColors.slice(0, -1)]);
+    else
+      setColors([...defaultColors]);
+  }, [hasTransparent]);
   const [selected, setSelected] = useState(color);
   return (
     <span className='colorpicker'>
@@ -49,7 +41,7 @@ const ColorPicker = ({ color, setColor }: ColorPickerProps) => {
             width: 12,
             height: 12,
             borderRadius: 10,
-            backgroundColor: c,
+            backgroundColor: c === 'none' ? '#fff' : c,
             margin: 5,
             cursor: 'pointer',
           }}
@@ -71,15 +63,9 @@ const MenuAdd = (
     ogma.setOptions({ cursor: { default: 'crosshair' } });
     ogma.events.once('click', (evt) => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const annotation = type === 'arrow' ? createArrow(x, y, x, y, {
-        strokeWidth: arrowStyle.strokeWidth,
-        strokeColor: arrowStyle.strokeColor,
-        strokeType: 'plain'
-      }) : createText(x, y, 0, 0, '...', {
-        strokeWidth: arrowStyle.strokeWidth,
-        strokeColor: arrowStyle.strokeColor,
-        strokeType: 'plain'
-      });
+      const annotation = type === 'arrow'
+        ? createArrow(x, y, x, y, { ...defaultArrowStyle })
+        : createText(x, y, 0, 0, '...', { ...defaultTextStyle });
       setTimeout(() => {
         if (isArrow(annotation)) {
           editor.startArrow(x, y, annotation);
@@ -92,7 +78,7 @@ const MenuAdd = (
         ogma.setOptions(opts);
       });
     });
-  }
+  };
   return (
     <>
       <Button onClick={() => addAnnotation('arrow')}>
@@ -108,6 +94,7 @@ const MenuAdd = (
 
 
 export const UI = (
+  { minThickness, maxThickness }: { minThickness: number, maxThickness: number; }
 ) => {
   const { currentAnnotation, arrowStyle, setArrowStyle, textStyle, setTextStyle } = useAnnotationsContext();
   function setExt(ext: 'one' | 'none' | 'both') {
@@ -124,8 +111,6 @@ export const UI = (
     }
     setArrowStyle({ ...arrowStyle, ...style });
   }
-  const minThickness = 0.1;
-  const maxThickness = 10;
   function setWidth(w: number) {
     const strokeWidth = interpolate(normalize(w, 0, 100), minThickness, maxThickness);
     console.log(strokeWidth);
@@ -138,7 +123,7 @@ export const UI = (
     setTextStyle({ ...textStyle, font });
   }
   function setSize(f: string) {
-    setTextStyle({ ...textStyle, fontSize: `${f}px` });
+    setTextStyle({ ...textStyle, fontSize: `${f}` });
   }
   function setBgColor(background: string) {
     setTextStyle({ ...textStyle, background });
@@ -179,7 +164,7 @@ export const UI = (
                 <ColorPicker color={arrowStyle.strokeColor} setColor={c => setColor(c)} />
                 <span>Thickness</span>
                 <Slider min={0} max={100} onChange={val => setWidth(val)}
-                  initialValue={Math.floor(interpolate(normalize(arrowStyle.strokeWidth, minThickness, maxThickness), 0, 100))} />
+                  initialValue={Math.floor(interpolate(normalize(arrowStyle.strokeWidth || 0, minThickness, maxThickness), 0, 100))} />
               </span>
             )
           }
@@ -193,7 +178,7 @@ export const UI = (
                   initialValue={textStyle.font}
                 >
                   {
-                    fonts.map(f => <Select.Option key={f.value} value={f.value}>{f.label}</Select.Option>)
+                    fontOptions.map(f => <Select.Option key={f.value} value={f.value}>{f.label}</Select.Option>)
                   }
                 </Select>
                 <span>Size</span>
@@ -201,13 +186,13 @@ export const UI = (
                   initialValue={textStyle.fontSize}
                 >
                   {
-                    sizes.map(s => <Select.Option key={s.value} value={s.value}>{s.label}</Select.Option>)
+                    fontSizeOptions.map(s => <Select.Option key={s.value} value={s.value}>{s.label}</Select.Option>)
                   }
                 </Select>
                 <span>Color</span>
                 <ColorPicker color={textStyle.color} setColor={c => setTextColor(c)} />
                 <span>Background</span>
-                <ColorPicker color={textStyle.background} setColor={c => setBgColor(c)} />
+                <ColorPicker hasTransparent={true} color={textStyle.background} setColor={c => setBgColor(c)} />
               </span>
             )
           }

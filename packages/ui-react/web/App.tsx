@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Ogma } from '@linkurious/ogma-react';
 import './App.css';
-import { Options, RawGraph } from '@linkurious/ogma/umd';
-import { AnnotationsContextProvider, useAnnotationsContext } from '../src/AnnotationsContext';
+import { RawGraph } from '@linkurious/ogma/umd';
+import { AnnotationsContextProvider } from '../src/AnnotationsContext';
 import { UI } from './UI';
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
     <div className='App'>
       <Ogma graph={graph}>
         <AnnotationsContextProvider>
-          <UI />
+          <UI minThickness={1} maxThickness={10} />
         </AnnotationsContextProvider>
       </Ogma>
     </div>

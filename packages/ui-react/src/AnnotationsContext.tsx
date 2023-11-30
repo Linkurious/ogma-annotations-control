@@ -120,49 +120,45 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     });
     setArrowWidthFactor(newArrowWidthFactor);
     setTextSizeFactor(newTextSizeFactor);
-    // setTextStyle({
-    //   ...textStyle,
-    //   fontSize: (+textStyle.fontSize! * newTextSizeFactor).toString(),
-    // });
     newEditor
       .on("select", (annotation) => {
         // read back the current options from the selected annotation
-        // if (isArrow(annotation)) {
-        //   setArrowStyle({
-        //     // ...arrowStyle,
-        //     ...(annotation.properties.style || {}),
-        //   });
-        // } else if (isText(annotation)) {
-        //   setTextStyle({
-        //     // ...textStyle,
-        //     ...(annotation.properties.style || {}),
-        //   });
-        // }
+        if (isArrow(annotation)) {
+          setArrowStyle({
+            ...(annotation.properties.style || {}),
+          });
+        } else if (isText(annotation)) {
+          setTextStyle({
+            ...(annotation.properties.style || {}),
+          });
+        }
+        console.log('select', annotation);
         setCurrentAnnotation(annotation);
       })
       .on("unselect", () => {
         console.log('unselect');
         // TODO: maybe set back the styles to the default options
         setCurrentAnnotation(null);
-      });
-    /*.on("add", (annotation) =>
-      updateAnnotations({
-        type: "add",
-        payload: annotation,
       })
-    )
-    .on("update", (annotation) => {
-      updateAnnotations({
-        type: "update",
-        payload: annotation,
-      });
-    })
-    .on("remove", (annotation) =>
-      updateAnnotations({
-        type: "remove",
-        payload: annotation,
+      .on("add", (annotation) => {
+        updateAnnotations({
+          type: "add",
+          payload: annotation,
+        });
+      }
+      )
+      .on("update", (annotation) => {
+        updateAnnotations({
+          type: "update",
+          payload: annotation,
+        });
       })
-    );*/
+      .on("remove", (annotation) =>
+        updateAnnotations({
+          type: "remove",
+          payload: annotation,
+        })
+      );
     setEditor(newEditor);
     return () => {
       editor?.destroy();
