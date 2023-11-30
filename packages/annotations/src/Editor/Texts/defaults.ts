@@ -47,14 +47,14 @@ export const createText = (
   width = 100,
   height = 50,
   content = '',
-  styles = { ...defaultStyle }
+  styles: Partial<TextStyle> = { ...defaultStyle }
 ): Text => ({
   id: getId(),
   type: 'Feature',
   properties: {
     type: 'text',
     content,
-    style: { ...styles }
+    style: { ...defaultStyle, ...styles }
   },
   geometry: {
     type: 'Polygon',

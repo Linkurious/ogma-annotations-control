@@ -307,6 +307,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   };
 
   private _onSelect = (annotation: Annotation) => {
+    if (this.selected === annotation) return;
     this.selected = annotation;
     this.emit(EVT_SELECT, this.selected);
   };

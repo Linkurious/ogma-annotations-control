@@ -58,8 +58,6 @@ export default function draw(
   const b = new Vec2(end.x, end.y);
   const vec = b.clone().sub(a);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
-  console.log('tipLength', tipLength);
-
   const path = createSVGElement<SVGPathElement>('path');
   path.setAttribute('data-annotation', `${arrow.id}`);
   path.setAttribute('data-annotation-type', 'arrow');

@@ -14,10 +14,8 @@ export const Layer = (
   const ogma = useOgma();
   const elt = document.createElement('div');
   const layer = ogma.layers.addLayer(elt);
-  window.ogma = ogma;
   useEffect(() => {
     return () => {
-      console.log('destroying layer');
       layer.destroy();
     };
   }, [children]);
