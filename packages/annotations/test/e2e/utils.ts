@@ -6,8 +6,11 @@ import { preview, build } from "vite";
 import type { InlineConfig, PreviewServer } from "vite";
 declare global {
   function createOgma(options: OgmaParameters): Ogma;
+  function createEditor(): import("../../src").Control;
   function wait(ms: number): Promise<void>;
   let ogma: Ogma;
+  let editor: import("../../src").Control;
+  let createArrow: typeof import("../../src").createArrow;
 }
 
 export class BrowserSession {
@@ -26,7 +29,7 @@ export class BrowserSession {
       preview: { port: this.port },
       ...options
     });
-    this.browser = await chromium.launch({ headless, devtools: false });
+    this.browser = await chromium.launch({ headless, devtools: false, slowMo: 100 });
     this.page = await this.browser.newPage();
     await this.page.goto(`http://localhost:${this.port}`);
   }
@@ -56,4 +59,8 @@ export function compareDates(date1: Date, date2: Date) {
     date1.getMonth() === date2.getMonth() &&
     date1.getDate() === date2.getDate()
   );
+}
+
+export function wait(ms: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, ms));
 }

@@ -146,7 +146,14 @@ export class Control extends EventEmitter<FeatureEvents> {
     key: EndType | 'line' | 'text'
   ) => {
     const h = key;
-    if (isArrow(a) && h !== 'line') {
+    if (isArrow(a) && h === 'line') {
+      ['start', 'end']
+        .find((side) => {
+          const point = side === 'start' ? getArrowStart(a) : getArrowEnd(a);
+          const snapped = this._snapToText(a, h as EndType, point);
+          return snapped || this._findAndSnapToNode(a, side as EndType, point);
+        });
+    } else if (isArrow(a) && h !== 'line') {
       const point = h === 'start' ? getArrowStart(a) : getArrowEnd(a);
       const snapped = this._snapToText(a, h as EndType, point);
       // if no text is detected and option is on, we to snap to node
