@@ -43,6 +43,9 @@ const sidebar: DefaultTheme.Sidebar = {
 export default defineConfig({
   title: "Ogma annotations",
   description: "A plugin to draw annotations on top of Ogma",
+  head: [['link', { rel: 'icon', href: '/ogma-annotations-control/favicon.ico' }]],
+  base: '/ogma-annotations-control/',
+  ignoreDeadLinks: true,
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [

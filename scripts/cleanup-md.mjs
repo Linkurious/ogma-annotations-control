@@ -8,6 +8,7 @@ const toDelete = [
   '### \\_',
   `#### Defined in`,
   `#### Inherited from`,
+  `#### Overrides`,
 ];
 
 function getTitles(content, title) {

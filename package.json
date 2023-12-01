@@ -16,10 +16,11 @@
     "typedoc": "npm run typedoc -ws --if-present",
     "posttypedoc": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
+    "predocs:build": "npm run typedoc",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
-    "predoc:publish": "npm run doc:build",
-    "doc:publish": "gh-pages -d docs/.vitepress/dist"
+    "predocs:publish": "npm run docs:build",
+    "docs:publish": "gh-pages -d docs/.vitepress/dist"
   },
   "repository": {
     "type": "git",
@@ -48,6 +49,7 @@
   ],
   "devDependencies": {
     "@linkurious/code-tools": "^0.0.14",
+    "gh-pages": "^6.1.0",
     "marked": "^11.0.0",
     "playwright": "1.40.0",
     "typedoc": "^0.25.4",
