@@ -50,6 +50,8 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Demo', link: '/demo-react.html' },
+
     ],
     outline: {
       level: [2, 3]

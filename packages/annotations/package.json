@@ -33,7 +33,7 @@
     "lint": "eslint --ext .ts,.tsx --fix src",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
     "preview": "vite preview",
-    "typedoc": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/annotations src/index.ts",
+    "docs:build": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/annotations src/index.ts",
     "test:unit": "vitest run -c test/unit/vitest.config.mts",
     "test:watch": "vitest watch -c test/unit/vitest.config.mts",
     "test:e2e": "vitest run -c test/e2e/vitest.config.mts",
