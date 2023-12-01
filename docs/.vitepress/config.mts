@@ -23,20 +23,22 @@ function createSidebar(dir) {
 }
 const classes = await createSidebar('docs/annotations/classes');
 const interfaces = await createSidebar('docs/annotations/interfaces');
-const sidebar: DefaultTheme.Sidebar = [
-  {
-    text: 'Classes',
-    items: classes,
-  },
-  {
-    text: 'Interfaces',
-    items: interfaces,
-  },
-  {
-    text: 'Misc',
-    link: 'annotations/modules'
-  },
-];
+const sidebar: DefaultTheme.Sidebar = {
+  'annotations/': [
+    {
+      text: 'Classes',
+      items: classes,
+    },
+    {
+      text: 'Interfaces',
+      items: interfaces,
+    },
+    {
+      text: 'Misc',
+      link: 'annotations/modules'
+    },
+  ],
+};
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "Ogma annotations",
@@ -51,7 +53,7 @@ export default defineConfig({
     },
     sidebar,
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
+      { icon: 'github', link: 'https://github.com/Linkurious/ogma-annotations-control' }
     ]
   }
 });

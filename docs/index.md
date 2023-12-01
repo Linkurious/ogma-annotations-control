@@ -5,7 +5,6 @@ layout: home
 hero:
   name: "Ogma annotations"
   text: "A plugin to draw annotations on top of Ogma"
-  tagline: My great project tagline
   actions:
     - theme: alt
       text: Getting started
