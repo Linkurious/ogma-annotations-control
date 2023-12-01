@@ -3,13 +3,12 @@ import { useAnnotationsContext } from "../src/AnnotationsContext";
 import { useEffect, useState } from "react";
 import { ButtonGroup, Button, Slider, Select } from '@geist-ui/react';
 import { DirectionNone } from './icons/direction-none';
-import { Layer } from "../src/Layer";
 import './UI.css';
 import { DirectionBoth } from './icons/direction-both';
 import { DirectionOne } from './icons/direction-one';
 import { interpolate, normalize } from '../src/utils';
 import { ArrowStyles, createArrow, createText, isArrow, isText } from '@linkurious/ogma-annotations';
-import { useOgma } from '@linkurious/ogma-react';
+import { useOgma, Layer } from '@linkurious/ogma-react';
 import {
   fontSizes, fonts, defaultColors,
   defaultArrowStyle,
@@ -149,7 +148,6 @@ export const UI = (
   }
 
 
-  // <Layer>
   return (
     <Layer>
       <div className='ui'>
