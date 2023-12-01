@@ -9,19 +9,11 @@ hero:
   actions:
     - theme: alt
       text: Getting started
-      link: /annotations/classes/Control.md
+      link: /getting-started.md
     - theme: alt
       text: Vanilla API
       link: /annotations/classes/Control.md
     - theme: alt
-      text: React API
-      link: /react/classes/Control.md
-
-features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+      text: React Wrapper
+      link: /react-guide.md
 ---

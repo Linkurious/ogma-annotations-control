@@ -37,8 +37,6 @@ const sidebar: DefaultTheme.Sidebar = [
     link: 'annotations/modules'
   },
 ];
-console.log('sidebar', sidebar[0].items);
-
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "Ogma annotations",
@@ -47,9 +45,10 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
     ],
-
+    outline: {
+      level: [2, 3]
+    },
     sidebar,
     socialLinks: [
       { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
