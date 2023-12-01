@@ -2,3 +2,4 @@
 **/dist
 **/reports
 docs/.vitepress/cache
+docs/annotations

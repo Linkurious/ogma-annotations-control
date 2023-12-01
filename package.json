@@ -13,6 +13,8 @@
     "prepublishOnly": "npm pack -ws && npm publish -ws --dry-run",
     "build": "npm run build -ws --if-present",
     "postversion": "sync_versions",
+    "typedoc": "npm run typedoc -ws --if-present",
+    "posttypedoc": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs"
@@ -44,7 +46,10 @@
   ],
   "devDependencies": {
     "@linkurious/code-tools": "^0.0.14",
+    "marked": "^11.0.0",
     "playwright": "1.40.0",
+    "typedoc": "^0.25.4",
+    "typedoc-plugin-markdown": "^3.17.1",
     "vitepress": "^1.0.0-rc.31",
     "vitest": "^0.34.6"
   }

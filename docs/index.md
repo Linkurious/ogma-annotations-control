@@ -7,12 +7,15 @@ hero:
   text: "A plugin to draw annotations on top of Ogma"
   tagline: My great project tagline
   actions:
-    - theme: brand
-      text: Markdown Examples
-      link: /markdown-examples
     - theme: alt
-      text: API Examples
-      link: /api-examples
+      text: Getting started
+      link: /annotations/classes/Control.md
+    - theme: alt
+      text: Vanilla API
+      link: /annotations/classes/Control.md
+    - theme: alt
+      text: React API
+      link: /react/classes/Control.md
 
 features:
   - title: Feature A
@@ -22,4 +25,3 @@ features:
   - title: Feature C
     details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
 ---
-
