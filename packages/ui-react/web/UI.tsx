@@ -79,6 +79,14 @@ const MenuAdd = (
       });
     });
   };
+
+  function save() {
+    // download the file 
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(editor.getAnnotations())], { type: 'text/plain' }));
+    a.download = 'annotations.json';
+    a.click();
+  }
   return (
     <>
       <Button onClick={() => addAnnotation('arrow')}>
@@ -86,6 +94,9 @@ const MenuAdd = (
       </Button>
       <Button onClick={() => addAnnotation('text')}>
         Add text
+      </Button>
+      <Button onClick={() => save()}>
+        Save
       </Button>
     </>
   );
