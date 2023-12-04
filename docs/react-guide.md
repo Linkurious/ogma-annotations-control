@@ -110,3 +110,19 @@ const ui = () => {
   );
 };
 ```
+
+## API
+
+### AnnotationsContextProvider
+
+Here is the description of the states exported by the AnnotationsContextProvider
+
+| Context           | Usage                                                                     |
+| ----------------- | ------------------------------------------------------------------------- |
+| annotations       | All annotations in controller                                             |
+| currentAnnotation | The selected annotation in controller                                     |
+| textStyle         | The style of the current selected text                                    |
+| setTextStyle      | Setter for the current [text style](/annotations/interfaces/TextStyles)   |
+| arrowStyle        | The Style of the current selected arrow                                   |
+| setArrowStyle     | Setter for the current [arrow style](/annotations/interfaces/ArrowStyles) |
+| editor            | The instance of [Controller](/annotations/classes/Control)                |

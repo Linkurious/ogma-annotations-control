@@ -3,3 +3,6 @@
 **/reports
 docs/.vitepress/cache
 docs/annotations
+docs/.vitepress/public/assets
+docs/.vitepress/public/demo-react.html
+
