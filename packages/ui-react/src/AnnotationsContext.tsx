@@ -109,7 +109,6 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     const newEditor = new AnnotationsEditor(ogma, {
       minArrowHeight: 1
     });
-    window.ogma = ogma;
     // adjust the default style of the annotations based on the graph
     const newTextSizeFactor =
       mean(ogma.getNodes().getAttribute("radius") as number[]) / 5;

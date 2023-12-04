@@ -1,7 +1,7 @@
 {
   "name": "@linkurious/ogma-annotations",
   "version": "1.0.4",
-  "description": "Headless annotation controller",
+  "description": "Headless annotation plugin for Ogma",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "browser": "dist/index.umd.js",
@@ -60,7 +60,7 @@
     "get-port": "^7.0.0",
     "jsdom": "^22.1.0",
     "playwright": "1.40.0",
-    "typescript": "^5.3.2",
+    "typescript": "5.3.2",
     "vite": "^5.0.2",
     "vitest": "^0.34.6"
   },
@@ -68,7 +68,6 @@
     "@borgar/textbox": "^1.6.0",
     "@types/geojson": "^7946.0.13",
     "@types/vector2js": "^2.0.2",
-    "annotations": "^1.1.2",
     "eventemitter3": "^5.0.1",
     "vector2js": "^2.0.1"
   }
