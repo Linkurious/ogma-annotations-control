@@ -115,7 +115,8 @@ const ui = () => {
 
 ### AnnotationsContextProvider
 
-Here is the description of the states exported by the AnnotationsContextProvider
+Here is the description of the states exported by the AnnotationsContextProvider,
+that you can access with the `useAnnotationsContext` hook.
 
 | Context           | Usage                                                                     |
 | ----------------- | ------------------------------------------------------------------------- |
