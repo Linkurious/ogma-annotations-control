@@ -9,4 +9,5 @@ nodeJob {
   runUnitTests = true
   runNpmPublish = true
   runForwardMerge = false
+  runDependencyVersionCheck = false
 }
