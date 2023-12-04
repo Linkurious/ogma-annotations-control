@@ -319,6 +319,9 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_SELECT, this.selected);
   };
 
+  /**
+   * @returns the currently selected annotation
+   */
   public getSelected() {
     return this.selected;
   }
@@ -344,6 +347,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     return res;
   }
 
+  /**
+   * Set the options for the controller
+   * @param options new Options
+   * @returns the updated options
+   */
   public setOptions(options: Partial<ControllerOptions> = {}) {
     this.options = {
       ...(this.options || {}),
@@ -351,7 +359,10 @@ export class Control extends EventEmitter<FeatureEvents> {
     } as ControllerOptions;
     return this.options;
   }
-
+  /**
+   * Selects the annotation with the given id
+   * @param id the id of the annotation to select
+   */
   public select(id: Id): this {
     const annotation = this.getAnnotations().features.find((a) => a.id === id);
     if (!annotation) return this;
@@ -359,14 +370,19 @@ export class Control extends EventEmitter<FeatureEvents> {
     else if (isText(annotation)) this.texts.select(annotation.id);
     return this;
   }
-
+  /**
+   * Unselects the currently selected annotation
+   */
   public unselect(): this {
     if (!this.selected) return this;
     if (isArrow(this.selected)) this.arrows.unselect();
     else if (isText(this.selected)) this.texts.unselect();
     return this;
   }
-
+  /**
+   * Add an annotation to the controller
+   * @param annotation The annotation to add
+   */
   public add(annotation: Arrow | Text | AnnotationCollection): this {
     if (isAnnotationCollection(annotation)) {
       annotation.features.forEach((f) =>
@@ -402,22 +418,37 @@ export class Control extends EventEmitter<FeatureEvents> {
       }
     }
   }
-
+  /**
+   * Start adding an arrow (add it, and give control to the user)
+   * @param x coord of the first point
+   * @param y coord of the first point
+   * @param arrow The arrow to add
+   */
   public startArrow(x: number, y: number, arrow?: Arrow) {
     this.cancelDrawing();
     this.arrows.startDrawing(x, y, arrow);
   }
-
+  /**
+   * Start adding a text (add it, and give control to the user)
+   * @param x coord of the top left point
+   * @param y coord of the top left point
+   * @param text The text to add
+   */
   public startText(x: number, y: number, text?: Text) {
     this.cancelDrawing();
     this.texts.startDrawing(x, y, text);
   }
-
+  /**
+   * Cancel drawing on the current frame
+   */
   public cancelDrawing() {
     this.annotations.forEach((o) => o.cancelDrawing());
     this.emit(EVT_CANCEL_DRAWING);
   }
-
+  /**
+   * Triggers the update event on the annotation
+   * @param annotation The annotation updated
+   */
   public onUpdate = (annotation: Annotation) => {
     cancelAnimationFrame(this.updateTimeout);
     this.updateTimeout = requestAnimationFrame(() =>
@@ -429,6 +460,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_UPDATE, annotation);
   };
 
+  /**
+   * Update the style of the annotation with the given id
+   * @param id The id of the annotation to update
+   * @param style The new style
+   */
   public updateStyle<A extends Annotation>(
     id: Id,
     style: A['properties']['style']
@@ -441,6 +477,10 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this;
   }
 
+  /**
+   * 
+   * @returns the annotations in the controller
+   */
   public getAnnotations() {
     const collection: AnnotationCollection = {
       type: 'FeatureCollection',
@@ -451,11 +491,17 @@ export class Control extends EventEmitter<FeatureEvents> {
     });
     return collection;
   }
-
+  /**
+   * Retrieve the annotation with the given id
+   * @param id the id of the annotation to get
+   * @returns The annotation with the given id
+   */
   public getAnnotation(id: Id) {
     return this.getAnnotations().features.find((a) => a.id === id);
   }
-
+  /**
+   * Destroy the controller and its elements
+   */
   public destroy() {
     this.annotations.forEach((o) => o.destroy());
     this.layer.destroy();

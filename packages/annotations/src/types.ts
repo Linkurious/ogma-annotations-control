@@ -159,13 +159,36 @@ export type Events<T> = {
 };
 
 export type FeatureEvents = {
+  /**
+   * Event trigerred when selecting an annotation
+   * @param evt The annotation selected
+   */
   [EVT_SELECT]: (evt: Annotation) => void;
+  /**
+   * Event trigerred when unselecting an annotation
+   * @param evt The annotation unselected
+   */
   [EVT_UNSELECT]: (evt: Annotation) => void;
+  /**
+   * Event trigerred when removing an annotation
+   * @param evt The annotation removed
+   */
   [EVT_REMOVE]: (evt: Annotation) => void;
+  /**
+   * Event trigerred when adding an annotation
+   * @param evt The annotation added
+   */
   [EVT_ADD]: (evt: Annotation) => void;
   [EVT_CANCEL_DRAWING]: () => void;
+  /**
+   * Event trigerred when updating an annotation
+   * @returns The annotation updated
+   */
   [EVT_UPDATE]: (evt: Annotation) => void;
-  [EVT_LINK]: (evt: { arrow: Arrow; link: Link }) => void;
+  /**
+   * Event trigerred when linking an arrow to a text or node
+   */
+  [EVT_LINK]: (evt: { arrow: Arrow; link: Link; }) => void;
 };
 
 export type TargetType = 'text' | 'node';
