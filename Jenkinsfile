@@ -1,9 +1,8 @@
-@Library('linkurious-shared')_
+@Library('linkurious-shared@update-monorepo')_
 
 nodeJob {
   // General
   projectName = "linkurious/ogma-annotations-control"
-  podTemplateNames = ['jnlp-agent-node']
   createGitTag = true
   gitTagPrefix = 'v'
   runBookeeping = false

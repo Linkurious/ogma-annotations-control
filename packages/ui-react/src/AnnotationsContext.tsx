@@ -132,10 +132,9 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
             ...(annotation.properties.style || {}),
           });
         }
+        setCurrentAnnotation(annotation);
       })
       .on("unselect", () => {
-        console.log('unselect');
-        // TODO: maybe set back the styles to the default options
         setCurrentAnnotation(null);
       });
     setEditor(newEditor);

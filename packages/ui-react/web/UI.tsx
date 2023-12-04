@@ -1,15 +1,14 @@
-import '@linkurious/ogma-annotations/style.css';
-import { useAnnotationsContext } from "../src/AnnotationsContext";
 import { useEffect, useState } from "react";
 import { ButtonGroup, Button, Slider, Select } from '@geist-ui/react';
-import { DirectionNone } from './icons/direction-none';
-import { Layer } from "../src/Layer";
+import { useOgma, Layer } from '@linkurious/ogma-react';
+import { ArrowStyles, createArrow, createText, isArrow, isText } from '@linkurious/ogma-annotations';
+import '@linkurious/ogma-annotations/style.css';
 import './UI.css';
+import { useAnnotationsContext } from "../src/AnnotationsContext";
+import { DirectionNone } from './icons/direction-none';
 import { DirectionBoth } from './icons/direction-both';
 import { DirectionOne } from './icons/direction-one';
 import { interpolate, normalize } from '../src/utils';
-import { ArrowStyles, createArrow, createText, isArrow, isText } from '@linkurious/ogma-annotations';
-import { useOgma } from '@linkurious/ogma-react';
 import {
   fontSizes, fonts, defaultColors,
   defaultArrowStyle,
@@ -79,6 +78,14 @@ const MenuAdd = (
       });
     });
   };
+
+  function save() {
+    // download the file 
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(editor.getAnnotations())], { type: 'text/plain' }));
+    a.download = 'annotations.json';
+    a.click();
+  }
   return (
     <>
       <Button onClick={() => addAnnotation('arrow')}>
@@ -86,6 +93,9 @@ const MenuAdd = (
       </Button>
       <Button onClick={() => addAnnotation('text')}>
         Add text
+      </Button>
+      <Button onClick={() => save()}>
+        Save
       </Button>
     </>
   );
@@ -138,7 +148,6 @@ export const UI = (
   }
 
 
-  // <Layer>
   return (
     <Layer>
       <div className='ui'>

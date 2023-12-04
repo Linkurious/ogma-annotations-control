@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-react",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "A react component to add ogma annotations with  react",
   "main": "dist/ogma-annotations-react.mjs",
   "module": "dist/ogma-annotations-react.mjs",
@@ -19,16 +19,14 @@
       "default": "./dist/ogma-annotations-react.mjs",
       "types": "./dist/index.d.ts"
     },
-    "./style.css": {
-      "import": "./dist/style.css",
-      "require": "./dist/style.css"
-    },
     "./umd": "./dist/ogma-annotations-react.umd.js",
     "./esm": "./dist/ogma-annotations-react.mjs"
   },
   "scripts": {
     "dev": "vite -c web/vite.config.ts",
     "build": "tsc --p ./tsconfig-build.json && vite build",
+    "docs:build": "vite build -c web/vite.config.ts",
+    "postdocs:build": "bash scripts/postdocs.sh",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "keywords": [
@@ -42,15 +40,14 @@
   "license": "Apache-2.0",
   "peerDependencies": {
     "@linkurious/ogma": "^4.5.6",
-    "@linkurious/ogma-annotations": "file:../annotations",
-    "@linkurious/ogma-react": "^4.3.3",
+    "@linkurious/ogma-annotations": "^1.0.0",
+    "@linkurious/ogma-react": "^4.6.0",
     "react": "^18.2.0"
   },
-  "dependencies": {
-    "@geist-ui/react": "^2.2.5",
-    "@geist-ui/react-icons": "^1.0.1"
-  },
+  "dependencies": {},
   "devDependencies": {
+    "@geist-ui/react": "^2.2.5",
+    "@geist-ui/react-icons": "^1.0.1",
     "@types/react": "^18.2.39",
     "@types/react-dom": "^18.2.17",
     "@typescript-eslint/eslint-plugin": "^6.13.1",
