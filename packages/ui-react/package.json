@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-react",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A react component to add ogma annotations with  react",
   "main": "dist/ogma-annotations-react.mjs",
   "module": "dist/ogma-annotations-react.mjs",
