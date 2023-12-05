@@ -22,6 +22,10 @@
     "predocs:publish": "npm run docs:build",
     "docs:publish": "gh-pages -d docs/.vitepress/dist"
   },
+  "publishConfig": {
+    "access": "public"
+  },
+  "private": false,
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/Linkurious/ogma-annotations-control.git"
