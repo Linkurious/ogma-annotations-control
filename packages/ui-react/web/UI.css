@@ -27,6 +27,7 @@ button[type="button"].btn {
   margin-top: 10px;
   justify-content: space-around;
   flex-direction: row;
+  user-select: none;
 }
 
 .tweakpanel > .rows {
