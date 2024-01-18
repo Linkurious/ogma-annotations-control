@@ -1,7 +1,7 @@
 # Ogma annotations plugin
 
 This plugin allows you to add annotations to your [Ogma](https://doc.linkurio.us/ogma/latest/) visualisation.
-You need an Ogma licence to use it. Please [contact us](<[https://doc.linkurio.us/ogma/latest/support.html](https://doc.linkurious.com/ogma/latest/contact.html)>) for more info.
+You need an Ogma licence to use it. Please [contact us](https://doc.linkurious.com/ogma/latest/contact.html) for more info.
 
 ## Demo
 
