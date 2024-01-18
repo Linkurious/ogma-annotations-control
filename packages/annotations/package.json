@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Headless annotation plugin for Ogma",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
