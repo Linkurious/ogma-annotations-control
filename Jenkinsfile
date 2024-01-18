@@ -5,9 +5,9 @@ nodeJob {
   projectName = "linkurious/ogma-annotations-control"
   createGitTag = true
   gitTagPrefix = 'v'
-  runBookeeping = false
+  runBookeeping = true
   runUnitTests = true
   runNpmPublish = true
-  runForwardMerge = false
+  runForwardMerge = true
   runDependencyVersionCheck = false
 }

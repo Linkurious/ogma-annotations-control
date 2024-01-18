@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-control",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A tool to draw texts and arrows on top of Ogma",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,8 @@
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
     "predocs:publish": "npm run docs:build",
-    "docs:publish": "gh-pages -d docs/.vitepress/dist"
+    "docs:publish": "gh-pages -d docs/.vitepress/dist",
+    "upload": "npm run docs:publish"
   },
   "publishConfig": {
     "access": "public"
