@@ -176,27 +176,33 @@ window.createArrow = createArrow;
 
 document.getElementById('add-arrow')?.addEventListener('click', () => {
   // set button active
-  ogma.events.once('mousedown', (evt) => {
-    requestAnimationFrame(() => {
-      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const arrow = createArrow(x, y, x, y, {
-        strokeWidth: 2,
-        strokeColor: '#3b3',
-        strokeType: 'plain'
-      });
-      //control.add(arrow);
-      control.startArrow(x, y, arrow);
+  ogma.events.once('click', (evt) => {
+    // const { x, y } = ogma.view.screenToGraphCoordinates({
+    //   x: evt.domEvent.clientX - ogma.getContainer()!.getBoundingClientRect().left,
+    //   y: evt.domEvent.clientY - ogma.getContainer()!.getBoundingClientRect().top
+    // });
+    const { x, y } = { x: evt.domEvent.clientX, y: evt.domEvent.clientY };
+    const arrow = createArrow(x, y, x, y, {
+      strokeWidth: 2,
+      strokeColor: '#3b3',
+      strokeType: 'plain'
     });
+    setTimeout(() => {
+      control.startArrow(evt.domEvent.clientX, evt.domEvent.clientY, arrow);
+    }, 100);
   });
 });
 
 document.getElementById('add-text')?.addEventListener('click', () => {
-  ogma.events.once('mousedown', (evt) => {
-    requestAnimationFrame(() => {
-      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const text = createText(x, y, 0, 0);
-      control.startText(x, y, text);
+  ogma.events.once('click', (evt) => {
+    const { x, y } = ogma.view.screenToGraphCoordinates({
+      x: evt.domEvent.clientX - ogma.getContainer()!.getBoundingClientRect().left,
+      y: evt.domEvent.clientY - ogma.getContainer()!.getBoundingClientRect().top
     });
+    const text = createText(x, y, 0, 0);
+    setTimeout(() => {
+      control.startText(evt.domEvent.clientX, evt.domEvent.clientY, text);
+    }, 100);
   });
 });
 

@@ -13,15 +13,20 @@ function App() {
     ],
     edges: []
   });
-  return (
+  return (<>
+    <div className='top'>
+    </div>
     <div className='App'>
+      <div className='left'>
+
+      </div>
       <Ogma graph={graph}>
         <AnnotationsContextProvider>
           <UI minThickness={1} maxThickness={10} />
         </AnnotationsContextProvider>
       </Ogma>
     </div>
-  );
+  </>);
 }
 
 export default App;

@@ -61,16 +61,19 @@ const MenuAdd = (
     const opts = ogma.getOptions();
     ogma.setOptions({ cursor: { default: 'crosshair' } });
     ogma.events.once('click', (evt) => {
-      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+      const { x, y } = ogma.view.screenToGraphCoordinates({
+        x: evt.domEvent.clientX - ogma.getContainer()!.getBoundingClientRect().left,
+        y: evt.domEvent.clientY - ogma.getContainer()!.getBoundingClientRect().top
+      });
       const annotation = type === 'arrow'
         ? createArrow(x, y, x, y, { ...defaultArrowStyle })
         : createText(x, y, 0, 0, '...', { ...defaultTextStyle });
       setTimeout(() => {
         if (isArrow(annotation)) {
-          editor.startArrow(x, y, annotation);
+          editor.startArrow(evt.domEvent.clientX, evt.domEvent.clientY, annotation);
         }
         if (isText(annotation)) {
-          editor.startText(x, y, annotation);
+          editor.startText(evt.domEvent.clientX, evt.domEvent.clientY, annotation);
         }
       }, 50);
       editor.once('add', () => {
