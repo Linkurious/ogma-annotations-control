@@ -118,9 +118,8 @@ export class Texts extends Editor<Text> {
     text = createText(x, y, 0, 0, '', defaultStyle)
   ) => {
     this.add(text);
-    const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     this.select(text.id);
-    this.startDragging(this.getById(text.id), pos.x, pos.y);
+    this.startDragging(this.getById(text.id), x, y);
     this.draggedHandle = 6;
   };
 
