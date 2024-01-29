@@ -177,11 +177,10 @@ window.createArrow = createArrow;
 document.getElementById('add-arrow')?.addEventListener('click', () => {
   // set button active
   ogma.events.once('click', (evt) => {
-    // const { x, y } = ogma.view.screenToGraphCoordinates({
-    //   x: evt.domEvent.clientX - ogma.getContainer()!.getBoundingClientRect().left,
-    //   y: evt.domEvent.clientY - ogma.getContainer()!.getBoundingClientRect().top
-    // });
-    const { x, y } = { x: evt.domEvent.clientX, y: evt.domEvent.clientY };
+    const { x, y } = ogma.view.screenToGraphCoordinates({
+      x: evt.domEvent.clientX - ogma.getContainer()!.getBoundingClientRect().left,
+      y: evt.domEvent.clientY - ogma.getContainer()!.getBoundingClientRect().top
+    });
     const arrow = createArrow(x, y, x, y, {
       strokeWidth: 2,
       strokeColor: '#3b3',
