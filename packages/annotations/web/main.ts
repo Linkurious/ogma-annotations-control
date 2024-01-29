@@ -176,7 +176,7 @@ window.createArrow = createArrow;
 
 document.getElementById('add-arrow')?.addEventListener('click', () => {
   // set button active
-  ogma.events.once('mousedown', (evt) => {
+  ogma.events.once('click', (evt) => {
     requestAnimationFrame(() => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
       const arrow = createArrow(x, y, x, y, {
@@ -191,7 +191,7 @@ document.getElementById('add-arrow')?.addEventListener('click', () => {
 });
 
 document.getElementById('add-text')?.addEventListener('click', () => {
-  ogma.events.once('mousedown', (evt) => {
+  ogma.events.once('click', (evt) => {
     requestAnimationFrame(() => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
       const text = createText(x, y, 0, 0);
