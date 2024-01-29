@@ -109,11 +109,15 @@ export class Arrows extends Editor<Arrow> {
     if (this.selectedId !== arrow.id) this.select(this.hoveredId);
     this.arrow = arrow;
     // remember drag start point and arrow ends poisitions
-    this.startX = x;
-    this.startY = y;
+    const bb = this.ogma.getContainer()!.getBoundingClientRect();
+    const pos = this.ogma.view.screenToGraphCoordinates({
+      x: x - bb.left,
+      y: y - bb.top
+    });
+    this.startX = pos.x;
+    this.startY = pos.y;
     this.start = getArrowStart(this.arrow);
     this.end = getArrowEnd(this.arrow);
-
     this.disableDragging();
     this.emit(EVT_DRAG_START, this.arrow);
     this.isDragging = true;
@@ -136,14 +140,16 @@ export class Arrows extends Editor<Arrow> {
       x: evt.clientX - bb.left,
       y: evt.clientY - bb.top
     });
+    const dx = pt.x - this.startX;
+    const dy = pt.y - this.startY;
     const isLine = handle.id === HANDLE_LINE;
     const isStart = handle.id === HANDLE_START;
     const isEnd = handle.id === HANDLE_END;
 
     if (isLine || isStart)
-      setArrowStart(this.arrow, pt.x, pt.y);
+      setArrowStart(this.arrow, this.start.x + dx, this.start.y + dy);
     if (isLine || isEnd)
-      setArrowEnd(this.arrow, pt.x, pt.y);
+      setArrowEnd(this.arrow, this.end.x + dx, this.end.y + dy);
 
     this.emit(
       EVT_DRAG,
