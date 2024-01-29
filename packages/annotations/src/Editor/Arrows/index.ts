@@ -91,7 +91,8 @@ export class Arrows extends Editor<Arrow> {
   ) {
     this.add(arrow);
     this.hoveredId = arrow.id;
-    this.startDragging(this.getById(arrow.id), x, y);
+    const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
+    this.startDragging(this.getById(arrow.id), pos.x, pos.y);
     this.draggedHandle = 2;
   }
 
@@ -109,15 +110,12 @@ export class Arrows extends Editor<Arrow> {
     if (this.selectedId !== arrow.id) this.select(this.hoveredId);
     this.arrow = arrow;
     // remember drag start point and arrow ends poisitions
-    const bb = this.ogma.getContainer()!.getBoundingClientRect();
-    const pos = this.ogma.view.screenToGraphCoordinates({
-      x: x - bb.left,
-      y: y - bb.top
-    });
-    this.startX = pos.x;
-    this.startY = pos.y;
+    this.startX = x;
+    this.startY = y;
+
     this.start = getArrowStart(this.arrow);
     this.end = getArrowEnd(this.arrow);
+
     this.disableDragging();
     this.emit(EVT_DRAG_START, this.arrow);
     this.isDragging = true;
@@ -135,13 +133,10 @@ export class Arrows extends Editor<Arrow> {
     if (!this.isDragging || this.draggedHandle === NONE) return;
 
     const handle = this.handles[this.draggedHandle];
-    const bb = this.ogma.getContainer()!.getBoundingClientRect();
-    const pt = this.ogma.view.screenToGraphCoordinates({
-      x: evt.clientX - bb.left,
-      y: evt.clientY - bb.top
-    });
-    const dx = pt.x - this.startX;
-    const dy = pt.y - this.startY;
+    const zoom = this.ogma.view.getZoom();
+    const dx = (evt.clientX - this.startX) / zoom;
+    const dy = (evt.clientY - this.startY) / zoom;
+
     const isLine = handle.id === HANDLE_LINE;
     const isStart = handle.id === HANDLE_START;
     const isEnd = handle.id === HANDLE_END;
