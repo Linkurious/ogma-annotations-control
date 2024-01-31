@@ -5,7 +5,7 @@ nodeJob {
   projectName = "linkurious/ogma-annotations"
   podTemplateNames = ['jnlp-agent-node']
 
-  defaultPath = 'packages/annotations'
+  defaultPath = 'packages/ogma-annotations'
 
   runUnitTests = true
 
@@ -23,7 +23,7 @@ nodeJob {
   projectName = "linkurious/ogma-annotations-react"
   podTemplateNames = ['jnlp-agent-node']
 
-  defaultPath = 'packages/ui-react'
+  defaultPath = 'packages/ogma-annotations-react'
 
   runUnitTests = true
 
