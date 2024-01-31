@@ -25,6 +25,9 @@
   "scripts": {
     "dev": "vite -c web/vite.config.ts",
     "build": "tsc --p ./tsconfig-build.json && vite build",
+    "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
+    "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
+    "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "docs:build": "vite build -c web/vite.config.ts",
     "postdocs:build": "bash scripts/postdocs.sh",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
