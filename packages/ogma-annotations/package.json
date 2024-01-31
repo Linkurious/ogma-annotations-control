@@ -60,7 +60,7 @@
   "author": "Linkurious SAS",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@linkurious/ogma": ">=4.5.6"
+    "@linkurious/ogma": "4.5.6"
   },
   "dependencies": {
     "@borgar/textbox": "1.6.0",
