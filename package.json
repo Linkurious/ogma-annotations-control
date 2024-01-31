@@ -53,7 +53,8 @@
   },
   "homepage": "https://github.com/Linkurious/ogma-annotations-control#readme",
   "workspaces": [
-    "packages/**"
+    "packages/@linkurious/ogma-annotations",
+    "packages/@linkurious/ogma-annotations-react"
   ],
   "devDependencies": {}
 }
