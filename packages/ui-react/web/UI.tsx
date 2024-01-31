@@ -157,7 +157,7 @@ export const UI = (
             <MenuAdd />
           </span>)
         }
-        <div className='tweakpanel' onMouseUp={stopEvent} onMouseDown={stopEvent} onClick={stopEvent}>
+        <div className='tweakpanel' onMouseDown={stopEvent} onClick={stopEvent}>
           {
             currentAnnotation &&
             isArrow(currentAnnotation) &&

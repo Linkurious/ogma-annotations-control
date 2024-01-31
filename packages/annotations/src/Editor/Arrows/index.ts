@@ -134,8 +134,9 @@ export class Arrows extends Editor<Arrow> {
 
     const handle = this.handles[this.draggedHandle];
     const zoom = this.ogma.view.getZoom();
-    const dx = (evt.clientX - this.startX) / zoom;
-    const dy = (evt.clientY - this.startY) / zoom;
+    const bb = this.ogma.getContainer()?.getBoundingClientRect();
+    const dx = (evt.clientX - this.startX - bb!.left) / zoom;
+    const dy = (evt.clientY - this.startY - bb!.top) / zoom;
 
     const isLine = handle.id === HANDLE_LINE;
     const isStart = handle.id === HANDLE_START;
