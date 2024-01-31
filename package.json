@@ -16,6 +16,7 @@
     "wsdocs": "npm run docs:build -ws --if-present",
     "postwsdocs": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
+    "lint:ci": "npm run lint:ci -ws",
     "predocs:build": "npm run wsdocs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -52,14 +53,5 @@
   "workspaces": [
     "packages/**"
   ],
-  "devDependencies": {
-    "@linkurious/code-tools": "^0.0.14",
-    "gh-pages": "^6.1.0",
-    "marked": "^11.0.0",
-    "playwright": "1.40.0",
-    "typedoc": "^0.25.4",
-    "typedoc-plugin-markdown": "^3.17.1",
-    "vitepress": "^1.0.0-rc.31",
-    "vitest": "^0.34.6"
-  }
+  "devDependencies": {}
 }

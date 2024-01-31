@@ -29,8 +29,8 @@
     "build:ui": "vite build -c vite.config-ui.ts",
     "prebuild": "rm -rf dist",
     "build": "tsc && vite build && npm run types",
-    "lint:ci": "eslint --ext .ts,.tsx src",
-    "lint": "eslint --ext .ts,.tsx --fix src",
+    "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts --ext js src",
+    "lint": "eslint --ext ts --ext js src",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
     "preview": "vite preview",
     "docs:build": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/annotations src/index.ts",
@@ -59,20 +59,28 @@
   "peerDependencies": {
     "@linkurious/ogma": ">=4.5.6"
   },
-  "devDependencies": {
-    "canvas": "^2.11.2",
-    "get-port": "^7.0.0",
-    "jsdom": "^22.1.0",
-    "playwright": "1.40.0",
-    "typescript": "5.3.2",
-    "vite": "^5.0.2",
-    "vitest": "^0.34.6"
-  },
   "dependencies": {
-    "@borgar/textbox": "^1.6.0",
-    "@types/geojson": "^7946.0.13",
-    "@types/vector2js": "^2.0.2",
-    "eventemitter3": "^5.0.1",
-    "vector2js": "^2.0.1"
+    "@borgar/textbox": "1.6.0",
+    "eventemitter3": "5.0.1",
+    "vector2js": "2.0.1"
+  },
+  "devDependencies": {
+    "@linkurious/eslint-config-ogma": "^1.0.9",
+    "@types/geojson": "7946.0.13",
+    "@types/vector2js": "2.0.2",
+    "canvas": "2.11.2",
+    "eslint": "8.56.0",
+    "get-port": "7.0.0",
+    "jsdom": "24.0.0",
+    "playwright": "1.41.1",
+    "typescript": "5.3.3",
+    "vite": "5.0.12",
+    "vitest": "1.2.2"
+  },
+  "eslintConfig": {
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+      "@linkurious/eslint-config-ogma"
+    ]
   }
 }
