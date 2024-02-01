@@ -1,4 +1,4 @@
-import Ogma, { Point, Size } from '@linkurious/ogma';
+import Ogma, { Point } from '@linkurious/ogma';
 import Vector2 from 'vector2js';
 import { createArrow, defaultOptions, defaultStyle } from './defaults';
 import drawArrow, { getArrowHeight } from './render';
@@ -33,7 +33,6 @@ export class Arrows extends Editor<Arrow> {
   private startY = 0;
   private minArrowHeight = 0;
   private maxArrowHeight = 0;
-
   private handles: HTMLDivElement[] = [];
 
   constructor(
@@ -92,7 +91,8 @@ export class Arrows extends Editor<Arrow> {
     this.add(arrow);
     this.hoveredId = arrow.id;
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
-    this.startDragging(this.getById(arrow.id), pos.x, pos.y);
+    const bb = this.ogma.getContainer()?.getBoundingClientRect() || { left: 0, top: 0 };
+    this.startDragging(this.getById(arrow.id), pos.x + bb?.left, pos.y + bb.top);
     this.draggedHandle = 2;
   }
 
@@ -134,9 +134,8 @@ export class Arrows extends Editor<Arrow> {
 
     const handle = this.handles[this.draggedHandle];
     const zoom = this.ogma.view.getZoom();
-    const bb = this.ogma.getContainer()?.getBoundingClientRect();
-    const dx = (evt.clientX - this.startX - bb!.left) / zoom;
-    const dy = (evt.clientY - this.startY - bb!.top) / zoom;
+    const dx = (evt.clientX - this.startX) / zoom;
+    const dy = (evt.clientY - this.startY) / zoom;
 
     const isLine = handle.id === HANDLE_LINE;
     const isStart = handle.id === HANDLE_START;
@@ -182,19 +181,16 @@ export class Arrows extends Editor<Arrow> {
       this.selectedId !== NONE
         ? this.getById(this.selectedId)
         : this.getById(this.hoveredId);
-    const { start, end } = getArrowEndPoints(arrow);
-
-    this.editor
-      .setPosition({ x: 0, y: 0 })
-      .setSize({ width: '100%', height: '100%' } as unknown as Size);
+    const extremities = getArrowEndPoints(arrow);
+    const start = this.ogma.view.graphToScreenCoordinates(extremities.start);
+    const end = this.ogma.view.graphToScreenCoordinates(extremities.end);
+    const scale = Math.min(this.ogma.view.getZoom(), this.maxHandleScale);
     const [lineH, startH, endH] = Array.prototype.slice.call(
       this.editor.element.querySelectorAll('.handle')
     ) as HTMLDivElement[];
 
-    startH.style.left = `${start.x}px`;
-    startH.style.top = `${start.y}px`;
-    endH.style.left = `${end.x}px`;
-    endH.style.top = `${end.y}px`;
+    startH.style.transform = `translate(${start.x}px, ${start.y}px) translate(-50%, -50%) scale(${scale})`;
+    endH.style.transform = `translate(${end.x}px, ${end.y}px) translate(-50%, -50%) scale(${scale}`;
 
     const middle = {
       x: (end.x + start.x) / 2,
@@ -205,10 +201,10 @@ export class Arrows extends Editor<Arrow> {
     const vn = v.mul(1 / v.length());
     const angle = Math.atan2(vn.y, vn.x);
 
-    lineH.style.width = `${v.length()}px`;
+    lineH.style.width = `${v.length() / scale}px`;
     lineH.style.left = `${middle.x}px`;
     lineH.style.top = `${middle.y}px`;
-    lineH.style.transform = `translate(-50%, -50%) rotate(${angle}rad)`;
+    lineH.style.transform = `translate(-50%, -50%) rotate(${angle}rad) scale(${scale}) `;
   }
   public getDefaultOptions(): Arrow {
     return defaultOptions;

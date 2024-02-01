@@ -55,7 +55,7 @@ const ColorPicker = ({ color, setColor, hasTransparent }: ColorPickerProps) => {
 
 const MenuAdd = (
 ) => {
-  const { editor, arrowStyle, textStyle } = useAnnotationsContext();
+  const { editor } = useAnnotationsContext();
   const ogma = useOgma();
   function addAnnotation(type: 'arrow' | 'text') {
     const opts = ogma.getOptions();
@@ -77,7 +77,7 @@ const MenuAdd = (
         ogma.setOptions(opts);
       });
     });
-  };
+  }
 
   function save() {
     // download the file 
