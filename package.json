@@ -57,7 +57,12 @@
     "packages/ogma-annotations",
     "packages/ogma-annotations-react"
   ],
+<<<<<<< HEAD
   "devDependencies": {
     "vitepress": "^1.0.0-rc.40"
   }
 }
+=======
+  "devDependencies": {}
+}
+>>>>>>> @{-1}
