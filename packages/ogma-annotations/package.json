@@ -24,6 +24,7 @@
     "./esm": "./dist/index.mjs"
   },
   "scripts": {
+    "postinstall": "playwright install",
     "start": "npm run dev",
     "dev": "vite -c web/vite.config.ts",
     "build:ui": "vite build -c vite.config-ui.ts",
