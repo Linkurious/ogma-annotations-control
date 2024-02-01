@@ -18,6 +18,7 @@
     "postwsdocs": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
     "lint:ci": "npm run lint:ci -ws",
+    "lint": "npm run lint -ws",
     "predocs:build": "npm run wsdocs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
