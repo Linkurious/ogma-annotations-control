@@ -48,7 +48,7 @@
   "license": "Apache-2.0",
   "peerDependencies": {
     "@linkurious/ogma": "4.5.6",
-    "@linkurious/ogma-annotations": "file:../ogma-annotations",
+    "@linkurious/ogma-annotations": "1.0.8",
     "@linkurious/ogma-react": ">=4.6.1",
     "react": "18.2.0"
   },
