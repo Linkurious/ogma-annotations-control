@@ -402,7 +402,25 @@ export class Control extends EventEmitter<FeatureEvents> {
     }
     return this;
   }
-
+  /**
+  * Remove an annotation or an array of annotations from the controller
+  * @param annotation The annotation(s) to remove
+  */
+  public remove(annotation: Arrow | Text | AnnotationCollection): this {
+    if (isAnnotationCollection(annotation)) {
+      annotation.features.forEach((f) =>
+        this.remove(f as unknown as Arrow | Text)
+      );
+      return this;
+    } else if (isArrow(annotation)) {
+      this.links.remove(annotation, 'start');
+      this.links.remove(annotation, 'end');
+      this.arrows.remove(annotation.id);
+    } else {
+      this.texts.remove(annotation.id);
+    }
+    return this;
+  }
   private loadLink(arrow: Arrow) {
     if (!arrow.properties.link) return;
     for (const side of ends) {
