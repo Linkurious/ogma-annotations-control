@@ -1,5 +1,6 @@
 import Ogma, {
   CanvasLayer,
+  LayoutEndEvent,
   Node,
   NodeList,
   NodesDragProgressEvent,
@@ -116,7 +117,8 @@ export class Control extends EventEmitter<FeatureEvents> {
 
     this.ogma.events
       .on('nodesDragStart', this._onNodesDragStart)
-      .on('nodesDragProgress', this._onNodesDrag);
+      .on('nodesDragProgress', this._onNodesDrag)
+      .on('layoutEnd', this._onLayoutEnd);
 
     this.layer = ogma.layers.addCanvasLayer(this._render);
     this.layer.moveToBottom();
@@ -214,6 +216,27 @@ export class Control extends EventEmitter<FeatureEvents> {
   private _onNodesDrag = (evt: NodesDragProgressEvent<unknown, unknown>) => {
     const { dx, dy } = evt;
     this._moveNodes(evt.nodes, dx, dy);
+  };
+
+  private _onLayoutEnd = (evt: LayoutEndEvent) => {
+    evt.ids.forEach((id, i) => {
+      const links = this.links.getTargetLinks(id);
+      links.forEach(link => {
+        const arrow = this.getAnnotation(link.arrow) as Arrow;
+        const side = link.side;
+        const otherSide = getArrowSide(
+          arrow,
+          side === 'start' ? 'end' : 'start'
+        );
+        // @ts-ignore
+        const point = evt.positions.current[i];
+        const radius = this.ogma.getNode(id)!.getAttribute('radius');
+        const anchor = getAttachmentPointOnNode(otherSide, point, +radius);
+        setArrowEndPoint(arrow, side, anchor.x, anchor.y);
+      });
+    });
+    this.arrows.refreshLayer();
+    this.texts.refreshLayer();
   };
 
   private _moveNodes(nodes: NodeList, dx: number, dy: number) {
@@ -402,7 +425,25 @@ export class Control extends EventEmitter<FeatureEvents> {
     }
     return this;
   }
-
+  /**
+  * Remove an annotation or an array of annotations from the controller
+  * @param annotation The annotation(s) to remove
+  */
+  public remove(annotation: Arrow | Text | AnnotationCollection): this {
+    if (isAnnotationCollection(annotation)) {
+      annotation.features.forEach((f) =>
+        this.remove(f as unknown as Arrow | Text)
+      );
+      return this;
+    } else if (isArrow(annotation)) {
+      this.links.remove(annotation, 'start');
+      this.links.remove(annotation, 'end');
+      this.arrows.remove(annotation.id);
+    } else {
+      this.texts.remove(annotation.id);
+    }
+    return this;
+  }
   private loadLink(arrow: Arrow) {
     if (!arrow.properties.link) return;
     for (const side of ends) {

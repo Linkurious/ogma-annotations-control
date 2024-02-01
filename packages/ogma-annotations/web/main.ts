@@ -77,64 +77,6 @@ const annotationsWithLinks = {
     }
   ]
 };
-//@ts-expect-error
-const annotations = {
-  type: 'FeatureCollection',
-  features: [
-    {
-      type: 'Feature',
-      id: 0,
-      properties: {
-        type: 'text',
-        content: 'Another annotation',
-        style: {
-          fontSize: '52',
-          font: 'Helvetica',
-          strokeWidth: 1,
-          strokeColor: '#000',
-          background: 'rgba(255, 255, 255, 0.5)',
-          strokeType: 'plain',
-          padding: 12
-        }
-      },
-      geometry: {
-        type: 'Polygon',
-        coordinates: [
-          [
-            [-200, -200],
-            [-200, -50],
-            [200, -50],
-            [200, -200],
-            [-200, -200]
-          ]
-        ]
-      }
-    },
-    // {
-    //   //   head: 'arrow-plain'
-    // });
-    {
-      type: 'Feature',
-      id: 2,
-      properties: {
-        type: 'arrow',
-        style: {
-          head: 'arrow-plain',
-          strokeWidth: 2,
-          strokeColor: '#3b3',
-          strokeType: 'plain'
-        }
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [-200, 200],
-          [200, 250]
-        ]
-      }
-    }
-  ]
-};
 
 ogma.generate
   .flower({ depth: 3 })
@@ -152,20 +94,6 @@ ogma.generate
   })
   .then(() => ogma.layouts.force({ locate: true }))
   .then(() => {
-    //@ts-ignore
-    // texts.add({
-    //   text: 'Cool Annotation',
-    //   fontSize: '32px',
-    //   font: 'sans-serif',
-    //   stroke: {
-    //     width: 1,
-    //     color: '#000',
-    //     type: 'plain'
-    //   },
-    //   size: { width: 800, height: 50 },
-    //   position: { x: -400, y: 200 }
-    // });
-
     control.add(annotationsWithLinks);
   });
 
@@ -184,7 +112,6 @@ document.getElementById('add-arrow')?.addEventListener('click', () => {
         strokeColor: '#3b3',
         strokeType: 'plain'
       });
-      //control.add(arrow);
       control.startArrow(x, y, arrow);
     });
   });

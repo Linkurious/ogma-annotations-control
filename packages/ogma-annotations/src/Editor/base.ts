@@ -38,6 +38,8 @@ export default abstract class Editor<
   protected ogmaOptions: Options;
   protected shouldDetect: boolean;
   protected isDragging: boolean;
+  protected maxHandleScale = 1.5;
+
 
   constructor(ogma: Ogma, editorHtml: string) {
     super();
@@ -49,7 +51,11 @@ export default abstract class Editor<
     //handle select/unselect on click
     ogma.events
       .on(['click', 'mousemove'], this._onClickMouseMove)
-      .on('keyup', this._onKeyUp);
+      .on('keyup', this._onKeyUp)
+      // @ts-expect-error
+      .on('newFrame', () => {
+        this.refreshEditor();
+      });
 
     // Layer to draw all the annotations
     this.layer = ogma.layers.addSVGLayer({
@@ -57,11 +63,7 @@ export default abstract class Editor<
     });
     this.layer.moveToTop();
     // UI to move/resize the element
-    this.editor = ogma.layers.addOverlay({
-      element: editorHtml,
-      position: { x: 0, y: 0 },
-      size: { width: 0, height: 0 }
-    });
+    this.editor = ogma.layers.addLayer(editorHtml);
     this.editor.hide();
   }
 

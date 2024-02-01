@@ -12,10 +12,14 @@
     "publish:packages": "npm publish -ws",
     "prepublishOnly": "npm pack -ws && npm publish -ws --dry-run",
     "build": "npm run build -ws --if-present",
-    "postversion": "sync_versions",
     "wsdocs": "npm run docs:build -ws --if-present",
+    "bump:patch": "bump2version patch && npm version --no-git-tag-version patch && npm run bump:patch -ws",
+    "bump:minor": "bump2version minor && npm version --no-git-tag-version minor && npm run bump:minor -ws",
+    "bump:major": "bump2version major && npm version --no-git-tag-version major && npm run bump:major -ws",
     "postwsdocs": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
+    "lint:ci": "npm run lint:ci -ws",
+    "lint": "npm run lint -ws",
     "predocs:build": "npm run wsdocs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
@@ -50,16 +54,8 @@
   },
   "homepage": "https://github.com/Linkurious/ogma-annotations-control#readme",
   "workspaces": [
-    "packages/**"
+    "packages/ogma-annotations",
+    "packages/ogma-annotations-react"
   ],
-  "devDependencies": {
-    "@linkurious/code-tools": "^0.0.14",
-    "gh-pages": "^6.1.0",
-    "marked": "^11.0.0",
-    "playwright": "1.40.0",
-    "typedoc": "^0.25.4",
-    "typedoc-plugin-markdown": "^3.17.1",
-    "vitepress": "^1.0.0-rc.31",
-    "vitest": "^0.34.6"
-  }
+  "devDependencies": {}
 }

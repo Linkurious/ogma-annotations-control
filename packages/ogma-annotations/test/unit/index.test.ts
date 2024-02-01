@@ -1,25 +1,31 @@
 import Ogma from '@linkurious/ogma';
-import { describe, it, assert } from 'vitest';
+import { describe, it, assert, beforeEach, afterAll } from 'vitest';
 import { Control, createArrow, createText, Text } from '../../src';
 
 export const createOgma = () => new Ogma({ renderer: 'svg' });
 
 describe('text-annotations', () => {
+  let ogma: Ogma;
+  let control: Control;
+  beforeEach(() => {
+    ogma = createOgma();
+    control = new Control(ogma);
+  });
+  afterAll(() => {
+    control.destroy();
+    return ogma.destroy();
+  });
   it('should expose the control', () => {
     assert.isDefined(Control);
   });
 
   it('should be able to create a control instance', () => {
-    const ogma = createOgma();
-    const control = new Control(ogma);
     assert.isDefined(control);
     assert.isFunction(control.add);
     return Promise.resolve().then(() => ogma.destroy());
   });
 
   it('should be able to add an arrow', () => {
-    const ogma = createOgma();
-    const control = new Control(ogma);
     control.add({
       type: 'Feature',
       id: 0,
@@ -34,12 +40,10 @@ describe('text-annotations', () => {
         ]
       }
     });
-    return Promise.resolve().then(() => ogma.destroy());
+    assert.equal(control.getAnnotations().features.length, 1);
   });
 
   it('should be able to add a text', () => {
-    const ogma = createOgma();
-    const control = new Control(ogma);
     control.add({
       type: 'Feature',
       id: 0,
@@ -65,33 +69,10 @@ describe('text-annotations', () => {
         ]
       }
     });
-    return Promise.resolve().then(() => ogma.destroy());
-  });
-
-  it('should be able to add an arrow', () => {
-    const ogma = createOgma();
-    const control = new Control(ogma);
-    control.add({
-      type: 'Feature',
-      id: 0,
-      properties: {
-        type: 'arrow',
-        style: {}
-      },
-      geometry: {
-        type: 'LineString',
-        coordinates: [
-          [0, 0],
-          [1, 1]
-        ]
-      }
-    });
-    return Promise.resolve().then(() => ogma.destroy());
+    assert.equal(control.getAnnotations().features.length, 1);
   });
 
   it('should be able to add a collection', () => {
-    const ogma = createOgma();
-    const control = new Control(ogma);
     control.add({
       type: 'FeatureCollection',
       features: [
@@ -132,8 +113,38 @@ describe('text-annotations', () => {
         }
       ]
     });
+    assert.equal(control.getAnnotations().features.length, 2);
+  });
 
-    return Promise.resolve().then(() => ogma.destroy());
+  it('should be able to remove an arrow', () => {
+    const ogma = createOgma();
+    ogma.addNode({ id: 'node1' });
+    const control = new Control(ogma);
+    control.add({
+      type: 'Feature',
+      id: 0,
+      properties: {
+        type: 'arrow',
+        link: {
+          start: {
+            id: 'node1',
+            side: 'start',
+            type: 'node'
+          }
+        }
+      },
+      geometry: {
+        type: 'LineString',
+        coordinates: [
+          [0, 0],
+          [1, 1]
+        ]
+      },
+    });
+    control.remove(control.getAnnotation(0)!);
+    assert.equal(control.getAnnotations().features.length, 0);
+    // @ts-expect-error
+    assert.equal(control.links.getArrowLink(0, 'start'), null);
   });
 });
 
