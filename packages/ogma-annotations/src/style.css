@@ -32,7 +32,6 @@ svg text {
   resize: none;
   white-space: break-spaces;
   background: transparent;
-  position: relative;
   overflow: hidden;
 }
 

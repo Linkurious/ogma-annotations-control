@@ -59,15 +59,15 @@ export class Texts extends Editor<Text> {
       ogma,
       `
     <div class="annotation-text-handle">
-      <span class="handle line-handle top" data-handle-id="0"></span>
-      <span class="handle line-handle bottom" data-handle-id="1"></span>
-      <span class="handle line-handle left" data-handle-id="2"></span>
-      <span class="handle line-handle right" data-handle-id="3"></span>
-      <span class="handle top right point-handle top-right" data-handle-id="4"></span>
-      <span class="handle left top point-handle top-left" data-handle-id="5"></span>
-      <span class="handle bottom right point-handle bottom-right" data-handle-id="6"></span>
-      <span class="handle left bottom left-handle point-handle bottom-left" data-handle-id="7"></span>
-      <textarea wrap="off"></textarea>
+    <span class="handle line-handle top" data-handle-id="0"></span>
+    <span class="handle line-handle bottom" data-handle-id="1"></span>
+    <span class="handle line-handle left" data-handle-id="2"></span>
+    <span class="handle line-handle right" data-handle-id="3"></span>
+    <span class="handle top right point-handle top-right" data-handle-id="4"></span>
+    <span class="handle left top point-handle top-left" data-handle-id="5"></span>
+    <span class="handle bottom right point-handle bottom-right" data-handle-id="6"></span>
+    <span class="handle left bottom left-handle point-handle bottom-left" data-handle-id="7"></span>
+    <textarea wrap="off"></textarea>
     </div>
   `
     );
@@ -311,7 +311,9 @@ export class Texts extends Editor<Text> {
     if (+this.selectedId < 0 && +this.hoveredId < 0) return;
     const t = this.getById(this.selectedId) || this.getById(this.hoveredId);
     const size = getTextSize(t);
-    const position = getTextPosition(t);
+    const position = this.ogma.view.graphToScreenCoordinates(getTextPosition(t));
+    const zoom = this.ogma.view.getZoom();
+    const scale = Math.min(zoom, this.maxHandleScale);
 
     const {
       font,
@@ -320,14 +322,19 @@ export class Texts extends Editor<Text> {
       background,
       padding = 0
     } = t.properties.style || defaultStyle;
+    const scaledFontSize = fontSize;
     this.textArea.value = t.properties.content;
-    this.editor.setPosition({ x: position.x, y: position.y });
-    this.editor.setSize(size);
-    //this.textArea.style.font = `${fontSize} ${font}`;
+    this.editor.element.style.transform = `translate(${position.x}px, ${position.y}px)`
+      + `translate(-50%, -50%)`
+      + `translate(${size.width / 2 * zoom}px, ${size.height / 2 * zoom}px)`
+      + `scale(${scale})`;
+    this.editor.element.style.width = `${size.width}px`;
+    this.editor.element.style.height = `${size.height}px`;
+    this.textArea.style.font = `${scaledFontSize} ${font}`;
     this.textArea.style.fontFamily = font || 'sans-serif';
-    this.textArea.style.fontSize = `${fontSize}px`;
+    this.textArea.style.fontSize = `${scaledFontSize}px`;
     this.textArea.style.padding = `${padding}px`;
-    this.textArea.style.lineHeight = `${fontSize}px`;
+    this.textArea.style.lineHeight = `${scaledFontSize}px`;
 
     this.textArea.style.boxSizing = 'border-box';
     this.textArea.style.color = color || 'black';
