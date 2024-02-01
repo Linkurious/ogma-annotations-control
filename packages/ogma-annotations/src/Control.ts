@@ -1,5 +1,6 @@
 import Ogma, {
   CanvasLayer,
+  LayoutEndEvent,
   Node,
   NodeList,
   NodesDragProgressEvent,
@@ -116,7 +117,8 @@ export class Control extends EventEmitter<FeatureEvents> {
 
     this.ogma.events
       .on('nodesDragStart', this._onNodesDragStart)
-      .on('nodesDragProgress', this._onNodesDrag);
+      .on('nodesDragProgress', this._onNodesDrag)
+      .on('layoutEnd', this._onLayoutEnd);
 
     this.layer = ogma.layers.addCanvasLayer(this._render);
     this.layer.moveToBottom();
@@ -214,6 +216,26 @@ export class Control extends EventEmitter<FeatureEvents> {
   private _onNodesDrag = (evt: NodesDragProgressEvent<unknown, unknown>) => {
     const { dx, dy } = evt;
     this._moveNodes(evt.nodes, dx, dy);
+  };
+
+  private _onLayoutEnd = (evt: LayoutEndEvent) => {
+    evt.ids.forEach((id, i) => {
+      const links = this.links.getTargetLinks(id);
+      links.forEach(link => {
+        const arrow = this.getAnnotation(link.arrow) as Arrow;
+        const side = link.side;
+        const otherSide = getArrowSide(
+          arrow,
+          side === 'start' ? 'end' : 'start'
+        );
+        const point = evt.positions.current[i];
+        const radius = this.ogma.getNode(id)!.getAttribute('radius');
+        const anchor = getAttachmentPointOnNode(otherSide, point, +radius);
+        setArrowEndPoint(arrow, side, anchor.x, anchor.y);
+      });
+    });
+    this.arrows.refreshLayer();
+    this.texts.refreshLayer();
   };
 
   private _moveNodes(nodes: NodeList, dx: number, dy: number) {
