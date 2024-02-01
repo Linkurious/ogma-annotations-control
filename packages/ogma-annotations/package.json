@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Headless annotation plugin for Ogma",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
@@ -69,6 +69,7 @@
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "^1.0.9",
+    "@linkurious/ogma-annotations": "^1.0.8",
     "@types/geojson": "7946.0.13",
     "@types/vector2js": "2.0.2",
     "canvas": "2.11.2",
@@ -76,6 +77,8 @@
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
     "playwright": "1.41.1",
+    "typedoc": "^0.25.7",
+    "typedoc-plugin-markdown": "^3.17.1",
     "typescript": "5.3.3",
     "vite": "5.0.12",
     "vitest": "1.2.2"
