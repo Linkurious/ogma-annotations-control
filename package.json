@@ -4,12 +4,11 @@
   "description": "A tool to draw texts and arrows on top of Ogma",
   "main": "index.js",
   "scripts": {
-    "prepack": "npm publish -ws",
     "e2e:test": "npm run test:e2e -ws --if-present",
     "test": "npm run test -ws --if-present",
     "test:unit": "npm run test:unit -ws --if-present",
     "publish:packages": "npm publish -ws",
-    "prepublishOnly": "npm pack -ws && npm publish -ws --dry-run",
+    "prepublishOnly": "#npm pack -ws && npm publish -ws --dry-run",
     "build": "npm run build -ws --if-present",
     "wsdocs": "npm run docs:build -ws --if-present",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch && npm run bump:patch -ws",
