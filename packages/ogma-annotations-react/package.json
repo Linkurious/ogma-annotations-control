@@ -25,6 +25,7 @@
   "scripts": {
     "dev": "vite -c web/vite.config.ts",
     "build": "tsc --p ./tsconfig-build.json && vite build",
+    "postversion": "env; npm i --save-peer @linkurious/ogma-annotations@${npm_new_version}",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
