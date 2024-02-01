@@ -228,6 +228,7 @@ export class Control extends EventEmitter<FeatureEvents> {
           arrow,
           side === 'start' ? 'end' : 'start'
         );
+        // @ts-ignore
         const point = evt.positions.current[i];
         const radius = this.ogma.getNode(id)!.getAttribute('radius');
         const anchor = getAttachmentPointOnNode(otherSide, point, +radius);
