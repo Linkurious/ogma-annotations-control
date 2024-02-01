@@ -4,7 +4,6 @@
   "description": "A tool to draw texts and arrows on top of Ogma",
   "main": "index.js",
   "scripts": {
-    "postinstall": "playwright install",
     "prepack": "npm publish -ws",
     "e2e:test": "npm run test:e2e -ws --if-present",
     "test": "npm run test -ws --if-present",
