@@ -12,7 +12,7 @@
     "prepublishOnly": "npm pack -ws && npm publish -ws --dry-run",
     "build": "npm run build -ws --if-present",
     "wsdocs": "npm run docs:build -ws --if-present",
-    "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
+    "bump:patch": "bump2version patch && npm version --no-git-tag-version patchi && npm run bump:patch -ws",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "postwsdocs": "node scripts/cleanup-md.mjs",
