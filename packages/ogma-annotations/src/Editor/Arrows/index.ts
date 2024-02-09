@@ -201,10 +201,10 @@ export class Arrows extends Editor<Arrow> {
     const vn = v.mul(1 / v.length());
     const angle = Math.atan2(vn.y, vn.x);
 
-    lineH.style.width = `${v.length() / scale}px`;
+    lineH.style.width = `${v.length()}px`;
     lineH.style.left = `${middle.x}px`;
     lineH.style.top = `${middle.y}px`;
-    lineH.style.transform = `translate(-50%, -50%) rotate(${angle}rad) scale(${scale}) `;
+    lineH.style.transform = `translate(-50%, -50%) rotate(${angle}rad)`;
   }
   public getDefaultOptions(): Arrow {
     return defaultOptions;
