@@ -314,8 +314,6 @@ export class Texts extends Editor<Text> {
     const size = getTextSize(t);
     const position = this.ogma.view.graphToScreenCoordinates(getTextPosition(t));
     const zoom = this.ogma.view.getZoom();
-    const scale = Math.min(zoom, this.maxHandleScale);
-
     const {
       font,
       fontSize,
@@ -323,7 +321,7 @@ export class Texts extends Editor<Text> {
       background,
       padding = 0
     } = t.properties.style || defaultStyle;
-    const scaledFontSize = fontSize * zoom;
+    const scaledFontSize = +(fontSize as string) * zoom;
     this.textArea.value = t.properties.content;
     this.editor.element.style.transform = `translate(${position.x}px, ${position.y}px)`
       + `translate(-50%, -50%)`
