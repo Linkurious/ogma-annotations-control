@@ -212,7 +212,8 @@ export class Texts extends Editor<Text> {
 
   private onViewChanged = () => {
     const w = Math.max(2, this.handleSize / this.ogma.view.getZoom());
-    document.documentElement.style.setProperty('--handle-width', `${w}px`);
+    document.documentElement.style.setProperty('--handle-scale', `${1 / w}`);
+
   };
 
   private _onInput = () => {
@@ -313,8 +314,6 @@ export class Texts extends Editor<Text> {
     const size = getTextSize(t);
     const position = this.ogma.view.graphToScreenCoordinates(getTextPosition(t));
     const zoom = this.ogma.view.getZoom();
-    const scale = Math.min(zoom, this.maxHandleScale);
-
     const {
       font,
       fontSize,
@@ -322,14 +321,13 @@ export class Texts extends Editor<Text> {
       background,
       padding = 0
     } = t.properties.style || defaultStyle;
-    const scaledFontSize = fontSize;
+    const scaledFontSize = +(fontSize as string) * zoom;
     this.textArea.value = t.properties.content;
     this.editor.element.style.transform = `translate(${position.x}px, ${position.y}px)`
       + `translate(-50%, -50%)`
-      + `translate(${size.width / 2 * zoom}px, ${size.height / 2 * zoom}px)`
-      + `scale(${scale})`;
-    this.editor.element.style.width = `${size.width}px`;
-    this.editor.element.style.height = `${size.height}px`;
+      + `translate(${size.width / 2 * zoom}px, ${size.height / 2 * zoom}px)`;
+    this.editor.element.style.width = `${size.width * zoom}px`;
+    this.editor.element.style.height = `${size.height * zoom}px`;
     this.textArea.style.font = `${scaledFontSize} ${font}`;
     this.textArea.style.fontFamily = font || 'sans-serif';
     this.textArea.style.fontSize = `${scaledFontSize}px`;
