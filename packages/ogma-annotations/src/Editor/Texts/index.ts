@@ -268,7 +268,7 @@ export class Texts extends Editor<Text> {
         return;
       const g = createSVGElement<SVGGElement>('g');
       g.setAttribute('fill', `${color}`);
-      g.setAttribute('font-size', `${fontSize}`);
+      g.setAttribute('font-size', `${fontSize}px`);
       g.setAttribute('font-family', `${font}`);
 
       // rect is used for background and stroke
@@ -321,7 +321,7 @@ export class Texts extends Editor<Text> {
       background,
       padding = 0
     } = t.properties.style || defaultStyle;
-    const scaledFontSize = +(fontSize as string) * zoom;
+    const scaledFontSize = (fontSize || 1) * zoom;
     this.textArea.value = t.properties.content;
     this.editor.element.style.transform = `translate(${position.x}px, ${position.y}px)`
       + `translate(-50%, -50%)`

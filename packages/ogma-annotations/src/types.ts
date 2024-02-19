@@ -109,8 +109,8 @@ export type StrokeOptions = {
 export interface TextStyle extends StrokeOptions {
   /** Helvetica, sans-serif...  */
   font?: string;
-  /** 12px, 1em... */
-  fontSize?: string;
+  /** Font size, in pixels */
+  fontSize?: number;
   /** text color: #f00, yellow...*/
   color?: string;
   /** background color: empty for transparent #f00, yellow...*/
