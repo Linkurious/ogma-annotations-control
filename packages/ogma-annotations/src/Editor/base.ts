@@ -55,6 +55,7 @@ export default abstract class Editor<
       // @ts-expect-error
       .on('newFrame', () => {
         this.refreshEditor();
+        this.refreshDrawing();
       });
 
     // Layer to draw all the annotations
@@ -301,6 +302,9 @@ export default abstract class Editor<
 
   public refreshLayer() {
     this.layer.refresh();
+  }
+  public refreshDrawing() {
+
   }
 
   public getElements() {

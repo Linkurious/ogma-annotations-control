@@ -247,6 +247,7 @@ export class Texts extends Editor<Text> {
   public draw(svg: SVGSVGElement): void {
     svg.innerHTML = '';
     const styleContent = '';
+    const angle = this.ogma.view.getAngle() * 180 / Math.PI;
     this.elements.forEach((annotation, i) => {
       const className = `class${i}`;
       const size = getTextSize(annotation);
@@ -292,7 +293,7 @@ export class Texts extends Editor<Text> {
       }
       g.appendChild(rect);
       drawText(annotation, g);
-      g.setAttribute('transform', `translate(${position.x},${position.y})`);
+      g.setAttribute('transform', `translate(${position.x},${position.y}) rotate(${angle})`);
       g.classList.add(className);
       g.setAttribute('data-annotation', `${annotation.id}`);
       g.setAttribute('data-annotation-type', 'text');
@@ -302,6 +303,16 @@ export class Texts extends Editor<Text> {
     style.innerHTML = styleContent;
     if (!svg.firstChild) return;
     svg.insertBefore(style, svg.firstChild);
+  }
+
+  public refreshDrawing(): void {
+    const angle = this.ogma.view.getAngle() * 180 / Math.PI;
+    [...this.layer.element.children].forEach((g) => {
+      const transform = g.getAttribute('transform');
+      const translate = transform?.match(/translate\(([^)]+)\)/);
+      if (!translate) return;
+      g.setAttribute('transform', `translate(${translate[1]}) rotate(${angle})`);
+    });
   }
 
   public getDefaultOptions(): Text {
