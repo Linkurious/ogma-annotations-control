@@ -124,25 +124,18 @@ svg text {
 .point-handle.bottom-left,
 .point-handle.bottom-right {
   top: 100%;
-  /* calc(
-    100% - (1.5 * var(--point-handle-width) - var(--handle-width)) * 0.5
-  ); */
 }
 .point-handle.top-left,
 .point-handle.top-right {
   top: 0;
-  /* calc((var(--point-handle-width) + var(--handle-width)) * -0.5); */
 }
 .point-handle.bottom-left,
 .point-handle.top-left {
   left: 0;
-  /* calc((var(--point-handle-width) + var(--handle-width)) * -0.5); */
 }
 .point-handle.bottom-right,
 .point-handle.top-right {
-  /* right: calc((var(--point-handle-width) + var(--handle-width)) * -0.5); */
   left: 100%;
-  /* calc(100% - (var(--point-handle-width) + var(--handle-width)) * 0.25); */
 }
 
 .arrow-handle > .handle {
