@@ -118,7 +118,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.ogma.events
       .on('nodesDragStart', this._onNodesDragStart)
       .on('nodesDragProgress', this._onNodesDrag)
-      .on('layoutEnd', this._onLayoutEnd);
+      .on('layoutEnd', this._onLayoutEnd)
+      .on(['viewChanged', 'rotate'], () => {
+        this.refreshTextLinks();
+      });
+
 
     this.layer = ogma.layers.addCanvasLayer(this._render);
     this.layer.moveToBottom();
@@ -135,6 +139,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       const position = getTextPosition(this.textToMagnet);
       const { x, y } = new Vector2(magnet.x, magnet.y)
         .mul({ x: size.width, y: size.height })
+        .rotateRadians(this.ogma.view.getAngle())
         .add(position);
       ctx.moveTo(x, y);
       ctx.arc(x, y, this.options.magnetHandleRadius / z, 0, Math.PI * 2);
@@ -167,12 +172,14 @@ export class Control extends EventEmitter<FeatureEvents> {
         const position = getTextPosition(a);
         const pt = new Vector2(connectionPoint!.x, connectionPoint!.y)
           .mul({ x: size.width, y: size.height })
+          .rotateRadians(this.ogma.view.getAngle())
           .add(position);
         arrow.geometry.coordinates[side === 'start' ? 0 : 1] = [pt.x, pt.y];
       });
       if (this.activeLinks.length) this.arrows.refreshLayer();
     }
     this.layer.refresh();
+    this.emit(EVT_DRAG, a, key);
   };
 
   private _onFeatureDragEnd = (a: Text | Arrow) => {
@@ -194,18 +201,20 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.textToMagnet = undefined;
     this.annotations.forEach((o) => o.enableDetection());
     this.layer.refresh();
+    this.emit(EVT_DRAG_END, a);
   };
 
   private _onFeatureDragStart = (d: Arrow | Text) => {
     this.textToMagnet = undefined;
     if (isArrow(d)) this.dragged = d as Arrow;
     else if (isText(d))
-      this.activeLinks.push(...this.links.getTargetLinks(d.id));
+      this.activeLinks.push(...this.links.getTargetLinks(d.id, 'text'));
     this.annotations.forEach((a) => {
       const selected = a.getSelectedFeature();
       if (selected && selected !== d) a.unhover().unselect();
       a.disableDetection();
     });
+    this.emit(EVT_DRAG_START, d);
   };
 
   private _onNodesDragStart = () => {
@@ -220,7 +229,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private _onLayoutEnd = (evt: LayoutEndEvent) => {
     evt.ids.forEach((id, i) => {
-      const links = this.links.getTargetLinks(id);
+      const links = this.links.getTargetLinks(id, 'node');
       links.forEach(link => {
         const arrow = this.getAnnotation(link.arrow) as Arrow;
         const side = link.side;
@@ -241,7 +250,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private _moveNodes(nodes: NodeList, dx: number, dy: number) {
     nodes.forEach((node) => {
-      const links = this.links.getTargetLinks(node.getId());
+      const links = this.links.getTargetLinks(node.getId(), 'node');
       const pos = node.getPosition();
       links.forEach((link) => {
         const arrow = this.getAnnotation(link.arrow) as Arrow;
@@ -342,6 +351,26 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_SELECT, this.selected);
   };
 
+  private refreshTextLinks() {
+    let shouldRefresh = false;
+    this.links.forEach(({ connectionPoint, targetType, target, arrow, side }) => {
+      if (targetType !== 'text') return;
+      shouldRefresh = true;
+
+      const text = this.getAnnotation(target) as Text;
+      const a = this.getAnnotation(arrow) as Arrow;
+      const size = getTextSize(text);
+      const position = getTextPosition(text);
+      const point = new Vector2(connectionPoint!.x, connectionPoint!.y)
+        .mul({ x: size.width, y: size.height })
+        .rotateRadians(this.ogma.view.getAngle())
+        .add(position);
+      setArrowEndPoint(a, side, point.x, point.y);
+    });
+    if (!shouldRefresh) return;
+    this.arrows.refreshLayer();
+  }
+
   /**
    * @returns the currently selected annotation
    */
@@ -356,9 +385,14 @@ export class Control extends EventEmitter<FeatureEvents> {
       const position = getTextPosition(textToMagnet);
       const mPoint = new Vector2(magnet.x, magnet.y)
         .mul({ x: size.width, y: size.height })
+        .rotateRadians(this.ogma.view.getAngle())
         .add(position);
       const dist = mPoint.sub(point).length();
-      const scaledRadius = this.options.magnetRadius * this.ogma.view.getZoom();
+      const scaledRadius = Math.min(this.options.magnetRadius * this.ogma.view.getZoom(),
+        // when really zoomed in: avoid to snap on too far away magnets
+        size.width / 2,
+        size.height / 2
+      );
       if (dist < Math.max(scaledRadius, this.options.magnetHandleRadius)) {
         res = {
           point: mPoint,
@@ -411,6 +445,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       annotation.features.forEach((f) =>
         this.add(f as unknown as Arrow | Text)
       );
+      this.arrows.refreshLayer();
       return this;
     }
     switch (annotation.properties.type) {
@@ -456,6 +491,11 @@ export class Control extends EventEmitter<FeatureEvents> {
         const targetNode = this.ogma.getNode(link.id);
         if (!targetNode) continue;
         this.links.add(arrow, side, link.id, link.type, link.magnet!);
+        const point = targetNode.getPosition();
+        const radius = targetNode!.getAttribute('radius') || 0;
+        const otherSide = getArrowSide(arrow, side === 'start' ? 'end' : 'start');
+        const anchor = getAttachmentPointOnNode(otherSide, point, +radius);
+        setArrowEndPoint(arrow, side, anchor.x, anchor.y);
       }
     }
   }

@@ -33,7 +33,7 @@ export const RELATIVE_PADDING = 0.25;
 
 export const defaultTextStyle: TextStyle = {
   font: 'Roboto',
-  fontSize: fontSizes[2].toString(),
+  fontSize: fontSizes[2],
   padding: fontSizes[2] * RELATIVE_PADDING,
   color: BLACK,
   strokeType: TRANSPARENT,

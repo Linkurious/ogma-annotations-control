@@ -3,7 +3,7 @@ import { AnnotationOptions, Text, TextStyle } from '../../types';
 
 export const defaultStyle: TextStyle = {
   font: 'sans-serif',
-  fontSize: '12',
+  fontSize: 12,
   color: 'black',
   background: '',
   strokeWidth: 1,

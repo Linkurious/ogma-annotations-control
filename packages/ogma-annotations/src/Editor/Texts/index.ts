@@ -1,4 +1,5 @@
 import Ogma, { Point } from '@linkurious/ogma';
+import Vector2 from 'vector2js';
 import {
   createText,
   defaultControllerOptions,
@@ -71,6 +72,7 @@ export class Texts extends Editor<Text> {
     </div>
   `
     );
+    this.showeditorOnHover = false;
     this.handleSize = (defaultControllerOptions.handleSize ||
       options.textHandleSize) as number;
     this.placeholder =
@@ -182,14 +184,20 @@ export class Texts extends Editor<Text> {
     const zoom = this.ogma.view.getZoom();
     const dx = (evt.clientX - this.startX) / zoom;
     const dy = (evt.clientY - this.startY) / zoom;
-    const x = isLeft || isLine ? this.rect.x + dx : this.rect.x;
-    const y = isTop || isLine ? this.rect.y + dy : this.rect.y;
+    const angle = this.ogma.view.getAngle();
+    const delta = new Vector2(dx, dy).rotateRadians(angle);
+    if ((isBottom && isLeft) || (isTop && isRight)) {
+      delta.y = 0;
+      delta.x = 0;
+    }
+    const x = isLeft || isLine ? this.rect.x + delta.x : this.rect.x;
+    const y = isTop || isLine ? this.rect.y + delta.y : this.rect.y;
     const width = Math.max(
-      this.rect.width + dx * (isLine ? 0 : isLeft ? -1 : isRight ? 1 : 0),
+      this.rect.width + dx * (isLine || isLeft ? 0 : 1),
       minSize
     );
     const height = Math.max(
-      this.rect.height + dy * (isLine ? 0 : isTop ? -1 : isBottom ? 1 : 0),
+      this.rect.height + dy * (isLine || isTop ? 0 : 1),
       minSize
     );
     setTextBbox(this.annotation, x, y, width, height);
@@ -231,22 +239,25 @@ export class Texts extends Editor<Text> {
 
   public detect({ x, y }: Point, margin = 0): Text | undefined {
     // check if the pointer is within the bounding box of one of the texts
+    const p = new Vector2(x, y);
+    const angle = this.ogma.view.getAngle();
     return this.elements.find((a) => {
       const { x: tx, y: ty } = getTextPosition(a);
       const { width, height } = getTextSize(a);
+      const origin = new Vector2(tx, ty);
+      const { x: dx, y: dy } = p.sub(origin).rotateRadians(-angle);
 
-      return (
-        tx - margin < x &&
-        ty - margin < y &&
-        tx + width + margin > x &&
-        ty + height + margin > y
-      );
+      return dx > -margin
+        && dx < width + margin
+        && dy > -margin
+        && dy < height + margin;
     });
   }
 
   public draw(svg: SVGSVGElement): void {
     svg.innerHTML = '';
     const styleContent = '';
+    const angle = this.ogma.view.getAngle() * 180 / Math.PI;
     this.elements.forEach((annotation, i) => {
       const className = `class${i}`;
       const size = getTextSize(annotation);
@@ -261,14 +272,12 @@ export class Texts extends Editor<Text> {
         strokeType,
         background
       } = annotation.properties.style || defaultStyle;
-      if (
-        id === this.selectedId ||
-        (this.selectedId === -1 && id === this.hoveredId)
-      )
+      if (id === this.selectedId)
         return;
       const g = createSVGElement<SVGGElement>('g');
+      g.classList.add('annotation-text');
       g.setAttribute('fill', `${color}`);
-      g.setAttribute('font-size', `${fontSize}`);
+      g.setAttribute('font-size', `${fontSize}px`);
       g.setAttribute('font-family', `${font}`);
 
       // rect is used for background and stroke
@@ -292,7 +301,7 @@ export class Texts extends Editor<Text> {
       }
       g.appendChild(rect);
       drawText(annotation, g);
-      g.setAttribute('transform', `translate(${position.x},${position.y})`);
+      g.setAttribute('transform', `translate(${position.x},${position.y}) rotate(${angle})`);
       g.classList.add(className);
       g.setAttribute('data-annotation', `${annotation.id}`);
       g.setAttribute('data-annotation-type', 'text');
@@ -302,6 +311,16 @@ export class Texts extends Editor<Text> {
     style.innerHTML = styleContent;
     if (!svg.firstChild) return;
     svg.insertBefore(style, svg.firstChild);
+  }
+
+  public refreshDrawing(): void {
+    const angle = this.ogma.view.getAngle() * 180 / Math.PI;
+    [...this.layer.element.children].forEach((g) => {
+      const transform = g.getAttribute('transform');
+      const translate = transform?.match(/translate\(([^)]+)\)/);
+      if (!translate) return;
+      g.setAttribute('transform', `translate(${translate[1]}) rotate(${angle})`);
+    });
   }
 
   public getDefaultOptions(): Text {
@@ -321,7 +340,7 @@ export class Texts extends Editor<Text> {
       background,
       padding = 0
     } = t.properties.style || defaultStyle;
-    const scaledFontSize = +(fontSize as string) * zoom;
+    const scaledFontSize = (fontSize || 1) * zoom;
     this.textArea.value = t.properties.content;
     this.editor.element.style.transform = `translate(${position.x}px, ${position.y}px)`
       + `translate(-50%, -50%)`

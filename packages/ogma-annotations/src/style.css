@@ -1,6 +1,11 @@
 :root {
   --handle-width: 2px;
   --point-handle-width: calc(3 * var(--handle-width));
+  --point-handle-border: 2px;
+  --point-handle-total: calc(
+    var(--point-handle-width) + var(--point-handle-border)
+  );
+  --handle-color: #38e;
 }
 
 svg text {
@@ -12,7 +17,7 @@ svg text {
 
 .handle {
   position: absolute;
-  background-color: #38e;
+  background-color: var(--handle-color);
 }
 
 .handle.line {
@@ -85,8 +90,25 @@ svg text {
 }
 
 .point-handle {
+  border-radius: 50%;
+  background-color: white;
+  transform-origin: center;
+  transform: translate(-50%, -50%);
+  border: var(--point-handle-border) solid var(--handle-color);
   width: var(--point-handle-width);
   height: var(--point-handle-width);
+}
+.point-handle.top-left {
+  transform: translate(-75%, -75%);
+}
+.point-handle.top-right {
+  transform: translate(-25%, -75%);
+}
+.point-handle.bottom-left {
+  transform: translate(-75%, -25%);
+}
+.point-handle.bottom-right {
+  transform: translate(-25%, -25%);
 }
 
 .point-handle.top-left,
@@ -101,20 +123,19 @@ svg text {
 
 .point-handle.bottom-left,
 .point-handle.bottom-right {
-  top: calc(100% - (var(--point-handle-width) - var(--handle-width)) * 0.5);
+  top: 100%;
 }
 .point-handle.top-left,
 .point-handle.top-right {
-  top: calc((var(--point-handle-width) + var(--handle-width)) * -0.5);
+  top: 0;
 }
 .point-handle.bottom-left,
 .point-handle.top-left {
-  left: calc((var(--point-handle-width) + var(--handle-width)) * -0.5);
+  left: 0;
 }
 .point-handle.bottom-right,
 .point-handle.top-right {
-  /* right: calc((var(--point-handle-width) + var(--handle-width)) * -0.5); */
-  left: calc(100% - (var(--point-handle-width) + var(--handle-width)) * 0.25);
+  left: 100%;
 }
 
 .arrow-handle > .handle {
@@ -141,4 +162,12 @@ svg text {
 
 .active {
   background-color: #38e;
+}
+
+.annotation-text {
+  pointer-events: visible;
+  cursor: pointer;
+}
+.annotation-text:hover > rect {
+  stroke: var(--handle-color);
 }
