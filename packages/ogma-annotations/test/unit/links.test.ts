@@ -135,7 +135,7 @@ describe('Links', () => {
   it('should return an empty array when there are no links for the given targetId', () => {
     const links = new Links();
     const targetId = 'target1';
-    const result = links.getTargetLinks(targetId);
+    const result = links.getTargetLinks(targetId, 'node').concat(links.getTargetLinks(targetId, 'text'));
     expect(result).toEqual([]);
   });
 
@@ -148,7 +148,7 @@ describe('Links', () => {
     const targetId = 'target1';
     const connectionPoint = { x: 0, y: 0 };
     links.add(arrow, side, targetId, 'node', connectionPoint);
-    const result = links.getTargetLinks(targetId);
+    const result = links.getTargetLinks(targetId, 'node');
     expect(result).toEqual<Link[]>([
       {
         id: expect.any(String),
@@ -174,7 +174,7 @@ describe('Links', () => {
     const connectionPoint = { x: 0, y: 0 };
     links.add(arrow1, side1, targetId, 'node', connectionPoint);
     links.add(arrow2, side2, targetId, 'node', connectionPoint);
-    const result = links.getTargetLinks(targetId);
+    const result = links.getTargetLinks(targetId, 'node');
     const expected: Link[] = [
       {
         id: expect.any(String),
