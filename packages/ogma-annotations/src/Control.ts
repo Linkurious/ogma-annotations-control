@@ -120,7 +120,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on('nodesDragProgress', this._onNodesDrag)
       .on('layoutEnd', this._onLayoutEnd)
       .on('viewChanged', () => {
-        this.refreshMagnets();
+        this.refreshTextLinks();
       });
 
 
@@ -348,7 +348,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_SELECT, this.selected);
   };
 
-  private refreshMagnets() {
+  private refreshTextLinks() {
     let shouldRefresh = false;
     this.links.forEach(({ connectionPoint, targetType, target, arrow, side }) => {
       if (targetType !== 'text') return;
@@ -442,6 +442,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       annotation.features.forEach((f) =>
         this.add(f as unknown as Arrow | Text)
       );
+      this.arrows.refreshLayer();
       return this;
     }
     switch (annotation.properties.type) {
@@ -487,6 +488,11 @@ export class Control extends EventEmitter<FeatureEvents> {
         const targetNode = this.ogma.getNode(link.id);
         if (!targetNode) continue;
         this.links.add(arrow, side, link.id, link.type, link.magnet!);
+        const point = targetNode.getPosition();
+        const radius = targetNode!.getAttribute('radius') || 0;
+        const otherSide = getArrowSide(arrow, side === 'start' ? 'end' : 'start');
+        const anchor = getAttachmentPointOnNode(otherSide, point, +radius);
+        setArrowEndPoint(arrow, side, anchor.x, anchor.y);
       }
     }
   }
