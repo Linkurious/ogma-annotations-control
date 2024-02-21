@@ -133,10 +133,10 @@ export class Arrows extends Editor<Arrow> {
     if (!this.isDragging || this.draggedHandle === NONE) return;
 
     const handle = this.handles[this.draggedHandle];
-    const zoom = this.ogma.view.getZoom();
-    const dx = (evt.clientX - this.startX) / zoom;
-    const dy = (evt.clientY - this.startY) / zoom;
-
+    const angle = this.ogma.view.getAngle();
+    const { x: dx, y: dy } = new Vector2(evt.clientX - this.startX, evt.clientY - this.startY)
+      .divScalar(this.ogma.view.getZoom())
+      .rotateRadians(angle);
     const isLine = handle.id === HANDLE_LINE;
     const isStart = handle.id === HANDLE_START;
     const isEnd = handle.id === HANDLE_END;
