@@ -119,7 +119,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on('nodesDragStart', this._onNodesDragStart)
       .on('nodesDragProgress', this._onNodesDrag)
       .on('layoutEnd', this._onLayoutEnd)
-      .on('viewChanged', () => {
+      .on(['viewChanged', 'rotate'], () => {
         this.refreshTextLinks();
       });
 
