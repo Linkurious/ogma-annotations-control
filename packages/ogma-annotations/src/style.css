@@ -142,3 +142,8 @@ svg text {
 .active {
   background-color: #38e;
 }
+
+.annotation-text {
+  pointer-events: visible;
+  cursor: pointer;
+}

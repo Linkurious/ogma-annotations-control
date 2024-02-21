@@ -72,6 +72,7 @@ export class Texts extends Editor<Text> {
     </div>
   `
     );
+    this.showeditorOnHover = false;
     this.handleSize = (defaultControllerOptions.handleSize ||
       options.textHandleSize) as number;
     this.placeholder =
@@ -271,12 +272,10 @@ export class Texts extends Editor<Text> {
         strokeType,
         background
       } = annotation.properties.style || defaultStyle;
-      if (
-        id === this.selectedId ||
-        (this.selectedId === -1 && id === this.hoveredId)
-      )
+      if (id === this.selectedId)
         return;
       const g = createSVGElement<SVGGElement>('g');
+      g.classList.add('annotation-text');
       g.setAttribute('fill', `${color}`);
       g.setAttribute('font-size', `${fontSize}px`);
       g.setAttribute('font-family', `${font}`);
