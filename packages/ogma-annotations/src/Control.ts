@@ -135,6 +135,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       const position = getTextPosition(this.textToMagnet);
       const { x, y } = new Vector2(magnet.x, magnet.y)
         .mul({ x: size.width, y: size.height })
+        .rotateRadians(this.ogma.view.getAngle())
         .add(position);
       ctx.moveTo(x, y);
       ctx.arc(x, y, this.options.magnetHandleRadius / z, 0, Math.PI * 2);
@@ -167,6 +168,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         const position = getTextPosition(a);
         const pt = new Vector2(connectionPoint!.x, connectionPoint!.y)
           .mul({ x: size.width, y: size.height })
+          .rotateRadians(-this.ogma.view.getAngle())
           .add(position);
         arrow.geometry.coordinates[side === 'start' ? 0 : 1] = [pt.x, pt.y];
       });
@@ -356,9 +358,14 @@ export class Control extends EventEmitter<FeatureEvents> {
       const position = getTextPosition(textToMagnet);
       const mPoint = new Vector2(magnet.x, magnet.y)
         .mul({ x: size.width, y: size.height })
+        .rotateRadians(this.ogma.view.getAngle())
         .add(position);
       const dist = mPoint.sub(point).length();
-      const scaledRadius = this.options.magnetRadius * this.ogma.view.getZoom();
+      const scaledRadius = Math.min(this.options.magnetRadius * this.ogma.view.getZoom(),
+        // when really zoomed in: avoid to snap on too far away magnets
+        size.width / 2,
+        size.height / 2
+      );
       if (dist < Math.max(scaledRadius, this.options.magnetHandleRadius)) {
         res = {
           point: mPoint,
