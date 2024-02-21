@@ -179,6 +179,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       if (this.activeLinks.length) this.arrows.refreshLayer();
     }
     this.layer.refresh();
+    this.emit(EVT_DRAG, a, key);
   };
 
   private _onFeatureDragEnd = (a: Text | Arrow) => {
@@ -200,6 +201,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.textToMagnet = undefined;
     this.annotations.forEach((o) => o.enableDetection());
     this.layer.refresh();
+    this.emit(EVT_DRAG_END, a);
   };
 
   private _onFeatureDragStart = (d: Arrow | Text) => {
@@ -212,6 +214,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       if (selected && selected !== d) a.unhover().unselect();
       a.disableDetection();
     });
+    this.emit(EVT_DRAG_START, d);
   };
 
   private _onNodesDragStart = () => {
