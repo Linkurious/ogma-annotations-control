@@ -109,8 +109,8 @@ export type StrokeOptions = {
 export interface TextStyle extends StrokeOptions {
   /** Helvetica, sans-serif...  */
   font?: string;
-  /** 12px, 1em... */
-  fontSize?: string;
+  /** Font size, in pixels */
+  fontSize?: number;
   /** text color: #f00, yellow...*/
   color?: string;
   /** background color: empty for transparent #f00, yellow...*/
@@ -189,6 +189,19 @@ export type FeatureEvents = {
    * Event trigerred when linking an arrow to a text or node
    */
   [EVT_LINK]: (evt: { arrow: Arrow; link: Link; }) => void;
+  /**
+   * Event trigerred when starting to drag an arrow or a text
+   */
+  [EVT_DRAG_START]: (evt: Arrow | Text) => void;
+  /**
+   * Event trigerred when dragging an arrow or a text
+   */
+  [EVT_DRAG]: (evt: Arrow | Text, key: 'line' | 'start' | 'end' | 'text') => void;
+  /**
+   * Event trigerred when stopped dragging an arrow or a text
+   */
+  [EVT_DRAG_END]: (evt: Arrow | Text) => void;
+
 };
 
 export type TargetType = 'text' | 'node';

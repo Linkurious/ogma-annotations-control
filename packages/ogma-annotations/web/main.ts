@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Ogma, { RawNode } from '@linkurious/ogma';
 import { Control, createArrow, createText } from '../src/index';
+import { EVT_DRAG_END } from '../src/constants';
 const ogma = new Ogma({
   container: 'app'
 });
@@ -102,8 +103,12 @@ window.control = control;
 // @ts-ignore
 window.createArrow = createArrow;
 
-document.getElementById('add-arrow')?.addEventListener('click', () => {
-  // set button active
+const addArrows = document.getElementById('add-arrow')! as HTMLButtonElement;
+addArrows.addEventListener('click', () => {
+  if (addArrows.disabled) {
+    return;
+  }
+  addArrows.disabled = true;
   ogma.events.once('click', (evt) => {
     requestAnimationFrame(() => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
@@ -113,16 +118,29 @@ document.getElementById('add-arrow')?.addEventListener('click', () => {
         strokeType: 'plain'
       });
       control.startArrow(x, y, arrow);
+      control.once(EVT_DRAG_END, (a) => {
+        if (a.id !== arrow.id) return;
+        addArrows.disabled = false;
+      });
     });
   });
 });
+const addTexts = document.getElementById('add-text')! as HTMLButtonElement;
 
-document.getElementById('add-text')?.addEventListener('click', () => {
+addTexts.addEventListener('click', () => {
+  if (addTexts.disabled) {
+    return;
+  }
+  addTexts.disabled = true;
   ogma.events.once('click', (evt) => {
     requestAnimationFrame(() => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
       const text = createText(x, y, 0, 0);
       control.startText(x, y, text);
+      control.once(EVT_DRAG_END, (a) => {
+        if (a.id !== text.id) return;
+        addArrows.disabled = false;
+      });
     });
   });
 });

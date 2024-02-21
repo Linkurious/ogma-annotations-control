@@ -38,6 +38,7 @@ export default abstract class Editor<
   protected ogmaOptions: Options;
   protected shouldDetect: boolean;
   protected isDragging: boolean;
+  protected showeditorOnHover: boolean;
   protected maxHandleScale = 1.5;
 
 
@@ -47,6 +48,7 @@ export default abstract class Editor<
     this.elements = [];
     this.shouldDetect = true;
     this.isDragging = false;
+    this.showeditorOnHover = true;
     this.ogmaOptions = ogma.getOptions();
     //handle select/unselect on click
     ogma.events
@@ -55,6 +57,7 @@ export default abstract class Editor<
       // @ts-expect-error
       .on('newFrame', () => {
         this.refreshEditor();
+        this.refreshDrawing();
       });
 
     // Layer to draw all the annotations
@@ -214,7 +217,9 @@ export default abstract class Editor<
   hover(id: Id) {
     const element = this.getById(id);
     if (!element) return;
-    this.editor.show();
+    if (this.showeditorOnHover) {
+      this.editor.show();
+    }
     this.hoveredId = id;
     this.refreshEditor();
     this.layer.refresh();
@@ -301,6 +306,9 @@ export default abstract class Editor<
 
   public refreshLayer() {
     this.layer.refresh();
+  }
+  public refreshDrawing() {
+
   }
 
   public getElements() {

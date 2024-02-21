@@ -13,7 +13,7 @@ import { Arrow, Id, TargetType, Link, Side } from './types';
 export class Links {
   private links: Record<Id, Link> = {};
   private linksByTargetId: Record<Id, Id[]> = {};
-  private linksByArrowId: Record<Id, { start?: Id; end?: Id }> = {};
+  private linksByArrowId: Record<Id, { start?: Id; end?: Id; }> = {};
 
   public add(
     arrow: Arrow,
@@ -90,7 +90,12 @@ export class Links {
     return this.links[id];
   }
 
-  getTargetLinks(targetId: Id): Link[] {
-    return this.linksByTargetId[targetId]?.map((id) => this.links[id]) ?? [];
+  getTargetLinks(targetId: Id, type: TargetType): Link[] {
+    return this.linksByTargetId[targetId]?.map((id) => this.links[id])
+      .filter(l => l.targetType === type) ?? [];
+  }
+
+  forEach(cb: (link: Link) => void) {
+    Object.values(this.links).forEach(cb);
   }
 }
