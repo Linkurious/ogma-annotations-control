@@ -206,7 +206,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.textToMagnet = undefined;
     if (isArrow(d)) this.dragged = d as Arrow;
     else if (isText(d))
-      this.activeLinks.push(...this.links.getTargetLinks(d.id));
+      this.activeLinks.push(...this.links.getTargetLinks(d.id, 'text'));
     this.annotations.forEach((a) => {
       const selected = a.getSelectedFeature();
       if (selected && selected !== d) a.unhover().unselect();
@@ -226,7 +226,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private _onLayoutEnd = (evt: LayoutEndEvent) => {
     evt.ids.forEach((id, i) => {
-      const links = this.links.getTargetLinks(id);
+      const links = this.links.getTargetLinks(id, 'node');
       links.forEach(link => {
         const arrow = this.getAnnotation(link.arrow) as Arrow;
         const side = link.side;
@@ -247,7 +247,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private _moveNodes(nodes: NodeList, dx: number, dy: number) {
     nodes.forEach((node) => {
-      const links = this.links.getTargetLinks(node.getId());
+      const links = this.links.getTargetLinks(node.getId(), 'node');
       const pos = node.getPosition();
       links.forEach((link) => {
         const arrow = this.getAnnotation(link.arrow) as Arrow;
