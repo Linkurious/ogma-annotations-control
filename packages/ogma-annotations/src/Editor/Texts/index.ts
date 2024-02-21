@@ -1,4 +1,5 @@
 import Ogma, { Point } from '@linkurious/ogma';
+import Vector2 from 'vector2js';
 import {
   createText,
   defaultControllerOptions,
@@ -231,16 +232,18 @@ export class Texts extends Editor<Text> {
 
   public detect({ x, y }: Point, margin = 0): Text | undefined {
     // check if the pointer is within the bounding box of one of the texts
+    const p = new Vector2(x, y);
+    const angle = this.ogma.view.getAngle();
     return this.elements.find((a) => {
       const { x: tx, y: ty } = getTextPosition(a);
       const { width, height } = getTextSize(a);
+      const origin = new Vector2(tx, ty);
+      const { x: dx, y: dy } = p.sub(origin).rotateRadians(-angle);
 
-      return (
-        tx - margin < x &&
-        ty - margin < y &&
-        tx + width + margin > x &&
-        ty + height + margin > y
-      );
+      return dx > -margin
+        && dx < width + margin
+        && dy > -margin
+        && dy < height + margin;
     });
   }
 
