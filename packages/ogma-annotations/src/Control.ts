@@ -118,7 +118,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.ogma.events
       .on('nodesDragStart', this._onNodesDragStart)
       .on('nodesDragProgress', this._onNodesDrag)
-      .on('layoutEnd', this._onLayoutEnd);
+      .on('layoutEnd', this._onLayoutEnd)
+      .on('viewChanged', () => {
+        this.refreshMagnets();
+      });
+
 
     this.layer = ogma.layers.addCanvasLayer(this._render);
     this.layer.moveToBottom();
@@ -168,7 +172,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         const position = getTextPosition(a);
         const pt = new Vector2(connectionPoint!.x, connectionPoint!.y)
           .mul({ x: size.width, y: size.height })
-          .rotateRadians(-this.ogma.view.getAngle())
+          .rotateRadians(this.ogma.view.getAngle())
           .add(position);
         arrow.geometry.coordinates[side === 'start' ? 0 : 1] = [pt.x, pt.y];
       });
@@ -343,6 +347,26 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.selected = annotation;
     this.emit(EVT_SELECT, this.selected);
   };
+
+  private refreshMagnets() {
+    let shouldRefresh = false;
+    this.links.forEach(({ connectionPoint, targetType, target, arrow, side }) => {
+      if (targetType !== 'text') return;
+      shouldRefresh = true;
+
+      const text = this.getAnnotation(target) as Text;
+      const a = this.getAnnotation(arrow) as Arrow;
+      const size = getTextSize(text);
+      const position = getTextPosition(text);
+      const point = new Vector2(connectionPoint!.x, connectionPoint!.y)
+        .mul({ x: size.width, y: size.height })
+        .rotateRadians(this.ogma.view.getAngle())
+        .add(position);
+      setArrowEndPoint(a, side, point.x, point.y);
+    });
+    if (!shouldRefresh) return;
+    this.arrows.refreshLayer();
+  }
 
   /**
    * @returns the currently selected annotation
