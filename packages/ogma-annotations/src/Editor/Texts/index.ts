@@ -183,14 +183,20 @@ export class Texts extends Editor<Text> {
     const zoom = this.ogma.view.getZoom();
     const dx = (evt.clientX - this.startX) / zoom;
     const dy = (evt.clientY - this.startY) / zoom;
-    const x = isLeft || isLine ? this.rect.x + dx : this.rect.x;
-    const y = isTop || isLine ? this.rect.y + dy : this.rect.y;
+    const angle = this.ogma.view.getAngle();
+    const delta = new Vector2(dx, dy).rotateRadians(angle);
+    if ((isBottom && isLeft) || (isTop && isRight)) {
+      delta.y = 0;
+      delta.x = 0;
+    }
+    const x = isLeft || isLine ? this.rect.x + delta.x : this.rect.x;
+    const y = isTop || isLine ? this.rect.y + delta.y : this.rect.y;
     const width = Math.max(
-      this.rect.width + dx * (isLine ? 0 : isLeft ? -1 : isRight ? 1 : 0),
+      this.rect.width + dx * (isLine || isLeft ? 0 : 1),
       minSize
     );
     const height = Math.max(
-      this.rect.height + dy * (isLine ? 0 : isTop ? -1 : isBottom ? 1 : 0),
+      this.rect.height + dy * (isLine || isTop ? 0 : 1),
       minSize
     );
     setTextBbox(this.annotation, x, y, width, height);
