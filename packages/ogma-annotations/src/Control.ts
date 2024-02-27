@@ -496,7 +496,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       const targetText = this.getAnnotation(link.id);
       if (link.type === 'text' && targetText) {
         this.links.add(arrow, side, link.id, link.type, link.magnet!);
-      } else {
+      } else if (link.type === 'node') {
         const targetNode = this.ogma.getNode(link.id);
         if (!targetNode) continue;
         this.links.add(arrow, side, link.id, link.type, link.magnet!);
