@@ -1,6 +1,9 @@
+import Ogma from '@linkurious/ogma';
 import { describe, it, expect } from 'vitest';
-import { Arrow, createArrow, Link } from '../../src';
+import { AnnotationCollection, Arrow, Control, createArrow, Link } from '../../src';
 import { Links } from '../../src/links';
+import LoadLinksMissing from '../fixtures/load-links-missing.json';
+import LoadLinksData from '../fixtures/load-links.json';
 
 describe('Links', () => {
   // Add a link between an arrow and a node
@@ -12,16 +15,6 @@ describe('Links', () => {
     const targetId = 'node1';
 
     links.add(arrow, side, targetId, 'node', { x: 0, y: 0 });
-
-    // expect(links['links']).toEqual({
-    //   [expect.any(String)]: {
-    //     id: expect.any(String),
-    //     arrow: arrowId,
-    //     target: targetId,
-    //     type: 'node',
-    //     side: side
-    //   }
-    // });
     expect(links['linksByTargetId']).toEqual({
       [targetId]: [expect.any(String)]
     });
@@ -218,4 +211,37 @@ describe('Links', () => {
       magnet: point
     });
   });
+
+  it('should load links', () => {
+    const ogma = new Ogma({
+      options: { renderer: null }
+    });
+    ogma.addNode({ id: 'n0' });
+    const control = new Control(ogma);
+    control.add(LoadLinksData as AnnotationCollection);
+    // @ts-ignore
+    const [link1, link2] = Object.values(control.links.links);
+
+    expect(link1.arrow).toEqual(2);
+    expect(link1.side).toEqual('start');
+    expect(link1.target).toEqual(0);
+    expect(link1.targetType).toEqual('text');
+
+    expect(link2.arrow).toEqual(2);
+    expect(link2.side).toEqual('end');
+    expect(link2.target).toEqual('n0');
+    expect(link2.targetType).toEqual('node');
+  });
+
+  it('should not load links if target does not exist', () => {
+    const ogma = new Ogma({
+      options: { renderer: null }
+    });
+    const control = new Control(ogma);
+    control.add(LoadLinksMissing as AnnotationCollection);
+    // @ts-ignore
+    const links = Object.values(control.links.links);
+    expect(links).toEqual([]);
+  });
+
 });

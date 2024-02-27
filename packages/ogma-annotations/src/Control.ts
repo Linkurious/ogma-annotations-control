@@ -442,7 +442,16 @@ export class Control extends EventEmitter<FeatureEvents> {
    */
   public add(annotation: Arrow | Text | AnnotationCollection): this {
     if (isAnnotationCollection(annotation)) {
-      annotation.features.forEach((f) =>
+      const [texts, arrows] = annotation.features.reduce((acc, f) => {
+        if (isArrow(f)) acc[1].push(f);
+        else if (isText(f)) acc[0].push(f);
+        return acc;
+      }, [[], []] as [Text[], Arrow[]]);
+      // Add texts first to make sure that arrows can snap to them
+      texts.forEach((f) =>
+        this.add(f as unknown as Arrow | Text)
+      );
+      arrows.forEach((f) =>
         this.add(f as unknown as Arrow | Text)
       );
       this.arrows.refreshLayer();
@@ -485,9 +494,9 @@ export class Control extends EventEmitter<FeatureEvents> {
       const link = arrow.properties.link[side];
       if (!link) continue;
       const targetText = this.getAnnotation(link.id);
-      if (targetText) {
+      if (link.type === 'text' && targetText) {
         this.links.add(arrow, side, link.id, link.type, link.magnet!);
-      } else {
+      } else if (link.type === 'node') {
         const targetNode = this.ogma.getNode(link.id);
         if (!targetNode) continue;
         this.links.add(arrow, side, link.id, link.type, link.magnet!);
