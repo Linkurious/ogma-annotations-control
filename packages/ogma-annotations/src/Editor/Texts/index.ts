@@ -350,7 +350,7 @@ export class Texts extends Editor<Text> {
     this.textArea.style.font = `${scaledFontSize} ${font}`;
     this.textArea.style.fontFamily = font || 'sans-serif';
     this.textArea.style.fontSize = `${scaledFontSize}px`;
-    this.textArea.style.padding = `${padding}px`;
+    this.textArea.style.padding = `${zoom * padding}px`;
     this.textArea.style.lineHeight = `${scaledFontSize}px`;
 
     this.textArea.style.boxSizing = 'border-box';
