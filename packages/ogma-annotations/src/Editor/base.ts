@@ -55,7 +55,7 @@ export default abstract class Editor<
       .on(['click', 'mousemove'], this._onClickMouseMove)
       .on('keyup', this._onKeyUp)
       // @ts-expect-error
-      .on('newFrame', () => {
+      .on('frame', () => {
         this.refreshEditor();
         this.refreshDrawing();
       });

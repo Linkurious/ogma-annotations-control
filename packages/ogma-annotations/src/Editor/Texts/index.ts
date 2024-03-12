@@ -257,7 +257,7 @@ export class Texts extends Editor<Text> {
   public draw(svg: SVGSVGElement): void {
     svg.innerHTML = '';
     const styleContent = '';
-    const angle = this.ogma.view.getAngle() * 180 / Math.PI;
+    const angle = this.ogma.view.getAngle();
     this.elements.forEach((annotation, i) => {
       const className = `class${i}`;
       const size = getTextSize(annotation);
@@ -301,7 +301,8 @@ export class Texts extends Editor<Text> {
       }
       g.appendChild(rect);
       drawText(annotation, g);
-      g.setAttribute('transform', `translate(${position.x},${position.y}) rotate(${angle})`);
+      const { x, y } = new Vector2(position.x, position.y).rotateRadians(-angle);
+      g.setAttribute('transform', `translate(${x},${y})`);
       g.classList.add(className);
       g.setAttribute('data-annotation', `${annotation.id}`);
       g.setAttribute('data-annotation-type', 'text');
@@ -314,12 +315,11 @@ export class Texts extends Editor<Text> {
   }
 
   public refreshDrawing(): void {
-    const angle = this.ogma.view.getAngle() * 180 / Math.PI;
+    const angle = this.ogma.view.getAngle();
     [...this.layer.element.children].forEach((g) => {
-      const transform = g.getAttribute('transform');
-      const translate = transform?.match(/translate\(([^)]+)\)/);
-      if (!translate) return;
-      g.setAttribute('transform', `translate(${translate[1]}) rotate(${angle})`);
+      const position = getTextPosition(this.getById(+g.getAttribute('data-annotation')!));
+      const { x, y } = new Vector2(position.x, position.y).rotateRadians(-angle);
+      g.setAttribute('transform', `translate(${x},${y})`);
     });
   }
 
