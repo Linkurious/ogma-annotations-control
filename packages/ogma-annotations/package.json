@@ -7,7 +7,9 @@
   "browser": "dist/index.umd.js",
   "types": "dist/types/index.d.ts",
   "files": [
-    "dist"
+    "dist/*.mjs",
+    "dist/*.js",
+    "dist/types"
   ],
   "exports": {
     ".": {
@@ -32,7 +34,7 @@
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
-    "build": "tsc && vite build && npm run types",
+    "build": "vite build && npm run types",
     "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts --ext js src",
     "lint": "eslint --ext ts --ext js src",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
@@ -61,7 +63,7 @@
   "author": "Linkurious SAS",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@linkurious/ogma": ">=4.5.6"
+    "@linkurious/ogma": ">=5.0.4"
   },
   "dependencies": {
     "@borgar/textbox": "1.6.0",
@@ -76,10 +78,10 @@
     "eslint": "8.56.0",
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
-    "playwright": "1.41.1",
+    "playwright": "1.42.1",
     "typescript": "5.3.3",
-    "vite": "5.0.12",
-    "vitest": "1.2.2"
+    "vite": "5.2.0",
+    "vitest": "1.4.0"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
