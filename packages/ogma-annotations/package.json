@@ -9,6 +9,7 @@
   "files": [
     "dist/*.mjs",
     "dist/*.js",
+    "dist/style.css",
     "dist/types"
   ],
   "exports": {
