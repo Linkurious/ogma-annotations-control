@@ -54,7 +54,6 @@ export default abstract class Editor<
     ogma.events
       .on(['click', 'mousemove'], this._onClickMouseMove)
       .on('keyup', this._onKeyUp)
-      // @ts-expect-error
       .on('frame', () => {
         this.refreshEditor();
         this.refreshDrawing();
