@@ -212,12 +212,19 @@ export class Arrows extends Editor<Arrow> {
   public draw(svg: SVGSVGElement): void {
     svg.innerHTML = '';
     const g = createSVGElement<SVGGElement>('g');
+    const angle = this.ogma.view.getAngle();
+    g.setAttribute('transform', `rotate(${-angle * (180 / Math.PI)})`);
     this.elements.forEach((a) =>
       drawArrow(a, g, defaultStyle, this.minArrowHeight, this.maxArrowHeight)
     );
     svg.appendChild(g);
   }
+  public refreshDrawing(): void {
+    const angle = this.ogma.view.getAngle();
+    this.layer.element.children[0]
+      .setAttribute('transform', `rotate(${-angle * (180 / Math.PI)})`);
 
+  }
   public destroy(): void {
     super.destroy();
     document.removeEventListener('mousemove', this.onMouseMove, true);
