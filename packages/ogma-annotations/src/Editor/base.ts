@@ -190,9 +190,10 @@ export default abstract class Editor<
   }
 
   getById(id: Id): T {
+    const nid = Number(id);
     for (let i = 0; i < this.elements.length; i++) {
       const element = this.elements[i];
-      if (element.id !== id) continue;
+      if (element.id !== id && element.id !== nid) continue;
       return element;
     }
     return undefined as unknown as T;

@@ -317,7 +317,9 @@ export class Texts extends Editor<Text> {
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
     [...this.layer.element.children].forEach((g) => {
-      const position = getTextPosition(this.getById(+g.getAttribute('data-annotation')!));
+      const id = g.getAttribute('data-annotation');
+      if (!id) return;
+      const position = getTextPosition(this.getById(id));
       const { x, y } = new Vector2(position.x, position.y).rotateRadians(-angle);
       g.setAttribute('transform', `translate(${x},${y})`);
     });
