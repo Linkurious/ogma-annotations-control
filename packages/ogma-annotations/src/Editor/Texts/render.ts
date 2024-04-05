@@ -5,6 +5,14 @@ import { getTextSize } from '../../utils';
 function removeElipse(str: string): string {
   return str.replace(/…$/, '');
 }
+function isText(e) {
+  return !!e.children[0]
+    && e.children[0].tagName === 'tspan';
+}
+
+function getText(e) {
+  return e.children[0].innerHTML;
+}
 /**
  * @function draw
  * @param annotation the annotation to draw
@@ -32,35 +40,53 @@ export default function draw(annotation: Text, g: SVGGElement) {
   const lines = box.linebreak(
     annotation.properties.content.replaceAll('\n', '<br>')
   );
+  const text = lines.render();
+  const children = [...text.children];
+  // remove extra blank lines
+  let index = 0;
+  const toRemove: number[] = [];
+  annotation.properties.content.split('\n').forEach(l => {
+    let query = l;
+    while (query.length && index < children.length) {
+      if (children[index].innerHTML === '&nbsp;') {
+        if (!query.startsWith('\n')) {
+          toRemove.push(index);
+        }
+        index++;
+        break;
+      }
+      const text = removeElipse(getText(children[index]));
+      if (query.startsWith(text)) {
+        query = query.slice(text.length).trim();
+      }
+      index++;
+    }
+  });
+  toRemove.forEach(i => text.removeChild(children[i]));
+  // replace spans with links: 
   const matches = annotation.properties.content.match(/(https?:\/\/.*)/gm);
   const links = matches ? matches.map(match => match.split(' ')[0]) : [];
-  // Destination canvas is set to the height of the output
-  const text = lines.render();
-  // replace spans with links: 
   text.setAttribute('transform', `translate(${padding}, ${padding})`);
-
-  const children = [...text.children];
   links.forEach(l => {
     let query = l;
     const toReplace = [];
     while (query.length > 0) {
-      const start = children.find(e => e.children[0]
-        && e.children[0].tagName === 'tspan'
-        && query.startsWith(removeElipse(e.children[0].innerHTML)));
+      const start = children.find(e => isText(e)
+        && query.startsWith(removeElipse(getText(e))));
       if (!start) break;
       toReplace.push(start);
-      query = query.slice(removeElipse(start.children[0].innerHTML).length);
+      const length = removeElipse(start.children[0].innerHTML).length;
+      if (!length) break;
+      query = query.slice(length);
     }
-
     toReplace.forEach(e => {
       const link = document.createElementNS('http://www.w3.org/2000/svg', 'a');
       link.setAttribute('href', l);
       link.setAttribute('target', '_blank');
-      link.innerHTML = e.children[0].innerHTML;
+      link.innerHTML = getText(e);
       e.children[0].innerHTML = '';
       e.children[0].appendChild(link);
     });
-
   });
 
   g.appendChild(text);
