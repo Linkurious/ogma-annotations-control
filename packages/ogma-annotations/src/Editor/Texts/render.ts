@@ -5,12 +5,8 @@ import { getTextSize } from '../../utils';
 function removeElipse(str: string): string {
   return str.replace(/…$/, '');
 }
-function isText(e) {
-  return !!e.children[0]
-    && e.children[0].tagName === 'tspan';
-}
 
-function getText(e) {
+function getText(e: Element) {
   return e.children[0].innerHTML;
 }
 /**
@@ -71,7 +67,8 @@ export default function draw(annotation: Text, g: SVGGElement) {
     let query = l;
     const toReplace = [];
     while (query.length > 0) {
-      const start = children.find(e => isText(e)
+      const start = children.find(e => !!e.children[0]
+        && e.children[0].tagName === 'tspan'
         && query.startsWith(removeElipse(getText(e))));
       if (!start) break;
       toReplace.push(start);

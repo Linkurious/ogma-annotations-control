@@ -219,7 +219,7 @@ export class Texts extends Editor<Text> {
     this.draggedHandle = NONE;
   };
 
-  private _onMousedown = (evt) => {
+  private _onMousedown = (evt: MouseEvent) => {
     evt.stopPropagation();
   };
 
