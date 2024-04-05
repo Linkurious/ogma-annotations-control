@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-control",
-  "version": "1.1.8",
+  "version": "1.1.9",
   "description": "A tool to draw texts and arrows on top of Ogma",
   "main": "index.js",
   "scripts": {
@@ -11,9 +11,9 @@
     "publish:packages": "npm publish -ws",
     "build": "npm run build -ws --if-present",
     "wsdocs": "npm run docs:build -ws --if-present",
-    "bump:patch": "bump2version patch && npm version -ws --include-workspace-root --no-git-tag-version patch",
-    "bump:minor": "bump2version minor && npm version -ws --include-workspace-root --no-git-tag-version minor",
-    "bump:major": "bump2version major && npm version -ws --include-workspace-root --no-git-tag-version major",
+    "bump:patch": "npm version -ws --include-workspace-root --no-git-tag-version patch",
+    "bump:minor": "npm version -ws --include-workspace-root --no-git-tag-version minor",
+    "bump:major": "npm version -ws --include-workspace-root --no-git-tag-version major",
     "postwsdocs": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
     "lint:ci": "npm run lint:ci -ws",

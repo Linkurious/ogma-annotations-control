@@ -68,7 +68,7 @@ export class Texts extends Editor<Text> {
     <span class="handle left top point-handle top-left" data-handle-id="5"></span>
     <span class="handle bottom right point-handle bottom-right" data-handle-id="6"></span>
     <span class="handle left bottom left-handle point-handle bottom-left" data-handle-id="7"></span>
-    <textarea wrap="off"></textarea>
+    <textarea wrap="on"></textarea>
     </div>
   `
     );
@@ -84,6 +84,7 @@ export class Texts extends Editor<Text> {
     textArea.addEventListener('input', this._onInput);
     textArea.addEventListener('focus', this._onFocus);
     textArea.addEventListener('blur', this._onBlur);
+    textArea.addEventListener('mousedown', this._onMousedown);
     textArea.spellcheck = false;
 
     this.handles = Array.prototype.slice.call(
@@ -216,6 +217,10 @@ export class Texts extends Editor<Text> {
     this.emit(EVT_DRAG_END, this.annotation);
     this.isDragging = false;
     this.draggedHandle = NONE;
+  };
+
+  private _onMousedown = (evt: MouseEvent) => {
+    evt.stopPropagation();
   };
 
   private onViewChanged = () => {
