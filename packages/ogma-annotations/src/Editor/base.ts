@@ -88,6 +88,9 @@ export default abstract class Editor<
     evt: MouseButtonEvent<unknown, unknown> & MouseMoveEvent
   ) => {
     if (!evt.domEvent || this.isDragging || !this.shouldDetect) return;
+    if (evt.domEvent.type !== 'mousemove' && evt.domEvent.target.tagName === 'a') {
+      return;
+    }
     const point = this.ogma.view.screenToGraphCoordinates(evt);
 
     // try to detect annotation
