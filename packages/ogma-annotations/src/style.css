@@ -173,10 +173,9 @@ svg text {
 }
 
 .annotation-text a {
-  stroke: var(--handle-color);
+  fill: var(--handle-color);
 }
 
 .annotation-text a:hover {
-  stroke: var(--handle-color);
   text-decoration: underline;
 }
