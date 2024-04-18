@@ -134,15 +134,14 @@ const addTexts = document.getElementById("add-text")! as HTMLButtonElement;
 addTexts.addEventListener("click", () => {
   if (addTexts.disabled) return;
   addTexts.disabled = true;
-  ogma.events.once("click", (evt) => {
-    requestAnimationFrame(() => {
-      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const text = createText(x, y, 0, 0);
-      control.startText(x, y, text);
-      control.once(EVT_DRAG_END, (a) => {
-        if (a.id !== text.id) return;
-        addArrows.disabled = false;
-      });
+  ogma.events.once("mousedown", (evt) => {
+    const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+    const text = createText(x, y, 0, 0);
+    control.startText(x, y, text);
+    control.once(EVT_DRAG_END, (a) => {
+      console.log(a, "done");
+      if (a.id !== text.id) return;
+      addTexts.disabled = false;
     });
   });
 });
