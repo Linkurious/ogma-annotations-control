@@ -1,92 +1,100 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import Ogma, { RawNode } from '@linkurious/ogma';
-import { Control, createArrow, createText } from '../src/index';
-import { EVT_DRAG_END } from '../src/constants';
+import Ogma, { RawNode } from "@linkurious/ogma";
+import { EVT_DRAG_END } from "../src/constants";
+import {
+  Control,
+  createArrow,
+  createText,
+  AnnotationCollection,
+} from "../src/index";
 const ogma = new Ogma({
-  container: 'app'
+  container: "app",
 });
 const control = new Control(ogma);
 //@ts-ignore
 window.ogma = ogma;
 
-const annotationsWithLinks = {
-  type: 'FeatureCollection',
+const annotationsWithLinks: AnnotationCollection = {
+  type: "FeatureCollection",
   features: [
     {
-      type: 'Feature',
+      type: "Feature",
       id: 2,
       properties: {
-        type: 'arrow',
+        type: "arrow",
         style: {
-          strokeType: 'plain',
-          strokeColor: '#3b3',
+          strokeType: "plain",
+          strokeColor: "#3b3",
           strokeWidth: 2,
-          head: 'arrow-plain',
-          tail: 'none'
+          head: "arrow-plain",
+          tail: "none",
         },
         link: {
           end: {
-            id: 'n0',
-            side: 'end',
-            type: 'node',
+            id: "n0",
+            side: "end",
+            type: "node",
             magnet: {
               x: 5.050129380397267,
-              y: 3.193041958648245
-            }
-          }
-        }
+              y: 3.193041958648245,
+            },
+          },
+        },
       },
       geometry: {
-        type: 'LineString',
+        type: "LineString",
         coordinates: [
           [-200, 200],
-          [5.050129380397267, 3.193041958648245]
-        ]
-      }
+          [5.050129380397267, 3.193041958648245],
+        ],
+      },
     },
     {
-      type: 'Feature',
+      type: "Feature",
       id: 0,
       properties: {
-        type: 'text',
-        content: 'Another annotation',
+        type: "text",
+        content: "Another annotation",
         style: {
-          font: 'Helvetica',
-          fontSize: '52',
-          color: 'black',
-          background: 'rgba(255, 255, 255, 0.5)',
+          font: "Helvetica",
+          fontSize: 52,
+          color: "black",
+          background: "rgba(255, 255, 255, 0.5)",
           strokeWidth: 1,
-          strokeColor: '#000',
-          strokeType: 'plain',
-          padding: 12
-        }
+          strokeColor: "#000",
+          strokeType: "plain",
+          padding: 12,
+        },
       },
       geometry: {
-        type: 'Polygon',
+        type: "Polygon",
         coordinates: [
           [
             [-200, -200],
             [-200, -50],
             [200, -50],
             [200, -200],
-            [-200, -200]
-          ]
+            [-200, -200],
+          ],
         ],
-        bbox: [-200, -200, 200, -50]
-      }
-    }
-  ]
+        bbox: [-200, -200, 200, -50],
+      },
+    },
+  ],
 };
 
 ogma.generate
   .flower({ depth: 3 })
   .then((g) => {
-    const nodesMap = g.nodes.reduce((acc, node, i) => {
-      acc[node.id!] = node;
-      node.id = `n${i}`;
-      return acc;
-    }, {} as Record<string, RawNode>);
+    const nodesMap = g.nodes.reduce(
+      (acc, node, i) => {
+        acc[node.id!] = node;
+        node.id = `n${i}`;
+        return acc;
+      },
+      {} as Record<string, RawNode>
+    );
     g.edges.forEach((edge) => {
       edge.source = nodesMap[edge.source].id!;
       edge.target = nodesMap[edge.target].id!;
@@ -103,36 +111,30 @@ window.control = control;
 // @ts-ignore
 window.createArrow = createArrow;
 
-const addArrows = document.getElementById('add-arrow')! as HTMLButtonElement;
-addArrows.addEventListener('click', () => {
-  if (addArrows.disabled) {
-    return;
-  }
+const addArrows = document.getElementById("add-arrow")! as HTMLButtonElement;
+addArrows.addEventListener("click", () => {
+  if (addArrows.disabled) return;
   addArrows.disabled = true;
-  ogma.events.once('click', (evt) => {
-    requestAnimationFrame(() => {
-      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const arrow = createArrow(x, y, x, y, {
-        strokeWidth: 2,
-        strokeColor: '#3b3',
-        strokeType: 'plain'
-      });
-      control.startArrow(x, y, arrow);
-      control.once(EVT_DRAG_END, (a) => {
-        if (a.id !== arrow.id) return;
-        addArrows.disabled = false;
-      });
+  ogma.events.once("mousedown", (evt) => {
+    const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+    const arrow = createArrow(x, y, x, y, {
+      strokeWidth: 2,
+      strokeColor: "#3b3",
+      strokeType: "plain",
+    });
+    control.startArrow(x, y, arrow);
+    control.once(EVT_DRAG_END, (a) => {
+      if (a.id !== arrow.id) return;
+      addArrows.disabled = false;
     });
   });
 });
-const addTexts = document.getElementById('add-text')! as HTMLButtonElement;
+const addTexts = document.getElementById("add-text")! as HTMLButtonElement;
 
-addTexts.addEventListener('click', () => {
-  if (addTexts.disabled) {
-    return;
-  }
+addTexts.addEventListener("click", () => {
+  if (addTexts.disabled) return;
   addTexts.disabled = true;
-  ogma.events.once('click', (evt) => {
+  ogma.events.once("click", (evt) => {
     requestAnimationFrame(() => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
       const text = createText(x, y, 0, 0);
@@ -145,12 +147,12 @@ addTexts.addEventListener('click', () => {
   });
 });
 
-document.addEventListener('keydown', (evt) => {
-  if (evt.key === 'Escape') {
+document.addEventListener("keydown", (evt) => {
+  if (evt.key === "Escape") {
     control.cancelDrawing();
   }
 });
 
-control.on('cancelDrawing', () => {
-  console.log('cancelDrawing');
+control.on("cancelDrawing", () => {
+  console.log("cancelDrawing");
 });

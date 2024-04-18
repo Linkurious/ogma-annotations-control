@@ -17,10 +17,7 @@ import {
   isArrow,
   isText,
 } from "@linkurious/ogma-annotations";
-import {
-  defaultArrowStyle,
-  defaultTextStyle,
-} from "./constants";
+import { defaultArrowStyle, defaultTextStyle } from "./constants";
 import { useOgma } from "@linkurious/ogma-react";
 import { mean } from "./utils";
 
@@ -107,7 +104,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
   useEffect(() => {
     if (!ogma) return;
     const newEditor = new AnnotationsEditor(ogma, {
-      minArrowHeight: 1
+      minArrowHeight: 1,
     });
     // adjust the default style of the annotations based on the graph
     const newTextSizeFactor =
