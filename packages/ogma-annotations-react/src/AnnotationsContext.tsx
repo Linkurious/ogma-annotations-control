@@ -137,7 +137,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     return () => {
       editor?.destroy();
     };
-  }, [ogma]);
+  }, [ogma, setArrowWidthFactor, arrowWidthFactor, arrowStyle, editor]);
 
   // update the style of the current arrow annotation when the style changes
   useEffect(() => {
@@ -148,7 +148,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     ) {
       editor.updateStyle(currentAnnotation.id, arrowStyle);
     }
-  }, [editor, arrowStyle]);
+  }, [editor, arrowStyle, currentAnnotation]);
 
   // update the style of the current text annotation when the style changes
   useEffect(() => {
@@ -159,7 +159,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     ) {
       editor.updateStyle(currentAnnotation.id, textStyle);
     }
-  }, [editor, textStyle]);
+  }, [editor, textStyle, currentAnnotation]);
 
   return (
     <AnnotationsContext.Provider

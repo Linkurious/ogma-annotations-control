@@ -235,7 +235,7 @@ export class Control extends EventEmitter<FeatureEvents> {
           arrow,
           side === "start" ? "end" : "start"
         );
-        // @ts-ignore
+        // @ts-expect-error Incomplete types in Ogma
         const point = evt.positions.current[i];
         const radius = this.ogma.getNode(id)!.getAttribute("radius");
         const anchor = getAttachmentPointOnNode(otherSide, point, +radius);

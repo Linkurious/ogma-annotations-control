@@ -4,7 +4,7 @@
   "description": "Headless annotation plugin for Ogma",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
-  "browser": "dist/index.umd.js",
+  "browser": "dist/index.js",
   "types": "dist/types/index.d.ts",
   "files": [
     "dist/*.mjs",
@@ -15,7 +15,7 @@
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
-      "require": "./dist/index.umd.js",
+      "require": "./dist/index.js",
       "default": "./dist/index.mjs",
       "types": "./dist/types/index.d.ts"
     },
@@ -23,7 +23,7 @@
       "import": "./dist/style.css",
       "require": "./dist/style.css"
     },
-    "./umd": "./dist/index.umd.js",
+    "./umd": "./dist/index.js",
     "./esm": "./dist/index.mjs"
   },
   "scripts": {

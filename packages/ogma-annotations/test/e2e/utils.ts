@@ -4,6 +4,7 @@ import { chromium } from "playwright";
 import type { Browser, Page } from "playwright";
 import { preview, build } from "vite";
 import type { InlineConfig, PreviewServer } from "vite";
+
 declare global {
   function createOgma(options: OgmaParameters): Ogma;
   function createEditor(): import("../../src").Control;
@@ -18,6 +19,7 @@ export class BrowserSession {
   public browser: Browser;
   public page: Page;
   public port: number;
+
   async start(headless = true, options: InlineConfig = {}) {
     this.port = await getPort();
     await build({
@@ -27,9 +29,13 @@ export class BrowserSession {
     this.server = await preview({
       root: "test/e2e/pages",
       preview: { port: this.port },
-      ...options
+      ...options,
     });
-    this.browser = await chromium.launch({ headless, devtools: false, slowMo: 100 });
+    this.browser = await chromium.launch({
+      headless,
+      devtools: false,
+      slowMo: 100,
+    });
     this.page = await this.browser.newPage();
     await this.page.goto(`http://localhost:${this.port}`);
   }
@@ -62,5 +68,5 @@ export function compareDates(date1: Date, date2: Date) {
 }
 
 export function wait(ms: number) {
-  return new Promise<void>(resolve => setTimeout(resolve, ms));
+  return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }

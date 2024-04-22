@@ -5,6 +5,7 @@ import drawArrow, { getArrowHeight } from "./render";
 import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from "../../constants";
 import { Arrow, ControllerOptions } from "../../types";
 import {
+  clientToContainerPosition,
   createSVGElement,
   getArrowEnd,
   getArrowEndPoints,
@@ -73,7 +74,8 @@ export class Arrows extends Editor<Arrow> {
     const res = this.getById(this.selectedId) || this.getById(this.hoveredId);
     if (!res) return;
 
-    this.startDragging(res, evt.clientX, evt.clientY);
+    const { x, y } = clientToContainerPosition(evt, this.ogma.getContainer());
+    this.startDragging(res, x, y);
     this.draggedHandle = getHandleId(evt.target as HTMLDivElement);
   };
 

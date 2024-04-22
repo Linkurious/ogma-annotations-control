@@ -139,7 +139,6 @@ addTexts.addEventListener("click", () => {
     const text = createText(x, y, 0, 0);
     control.startText(x, y, text);
     control.once(EVT_DRAG_END, (a) => {
-      console.log(a, "done");
       if (a.id !== text.id) return;
       addTexts.disabled = false;
     });
