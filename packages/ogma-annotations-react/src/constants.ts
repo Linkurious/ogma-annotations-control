@@ -19,9 +19,17 @@ export const defaultColors = [
   "#cccccc",
 ];
 export const fonts = [
-  "Roboto", "Helvetica Neue", "Helvetica", "Arial", "sans-serif",
+  "Roboto",
+  "Helvetica Neue",
+  "Helvetica",
+  "Arial",
+  "sans-serif",
   "Georgia, serif",
-  "Menlo", "Monaco", "Consolas", "Courier New", "monospace",
+  "Menlo",
+  "Monaco",
+  "Consolas",
+  "Courier New",
+  "monospace",
 ].sort((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()));
 
 export const defaultArrowStyle: ArrowStyles = {
@@ -32,7 +40,7 @@ export const defaultArrowStyle: ArrowStyles = {
 export const RELATIVE_PADDING = 0.25;
 
 export const defaultTextStyle: TextStyle = {
-  font: 'Roboto',
+  font: "Roboto",
   fontSize: fontSizes[2],
   padding: fontSizes[2] * RELATIVE_PADDING,
   color: BLACK,

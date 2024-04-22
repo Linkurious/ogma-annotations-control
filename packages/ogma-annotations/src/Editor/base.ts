@@ -4,10 +4,10 @@ import Ogma, {
   Options,
   Overlay,
   Point,
-  SVGLayer
-} from '@linkurious/ogma';
-import eventEmmitter from 'eventemitter3';
-import { nanoid as getId } from 'nanoid';
+  SVGLayer,
+} from "@linkurious/ogma";
+import eventEmmitter from "eventemitter3";
+import { nanoid as getId } from "nanoid";
 import {
   EVT_ADD,
   EVT_HOVER,
@@ -15,9 +15,9 @@ import {
   EVT_SELECT,
   EVT_UNHOVER,
   EVT_UNSELECT,
-  NONE
-} from '../constants';
-import { Annotation, Events, Id } from '../types';
+  NONE,
+} from "../constants";
+import { Annotation, Events, Id } from "../types";
 
 /**
  * @class Annotations
@@ -25,7 +25,7 @@ import { Annotation, Events, Id } from '../types';
  * Modifying annotation is handled by the child classes, it is too specific
  */
 export default abstract class Editor<
-  T extends Annotation
+  T extends Annotation,
 > extends eventEmmitter<Events<T>> {
   protected ogma: Ogma;
   protected elements: T[];
@@ -41,7 +41,6 @@ export default abstract class Editor<
   protected showeditorOnHover: boolean;
   protected maxHandleScale = 1.5;
 
-
   constructor(ogma: Ogma, editorHtml: string) {
     super();
     this.ogma = ogma;
@@ -52,16 +51,16 @@ export default abstract class Editor<
     this.ogmaOptions = ogma.getOptions();
     //handle select/unselect on click
     ogma.events
-      .on(['click', 'mousemove'], this._onClickMouseMove)
-      .on('keyup', this._onKeyUp)
-      .on('frame', () => {
+      .on(["click", "mousemove"], this._onClickMouseMove)
+      .on("keyup", this._onKeyUp)
+      .on("frame", () => {
         this.refreshEditor();
         this.refreshDrawing();
       });
 
     // Layer to draw all the annotations
     this.layer = ogma.layers.addSVGLayer({
-      draw: (svg) => this.draw(svg)
+      draw: (svg) => this.draw(svg),
     });
     this.layer.moveToTop();
     // UI to move/resize the element
@@ -69,7 +68,7 @@ export default abstract class Editor<
     this.editor.hide();
   }
 
-  private _onKeyUp = (evt: { code: number; }) => {
+  private _onKeyUp = (evt: { code: number }) => {
     if (evt.code === 27 && this.selectedId !== NONE) this.unselect();
     else if (
       (evt.code === 46 || evt.code === 8) &&
@@ -88,10 +87,12 @@ export default abstract class Editor<
     evt: MouseButtonEvent<unknown, unknown> & MouseMoveEvent
   ) => {
     if (!evt.domEvent || this.isDragging || !this.shouldDetect) return;
-    // @ts-ignore
-    if (evt.domEvent.type !== 'mousemove' && evt.domEvent.target.tagName === 'a') {
+    if (
+      evt.domEvent.type !== "mousemove" &&
+      evt.domEvent.target &&
+      (evt.domEvent.target as HTMLElement).tagName === "a"
+    )
       return;
-    }
     const point = this.ogma.view.screenToGraphCoordinates(evt);
 
     // try to detect annotation
@@ -100,7 +101,7 @@ export default abstract class Editor<
         ? this.detect(point, 0)
         : undefined;
     // hover/unhover on mousemove
-    if (evt.domEvent.type === 'mousemove') {
+    if (evt.domEvent.type === "mousemove") {
       if (element) this.hover(element.id);
       else if (this.hoveredId !== NONE) this.unhover();
     } else {
@@ -127,12 +128,12 @@ export default abstract class Editor<
         ...def.properties,
         ...(options.properties || {}),
         // styles need to be merged
-        style: { ...def.properties.style, ...(options.properties.style || {}) }
+        style: { ...def.properties.style, ...(options.properties.style || {}) },
       },
       geometry: {
         ...def.geometry,
-        ...options.geometry
-      }
+        ...options.geometry,
+      },
     } as T);
     this.elements.push(o);
     this.layer.refresh();
@@ -140,17 +141,17 @@ export default abstract class Editor<
     return o;
   }
 
-  public updateStyle(annotation: T, style: Partial<T['properties']['style']>) {
+  public updateStyle(annotation: T, style: Partial<T["properties"]["style"]>) {
     this.updateAnnotation(annotation, {
       properties: {
-        style
-      }
+        style,
+      },
     } as Partial<T>);
   }
 
-  public updateGeometry(annotation: T, geometry: Partial<T['geometry']>) {
+  public updateGeometry(annotation: T, geometry: Partial<T["geometry"]>) {
     this.updateAnnotation(annotation, {
-      geometry
+      geometry,
     } as Partial<T>);
   }
 
@@ -169,21 +170,21 @@ export default abstract class Editor<
     if (!target) return;
     const id = target.id;
     Object.keys(element).forEach((key) => {
-      if (key === 'id') return;
-      if (key === 'properties') {
+      if (key === "id") return;
+      if (key === "properties") {
         const properties = element.properties || { style: {} };
         target.properties = {
           ...(target.properties || {}),
           ...(properties || {}),
           style: {
             ...(target.properties.style || {}),
-            ...(properties.style || {})
-          }
+            ...(properties.style || {}),
+          },
         };
-      } else if (key === 'geometry') {
+      } else if (key === "geometry") {
         target.geometry = {
           ...target.geometry,
-          ...element.geometry
+          ...element.geometry,
         };
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -277,14 +278,14 @@ export default abstract class Editor<
     this.ogma.setOptions({
       interactions: {
         drag: { enabled: false },
-        pan: { enabled: false }
+        pan: { enabled: false },
       },
       detect: {
         nodes: false,
         edges: false,
         nodeTexts: false,
-        edgeTexts: false
-      }
+        edgeTexts: false,
+      },
     });
   }
 
@@ -311,9 +312,7 @@ export default abstract class Editor<
   public refreshLayer() {
     this.layer.refresh();
   }
-  public refreshDrawing() {
-
-  }
+  public refreshDrawing() {}
 
   public getElements() {
     return [...this.elements];

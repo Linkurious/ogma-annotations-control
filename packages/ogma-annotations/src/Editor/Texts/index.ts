@@ -1,28 +1,29 @@
-import Ogma, { Point } from '@linkurious/ogma';
-import Vector2 from 'vector2js';
+import Ogma, { Point } from "@linkurious/ogma";
+import Vector2 from "vector2js";
 import {
   createText,
   defaultControllerOptions,
   defaultOptions,
-  defaultStyle
-} from './defaults';
-import drawText from './render';
+  defaultStyle,
+} from "./defaults";
+import drawText from "./render";
 import {
   EVT_DRAG,
   EVT_DRAG_END,
   EVT_DRAG_START,
   EVT_UPDATE,
-  NONE
-} from '../../constants';
-import { ControllerOptions, Id, Text } from '../../types';
+  NONE,
+} from "../../constants";
+import { ControllerOptions, Id, Text } from "../../types";
 import {
+  clientToContainerPosition,
   createSVGElement,
   getHandleId,
   getTextPosition,
   getTextSize,
-  setTextBbox
-} from '../../utils';
-import Editor from '../base';
+  setTextBbox,
+} from "../../utils";
+import Editor from "../base";
 
 interface Rect {
   x: number;
@@ -47,13 +48,13 @@ export class Texts extends Editor<Text> {
   private handles: HTMLDivElement[] = [];
   private draggedHandle = NONE;
   private isFocused = false;
-  private placeholder = 'Type your text here...';
+  private placeholder = "Type your text here...";
 
   constructor(
     ogma: Ogma,
     options: Pick<
       Partial<ControllerOptions>,
-      'textHandleSize' | 'textPlaceholder'
+      "textHandleSize" | "textPlaceholder"
     > = {}
   ) {
     super(
@@ -76,34 +77,34 @@ export class Texts extends Editor<Text> {
     this.handleSize = (defaultControllerOptions.handleSize ||
       options.textHandleSize) as number;
     this.placeholder =
-      defaultControllerOptions.placeholder || options.textPlaceholder || '';
+      defaultControllerOptions.placeholder || options.textPlaceholder || "";
 
     // hidden text input to edit the text, we swap it with SVG when selected or hovered
     const textArea = (this.textArea =
-      this.editor.element.querySelector<HTMLTextAreaElement>('textarea')!);
-    textArea.addEventListener('input', this._onInput);
-    textArea.addEventListener('focus', this._onFocus);
-    textArea.addEventListener('blur', this._onBlur);
-    textArea.addEventListener('mousedown', this._onMousedown);
+      this.editor.element.querySelector<HTMLTextAreaElement>("textarea")!);
+    textArea.addEventListener("input", this._onInput);
+    textArea.addEventListener("focus", this._onFocus);
+    textArea.addEventListener("blur", this._onBlur);
+    textArea.addEventListener("mousedown", this._onMousedown);
     textArea.spellcheck = false;
 
     this.handles = Array.prototype.slice.call(
-      this.editor.element.querySelectorAll('.annotation-text-handle > .handle')
+      this.editor.element.querySelectorAll(".annotation-text-handle > .handle")
     );
 
     // events to move/resize
     this.handles.forEach((handle: HTMLDivElement) =>
-      handle.addEventListener('mousedown', this.onHandleMouseDown)
+      handle.addEventListener("mousedown", this.onHandleMouseDown)
     );
 
-    document.addEventListener('mouseup', this.onMouseUp);
-    document.addEventListener('mousemove', this.onMouseMove, true);
+    document.addEventListener("mouseup", this.onMouseUp);
+    document.addEventListener("mousemove", this.onMouseMove, true);
     // update the width of the controls depending on zoom
-    ogma.events.on(['viewChanged', 'zoom'], this.onViewChanged);
+    ogma.events.on(["viewChanged", "zoom"], this.onViewChanged);
   }
 
   private _onFocus = () => {
-    if (this.textArea.value === this.placeholder) this.textArea.value = '';
+    if (this.textArea.value === this.placeholder) this.textArea.value = "";
     this.isFocused = true;
   };
 
@@ -118,7 +119,7 @@ export class Texts extends Editor<Text> {
   public startDrawing = (
     x: number,
     y: number,
-    text = createText(x, y, 0, 0, '', defaultStyle)
+    text = createText(x, y, 0, 0, "", defaultStyle)
   ) => {
     this.add(text);
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
@@ -149,8 +150,8 @@ export class Texts extends Editor<Text> {
     this.startX = clientX;
     this.startY = clientY;
     this.disableDragging();
-    this.textArea.classList.add('noevents');
-    this.textArea.setAttribute('disabled', 'disabled');
+    this.textArea.classList.add("noevents");
+    this.textArea.setAttribute("disabled", "disabled");
     this.emit(EVT_DRAG_START, this.annotation);
     this.isDragging = true;
   };
@@ -160,7 +161,8 @@ export class Texts extends Editor<Text> {
     if (!res) return;
     if (this.selectedId !== res.id) this.select(this.hoveredId);
 
-    this.startDragging(res, evt.clientX, evt.clientY);
+    const { x, y } = clientToContainerPosition(evt, this.ogma.getContainer());
+    this.startDragging(res, x, y);
     this.draggedHandle = getHandleId(evt.target as HTMLDivElement);
   };
 
@@ -176,15 +178,20 @@ export class Texts extends Editor<Text> {
 
     const handle = this.handles[this.draggedHandle];
 
-    const isTop = handle.classList.contains('top');
-    const isLeft = handle.classList.contains('left');
-    const isRight = handle.classList.contains('right');
-    const isBottom = handle.classList.contains('bottom');
-    const isLine = handle.classList.contains('line-handle');
+    const isTop = handle.classList.contains("top");
+    const isLeft = handle.classList.contains("left");
+    const isRight = handle.classList.contains("right");
+    const isBottom = handle.classList.contains("bottom");
+    const isLine = handle.classList.contains("line-handle");
+
+    const { x: clientX, y: clientY } = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
 
     const zoom = this.ogma.view.getZoom();
-    const dx = (evt.clientX - this.startX) / zoom;
-    const dy = (evt.clientY - this.startY) / zoom;
+    const dx = (clientX - this.startX) / zoom;
+    const dy = (clientY - this.startY) / zoom;
     const angle = this.ogma.view.getAngle();
     const delta = new Vector2(dx, dy).rotateRadians(angle);
     if ((isBottom && isLeft) || (isTop && isRight)) {
@@ -202,7 +209,7 @@ export class Texts extends Editor<Text> {
       minSize
     );
     setTextBbox(this.annotation, x, y, width, height);
-    this.emit(EVT_DRAG, this.annotation, 'text');
+    this.emit(EVT_DRAG, this.annotation, "text");
 
     this.refreshEditor();
     this.layer.refresh();
@@ -212,8 +219,8 @@ export class Texts extends Editor<Text> {
     if (!this.isDragging || this.draggedHandle === NONE) return;
 
     this.restoreDragging();
-    this.textArea.classList.remove('noevents');
-    this.textArea.removeAttribute('disabled');
+    this.textArea.classList.remove("noevents");
+    this.textArea.removeAttribute("disabled");
     this.emit(EVT_DRAG_END, this.annotation);
     this.isDragging = false;
     this.draggedHandle = NONE;
@@ -225,8 +232,7 @@ export class Texts extends Editor<Text> {
 
   private onViewChanged = () => {
     const w = Math.max(2, this.handleSize / this.ogma.view.getZoom());
-    document.documentElement.style.setProperty('--handle-scale', `${1 / w}`);
-
+    document.documentElement.style.setProperty("--handle-scale", `${1 / w}`);
   };
 
   private _onInput = () => {
@@ -234,7 +240,7 @@ export class Texts extends Editor<Text> {
     if (!annotation) return;
     // prevent double spaces as it is not handled by the align algo.
     //const selectionCursor = this.textArea.selectionEnd;
-    this.textArea.value = this.textArea.value.replace(/ +(?= )/g, '');
+    this.textArea.value = this.textArea.value.replace(/ +(?= )/g, "");
     this.textArea.focus();
     //this.textArea.selectionEnd = Math.max(0, selectionCursor - 1);
     annotation.properties.content = this.textArea.value;
@@ -252,16 +258,18 @@ export class Texts extends Editor<Text> {
       const origin = new Vector2(tx, ty);
       const { x: dx, y: dy } = p.sub(origin).rotateRadians(-angle);
 
-      return dx > -margin
-        && dx < width + margin
-        && dy > -margin
-        && dy < height + margin;
+      return (
+        dx > -margin &&
+        dx < width + margin &&
+        dy > -margin &&
+        dy < height + margin
+      );
     });
   }
 
   public draw(svg: SVGSVGElement): void {
-    svg.innerHTML = '';
-    const styleContent = '';
+    svg.innerHTML = "";
+    const styleContent = "";
     const angle = this.ogma.view.getAngle();
     this.elements.forEach((annotation, i) => {
       const className = `class${i}`;
@@ -275,45 +283,46 @@ export class Texts extends Editor<Text> {
         strokeColor,
         strokeWidth,
         strokeType,
-        background
+        background,
       } = annotation.properties.style || defaultStyle;
-      if (id === this.selectedId)
-        return;
-      const g = createSVGElement<SVGGElement>('g');
-      g.classList.add('annotation-text');
-      g.setAttribute('fill', `${color}`);
-      g.setAttribute('font-size', `${fontSize}px`);
-      g.setAttribute('font-family', `${font}`);
+      if (id === this.selectedId) return;
+      const g = createSVGElement<SVGGElement>("g");
+      g.classList.add("annotation-text");
+      g.setAttribute("fill", `${color}`);
+      g.setAttribute("font-size", `${fontSize}px`);
+      g.setAttribute("font-family", `${font}`);
 
       // rect is used for background and stroke
-      const rect = createSVGElement<SVGRectElement>('rect');
+      const rect = createSVGElement<SVGRectElement>("rect");
       let addRect = false;
-      if (strokeType && strokeType !== 'none') {
+      if (strokeType && strokeType !== "none") {
         addRect = true;
-        rect.setAttribute('stroke', strokeColor || 'black');
-        rect.setAttribute('stroke-width', `${strokeWidth}`);
-        if (strokeType === 'dashed') {
-          rect.setAttribute('stroke-dasharray', `5,5`);
+        rect.setAttribute("stroke", strokeColor || "black");
+        rect.setAttribute("stroke-width", `${strokeWidth}`);
+        if (strokeType === "dashed") {
+          rect.setAttribute("stroke-dasharray", `5,5`);
         }
       }
       if ((background && background.length) || addRect) {
         addRect = true;
-        rect.setAttribute('fill', background || 'transparent');
+        rect.setAttribute("fill", background || "transparent");
       }
       if (addRect) {
-        rect.setAttribute('width', `${size.width}`);
-        rect.setAttribute('height', `${size.height}`);
+        rect.setAttribute("width", `${size.width}`);
+        rect.setAttribute("height", `${size.height}`);
       }
       g.appendChild(rect);
       drawText(annotation, g);
-      const { x, y } = new Vector2(position.x, position.y).rotateRadians(-angle);
-      g.setAttribute('transform', `translate(${x},${y})`);
+      const { x, y } = new Vector2(position.x, position.y).rotateRadians(
+        -angle
+      );
+      g.setAttribute("transform", `translate(${x},${y})`);
       g.classList.add(className);
-      g.setAttribute('data-annotation', `${annotation.id}`);
-      g.setAttribute('data-annotation-type', 'text');
+      g.setAttribute("data-annotation", `${annotation.id}`);
+      g.setAttribute("data-annotation-type", "text");
       svg.appendChild(g);
     });
-    const style = createSVGElement<SVGStyleElement>('style');
+    const style = createSVGElement<SVGStyleElement>("style");
     style.innerHTML = styleContent;
     if (!svg.firstChild) return;
     svg.insertBefore(style, svg.firstChild);
@@ -322,11 +331,13 @@ export class Texts extends Editor<Text> {
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
     [...this.layer.element.children].forEach((g) => {
-      const id = g.getAttribute('data-annotation');
+      const id = g.getAttribute("data-annotation");
       if (!id) return;
       const position = getTextPosition(this.getById(id));
-      const { x, y } = new Vector2(position.x, position.y).rotateRadians(-angle);
-      g.setAttribute('transform', `translate(${x},${y})`);
+      const { x, y } = new Vector2(position.x, position.y).rotateRadians(
+        -angle
+      );
+      g.setAttribute("transform", `translate(${x},${y})`);
     });
   }
 
@@ -338,31 +349,34 @@ export class Texts extends Editor<Text> {
     if (+this.selectedId < 0 && +this.hoveredId < 0) return;
     const t = this.getById(this.selectedId) || this.getById(this.hoveredId);
     const size = getTextSize(t);
-    const position = this.ogma.view.graphToScreenCoordinates(getTextPosition(t));
+    const position = this.ogma.view.graphToScreenCoordinates(
+      getTextPosition(t)
+    );
     const zoom = this.ogma.view.getZoom();
     const {
       font,
       fontSize,
       color,
       background,
-      padding = 0
+      padding = 0,
     } = t.properties.style || defaultStyle;
     const scaledFontSize = (fontSize || 1) * zoom;
     this.textArea.value = t.properties.content;
-    this.editor.element.style.transform = `translate(${position.x}px, ${position.y}px)`
-      + `translate(-50%, -50%)`
-      + `translate(${size.width / 2 * zoom}px, ${size.height / 2 * zoom}px)`;
+    this.editor.element.style.transform =
+      `translate(${position.x}px, ${position.y}px)` +
+      `translate(-50%, -50%)` +
+      `translate(${(size.width / 2) * zoom}px, ${(size.height / 2) * zoom}px)`;
     this.editor.element.style.width = `${size.width * zoom}px`;
     this.editor.element.style.height = `${size.height * zoom}px`;
     this.textArea.style.font = `${scaledFontSize} ${font}`;
-    this.textArea.style.fontFamily = font || 'sans-serif';
+    this.textArea.style.fontFamily = font || "sans-serif";
     this.textArea.style.fontSize = `${scaledFontSize}px`;
     this.textArea.style.padding = `${zoom * padding}px`;
     this.textArea.style.lineHeight = `${scaledFontSize}px`;
 
-    this.textArea.style.boxSizing = 'border-box';
-    this.textArea.style.color = color || 'black';
-    this.textArea.style.background = background || 'transparent';
+    this.textArea.style.boxSizing = "border-box";
+    this.textArea.style.color = color || "black";
+    this.textArea.style.background = background || "transparent";
 
     this.textArea.placeholder = this.placeholder;
 
@@ -376,8 +390,8 @@ export class Texts extends Editor<Text> {
 
   public destroy(): void {
     super.destroy();
-    document.removeEventListener('mouseup', this.onMouseUp);
-    document.removeEventListener('mousemove', this.onMouseMove, true);
+    document.removeEventListener("mouseup", this.onMouseUp);
+    document.removeEventListener("mousemove", this.onMouseMove, true);
     // update the width of the controls depending on zoom
     this.ogma.events.off(this.onViewChanged);
   }
@@ -387,5 +401,5 @@ export {
   defaultOptions as defaultTextOptions,
   defaultStyle as defaultTextStyle,
   defaultControllerOptions,
-  createText
+  createText,
 };

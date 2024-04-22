@@ -9,4 +9,3 @@ export function interpolate(t: number, min = 0, max = 1) {
 export function normalize(t: number, min = 0, max = 1) {
   return (t - min) / (max - min);
 }
-

@@ -1,14 +1,14 @@
-import { Point } from '@linkurious/ogma';
+import { Point } from "@linkurious/ogma";
 import type {
   BBox,
   Feature,
   FeatureCollection,
   Geometry,
-  Position
-} from 'geojson';
-import { AnnotationCollection, Arrow, Text } from './types';
+  Position,
+} from "geojson";
+import { AnnotationCollection, Arrow, Text } from "./types";
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 export function createSVGElement<T extends SVGElement>(tag: string): T {
   return document.createElementNS(SVG_NS, tag) as T;
@@ -23,7 +23,7 @@ export function getTextSize(t: Text) {
   const bbox = getTextBbox(t);
   return {
     width: bbox[2] - bbox[0],
-    height: bbox[3] - bbox[1]
+    height: bbox[3] - bbox[1],
   };
 }
 
@@ -53,8 +53,8 @@ export function setTextBbox(
       [x + width, y],
       [x + width, y + height],
       [x, y + height],
-      [x, y]
-    ]
+      [x, y],
+    ],
   ];
 }
 
@@ -63,8 +63,8 @@ export function getArrowStart(a: Arrow) {
   return { x, y };
 }
 
-export function getArrowSide(a: Arrow, side: 'start' | 'end') {
-  const [x, y] = a.geometry.coordinates[side === 'start' ? 0 : 1];
+export function getArrowSide(a: Arrow, side: "start" | "end") {
+  const [x, y] = a.geometry.coordinates[side === "start" ? 0 : 1];
   return { x, y };
 }
 
@@ -87,16 +87,16 @@ export function getArrowEndPoints(a: Arrow) {
 
 export function setArrowEndPoint(
   a: Arrow,
-  side: 'start' | 'end',
+  side: "start" | "end",
   x: number,
   y: number
 ) {
-  if (side === 'start') setArrowStart(a, x, y);
+  if (side === "start") setArrowStart(a, x, y);
   else setArrowEnd(a, x, y);
 }
 
 export const getHandleId = (handle: HTMLDivElement): number =>
-  parseInt(handle.getAttribute('data-handle-id') || '-1');
+  parseInt(handle.getAttribute("data-handle-id") || "-1");
 
 type Bounds = [number, number, number, number];
 
@@ -115,7 +115,7 @@ export function getAnnotationsBounds(
       Number.POSITIVE_INFINITY,
       Number.POSITIVE_INFINITY,
       Number.NEGATIVE_INFINITY,
-      Number.NEGATIVE_INFINITY
+      Number.NEGATIVE_INFINITY,
     ]
   );
 }
@@ -124,28 +124,28 @@ function getCoordinatesDump(
   gj: Feature | FeatureCollection | Geometry
 ): Position[] {
   let coords: Position[] = [];
-  if (gj.type == 'Point') {
+  if (gj.type == "Point") {
     coords = [gj.coordinates];
-  } else if (gj.type == 'LineString' || gj.type == 'MultiPoint') {
+  } else if (gj.type == "LineString" || gj.type == "MultiPoint") {
     coords = gj.coordinates;
-  } else if (gj.type == 'Polygon' || gj.type == 'MultiLineString') {
+  } else if (gj.type == "Polygon" || gj.type == "MultiLineString") {
     coords = gj.coordinates.reduce(function (dump, part) {
       return dump.concat(part);
     }, []);
-  } else if (gj.type == 'MultiPolygon') {
+  } else if (gj.type == "MultiPolygon") {
     coords = gj.coordinates.reduce<Position[]>(
       (dump, poly) =>
         dump.concat(poly.reduce((points, part) => points.concat(part), [])),
       []
     );
-  } else if (gj.type == 'Feature') {
+  } else if (gj.type == "Feature") {
     coords = getCoordinatesDump(gj.geometry);
-  } else if (gj.type == 'GeometryCollection') {
+  } else if (gj.type == "GeometryCollection") {
     coords = gj.geometries.reduce<Position[]>(
       (dump, g) => dump.concat(getCoordinatesDump(g)),
       []
     );
-  } else if (gj.type == 'FeatureCollection') {
+  } else if (gj.type == "FeatureCollection") {
     coords = gj.features.reduce<Position[]>(
       (dump, f) => dump.concat(getCoordinatesDump(f)),
       []
@@ -162,6 +162,18 @@ export function getAttachmentPointOnNode(
   const angle = Math.atan2(start.y - nodeCenter.y, start.x - nodeCenter.x);
   return {
     x: nodeCenter.x + nodeRadius * Math.cos(angle),
-    y: nodeCenter.y + nodeRadius * Math.sin(angle)
+    y: nodeCenter.y + nodeRadius * Math.sin(angle),
+  };
+}
+
+export function clientToContainerPosition(
+  evt: { clientX: number; clientY: number },
+  container?: HTMLElement | null
+) {
+  if (!container) return { x: evt.clientX, y: evt.clientY };
+  const rect = container.getBoundingClientRect();
+  return {
+    x: evt.clientX - rect.left - container.clientLeft,
+    y: evt.clientY - rect.top - container.clientTop,
   };
 }
