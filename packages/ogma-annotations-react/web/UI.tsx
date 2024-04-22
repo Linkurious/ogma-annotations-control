@@ -69,7 +69,7 @@ const MenuAdd = () => {
   function addAnnotation(type: "arrow" | "text") {
     const opts = ogma.getOptions();
     ogma.setOptions({ cursor: { default: "crosshair" } });
-    ogma.events.once("click", (evt) => {
+    ogma.events.once("mousedown", (evt) => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
       const annotation =
         type === "arrow"
@@ -102,9 +102,15 @@ const MenuAdd = () => {
   }
   return (
     <>
-      <Button onClick={() => addAnnotation("arrow")}>Add arrow</Button>
-      <Button onClick={() => addAnnotation("text")}>Add text</Button>
-      <Button onClick={() => save()}>Save</Button>
+      <Button placeholder="" onClick={() => addAnnotation("arrow")}>
+        Add arrow
+      </Button>
+      <Button placeholder="" onClick={() => addAnnotation("text")}>
+        Add text
+      </Button>
+      <Button onClick={() => save()} placeholder="">
+        Save
+      </Button>
     </>
   );
 };
@@ -152,7 +158,7 @@ export const UI = ({
     setTextStyle({ ...textStyle, font });
   }
   function setSize(f: string) {
-    setTextStyle({ ...textStyle, fontSize: `${f}` });
+    setTextStyle({ ...textStyle, fontSize: parseFloat(f) });
   }
   function setBgColor(background: string) {
     setTextStyle({ ...textStyle, background });
@@ -173,20 +179,24 @@ export const UI = ({
             <MenuAdd />
           </span>
         )}
+        {/* @ts-expect-error event-listeners */}
         <div className="tweakpanel" onMouseDown={stopEvent} onClick={stopEvent}>
           {currentAnnotation && isArrow(currentAnnotation) && (
             <span className="rows">
               <span>Shape</span>
               <ButtonGroup>
                 <Button
+                  placeholder={undefined}
                   onClick={() => setExt("none")}
                   icon={<DirectionNone />}
                 ></Button>
                 <Button
+                  placeholder={undefined}
                   onClick={() => setExt("one")}
                   icon={<DirectionOne />}
                 ></Button>
                 <Button
+                  placeholder={undefined}
                   onClick={() => setExt("both")}
                   icon={<DirectionBoth />}
                 ></Button>
@@ -231,7 +241,7 @@ export const UI = ({
               <span>Size</span>
               <Select
                 onChange={(s) => setSize(s as string)}
-                initialValue={textStyle.fontSize}
+                initialValue={textStyle.fontSize?.toString()}
               >
                 {fontSizeOptions.map((s) => (
                   <Select.Option key={s.value} value={s.value}>

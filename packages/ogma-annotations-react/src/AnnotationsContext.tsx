@@ -137,7 +137,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     return () => {
       editor?.destroy();
     };
-  }, [ogma, setArrowWidthFactor, arrowWidthFactor, arrowStyle, editor]);
+  }, [ogma]);
 
   // update the style of the current arrow annotation when the style changes
   useEffect(() => {
