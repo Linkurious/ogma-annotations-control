@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
 import { BrowserSession } from "./utils";
 
-describe.only("Snapping", () => {
+describe("Snapping", () => {
   const session = new BrowserSession();
 
   beforeAll(async () => {
