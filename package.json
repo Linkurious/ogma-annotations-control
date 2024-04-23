@@ -14,6 +14,7 @@
     "bump:patch": "npm version -ws --include-workspace-root --no-git-tag-version patch",
     "bump:minor": "npm version -ws --include-workspace-root --no-git-tag-version minor",
     "bump:major": "npm version -ws --include-workspace-root --no-git-tag-version major",
+    "postversion": "sync_versions",
     "postwsdocs": "node scripts/cleanup-md.mjs",
     "docs:dev": "vitepress dev docs",
     "lint:ci": "npm run lint:ci -ws",
@@ -55,5 +56,7 @@
     "packages/ogma-annotations",
     "packages/ogma-annotations-react"
   ],
-  "devDependencies": {}
+  "devDependencies": {
+    "@linkurious/code-tools": "^0.0.14"
+  }
 }
