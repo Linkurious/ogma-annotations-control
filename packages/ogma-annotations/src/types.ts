@@ -1,12 +1,12 @@
-import { Point } from '@linkurious/ogma';
+import { Point } from "@linkurious/ogma";
 import type {
   Feature,
   FeatureCollection,
   Geometry,
   GeometryObject,
   LineString,
-  Polygon
-} from 'geojson';
+  Polygon,
+} from "geojson";
 import {
   EVT_ADD,
   EVT_CANCEL_DRAWING,
@@ -19,22 +19,22 @@ import {
   EVT_UNHOVER,
   EVT_UNSELECT,
   EVT_UPDATE,
-  EVT_LINK
-} from './constants';
+  EVT_LINK,
+} from "./constants";
 
 export const isArrow = (
   a: AnnotationFeature<Geometry, AnnotationProps>
-): a is Arrow => a.properties.type === 'arrow';
+): a is Arrow => a.properties.type === "arrow";
 
 export const isText = (
   a: AnnotationFeature<Geometry, AnnotationProps>
-): a is Text => a.properties.type === 'text';
+): a is Text => a.properties.type === "text";
 
 export const isAnnotationCollection = (
   a: AnnotationFeature<Geometry, AnnotationProps> | FeatureCollection
-): a is AnnotationCollection => a.type === 'FeatureCollection';
+): a is AnnotationCollection => a.type === "FeatureCollection";
 
-type AnnotationType = 'arrow' | 'text';
+type AnnotationType = "arrow" | "text";
 
 export interface AnnotationProps {
   type: AnnotationType;
@@ -71,7 +71,7 @@ export type Id = string | number;
 
 export interface AnnotationFeature<
   G extends GeometryObject = GeometryObject,
-  P = AnnotationProps
+  P = AnnotationProps,
 > extends Feature<G, P> {
   id: string | number;
 }
@@ -83,13 +83,13 @@ export interface ArrowStyles extends StrokeOptions {
 
 type ExportedLink = {
   id: Id;
-  side: 'start' | 'end';
-  type: 'node' | 'text';
+  side: "start" | "end";
+  type: "node" | "text";
   magnet?: Point;
 };
 
 export interface ArrowProperties extends AnnotationProps {
-  type: 'arrow';
+  type: "arrow";
   style?: ArrowStyles;
   link?: Partial<Record<Side, ExportedLink>>;
 }
@@ -101,7 +101,7 @@ export interface AnnotationCollection extends FeatureCollection {
 }
 
 export type StrokeOptions = {
-  strokeType?: 'plain' | 'dashed' | 'none';
+  strokeType?: "plain" | "dashed" | "none";
   strokeColor?: string;
   strokeWidth?: number;
 };
@@ -122,7 +122,7 @@ export interface TextStyle extends StrokeOptions {
 }
 
 export interface TextProperties extends AnnotationProps {
-  type: 'text';
+  type: "text";
   /**text to display*/
   content: string;
   style?: TextStyle;
@@ -131,14 +131,14 @@ export interface TextProperties extends AnnotationProps {
 export type Text = AnnotationFeature<Polygon, TextProperties>;
 
 export type Stroke = {
-  type: 'plain' | 'dashed' | 'none';
+  type: "plain" | "dashed" | "none";
   color: string;
   width: number;
 };
 
 export type StrokeStyle = Stroke;
 
-export type Extremity = 'none' | 'arrow' | 'arrow-plain';
+export type Extremity = "none" | "arrow" | "arrow-plain";
 
 export type AnnotationOptions = {
   handleSize: number;
@@ -151,7 +151,7 @@ export type Events<T> = {
   [EVT_SELECT]: (evt: T) => void;
   [EVT_UNSELECT]: (evt: T) => void;
   [EVT_DRAG_START]: (evt: T) => void;
-  [EVT_DRAG]: (evt: T, key: 'line' | 'start' | 'end' | 'text') => void;
+  [EVT_DRAG]: (evt: T, key: "line" | "start" | "end" | "text") => void;
   [EVT_DRAG_END]: (evt: T) => void;
   [EVT_REMOVE]: (evt: T) => void;
   [EVT_ADD]: (evt: T) => void;
@@ -188,7 +188,7 @@ export type FeatureEvents = {
   /**
    * Event trigerred when linking an arrow to a text or node
    */
-  [EVT_LINK]: (evt: { arrow: Arrow; link: Link; }) => void;
+  [EVT_LINK]: (evt: { arrow: Arrow; link: Link }) => void;
   /**
    * Event trigerred when starting to drag an arrow or a text
    */
@@ -196,20 +196,22 @@ export type FeatureEvents = {
   /**
    * Event trigerred when dragging an arrow or a text
    */
-  [EVT_DRAG]: (evt: Arrow | Text, key: 'line' | 'start' | 'end' | 'text') => void;
+  [EVT_DRAG]: (
+    evt: Arrow | Text,
+    key: "line" | "start" | "end" | "text"
+  ) => void;
   /**
    * Event trigerred when stopped dragging an arrow or a text
    */
   [EVT_DRAG_END]: (evt: Arrow | Text) => void;
-
 };
 
-export type TargetType = 'text' | 'node';
+export type TargetType = "text" | "node";
 
-export type Side = 'start' | 'end';
+export type Side = "start" | "end";
 
 export type Link = {
-  /** arrow atteched to the text or node */
+  /** arrow attached to the text or node */
   arrow: Id;
   /** id of the text the arrow is attached to */
   id: Id;
@@ -229,6 +231,9 @@ export type Link = {
 };
 
 export type ControllerOptions = {
+  /**
+   * The color of the magnet points
+   */
   magnetColor: string;
   /**
    * The radius in which arrows are attracted
