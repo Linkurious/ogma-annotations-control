@@ -1,23 +1,24 @@
-import Ogma, { Point } from '@linkurious/ogma';
-import Vector2 from 'vector2js';
-import { createArrow, defaultOptions, defaultStyle } from './defaults';
-import drawArrow, { getArrowHeight } from './render';
-import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from '../../constants';
-import { Arrow, ControllerOptions } from '../../types';
+import Ogma, { Point } from "@linkurious/ogma";
+import Vector2 from "vector2js";
+import { createArrow, defaultOptions, defaultStyle } from "./defaults";
+import drawArrow, { getArrowHeight } from "./render";
+import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from "../../constants";
+import { Arrow, ControllerOptions } from "../../types";
 import {
+  clientToContainerPosition,
   createSVGElement,
   getArrowEnd,
   getArrowEndPoints,
   getArrowStart,
   getHandleId,
   setArrowEnd,
-  setArrowStart
-} from '../../utils';
-import Editor from '../base';
+  setArrowStart,
+} from "../../utils";
+import Editor from "../base";
 
-const HANDLE_LINE = 'handle-line';
-const HANDLE_START = 'handle-start';
-const HANDLE_END = 'handle-end';
+const HANDLE_LINE = "handle-line";
+const HANDLE_START = "handle-start";
+const HANDLE_END = "handle-end";
 
 /**
  * @class Arrows
@@ -40,7 +41,7 @@ export class Arrows extends Editor<Arrow> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: Pick<
       Partial<ControllerOptions>,
-      'arrowHandleSize' | 'maxArrowHeight' | 'minArrowHeight'
+      "arrowHandleSize" | "maxArrowHeight" | "minArrowHeight"
     > = {}
   ) {
     super(
@@ -58,22 +59,23 @@ export class Arrows extends Editor<Arrow> {
     this.maxArrowHeight = options.maxArrowHeight || 1e6;
 
     this.handles = Array.prototype.slice.call(
-      this.editor.element.querySelectorAll('.arrow-handle>.handle')
+      this.editor.element.querySelectorAll(".arrow-handle>.handle")
     );
 
     // events to move/resize
     this.handles.forEach((handle: HTMLDivElement) =>
-      handle.addEventListener('mousedown', this.onHandleMouseDown)
+      handle.addEventListener("mousedown", this.onHandleMouseDown)
     );
-    document.addEventListener('mousemove', this.onMouseMove, true);
-    document.addEventListener('mouseup', this.onMouseUp);
+    document.addEventListener("mousemove", this.onMouseMove, true);
+    document.addEventListener("mouseup", this.onMouseUp);
   }
 
   private onHandleMouseDown = (evt: MouseEvent) => {
     const res = this.getById(this.selectedId) || this.getById(this.hoveredId);
     if (!res) return;
 
-    this.startDragging(res, evt.clientX, evt.clientY);
+    const { x, y } = clientToContainerPosition(evt, this.ogma.getContainer());
+    this.startDragging(res, x, y);
     this.draggedHandle = getHandleId(evt.target as HTMLDivElement);
   };
 
@@ -88,11 +90,19 @@ export class Arrows extends Editor<Arrow> {
     y: number,
     arrow: Arrow = createArrow(x, y, x, y, defaultStyle)
   ) {
+    this.disableDragging();
     this.add(arrow);
     this.hoveredId = arrow.id;
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
-    const bb = this.ogma.getContainer()?.getBoundingClientRect() || { left: 0, top: 0 };
-    this.startDragging(this.getById(arrow.id), pos.x + bb?.left, pos.y + bb.top);
+    const bb = this.ogma.getContainer()?.getBoundingClientRect() || {
+      left: 0,
+      top: 0,
+    };
+    this.startDragging(
+      this.getById(arrow.id),
+      pos.x + bb?.left,
+      pos.y + bb.top
+    );
     this.draggedHandle = 2;
   }
 
@@ -134,7 +144,10 @@ export class Arrows extends Editor<Arrow> {
 
     const handle = this.handles[this.draggedHandle];
     const angle = this.ogma.view.getAngle();
-    const { x: dx, y: dy } = new Vector2(evt.clientX - this.startX, evt.clientY - this.startY)
+    const { x: dx, y: dy } = new Vector2(
+      evt.clientX - this.startX,
+      evt.clientY - this.startY
+    )
       .divScalar(this.ogma.view.getZoom())
       .rotateRadians(angle);
     const isLine = handle.id === HANDLE_LINE;
@@ -149,7 +162,7 @@ export class Arrows extends Editor<Arrow> {
     this.emit(
       EVT_DRAG,
       this.arrow,
-      isLine ? 'line' : isStart ? 'start' : 'end'
+      isLine ? "line" : isStart ? "start" : "end"
     );
     this.refreshEditor();
     this.layer.refresh();
@@ -186,7 +199,7 @@ export class Arrows extends Editor<Arrow> {
     const end = this.ogma.view.graphToScreenCoordinates(extremities.end);
     const scale = Math.min(this.ogma.view.getZoom(), this.maxHandleScale);
     const [lineH, startH, endH] = Array.prototype.slice.call(
-      this.editor.element.querySelectorAll('.handle')
+      this.editor.element.querySelectorAll(".handle")
     ) as HTMLDivElement[];
 
     startH.style.transform = `translate(${start.x}px, ${start.y}px) translate(-50%, -50%) scale(${scale})`;
@@ -194,7 +207,7 @@ export class Arrows extends Editor<Arrow> {
 
     const middle = {
       x: (end.x + start.x) / 2,
-      y: (end.y + start.y) / 2
+      y: (end.y + start.y) / 2,
     };
 
     const v = new Vector2(end.x - start.x, end.y - start.y);
@@ -210,10 +223,10 @@ export class Arrows extends Editor<Arrow> {
     return defaultOptions;
   }
   public draw(svg: SVGSVGElement): void {
-    svg.innerHTML = '';
-    const g = createSVGElement<SVGGElement>('g');
+    svg.innerHTML = "";
+    const g = createSVGElement<SVGGElement>("g");
     const angle = this.ogma.view.getAngle();
-    g.setAttribute('transform', `rotate(${-angle * (180 / Math.PI)})`);
+    g.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
     this.elements.forEach((a) =>
       drawArrow(a, g, defaultStyle, this.minArrowHeight, this.maxArrowHeight)
     );
@@ -221,19 +234,20 @@ export class Arrows extends Editor<Arrow> {
   }
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
-    this.layer.element.children[0]
-      .setAttribute('transform', `rotate(${-angle * (180 / Math.PI)})`);
-
+    this.layer.element.children[0].setAttribute(
+      "transform",
+      `rotate(${-angle * (180 / Math.PI)})`
+    );
   }
   public destroy(): void {
     super.destroy();
-    document.removeEventListener('mousemove', this.onMouseMove, true);
-    document.removeEventListener('mouseup', this.onMouseUp);
+    document.removeEventListener("mousemove", this.onMouseMove, true);
+    document.removeEventListener("mouseup", this.onMouseUp);
   }
 }
 
 export {
   defaultOptions as defaultArrowOptions,
   defaultStyle as defaultArrowStyle,
-  createArrow
+  createArrow,
 };
