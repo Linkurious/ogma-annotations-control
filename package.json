@@ -19,9 +19,11 @@
     "docs:dev": "vitepress dev docs",
     "lint:ci": "npm run lint:ci -ws",
     "lint": "npm run lint -ws",
-    "predocs:build": "npm run wsdocs",
     "docs:build": "vitepress build docs",
     "docs:preview": "vitepress preview docs",
+    "predocs:build": "npm run wsdocs",
+    "predocs:dev": "npm run wsdocs",
+    "predocs:preview": "npm run wsdocs",
     "predocs:publish": "npm run docs:build",
     "docs:publish": "gh-pages -d docs/.vitepress/dist",
     "upload": "npm run docs:publish"
@@ -57,6 +59,8 @@
     "packages/ogma-annotations-react"
   ],
   "devDependencies": {
-    "@linkurious/code-tools": "^0.0.14"
+    "@linkurious/code-tools": "^0.0.14",
+    "@types/node": "^20.12.7",
+    "vitepress": "^1.1.3"
   }
 }

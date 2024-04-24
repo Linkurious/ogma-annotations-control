@@ -30,7 +30,7 @@
     "prepare": "playwright install",
     "start": "npm run dev",
     "dev": "vite -c web/vite.config.ts",
-    "build:ui": "vite build -c vite.config-ui.ts",
+    "build:demo": "vite build -c web/vite.config.mts",
     "prebuild": "rm -rf dist",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
@@ -40,7 +40,8 @@
     "lint": "eslint --ext ts --ext js src",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
     "preview": "vite preview",
-    "docs:build": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/annotations src/index.ts",
+    "docs:build": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/api src/index.ts",
+    "postdocs:build": "npm run build:demo",
     "test:unit": "vitest run -c test/unit/vitest.config.mts",
     "test:watch": "vitest watch -c test/unit/vitest.config.mts",
     "test:e2e": "vitest run -c test/e2e/vitest.config.mts",
@@ -80,12 +81,13 @@
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
     "playwright": "1.42.1",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^3.17.1",
     "typescript": "5.3.3",
     "vite": "5.2.0",
     "vitest": "1.4.0"
   },
   "eslintConfig": {
-    "parser": "@typescript-eslint/parser",
     "extends": [
       "@linkurious/eslint-config-ogma"
     ]
