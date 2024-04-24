@@ -11,7 +11,7 @@ hero:
       link: /getting-started.md
     - theme: alt
       text: Vanilla API
-      link: /annotations/classes/Control.md
+      link: /api/classes/Control.md
     - theme: alt
       text: React Wrapper
       link: /react-guide.md
