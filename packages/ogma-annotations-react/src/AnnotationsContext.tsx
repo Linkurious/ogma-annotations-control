@@ -137,6 +137,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     return () => {
       editor?.destroy();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ogma]);
 
   // update the style of the current arrow annotation when the style changes
