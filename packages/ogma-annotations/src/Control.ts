@@ -7,7 +7,6 @@ import Ogma, {
   Point,
 } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import Vector2 from "vector2js";
 import {
   EVT_ADD,
   EVT_CANCEL_DRAWING,
@@ -47,6 +46,7 @@ import {
   setArrowEndPoint,
   getAttachmentPointOnNode,
 } from "./utils";
+import { subtract, rotateRadians, add, multiply, length } from "./vec";
 
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
@@ -136,10 +136,11 @@ export class Control extends EventEmitter<FeatureEvents> {
       if (!this.textToMagnet) return;
       const size = getTextSize(this.textToMagnet);
       const position = getTextPosition(this.textToMagnet);
-      const { x, y } = new Vector2(magnet.x, magnet.y)
-        .mul({ x: size.width, y: size.height })
-        .rotateRadians(this.ogma.view.getAngle())
-        .add(position);
+
+      const a = multiply(magnet, { x: size.width, y: size.height });
+      const r = rotateRadians(a, this.ogma.view.getAngle());
+      const { x, y } = add(r, position);
+
       ctx.moveTo(x, y);
       ctx.arc(x, y, this.options.magnetHandleRadius / z, 0, Math.PI * 2);
     });
@@ -168,10 +169,11 @@ export class Control extends EventEmitter<FeatureEvents> {
         const arrow = this.getAnnotation(id) as Arrow;
         const size = getTextSize(a);
         const position = getTextPosition(a);
-        const pt = new Vector2(connectionPoint!.x, connectionPoint!.y)
-          .mul({ x: size.width, y: size.height })
-          .rotateRadians(this.ogma.view.getAngle())
-          .add(position);
+
+        const m = multiply(connectionPoint!, { x: size.width, y: size.height });
+        const r = rotateRadians(m, this.ogma.view.getAngle());
+        const pt = add(r, position);
+
         arrow.geometry.coordinates[side === "start" ? 0 : 1] = [pt.x, pt.y];
       });
       if (this.activeLinks.length) this.arrows.refreshLayer();
@@ -361,10 +363,10 @@ export class Control extends EventEmitter<FeatureEvents> {
         const a = this.getAnnotation(arrow) as Arrow;
         const size = getTextSize(text);
         const position = getTextPosition(text);
-        const point = new Vector2(connectionPoint!.x, connectionPoint!.y)
-          .mul({ x: size.width, y: size.height })
-          .rotateRadians(this.ogma.view.getAngle())
-          .add(position);
+
+        const m = multiply(connectionPoint!, { x: size.width, y: size.height });
+        const r = rotateRadians(m, this.ogma.view.getAngle());
+        const point = add(r, position);
         setArrowEndPoint(a, side, point.x, point.y);
       }
     );
@@ -384,11 +386,10 @@ export class Control extends EventEmitter<FeatureEvents> {
     for (const magnet of magnets) {
       const size = getTextSize(textToMagnet);
       const position = getTextPosition(textToMagnet);
-      const mPoint = new Vector2(magnet.x, magnet.y)
-        .mul({ x: size.width, y: size.height })
-        .rotateRadians(this.ogma.view.getAngle())
-        .add(position);
-      const dist = mPoint.sub(point).length();
+      const m = multiply(magnet, { x: size.width, y: size.height });
+      const r = rotateRadians(m, this.ogma.view.getAngle());
+      const mPoint = add(r, position);
+      const dist = length(subtract(mPoint, point));
       const scaledRadius = Math.min(
         this.options.magnetRadius * this.ogma.view.getZoom(),
         // when really zoomed in: avoid to snap on too far away magnets
