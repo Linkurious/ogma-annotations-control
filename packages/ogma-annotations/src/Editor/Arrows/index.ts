@@ -49,8 +49,8 @@ export class Arrows extends Editor<Arrow> {
       `
     <div class="arrow-handle">
       <div id="${HANDLE_LINE}" data-handle-id="0" class="handle line"></div>
-      <div id="${HANDLE_START}" data-handle-id="1" class="handle"></div>
-      <div id="${HANDLE_END}" data-handle-id="2" class="handle"></div>
+      <div id="${HANDLE_START}" data-handle-id="1" class="handle point"></div>
+      <div id="${HANDLE_END}" data-handle-id="2" class="handle point"></div>
     </div>
   `
     );
@@ -197,13 +197,12 @@ export class Arrows extends Editor<Arrow> {
     const extremities = getArrowEndPoints(arrow);
     const start = this.ogma.view.graphToScreenCoordinates(extremities.start);
     const end = this.ogma.view.graphToScreenCoordinates(extremities.end);
-    const scale = Math.min(this.ogma.view.getZoom(), this.maxHandleScale);
     const [lineH, startH, endH] = Array.prototype.slice.call(
       this.editor.element.querySelectorAll(".handle")
     ) as HTMLDivElement[];
 
-    startH.style.transform = `translate(${start.x}px, ${start.y}px) translate(-50%, -50%) scale(${scale})`;
-    endH.style.transform = `translate(${end.x}px, ${end.y}px) translate(-50%, -50%) scale(${scale}`;
+    startH.style.transform = `translate(${start.x}px, ${start.y}px) translate(-50%, -50%)`;
+    endH.style.transform = `translate(${end.x}px, ${end.y}px) translate(-50%, -50%)`;
 
     const middle = {
       x: (end.x + start.x) / 2,

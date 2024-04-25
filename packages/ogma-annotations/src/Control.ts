@@ -292,12 +292,13 @@ export class Control extends EventEmitter<FeatureEvents> {
     const element = this.ogma.view.getElementAt(screenPoint);
     this.links.remove(arrow, side);
     if (element && element.isNode) {
+      this.hoveredNode?.setSelected(false);
       this.hoveredNode = element;
-      this.hoveredNode.setSelected(true);
+      element.setSelected(true);
       // if close to the node border, snap to it
       this._snapToNode(arrow, side, element, screenPoint);
     } else {
-      if (this.hoveredNode) this.hoveredNode.setSelected(false);
+      this.hoveredNode?.setSelected(false);
       this.hoveredNode = null;
     }
   }

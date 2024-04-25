@@ -29,7 +29,7 @@
   "scripts": {
     "prepare": "playwright install",
     "start": "npm run dev",
-    "dev": "vite -c web/vite.config.ts",
+    "dev": "vite -c web/vite.config.mts",
     "build:demo": "vite build -c web/vite.config.mts",
     "prebuild": "rm -rf dist",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
