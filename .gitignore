@@ -2,7 +2,9 @@
 **/dist
 **/reports
 docs/.vitepress/cache
-docs/annotations
+docs/api
 docs/public/assets
 docs/public/demo-react.html
+docs/public/demo-react
+docs/public/demo
 

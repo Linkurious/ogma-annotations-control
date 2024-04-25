@@ -1,6 +1,6 @@
-import { Point } from '@linkurious/ogma';
-import { nanoid as getId } from 'nanoid';
-import { Arrow, Id, TargetType, Link, Side } from './types';
+import { Point } from "@linkurious/ogma";
+import { nanoid as getId } from "nanoid";
+import { Arrow, Id, TargetType, Link, Side } from "./types";
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -13,7 +13,7 @@ import { Arrow, Id, TargetType, Link, Side } from './types';
 export class Links {
   private links: Record<Id, Link> = {};
   private linksByTargetId: Record<Id, Id[]> = {};
-  private linksByArrowId: Record<Id, { start?: Id; end?: Id; }> = {};
+  private linksByArrowId: Record<Id, { start?: Id; end?: Id }> = {};
 
   public add(
     arrow: Arrow,
@@ -31,7 +31,7 @@ export class Links {
       target: targetId,
       targetType,
       connectionPoint,
-      side
+      side,
     };
     // add it to the links
     this.links[id] = link;
@@ -53,7 +53,7 @@ export class Links {
       id: targetId,
       side,
       type: targetType,
-      magnet: connectionPoint
+      magnet: connectionPoint,
     };
     return this;
   }
@@ -91,8 +91,11 @@ export class Links {
   }
 
   getTargetLinks(targetId: Id, type: TargetType): Link[] {
-    return this.linksByTargetId[targetId]?.map((id) => this.links[id])
-      .filter(l => l.targetType === type) ?? [];
+    return (
+      this.linksByTargetId[targetId]
+        ?.map((id) => this.links[id])
+        .filter((l) => l.targetType === type) ?? []
+    );
   }
 
   forEach(cb: (link: Link) => void) {

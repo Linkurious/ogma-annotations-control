@@ -24,9 +24,9 @@ import { Annotation, Events, Id } from "../types";
  * Abstract class to display Texts and Arrows, provide add/remove/update and mouse events
  * Modifying annotation is handled by the child classes, it is too specific
  */
-export default abstract class Editor<
-  T extends Annotation,
-> extends eventEmmitter<Events<T>> {
+export abstract class Editor<T extends Annotation> extends eventEmmitter<
+  Events<T>
+> {
   protected ogma: Ogma;
   protected elements: T[];
   // layer to draw elements
@@ -159,7 +159,7 @@ export default abstract class Editor<
    * @method update
    * Updates an annotation (position, color etc)
    * @param id Id of the annotation to update
-   * @param new params of the annotation
+   * @param element params of the annotation
    */
   update(id: Id, element: Partial<T>) {
     const target = this.getById(id);

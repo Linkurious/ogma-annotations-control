@@ -14,7 +14,7 @@ import {
   setArrowEnd,
   setArrowStart,
 } from "../../utils";
-import Editor from "../base";
+import { Editor } from "../base";
 
 const HANDLE_LINE = "handle-line";
 const HANDLE_START = "handle-start";

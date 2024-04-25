@@ -23,7 +23,7 @@ import {
   getTextSize,
   setTextBbox,
 } from "../../utils";
-import Editor from "../base";
+import { Editor } from "../base";
 
 interface Rect {
   x: number;
