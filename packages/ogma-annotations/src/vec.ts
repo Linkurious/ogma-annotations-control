@@ -1,4 +1,3 @@
-import exp from "constants";
 import { Vector } from "./types";
 
 // subtract two vectors
