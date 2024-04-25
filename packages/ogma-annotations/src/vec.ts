@@ -20,6 +20,7 @@ export const clone = (v: Vector) => ({
 
 export const normalize = (v: Vector): Vector => {
   const l = length(v);
+  if (l === 0) return { x: 0, y: 0 };
   return {
     x: v.x / l,
     y: v.y / l,
