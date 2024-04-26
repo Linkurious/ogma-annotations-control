@@ -29,7 +29,7 @@
   "scripts": {
     "prepare": "playwright install",
     "start": "npm run dev",
-    "dev": "vite -c web/vite.config.ts",
+    "dev": "vite -c web/vite.config.mts",
     "build:demo": "vite build -c web/vite.config.mts",
     "prebuild": "rm -rf dist",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
@@ -42,6 +42,7 @@
     "preview": "vite preview",
     "docs:build": "typedoc --plugin typedoc-plugin-markdown --out ../../docs/api src/index.ts",
     "postdocs:build": "npm run build:demo",
+    "test": "npm run test:unit",
     "test:unit": "vitest run -c test/unit/vitest.config.mts",
     "test:watch": "vitest watch -c test/unit/vitest.config.mts",
     "test:e2e": "vitest run -c test/e2e/vitest.config.mts",
@@ -69,13 +70,11 @@
   },
   "dependencies": {
     "@borgar/textbox": "1.6.0",
-    "eventemitter3": "5.0.1",
-    "vector2js": "2.0.1"
+    "eventemitter3": "5.0.1"
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "^1.0.9",
     "@types/geojson": "7946.0.13",
-    "@types/vector2js": "2.0.2",
     "canvas": "2.11.2",
     "eslint": "8.56.0",
     "get-port": "7.0.0",

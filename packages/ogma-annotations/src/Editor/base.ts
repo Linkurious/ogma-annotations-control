@@ -39,7 +39,6 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
   protected shouldDetect: boolean;
   protected isDragging: boolean;
   protected showeditorOnHover: boolean;
-  protected maxHandleScale = 1.5;
 
   constructor(ogma: Ogma, editorHtml: string) {
     super();

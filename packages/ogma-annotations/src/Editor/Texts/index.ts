@@ -1,5 +1,4 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import Vector2 from "vector2js";
 import {
   createText,
   defaultControllerOptions,
@@ -23,6 +22,7 @@ import {
   getTextSize,
   setTextBbox,
 } from "../../utils";
+import { rotateRadians, subtract } from "../../vec";
 import { Editor } from "../base";
 
 interface Rect {
@@ -193,7 +193,7 @@ export class Texts extends Editor<Text> {
     const dx = (clientX - this.startX) / zoom;
     const dy = (clientY - this.startY) / zoom;
     const angle = this.ogma.view.getAngle();
-    const delta = new Vector2(dx, dy).rotateRadians(angle);
+    const delta = rotateRadians({ x: dx, y: dy }, angle);
     if ((isBottom && isLeft) || (isTop && isRight)) {
       delta.y = 0;
       delta.x = 0;
@@ -250,13 +250,13 @@ export class Texts extends Editor<Text> {
 
   public detect({ x, y }: Point, margin = 0): Text | undefined {
     // check if the pointer is within the bounding box of one of the texts
-    const p = new Vector2(x, y);
+    const p = { x, y };
     const angle = this.ogma.view.getAngle();
     return this.elements.find((a) => {
       const { x: tx, y: ty } = getTextPosition(a);
       const { width, height } = getTextSize(a);
-      const origin = new Vector2(tx, ty);
-      const { x: dx, y: dy } = p.sub(origin).rotateRadians(-angle);
+      const origin = { x: tx, y: ty };
+      const { x: dx, y: dy } = rotateRadians(subtract(p, origin), -angle);
 
       return (
         dx > -margin &&
@@ -313,9 +313,7 @@ export class Texts extends Editor<Text> {
       }
       g.appendChild(rect);
       drawText(annotation, g);
-      const { x, y } = new Vector2(position.x, position.y).rotateRadians(
-        -angle
-      );
+      const { x, y } = rotateRadians(position, -angle);
       g.setAttribute("transform", `translate(${x},${y})`);
       g.classList.add(className);
       g.setAttribute("data-annotation", `${annotation.id}`);
@@ -334,9 +332,7 @@ export class Texts extends Editor<Text> {
       const id = g.getAttribute("data-annotation");
       if (!id) return;
       const position = getTextPosition(this.getById(id));
-      const { x, y } = new Vector2(position.x, position.y).rotateRadians(
-        -angle
-      );
+      const { x, y } = rotateRadians(position, -angle);
       g.setAttribute("transform", `translate(${x},${y})`);
     });
   }

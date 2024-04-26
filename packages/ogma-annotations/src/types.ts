@@ -1,4 +1,3 @@
-import { Point } from "@linkurious/ogma";
 import type {
   Feature,
   FeatureCollection,
@@ -80,6 +79,11 @@ export interface ArrowStyles extends StrokeOptions {
   tail?: Extremity;
   head?: Extremity;
 }
+
+export type Point = {
+  x: number;
+  y: number;
+};
 
 type ExportedLink = {
   id: Id;
@@ -275,3 +279,5 @@ export type ControllerOptions = {
 };
 
 export type Annotation = Arrow | Text;
+
+export type Vector = Point;
