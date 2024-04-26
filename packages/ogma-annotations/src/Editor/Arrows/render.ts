@@ -1,6 +1,14 @@
-import Vec2 from 'vector2js';
-import { Arrow, ArrowStyles, Extremity } from '../../types';
-import { createSVGElement, getArrowEndPoints } from '../../utils';
+import { Arrow, ArrowStyles, Extremity, Point } from "../../types";
+import { createSVGElement, getArrowEndPoints } from "../../utils";
+import {
+  subtract,
+  length,
+  invert,
+  rotateRadians,
+  normalize,
+  mul,
+  add,
+} from "../../vec";
 
 /**
  * @function getArrowHeight
@@ -9,11 +17,12 @@ import { createSVGElement, getArrowEndPoints } from '../../utils';
  */
 export function getArrowHeight(arrow: Arrow, min = 5, max = 30): number {
   const { start, end } = getArrowEndPoints(arrow);
-  const a = new Vec2(start.x, start.y);
-  const b = new Vec2(end.x, end.y);
-  const vec = b.sub(a);
-  const strokeW = arrow.properties.style && arrow.properties.style.strokeWidth ? arrow.properties.style?.strokeWidth : 0;
-  return Math.min(max, Math.max(3 * strokeW, vec.length() * 0.1, min));
+  const vec = subtract(end, start);
+  const strokeW =
+    arrow.properties.style && arrow.properties.style.strokeWidth
+      ? arrow.properties.style?.strokeWidth
+      : 0;
+  return Math.min(max, Math.max(3 * strokeW, length(vec) * 0.1, min));
 }
 
 /**
@@ -24,19 +33,20 @@ export function getArrowHeight(arrow: Arrow, min = 5, max = 30): number {
  * @param height The height of the arrow
  */
 function drawExt(
-  point: Vec2,
-  vec: Vec2,
+  point: Point,
+  vec: Point,
   type: Extremity | undefined,
   height: number
 ): string {
-  const delta = vec.clone().normalize().invert().mul(height);
-  if (!type || type === 'none') return '';
-  const p1 = point.clone().add(delta.rotateRadians(Math.PI / 8));
-  const p2 = point.clone().add(delta.rotateRadians(-Math.PI / 8));
+  const delta = mul(invert(normalize(vec)), height);
+  if (!type || type === "none") return "";
+  const p1 = add(point, rotateRadians(delta, Math.PI / 8));
+  const p2 = add(point, rotateRadians(delta, -Math.PI / 8));
 
   const pt = `${point.x} ${point.y}`;
-  return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${type === 'arrow' ? '' : `${p1.x} ${p1.y}`
-    }`;
+  return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${
+    type === "arrow" ? "" : `${p1.x} ${p1.y}`
+  }`;
 }
 
 /**
@@ -54,22 +64,20 @@ export default function draw(
   const { start, end } = getArrowEndPoints(arrow);
   const { tail, head, strokeColor, strokeWidth } =
     arrow.properties.style || defaultStyle;
-  const a = new Vec2(start.x, start.y);
-  const b = new Vec2(end.x, end.y);
-  const vec = b.clone().sub(a);
+  const vec = subtract(end, start);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
-  const path = createSVGElement<SVGPathElement>('path');
-  path.setAttribute('data-annotation', `${arrow.id}`);
-  path.setAttribute('data-annotation-type', 'arrow');
-  const filled = head === 'arrow-plain' || tail === 'arrow';
-  path.setAttribute('stroke', strokeColor || 'none');
-  path.setAttribute('stroke-width', `${strokeWidth}`);
-  path.setAttribute('fill', filled ? strokeColor || '' : 'none');
-  path.setAttribute('stroke-linecap', 'round');
-  path.setAttribute('stroke-linejoin', 'round');
-  const headD = drawExt(a, vec.clone().invert(), tail, tipLength);
-  const tailD = drawExt(b, vec, head, tipLength);
-  const d = headD + `M ${a.x} ${a.y} ${b.x} ${b.y}` + tailD;
-  path.setAttribute('d', d);
+  const path = createSVGElement<SVGPathElement>("path");
+  path.setAttribute("data-annotation", `${arrow.id}`);
+  path.setAttribute("data-annotation-type", "arrow");
+  const filled = head === "arrow-plain" || tail === "arrow";
+  path.setAttribute("stroke", strokeColor || "none");
+  path.setAttribute("stroke-width", `${strokeWidth}`);
+  path.setAttribute("fill", filled ? strokeColor || "" : "none");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  const headD = drawExt(start, invert(vec), tail, tipLength);
+  const tailD = drawExt(end, vec, head, tipLength);
+  const d = headD + `M ${start.x} ${start.y} ${end.x} ${end.y}` + tailD;
+  path.setAttribute("d", d);
   g.appendChild(path);
 }

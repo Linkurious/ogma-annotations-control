@@ -6,6 +6,7 @@
     var(--point-handle-width) + var(--point-handle-border)
   );
   --handle-color: #38e;
+  --handle-background: #fff;
 }
 
 svg text {
@@ -99,16 +100,16 @@ svg text {
   height: var(--point-handle-width);
 }
 .point-handle.top-left {
-  transform: translate(-75%, -75%);
+  transform: translate(-55%, -55%);
 }
 .point-handle.top-right {
-  transform: translate(-25%, -75%);
+  transform: translate(-45%, -55%);
 }
 .point-handle.bottom-left {
-  transform: translate(-75%, -25%);
+  transform: translate(-55%, -45%);
 }
 .point-handle.bottom-right {
-  transform: translate(-25%, -25%);
+  transform: translate(-45%, -45%);
 }
 
 .point-handle.top-left,
@@ -150,6 +151,11 @@ svg text {
   height: var(--handle-width);
   border-radius: 0;
   cursor: move;
+}
+
+.arrow-handle > .point {
+  background-color: var(--handle-background);
+  border: 2px solid var(--handle-color);
 }
 
 .annotations-hidden-input {

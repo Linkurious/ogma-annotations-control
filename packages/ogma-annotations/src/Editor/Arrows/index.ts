@@ -1,5 +1,4 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import Vector2 from "vector2js";
 import { createArrow, defaultOptions, defaultStyle } from "./defaults";
 import drawArrow, { getArrowHeight } from "./render";
 import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from "../../constants";
@@ -14,6 +13,15 @@ import {
   setArrowEnd,
   setArrowStart,
 } from "../../utils";
+import {
+  divScalar,
+  dot,
+  length,
+  mul,
+  normalize,
+  rotateRadians,
+  subtract,
+} from "../../vec";
 import { Editor } from "../base";
 
 const HANDLE_LINE = "handle-line";
@@ -49,8 +57,8 @@ export class Arrows extends Editor<Arrow> {
       `
     <div class="arrow-handle">
       <div id="${HANDLE_LINE}" data-handle-id="0" class="handle line"></div>
-      <div id="${HANDLE_START}" data-handle-id="1" class="handle"></div>
-      <div id="${HANDLE_END}" data-handle-id="2" class="handle"></div>
+      <div id="${HANDLE_START}" data-handle-id="1" class="handle point"></div>
+      <div id="${HANDLE_END}" data-handle-id="2" class="handle point"></div>
     </div>
   `
     );
@@ -144,12 +152,13 @@ export class Arrows extends Editor<Arrow> {
 
     const handle = this.handles[this.draggedHandle];
     const angle = this.ogma.view.getAngle();
-    const { x: dx, y: dy } = new Vector2(
-      evt.clientX - this.startX,
-      evt.clientY - this.startY
-    )
-      .divScalar(this.ogma.view.getZoom())
-      .rotateRadians(angle);
+    const { x: dx, y: dy } = rotateRadians(
+      divScalar(
+        { x: evt.clientX - this.startX, y: evt.clientY - this.startY },
+        this.ogma.view.getZoom()
+      ),
+      angle
+    );
     const isLine = handle.id === HANDLE_LINE;
     const isStart = handle.id === HANDLE_START;
     const isEnd = handle.id === HANDLE_END;
@@ -172,18 +181,19 @@ export class Arrows extends Editor<Arrow> {
     return this.elements.find((a) => {
       const { start, end } = getArrowEndPoints(a);
       // p is the vector from mouse pointer to the center of the arrow
-      const p = new Vector2(point.x, point.y).sub(
-        new Vector2((start.x + end.x) / 2, (start.y + end.y) / 2)
-      );
-      const vec = new Vector2(end.x, end.y).sub(new Vector2(start.x, start.y));
-      const width = vec.length();
-      const vecN = vec.normalize();
+      const p = subtract(point, {
+        x: (start.x + end.x) / 2,
+        y: (start.y + end.y) / 2,
+      });
+      const vec = subtract(end, start);
+      const width = length(vec);
+      const vecN = normalize(vec);
       const height = getArrowHeight(a);
       // check if the cursor is within the bounds of the bounding rectangle
       // of the arrow extended by margin
       return (
-        Math.abs(vecN.dot(p)) < width / 2 + margin &&
-        Math.abs(vecN.rotateRadians(Math.PI / 2).dot(p)) < height / 2 + margin
+        Math.abs(dot(vecN, p)) < width / 2 + margin &&
+        Math.abs(dot(rotateRadians(vecN, Math.PI / 2), p)) < height / 2 + margin
       );
     });
   }
@@ -197,24 +207,23 @@ export class Arrows extends Editor<Arrow> {
     const extremities = getArrowEndPoints(arrow);
     const start = this.ogma.view.graphToScreenCoordinates(extremities.start);
     const end = this.ogma.view.graphToScreenCoordinates(extremities.end);
-    const scale = Math.min(this.ogma.view.getZoom(), this.maxHandleScale);
     const [lineH, startH, endH] = Array.prototype.slice.call(
       this.editor.element.querySelectorAll(".handle")
     ) as HTMLDivElement[];
 
-    startH.style.transform = `translate(${start.x}px, ${start.y}px) translate(-50%, -50%) scale(${scale})`;
-    endH.style.transform = `translate(${end.x}px, ${end.y}px) translate(-50%, -50%) scale(${scale}`;
+    startH.style.transform = `translate(${start.x}px, ${start.y}px) translate(-50%, -50%)`;
+    endH.style.transform = `translate(${end.x}px, ${end.y}px) translate(-50%, -50%)`;
 
     const middle = {
       x: (end.x + start.x) / 2,
       y: (end.y + start.y) / 2,
     };
 
-    const v = new Vector2(end.x - start.x, end.y - start.y);
-    const vn = v.mul(1 / v.length());
+    const v = subtract(end, start);
+    const vn = mul(v, 1 / length(v));
     const angle = Math.atan2(vn.y, vn.x);
 
-    lineH.style.width = `${v.length()}px`;
+    lineH.style.width = `${length(v)}px`;
     lineH.style.left = `${middle.x}px`;
     lineH.style.top = `${middle.y}px`;
     lineH.style.transform = `translate(-50%, -50%) rotate(${angle}rad)`;
