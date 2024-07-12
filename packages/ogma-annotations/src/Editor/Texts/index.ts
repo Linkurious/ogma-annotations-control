@@ -356,6 +356,7 @@ export class Texts extends Editor<Text> {
       background,
       padding = 0,
     } = t.properties.style || defaultStyle;
+    // @ts-expect-error font size type casting
     const scaledFontSize = (fontSize || 1) * zoom;
     this.textArea.value = t.properties.content;
     this.editor.element.style.transform =
