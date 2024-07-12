@@ -114,7 +114,7 @@ export interface TextStyle extends StrokeOptions {
   /** Helvetica, sans-serif...  */
   font?: string;
   /** Font size, in pixels */
-  fontSize?: number;
+  fontSize?: number | string;
   /** text color: #f00, yellow...*/
   color?: string;
   /** background color: empty for transparent #f00, yellow...*/
