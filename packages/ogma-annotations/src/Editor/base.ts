@@ -18,6 +18,7 @@ import {
   NONE,
 } from "../constants";
 import { Annotation, Events, Id } from "../types";
+import { scaleGeometry } from "../utils";
 
 /**
  * @class Annotations
@@ -152,6 +153,13 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
     this.updateAnnotation(annotation, {
       geometry,
     } as Partial<T>);
+  }
+
+  public scale(annotation: T, scale: number, ox: number, oy: number) {
+    this.updateGeometry(
+      annotation,
+      scaleGeometry(annotation.geometry, scale, ox, oy)
+    );
   }
 
   /**

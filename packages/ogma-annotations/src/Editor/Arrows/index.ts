@@ -243,10 +243,11 @@ export class Arrows extends Editor<Arrow> {
   }
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
-    this.layer.element.children[0].setAttribute(
-      "transform",
-      `rotate(${-angle * (180 / Math.PI)})`
-    );
+    if (this.layer.element !== null)
+      this.layer.element.children[0].setAttribute(
+        "transform",
+        `rotate(${-angle * (180 / Math.PI)})`
+      );
   }
   public destroy(): void {
     super.destroy();
