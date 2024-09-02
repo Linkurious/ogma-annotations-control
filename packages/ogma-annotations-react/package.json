@@ -1,11 +1,11 @@
 {
   "name": "@linkurious/ogma-annotations-react",
-  "version": "1.1.17",
+  "version": "1.1.18",
   "description": "A react component to add ogma annotations with  react",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
   "browser": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/types/index.d.ts",
   "files": [
     "dist"
   ],
@@ -17,7 +17,7 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "default": "./dist/index.mjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/types/index.d.ts"
     },
     "./umd": "./dist/index.js",
     "./esm": "./dist/index.mjs"
