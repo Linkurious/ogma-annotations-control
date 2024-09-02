@@ -1,4 +1,5 @@
-import Ogma, {
+import type Ogma from "@linkurious/ogma";
+import type {
   CanvasLayer,
   LayoutEndEvent,
   Node,
@@ -20,7 +21,7 @@ import {
   EVT_UPDATE,
 } from "./constants";
 import { Arrows } from "./Editor/Arrows";
-import { Editor } from "./Editor/base";
+import type { Editor } from "./Editor/base";
 import { Texts } from "./Editor/Texts";
 import { Links } from "./links";
 import {

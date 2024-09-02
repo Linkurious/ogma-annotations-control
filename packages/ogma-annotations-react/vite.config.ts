@@ -10,11 +10,19 @@ const __dirname = dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // @ts-expect-error Types incompatible
-  plugins: [react(), libInjectCss(), dts({ include: ["src"] })],
+  plugins: [
+    // @ts-expect-error Types incompatible
+    react(),
+    libInjectCss(),
+    dts({
+      outDir: "dist/types",
+      rollupTypes: true,
+      tsconfigPath: resolve(__dirname, "tsconfig-build.json"),
+    }),
+  ],
   build: {
     lib: {
-      name: "index",
+      name: resolve(__dirname, "src/index.ts"),
       fileName: (format) => `index.${format === "umd" ? "" : "m"}js`,
       entry: resolve(__dirname, "src/index.ts"),
     },

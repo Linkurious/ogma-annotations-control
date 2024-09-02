@@ -1,6 +1,6 @@
-import { Point } from "@linkurious/ogma";
+import type { Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
-import { Arrow, Id, TargetType, Link, Side } from "./types";
+import type { Arrow, Id, TargetType, Link, Side } from "./types";
 
 /**
  * Class that implements linking between annotation arrows and different items.
