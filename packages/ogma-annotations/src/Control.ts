@@ -1,4 +1,5 @@
-import Ogma, {
+import type Ogma from "@linkurious/ogma";
+import type {
   CanvasLayer,
   LayoutEndEvent,
   Node,
@@ -20,7 +21,7 @@ import {
   EVT_UPDATE,
 } from "./constants";
 import { Arrows } from "./Editor/Arrows";
-import { Editor } from "./Editor/base";
+import type { Editor } from "./Editor/base";
 import { Texts } from "./Editor/Texts";
 import { Links } from "./links";
 import {
@@ -490,6 +491,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     }
     return this;
   }
+
   private loadLink(arrow: Arrow) {
     if (!arrow.properties.link) return;
     for (const side of ends) {
@@ -513,6 +515,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       }
     }
   }
+
   /**
    * Start adding an arrow (add it, and give control to the user)
    * @param x coord of the first point
@@ -523,6 +526,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.cancelDrawing();
     this.arrows.startDrawing(x, y, arrow);
   }
+
   /**
    * Start adding a text (add it, and give control to the user)
    * @param x coord of the top left point
@@ -533,6 +537,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.cancelDrawing();
     this.texts.startDrawing(x, y, text);
   }
+
   /**
    * Cancel drawing on the current frame
    */
@@ -540,6 +545,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.annotations.forEach((o) => o.cancelDrawing());
     this.emit(EVT_CANCEL_DRAWING);
   }
+
   /**
    * Triggers the update event on the annotation
    * @param annotation The annotation updated
@@ -572,6 +578,15 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this;
   }
 
+  public setScale(id: Id, scale: number, ox: number, oy: number) {
+    const annotation = this.getAnnotations().features.find((a) => a.id === id);
+    if (!annotation) return this;
+    if (isArrow(annotation)) this.arrows.scale(annotation, scale, ox, oy);
+    else if (isText(annotation)) this.texts.scale(annotation, scale, ox, oy);
+    this.onUpdate(annotation);
+    return this;
+  }
+
   /**
    *
    * @returns the annotations in the controller
@@ -586,6 +601,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     });
     return collection;
   }
+
   /**
    * Retrieve the annotation with the given id
    * @param id the id of the annotation to get
@@ -594,6 +610,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public getAnnotation(id: Id) {
     return this.getAnnotations().features.find((a) => a.id === id);
   }
+
   /**
    * Destroy the controller and its elements
    */

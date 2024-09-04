@@ -4,6 +4,8 @@ import type {
   Feature,
   FeatureCollection,
   Geometry,
+  LineString,
+  Polygon,
   Position,
 } from "geojson";
 import { AnnotationCollection, Arrow, Text } from "./types";
@@ -118,6 +120,32 @@ export function getAnnotationsBounds(
       Number.NEGATIVE_INFINITY,
     ]
   );
+}
+
+function isPosition(coord: unknown): coord is Position {
+  return Array.isArray(coord) && coord.length === 2 && coord.every(isFinite);
+}
+
+export function scaleGeometry(
+  geometry: LineString | Polygon,
+  scale: number,
+  ox: number,
+  oy: number
+) {
+  for (let i = 0; i < geometry.coordinates.length; i++) {
+    const coord = geometry.coordinates[i];
+    if (isPosition(coord)) {
+      coord[0] = ox + (coord[0] - ox) * scale;
+      coord[1] = oy + (coord[1] - oy) * scale;
+    } else {
+      for (let j = 0; j < coord.length; j++) {
+        const pos = coord[j];
+        pos[0] = ox + (pos[0] - ox) * scale;
+        pos[1] = oy + (pos[1] - oy) * scale;
+      }
+    }
+  }
+  return geometry;
 }
 
 function getCoordinatesDump(

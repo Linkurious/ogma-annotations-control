@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations",
-  "version": "1.1.15",
+  "version": "1.1.18",
   "description": "Headless annotation plugin for Ogma",
   "main": "dist/index.mjs",
   "module": "dist/index.mjs",
@@ -35,7 +35,7 @@
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
-    "build": "vite build && npm run types",
+    "build": "vite build",
     "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts --ext js src",
     "lint": "eslint --ext ts --ext js src",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
@@ -70,11 +70,12 @@
   },
   "dependencies": {
     "@borgar/textbox": "1.6.0",
-    "eventemitter3": "5.0.1"
+    "@types/geojson": "7946.0.13",
+    "eventemitter3": "5.0.1",
+    "geojson": "^0.5.0"
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "^1.0.9",
-    "@types/geojson": "7946.0.13",
     "canvas": "2.11.2",
     "eslint": "8.56.0",
     "get-port": "7.0.0",
@@ -84,6 +85,7 @@
     "typedoc-plugin-markdown": "^3.17.1",
     "typescript": "5.3.3",
     "vite": "5.2.0",
+    "vite-plugin-dts": "^4.1.0",
     "vitest": "1.4.0"
   },
   "eslintConfig": {
