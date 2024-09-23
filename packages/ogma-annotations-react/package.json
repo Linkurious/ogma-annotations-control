@@ -50,8 +50,8 @@
   "peerDependencies": {
     "@linkurious/ogma": ">=4.5.6 || ^5.0.0",
     "@linkurious/ogma-annotations": "^1.1.17",
-    "@linkurious/ogma-react": ">=4.6.1",
-    "react": "18.2.0"
+    "@linkurious/ogma-react": ">=5",
+    "react": ">=17"
   },
   "devDependencies": {
     "@geist-ui/react": "2.2.5",
