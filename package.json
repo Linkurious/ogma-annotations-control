@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-control",
-  "version": "1.1.18",
+  "version": "1.1.20",
   "description": "A tool to draw texts and arrows on top of Ogma",
   "type": "module",
   "main": "index.js",
@@ -27,6 +27,7 @@
     "predocs:preview": "npm run wsdocs",
     "predocs:publish": "npm run docs:build",
     "docs:publish": "gh-pages -t --nojekyll -d dist/",
+    "preupload": "mkdir -p tmp/github_release/ && mv *.tgz tmp/github_release/",
     "upload": "npm run docs:publish"
   },
   "publishConfig": {
@@ -60,7 +61,7 @@
     "packages/ogma-annotations-react"
   ],
   "devDependencies": {
-    "@linkurious/code-tools": "^0.0.14",
+    "@linkurious/code-tools": "^0.0.15",
     "@types/node": "^20.12.7",
     "gh-pages": "^6.1.1",
     "vitepress": "^1.1.3"

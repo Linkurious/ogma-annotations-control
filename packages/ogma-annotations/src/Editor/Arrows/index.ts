@@ -154,7 +154,7 @@ export class Arrows extends Editor<Arrow> {
     const angle = this.ogma.view.getAngle();
     const { x: dx, y: dy } = rotateRadians(
       divScalar(
-        { x: evt.clientX - this.startX, y: evt.clientY - this.startY },
+        { x: evt.x - this.startX, y: evt.y - this.startY },
         this.ogma.view.getZoom()
       ),
       angle
