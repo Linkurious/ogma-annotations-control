@@ -61,7 +61,7 @@
     "packages/ogma-annotations-react"
   ],
   "devDependencies": {
-    "@linkurious/code-tools": "^0.0.14",
+    "@linkurious/code-tools": "^0.0.15",
     "@types/node": "^20.12.7",
     "gh-pages": "^6.1.1",
     "vitepress": "^1.1.3"
