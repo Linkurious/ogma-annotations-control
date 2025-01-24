@@ -1,13 +1,10 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+
 import Ogma, { RawNode } from "@linkurious/ogma";
+import { Control, createArrow, createText, AnnotationCollection } from "../src";
 import { EVT_DRAG_END } from "../src/constants";
-import {
-  Control,
-  createArrow,
-  createText,
-  AnnotationCollection,
-} from "../src/index";
+
 const ogma = new Ogma({
   container: "app",
 });
@@ -84,27 +81,24 @@ const annotationsWithLinks: AnnotationCollection = {
   ],
 };
 
-ogma.generate
-  .flower({ depth: 3 })
-  .then((g) => {
-    const nodesMap = g.nodes.reduce(
-      (acc, node, i) => {
-        acc[node.id!] = node;
-        node.id = `n${i}`;
-        return acc;
-      },
-      {} as Record<string, RawNode>
-    );
-    g.edges.forEach((edge) => {
-      edge.source = nodesMap[edge.source].id!;
-      edge.target = nodesMap[edge.target].id!;
-    });
-    return ogma.setGraph(g);
-  })
-  .then(() => ogma.layouts.force({ locate: true }))
-  .then(() => {
-    control.add(annotationsWithLinks);
-  });
+const graph = await ogma.generate.flower({ depth: 3 });
+
+const nodesMap = graph.nodes.reduce(
+  (acc, node, i) => {
+    acc[node.id!] = node;
+    node.id = `n${i}`;
+    return acc;
+  },
+  {} as Record<string, RawNode>
+);
+
+graph.edges.forEach((edge) => {
+  edge.source = nodesMap[edge.source].id!;
+  edge.target = nodesMap[edge.target].id!;
+});
+await ogma.setGraph(graph);
+await ogma.layouts.force({ locate: true });
+control.add(annotationsWithLinks);
 
 // @ts-ignore
 window.control = control;

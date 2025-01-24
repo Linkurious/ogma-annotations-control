@@ -27,6 +27,7 @@
     "predocs:preview": "npm run wsdocs",
     "predocs:publish": "npm run docs:build",
     "docs:publish": "gh-pages -t --nojekyll -d dist/",
+    "preupload": "mkdir -p tmp/github_release/ && mv *.tgz tmp/github_release/",
     "upload": "npm run docs:publish"
   },
   "publishConfig": {
