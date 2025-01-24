@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-react",
-  "version": "1.1.18",
+  "version": "1.1.20",
   "description": "A react component to add ogma annotations with  react",
   "type": "module",
   "main": "dist/index.mjs",
@@ -51,7 +51,7 @@
   "license": "Apache-2.0",
   "peerDependencies": {
     "@linkurious/ogma": ">=4.5.6 || ^5.0.0",
-    "@linkurious/ogma-annotations": "^1.1.18",
+    "@linkurious/ogma-annotations": "^1.1.20",
     "@linkurious/ogma-react": ">=5",
     "react": ">=17"
   },
