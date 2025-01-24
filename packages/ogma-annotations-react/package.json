@@ -33,7 +33,8 @@
     "docs:build": "vite build -c web/vite.config.mts",
     "postdocs:build": "bash scripts/postdocs.sh",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts,tsx src"
+    "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts,tsx src",
+    "test:unit": ""
   },
   "publishConfig": {
     "access": "public"
