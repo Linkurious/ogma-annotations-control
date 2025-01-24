@@ -152,9 +152,13 @@ export class Arrows extends Editor<Arrow> {
 
     const handle = this.handles[this.draggedHandle];
     const angle = this.ogma.view.getAngle();
+    const containerPos = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
     const { x: dx, y: dy } = rotateRadians(
       divScalar(
-        { x: evt.clientX - this.startX, y: evt.clientY - this.startY },
+        { x: containerPos.x - this.startX, y: containerPos.y - this.startY },
         this.ogma.view.getZoom()
       ),
       angle
