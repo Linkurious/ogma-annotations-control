@@ -10,6 +10,8 @@ import {
   add,
 } from "../../vec";
 
+const HALO_OPACITY = 0.5;
+
 /**
  * @function getArrowHeight
  * @param arrow The arrow to measure
@@ -39,9 +41,9 @@ function drawExt(
   height: number
 ): string {
   const delta = mul(invert(normalize(vec)), height);
-  if (!type || type === "none") return "";
-  const p1 = add(point, rotateRadians(delta, Math.PI / 8));
-  const p2 = add(point, rotateRadians(delta, -Math.PI / 8));
+  if (!type || (type !== "arrow" && type !== "arrow-plain")) return "";
+  const p1 = add(point, rotateRadians(delta, Math.PI / 10));
+  const p2 = add(point, rotateRadians(delta, -Math.PI / 10));
 
   const pt = `${point.x} ${point.y}`;
   return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${
@@ -62,22 +64,94 @@ export default function draw(
   maxArrowHeight: number
 ) {
   const { start, end } = getArrowEndPoints(arrow);
-  const { tail, head, strokeColor, strokeWidth } =
-    arrow.properties.style || defaultStyle;
+  const {
+    tail,
+    head,
+    strokeColor,
+    strokeWidth = 0,
+  } = arrow.properties.style || defaultStyle;
   const vec = subtract(end, start);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
+  const lineGroup = createSVGElement<SVGGElement>("g");
   const path = createSVGElement<SVGPathElement>("path");
-  path.setAttribute("data-annotation", `${arrow.id}`);
-  path.setAttribute("data-annotation-type", "arrow");
+  lineGroup.setAttribute("data-annotation", `${arrow.id}`);
+  lineGroup.setAttribute("data-annotation-type", "arrow");
+
   const filled = head === "arrow-plain" || tail === "arrow";
-  path.setAttribute("stroke", strokeColor || "none");
+  const color = strokeColor || "none";
+  path.setAttribute("stroke", color);
   path.setAttribute("stroke-width", `${strokeWidth}`);
   path.setAttribute("fill", filled ? strokeColor || "" : "none");
   path.setAttribute("stroke-linecap", "round");
   path.setAttribute("stroke-linejoin", "round");
+
   const headD = drawExt(start, invert(vec), tail, tipLength);
   const tailD = drawExt(end, vec, head, tipLength);
+
   const d = headD + `M ${start.x} ${start.y} ${end.x} ${end.y}` + tailD;
   path.setAttribute("d", d);
-  g.appendChild(path);
+  lineGroup.appendChild(path);
+
+  addExtremity(lineGroup, start, color, tail, strokeWidth);
+  addExtremity(lineGroup, end, color, head, strokeWidth);
+  g.appendChild(lineGroup);
+}
+
+function addExtremity(
+  lineGroup: SVGGElement,
+  point: Point,
+  color: string,
+  type: Extremity | undefined,
+  strokeWidth: number
+) {
+  if (type === "halo-dot")
+    addDot(lineGroup, point, getHaloColor(color), strokeWidth * 4);
+  if (type === "dot" || type === "halo-dot")
+    addDot(lineGroup, point, color, strokeWidth * 2);
+}
+
+function getHaloColor(color: string) {
+  if (color === "none") return "none";
+  return colorToRgba(color, HALO_OPACITY);
+}
+
+function colorToRgba(color: string, alpha: number) {
+  if (color.startsWith("#")) return hexToRgba(color, alpha);
+  if (color.startsWith("rgb")) return rgbToRgba(color, alpha);
+  return color;
+}
+
+function hexShortToLong(color: string) {
+  if (color.length === 4)
+    return color
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  return color;
+}
+
+function hexToRgba(color: string, alpha: number) {
+  const [r, g, b] = hexShortToLong(color)
+    .match(/\w\w/g)!
+    .map((c) => parseInt(c, 16));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function rgbToRgba(color: string, alpha: number) {
+  const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function addDot(
+  lineGroup: SVGGElement,
+  point: Point,
+  color: string,
+  size: number
+) {
+  const circle = createSVGElement<SVGCircleElement>("circle");
+  circle.setAttribute("cx", `${point.x}`);
+  circle.setAttribute("cy", `${point.y}`);
+  circle.setAttribute("r", `${size}`);
+  circle.setAttribute("fill", color);
+  lineGroup.appendChild(circle);
 }

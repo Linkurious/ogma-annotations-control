@@ -284,6 +284,7 @@ export class Texts extends Editor<Text> {
         strokeWidth,
         strokeType,
         background,
+        borderRadius,
       } = annotation.properties.style || defaultStyle;
       if (id === this.selectedId) return;
       const g = createSVGElement<SVGGElement>("g");
@@ -294,6 +295,11 @@ export class Texts extends Editor<Text> {
 
       // rect is used for background and stroke
       const rect = createSVGElement<SVGRectElement>("rect");
+
+      if (borderRadius) {
+        rect.setAttribute("rx", `${borderRadius}`);
+        rect.setAttribute("ry", `${borderRadius}`);
+      }
       let addRect = false;
       if (strokeType && strokeType !== "none") {
         addRect = true;

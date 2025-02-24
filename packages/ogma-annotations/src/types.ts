@@ -40,32 +40,6 @@ export interface AnnotationProps {
   style?: unknown;
 }
 
-// const c: AnnotationCollection = {
-//   type: 'FeatureCollection',
-//   features: [
-//     {
-//       type: 'Feature',
-//       id: '1',
-//       properties: {
-//         type: 'text',
-//         content: 'Hello world'
-//       },
-//       geometry: {
-//         type: 'Polygon',
-//         coordinates: [
-//           [
-//             [0, 0],
-//             [1, 0],
-//             [1, 1],
-//             [0, 1],
-//             [0, 0]
-//           ]
-//         ]
-//       }
-//     }
-//   ]
-// };
-
 export type Id = string | number;
 
 export interface AnnotationFeature<
@@ -119,10 +93,10 @@ export interface TextStyle extends StrokeOptions {
   color?: string;
   /** background color: empty for transparent #f00, yellow...*/
   background?: string;
-  // /** stroke of the box: falsy to none */
-  // stroke?: Stroke;
   /** padding around the text */
   padding?: number;
+  /** Text box border radius */
+  borderRadius?: number;
 }
 
 export interface TextProperties extends AnnotationProps {
@@ -142,7 +116,7 @@ export type Stroke = {
 
 export type StrokeStyle = Stroke;
 
-export type Extremity = "none" | "arrow" | "arrow-plain";
+export type Extremity = "none" | "arrow" | "arrow-plain" | "dot" | "halo-dot";
 
 export type AnnotationOptions = {
   handleSize: number;

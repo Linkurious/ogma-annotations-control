@@ -12,74 +12,9 @@ const control = new Control(ogma);
 //@ts-ignore
 window.ogma = ogma;
 
-const annotationsWithLinks: AnnotationCollection = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      id: 2,
-      properties: {
-        type: "arrow",
-        style: {
-          strokeType: "plain",
-          strokeColor: "#3b3",
-          strokeWidth: 2,
-          head: "arrow-plain",
-          tail: "none",
-        },
-        link: {
-          end: {
-            id: "n0",
-            side: "end",
-            type: "node",
-            magnet: {
-              x: 5.050129380397267,
-              y: 3.193041958648245,
-            },
-          },
-        },
-      },
-      geometry: {
-        type: "LineString",
-        coordinates: [
-          [-200, 200],
-          [5.050129380397267, 3.193041958648245],
-        ],
-      },
-    },
-    {
-      type: "Feature",
-      id: 0,
-      properties: {
-        type: "text",
-        content: "Another annotation",
-        style: {
-          font: "Helvetica",
-          fontSize: 52,
-          color: "black",
-          background: "rgba(255, 255, 255, 0.5)",
-          strokeWidth: 1,
-          strokeColor: "#000",
-          strokeType: "plain",
-          padding: 12,
-        },
-      },
-      geometry: {
-        type: "Polygon",
-        coordinates: [
-          [
-            [-200, -200],
-            [-200, -50],
-            [200, -50],
-            [200, -200],
-            [-200, -200],
-          ],
-        ],
-        bbox: [-200, -200, 200, -50],
-      },
-    },
-  ],
-};
+const annotationsWithLinks: AnnotationCollection = await fetch(
+  "annotations.json"
+).then((response) => response.json());
 
 const graph = await ogma.generate.flower({ depth: 3 });
 
