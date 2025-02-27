@@ -56,9 +56,10 @@ addArrows.addEventListener("click", () => {
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     const arrow = createArrow(x, y, x, y, {
-      strokeWidth: 2,
-      strokeColor: "#3A03CF",
       strokeType: "plain",
+      strokeColor: "#3A03CF",
+      strokeWidth: 2,
+      head: "arrow",
     });
     control.startArrow(x, y, arrow);
     control.once(EVT_DRAG_END, (a) => {
@@ -74,7 +75,16 @@ addTexts.addEventListener("click", () => {
   addTexts.disabled = true;
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-    const text = createText(x, y, 0, 0);
+    const text = createText(x, y, 0, 0, undefined, {
+      font: "IBM Plex Sans",
+      fontSize: 36,
+      color: "#3A03CF",
+      background: "#EDE6FF",
+      strokeWidth: 0,
+      strokeType: "plain",
+      borderRadius: 8,
+      padding: 12,
+    });
     control.startText(x, y, text);
     control.once(EVT_DRAG_END, (a) => {
       if (a.id !== text.id) return;
