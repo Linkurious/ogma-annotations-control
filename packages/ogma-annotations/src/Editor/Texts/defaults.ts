@@ -1,44 +1,45 @@
-import { nanoid as getId } from 'nanoid';
-import { AnnotationOptions, Text, TextStyle } from '../../types';
+import { nanoid as getId } from "nanoid";
+import { AnnotationOptions, Text, TextStyle } from "../../types";
 
 export const defaultStyle: TextStyle = {
-  font: 'sans-serif',
-  fontSize: 12,
-  color: 'black',
-  background: '',
-  strokeWidth: 1,
-  strokeColor: '#000',
-  strokeType: 'plain'
+  font: "sans-serif",
+  fontSize: 24,
+  color: "#202020",
+  background: "#fefefe",
+  strokeWidth: 0,
+  borderRadius: 8,
+  padding: 8,
+  strokeType: "plain",
 };
 
 //used when adding a new Text
 export const defaultOptions: Text = {
   id: 0,
-  type: 'Feature',
+  type: "Feature",
   properties: {
-    type: 'text',
-    content: '',
-    style: { ...defaultStyle }
+    type: "text",
+    content: "",
+    style: { ...defaultStyle },
   },
   geometry: {
-    type: 'Polygon',
+    type: "Polygon",
     coordinates: [
       [
         [0, 0],
         [100, 0],
         [100, 50],
         [0, 50],
-        [0, 0]
-      ]
-    ]
-  }
+        [0, 0],
+      ],
+    ],
+  },
   // position: { x: 0, y: 0 },
   // size: { width: 100, height: 50 }
 };
 
 export const defaultControllerOptions: AnnotationOptions = {
   handleSize: 3.5,
-  placeholder: 'Your text...'
+  placeholder: "Your text...",
 };
 
 export const createText = (
@@ -46,26 +47,26 @@ export const createText = (
   y = 0,
   width = 100,
   height = 50,
-  content = '',
+  content = "",
   styles: Partial<TextStyle> = { ...defaultStyle }
 ): Text => ({
   id: getId(),
-  type: 'Feature',
+  type: "Feature",
   properties: {
-    type: 'text',
+    type: "text",
     content,
-    style: { ...defaultStyle, ...styles }
+    style: { ...defaultStyle, ...styles },
   },
   geometry: {
-    type: 'Polygon',
+    type: "Polygon",
     coordinates: [
       [
         [x, y],
         [x + width, y],
         [x + width, y + height],
         [x, y + height],
-        [x, y]
-      ]
-    ]
-  }
+        [x, y],
+      ],
+    ],
+  },
 });

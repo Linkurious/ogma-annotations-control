@@ -1,31 +1,31 @@
-import { nanoid as getId } from 'nanoid';
-import { Arrow, ArrowStyles } from '../../types';
+import { nanoid as getId } from "nanoid";
+import { Arrow, ArrowStyles } from "../../types";
 
 export const defaultStyle: ArrowStyles = {
-  strokeType: 'plain',
-  strokeColor: 'black',
+  strokeType: "plain",
+  strokeColor: "#202020",
   strokeWidth: 1,
-  head: 'none',
-  tail: 'none'
+  head: "none",
+  tail: "none",
 };
 
 // used when adding a new Arrow
 export const defaultOptions: Arrow = {
   id: 0,
-  type: 'Feature',
+  type: "Feature",
   properties: {
-    type: 'arrow',
+    type: "arrow",
     style: {
-      ...defaultStyle
-    }
+      ...defaultStyle,
+    },
   },
   geometry: {
-    type: 'LineString',
+    type: "LineString",
     coordinates: [
       [0, 0],
-      [100, 100]
-    ]
-  }
+      [100, 100],
+    ],
+  },
 
   // type: 'arrow',
   // stroke: {
@@ -47,19 +47,19 @@ export const createArrow = (
   styles = { ...defaultStyle }
 ): Arrow => ({
   id: getId(),
-  type: 'Feature',
+  type: "Feature",
   properties: {
-    type: 'arrow',
+    type: "arrow",
     style: {
       ...defaultStyle,
-      ...styles
-    }
+      ...styles,
+    },
   },
   geometry: {
-    type: 'LineString',
+    type: "LineString",
     coordinates: [
       [x0, y0],
-      [x1, y1]
-    ]
-  }
+      [x1, y1],
+    ],
+  },
 });
