@@ -77,11 +77,11 @@ addTexts.addEventListener("click", () => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     const text = createText(x, y, 0, 0, undefined, {
       font: "IBM Plex Sans",
-      fontSize: 36,
+      fontSize: 24,
       color: "#3A03CF",
       background: "#EDE6FF",
-      strokeWidth: 0,
-      strokeType: "plain",
+      //strokeWidth: 1,
+      //strokeType: "dashed",
       borderRadius: 8,
       padding: 12,
     });

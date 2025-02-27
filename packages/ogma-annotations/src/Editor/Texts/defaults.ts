@@ -3,12 +3,12 @@ import { AnnotationOptions, Text, TextStyle } from "../../types";
 
 export const defaultStyle: TextStyle = {
   font: "sans-serif",
-  fontSize: 24,
-  color: "#202020",
-  background: "#fefefe",
+  fontSize: 18,
+  color: "#505050",
+  background: "#f5f5f5",
   strokeWidth: 0,
   borderRadius: 8,
-  padding: 8,
+  padding: 16,
   strokeType: "plain",
 };
 
