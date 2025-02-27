@@ -8,7 +8,7 @@
         "type": "arrow",
         "style": {
           "strokeType": "plain",
-          "strokeColor": "#3b3",
+          "strokeColor": "#3A03CF",
           "strokeWidth": 2,
           "head": "arrow"
         },
@@ -48,7 +48,7 @@
         "type": "arrow",
         "style": {
           "strokeType": "plain",
-          "strokeColor": "#3b3",
+          "strokeColor": "#E31D5B",
           "strokeWidth": 2,
           "head": "none",
           "tail": "none"
@@ -89,7 +89,7 @@
         "type": "arrow",
         "style": {
           "strokeType": "plain",
-          "strokeColor": "#3b3",
+          "strokeColor": "#3A03CF",
           "strokeWidth": 2,
           "head": "halo-dot"
         },
@@ -131,13 +131,12 @@
         "style": {
           "font": "IBM Plex Sans",
           "fontSize": 52,
-          "color": "black",
-          "background": "rgba(255, 255, 255, 0.5)",
-          "strokeWidth": 1,
-          "strokeColor": "#000",
+          "color": "#3A03CF",
+          "background": "#EDE6FF",
+          "strokeWidth": 0,
           "strokeType": "plain",
           "borderRadius": 8,
-          "padding": 12
+          "padding": 16
         }
       },
       "geometry": {
@@ -166,8 +165,8 @@
         "style": {
           "font": "IBM Plex Sans",
           "fontSize": 22,
-          "color": "#3A03CF",
-          "background": "#EDE6FF",
+          "color": "#E31D5B",
+          "background": "#FAEDF7",
           "strokeWidth": 0,
           "strokeColor": "#000",
           "strokeType": "plain",

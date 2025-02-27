@@ -205,3 +205,30 @@ export function clientToContainerPosition(
     y: evt.clientY - rect.top - container.clientTop,
   };
 }
+
+export function colorToRgba(color: string, alpha: number) {
+  if (color.startsWith("#")) return hexToRgba(color, alpha);
+  if (color.startsWith("rgb")) return rgbToRgba(color, alpha);
+  return color;
+}
+
+export function hexShortToLong(color: string) {
+  if (color.length === 4)
+    return color
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  return color;
+}
+
+export function hexToRgba(color: string, alpha: number) {
+  const [r, g, b] = hexShortToLong(color)
+    .match(/\w\w/g)!
+    .map((c) => parseInt(c, 16));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function rgbToRgba(color: string, alpha: number) {
+  const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}

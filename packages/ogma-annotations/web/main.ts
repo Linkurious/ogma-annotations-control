@@ -12,6 +12,15 @@ const control = new Control(ogma);
 //@ts-ignore
 window.ogma = ogma;
 
+ogma.styles.addRule({
+  nodeAttributes: {
+    color: "#5B97F8",
+  },
+  edgeAttributes: {
+    color: "#c9c9c9",
+  },
+});
+
 const annotationsWithLinks: AnnotationCollection = await fetch(
   "annotations.json"
 ).then((response) => response.json());
@@ -48,7 +57,7 @@ addArrows.addEventListener("click", () => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     const arrow = createArrow(x, y, x, y, {
       strokeWidth: 2,
-      strokeColor: "#3b3",
+      strokeColor: "#3A03CF",
       strokeType: "plain",
     });
     control.startArrow(x, y, arrow);

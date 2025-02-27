@@ -1,5 +1,5 @@
 import { Arrow, ArrowStyles, Extremity, Point } from "../../types";
-import { createSVGElement, getArrowEndPoints } from "../../utils";
+import { colorToRgba, createSVGElement, getArrowEndPoints } from "../../utils";
 import {
   subtract,
   length,
@@ -24,7 +24,7 @@ export function getArrowHeight(arrow: Arrow, min = 5, max = 30): number {
     arrow.properties.style && arrow.properties.style.strokeWidth
       ? arrow.properties.style?.strokeWidth
       : 0;
-  return Math.min(max, Math.max(3 * strokeW, length(vec) * 0.1, min));
+  return Math.min(max, Math.max(3 * strokeW, length(vec) * 0.01, min));
 }
 
 /**
@@ -113,33 +113,6 @@ function addExtremity(
 function getHaloColor(color: string) {
   if (color === "none") return "none";
   return colorToRgba(color, HALO_OPACITY);
-}
-
-function colorToRgba(color: string, alpha: number) {
-  if (color.startsWith("#")) return hexToRgba(color, alpha);
-  if (color.startsWith("rgb")) return rgbToRgba(color, alpha);
-  return color;
-}
-
-function hexShortToLong(color: string) {
-  if (color.length === 4)
-    return color
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  return color;
-}
-
-function hexToRgba(color: string, alpha: number) {
-  const [r, g, b] = hexShortToLong(color)
-    .match(/\w\w/g)!
-    .map((c) => parseInt(c, 16));
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
-
-function rgbToRgba(color: string, alpha: number) {
-  const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 function addDot(
