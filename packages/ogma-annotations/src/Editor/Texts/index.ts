@@ -300,6 +300,10 @@ export class Texts extends Editor<Text> {
       const size = getTextSize(annotation);
       const position = getTextPosition(annotation);
       const id = annotation.id;
+
+      // edited element is rendered in DOM
+      if (id === this.selectedId) continue;
+
       const {
         color,
         fontSize,
@@ -310,7 +314,6 @@ export class Texts extends Editor<Text> {
         background,
         borderRadius
       } = annotation.properties.style || defaultStyle;
-      if (id === this.selectedId) return;
       const g = createSVGElement<SVGGElement>("g");
       g.classList.add("annotation-text");
       g.setAttribute("fill", `${color}`);
@@ -361,8 +364,8 @@ export class Texts extends Editor<Text> {
     const groups = this.layer.element.children;
     for (let i = 0; i < groups.length; i++) {
       const g = groups[i] as SVGGElement;
-      const id = g.getAttribute("data-annotation");
-      if (!id) continue;
+      if (!g.hasAttribute("data-annotation")) continue;
+      const id = g.getAttribute("data-annotation")!;
       const position = getTextPosition(this.getById(id));
       const { x, y } = rotateRadians(position, -angle);
       g.setAttribute("transform", `translate(${x},${y})`);
