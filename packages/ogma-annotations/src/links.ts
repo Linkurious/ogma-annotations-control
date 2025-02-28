@@ -31,7 +31,7 @@ export class Links {
       target: targetId,
       targetType,
       connectionPoint,
-      side,
+      side
     };
     // add it to the links
     this.links[id] = link;
@@ -53,7 +53,7 @@ export class Links {
       id: targetId,
       side,
       type: targetType,
-      magnet: connectionPoint,
+      magnet: connectionPoint
     };
     return this;
   }

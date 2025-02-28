@@ -4,7 +4,7 @@ import Ogma, {
   Options,
   Overlay,
   Point,
-  SVGLayer,
+  SVGLayer
 } from "@linkurious/ogma";
 import eventEmmitter from "eventemitter3";
 import { nanoid as getId } from "nanoid";
@@ -15,7 +15,7 @@ import {
   EVT_SELECT,
   EVT_UNHOVER,
   EVT_UNSELECT,
-  NONE,
+  NONE
 } from "../constants";
 import { Annotation, Events, Id } from "../types";
 import { scaleGeometry } from "../utils";
@@ -60,7 +60,7 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
 
     // Layer to draw all the annotations
     this.layer = ogma.layers.addSVGLayer({
-      draw: (svg) => this.draw(svg),
+      draw: (svg) => this.draw(svg)
     });
     this.layer.moveToTop();
     // UI to move/resize the element
@@ -128,12 +128,12 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
         ...def.properties,
         ...(options.properties || {}),
         // styles need to be merged
-        style: { ...def.properties.style, ...(options.properties.style || {}) },
+        style: { ...def.properties.style, ...(options.properties.style || {}) }
       },
       geometry: {
         ...def.geometry,
-        ...options.geometry,
-      },
+        ...options.geometry
+      }
     } as T);
     this.elements.push(o);
     this.layer.refresh();
@@ -144,14 +144,14 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
   public updateStyle(annotation: T, style: Partial<T["properties"]["style"]>) {
     this.updateAnnotation(annotation, {
       properties: {
-        style,
-      },
+        style
+      }
     } as Partial<T>);
   }
 
   public updateGeometry(annotation: T, geometry: Partial<T["geometry"]>) {
     this.updateAnnotation(annotation, {
-      geometry,
+      geometry
     } as Partial<T>);
   }
 
@@ -185,13 +185,13 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
           ...(properties || {}),
           style: {
             ...(target.properties.style || {}),
-            ...(properties.style || {}),
-          },
+            ...(properties.style || {})
+          }
         };
       } else if (key === "geometry") {
         target.geometry = {
           ...target.geometry,
-          ...element.geometry,
+          ...element.geometry
         };
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -285,14 +285,14 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
     this.ogma.setOptions({
       interactions: {
         drag: { enabled: false },
-        pan: { enabled: false },
+        pan: { enabled: false }
       },
       detect: {
         nodes: false,
         edges: false,
         nodeTexts: false,
-        edgeTexts: false,
-      },
+        edgeTexts: false
+      }
     });
   }
 

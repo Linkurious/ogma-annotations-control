@@ -5,7 +5,7 @@ import type {
   Node,
   NodeList,
   NodesDragProgressEvent,
-  Point,
+  Point
 } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import {
@@ -18,7 +18,7 @@ import {
   EVT_REMOVE,
   EVT_SELECT,
   EVT_UNSELECT,
-  EVT_UPDATE,
+  EVT_UPDATE
 } from "./constants";
 import { Arrows } from "./Editor/Arrows";
 import type { Editor } from "./Editor/base";
@@ -35,7 +35,7 @@ import {
   isAnnotationCollection,
   isArrow,
   isText,
-  Link,
+  Link
 } from "./types";
 
 import {
@@ -45,7 +45,7 @@ import {
   getTextPosition,
   getTextSize,
   setArrowEndPoint,
-  getAttachmentPointOnNode,
+  getAttachmentPointOnNode
 } from "./utils";
 import { subtract, rotateRadians, add, multiply, length } from "./vec";
 
@@ -58,7 +58,7 @@ const defaultOptions: ControllerOptions = {
   arrowHandleSize: 3.5,
   textHandleSize: 3.5,
   minArrowHeight: 20,
-  maxArrowHeight: 30,
+  maxArrowHeight: 30
 };
 
 type EndType = "start" | "end";
@@ -73,7 +73,7 @@ const MAGNETS: Point[] = [
   { x: 1, y: 0.5 },
   { x: 0, y: 1 },
   { x: 0.5, y: 1 },
-  { x: 1, y: 1 },
+  { x: 1, y: 1 }
 ];
 
 type MagnetPoint = {
@@ -190,7 +190,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         if (link) {
           this.emit(EVT_LINK, {
             arrow: a,
-            link: this.links.getArrowLink(a.id, side)!,
+            link: this.links.getArrowLink(a.id, side)!
           });
         }
       });
@@ -400,7 +400,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       if (dist < Math.max(scaledRadius, this.options.magnetHandleRadius)) {
         res = {
           point: mPoint,
-          magnet,
+          magnet
         };
         break;
       }
@@ -416,7 +416,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public setOptions(options: Partial<ControllerOptions> = {}) {
     this.options = {
       ...(this.options || {}),
-      ...options,
+      ...options
     } as ControllerOptions;
     return this.options;
   }
@@ -594,7 +594,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public getAnnotations() {
     const collection: AnnotationCollection = {
       type: "FeatureCollection",
-      features: [],
+      features: []
     };
     this.annotations.forEach((editor) => {
       collection.features = [...collection.features, ...editor.getElements()];
