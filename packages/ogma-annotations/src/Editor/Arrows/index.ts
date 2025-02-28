@@ -11,7 +11,7 @@ import {
   getArrowStart,
   getHandleId,
   setArrowEnd,
-  setArrowStart,
+  setArrowStart
 } from "../../utils";
 import {
   divScalar,
@@ -20,7 +20,7 @@ import {
   mul,
   normalize,
   rotateRadians,
-  subtract,
+  subtract
 } from "../../vec";
 import { Editor } from "../base";
 
@@ -104,7 +104,7 @@ export class Arrows extends Editor<Arrow> {
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     const bb = this.ogma.getContainer()?.getBoundingClientRect() || {
       left: 0,
-      top: 0,
+      top: 0
     };
     this.startDragging(
       this.getById(arrow.id),
@@ -183,7 +183,7 @@ export class Arrows extends Editor<Arrow> {
       // p is the vector from mouse pointer to the center of the arrow
       const p = subtract(point, {
         x: (start.x + end.x) / 2,
-        y: (start.y + end.y) / 2,
+        y: (start.y + end.y) / 2
       });
       const vec = subtract(end, start);
       const width = length(vec);
@@ -216,7 +216,7 @@ export class Arrows extends Editor<Arrow> {
 
     const middle = {
       x: (end.x + start.x) / 2,
-      y: (end.y + start.y) / 2,
+      y: (end.y + start.y) / 2
     };
 
     const v = subtract(end, start);
@@ -259,5 +259,5 @@ export class Arrows extends Editor<Arrow> {
 export {
   defaultOptions as defaultArrowOptions,
   defaultStyle as defaultArrowStyle,
-  createArrow,
+  createArrow
 };

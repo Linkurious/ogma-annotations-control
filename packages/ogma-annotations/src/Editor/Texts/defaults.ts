@@ -9,7 +9,7 @@ export const defaultStyle: TextStyle = {
   strokeWidth: 0,
   borderRadius: 8,
   padding: 16,
-  strokeType: "plain",
+  strokeType: "plain"
 };
 
 //used when adding a new Text
@@ -19,7 +19,7 @@ export const defaultOptions: Text = {
   properties: {
     type: "text",
     content: "",
-    style: { ...defaultStyle },
+    style: { ...defaultStyle }
   },
   geometry: {
     type: "Polygon",
@@ -29,17 +29,17 @@ export const defaultOptions: Text = {
         [100, 0],
         [100, 50],
         [0, 50],
-        [0, 0],
-      ],
-    ],
-  },
+        [0, 0]
+      ]
+    ]
+  }
   // position: { x: 0, y: 0 },
   // size: { width: 100, height: 50 }
 };
 
 export const defaultControllerOptions: AnnotationOptions = {
   handleSize: 3.5,
-  placeholder: "Your text...",
+  placeholder: "Your text..."
 };
 
 export const createText = (
@@ -55,7 +55,7 @@ export const createText = (
   properties: {
     type: "text",
     content,
-    style: { ...defaultStyle, ...styles },
+    style: { ...defaultStyle, ...styles }
   },
   geometry: {
     type: "Polygon",
@@ -65,8 +65,8 @@ export const createText = (
         [x + width, y],
         [x + width, y + height],
         [x, y + height],
-        [x, y],
-      ],
-    ],
-  },
+        [x, y]
+      ]
+    ]
+  }
 });

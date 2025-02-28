@@ -5,7 +5,7 @@ import {
   useState,
   ReactElement,
   useReducer,
-  useEffect,
+  useEffect
 } from "react";
 import {
   AnnotationCollection,
@@ -15,7 +15,7 @@ import {
   Control as AnnotationsEditor,
   Annotation,
   isArrow,
-  isText,
+  isText
 } from "@linkurious/ogma-annotations";
 import { defaultArrowStyle, defaultTextStyle } from "./constants";
 import { useOgma } from "@linkurious/ogma-react";
@@ -68,19 +68,19 @@ const annotationsReducer = (
     case "add":
       return {
         ...state,
-        features: [...state.features, action.payload],
+        features: [...state.features, action.payload]
       };
     case "remove":
       return {
         ...state,
-        features: state.features.filter((a) => a.id !== action.payload.id),
+        features: state.features.filter((a) => a.id !== action.payload.id)
       };
     case "update":
       return {
         ...state,
         features: state.features.map((a) =>
           a.id === action.payload.id ? action.payload : a
-        ),
+        )
       };
     default:
       return state;
@@ -91,7 +91,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
   const ogma = useOgma();
   const [annotations, updateAnnotations] = useReducer(annotationsReducer, {
     type: "FeatureCollection",
-    features: [],
+    features: []
   });
   const [currentAnnotation, setCurrentAnnotation] =
     useState<AnnotationFeature | null>(null);
@@ -104,7 +104,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
   useEffect(() => {
     if (!ogma) return;
     const newEditor = new AnnotationsEditor(ogma, {
-      minArrowHeight: 1,
+      minArrowHeight: 1
     });
     // adjust the default style of the annotations based on the graph
     const newTextSizeFactor =
@@ -112,7 +112,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
     const newArrowWidthFactor = arrowWidthFactor;
     setArrowStyle({
       ...arrowStyle,
-      strokeWidth: (arrowStyle.strokeWidth || 1) * newArrowWidthFactor,
+      strokeWidth: (arrowStyle.strokeWidth || 1) * newArrowWidthFactor
     });
     setArrowWidthFactor(newArrowWidthFactor);
     setTextSizeFactor(newTextSizeFactor);
@@ -121,11 +121,11 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
         // read back the current options from the selected annotation
         if (isArrow(annotation)) {
           setArrowStyle({
-            ...(annotation.properties.style || {}),
+            ...(annotation.properties.style || {})
           });
         } else if (isText(annotation)) {
           setTextStyle({
-            ...(annotation.properties.style || {}),
+            ...(annotation.properties.style || {})
           });
         }
         setCurrentAnnotation(annotation);
@@ -182,7 +182,7 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
           setTextSizeFactor,
 
           editor,
-          setEditor,
+          setEditor
         } as IAnnotationsContext
       }
     >

@@ -6,7 +6,7 @@ export const defaultStyle: ArrowStyles = {
   strokeColor: "#202020",
   strokeWidth: 1,
   head: "none",
-  tail: "none",
+  tail: "none"
 };
 
 // used when adding a new Arrow
@@ -16,16 +16,16 @@ export const defaultOptions: Arrow = {
   properties: {
     type: "arrow",
     style: {
-      ...defaultStyle,
-    },
+      ...defaultStyle
+    }
   },
   geometry: {
     type: "LineString",
     coordinates: [
       [0, 0],
-      [100, 100],
-    ],
-  },
+      [100, 100]
+    ]
+  }
 
   // type: 'arrow',
   // stroke: {
@@ -52,14 +52,14 @@ export const createArrow = (
     type: "arrow",
     style: {
       ...defaultStyle,
-      ...styles,
-    },
+      ...styles
+    }
   },
   geometry: {
     type: "LineString",
     coordinates: [
       [x0, y0],
-      [x1, y1],
-    ],
-  },
+      [x1, y1]
+    ]
+  }
 });

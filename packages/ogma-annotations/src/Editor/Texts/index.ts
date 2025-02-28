@@ -3,7 +3,7 @@ import {
   createText,
   defaultControllerOptions,
   defaultOptions,
-  defaultStyle,
+  defaultStyle
 } from "./defaults";
 import drawText from "./render";
 import {
@@ -11,7 +11,7 @@ import {
   EVT_DRAG_END,
   EVT_DRAG_START,
   EVT_UPDATE,
-  NONE,
+  NONE
 } from "../../constants";
 import { ControllerOptions, Id, Text } from "../../types";
 import {
@@ -20,7 +20,7 @@ import {
   getHandleId,
   getTextPosition,
   getTextSize,
-  setTextBbox,
+  setTextBbox
 } from "../../utils";
 import { rotateRadians, subtract } from "../../vec";
 import { Editor } from "../base";
@@ -290,7 +290,7 @@ export class Texts extends Editor<Text> {
         strokeWidth,
         strokeType,
         background,
-        borderRadius,
+        borderRadius
       } = annotation.properties.style || defaultStyle;
       if (id === this.selectedId) return;
       const g = createSVGElement<SVGGElement>("g");
@@ -366,7 +366,7 @@ export class Texts extends Editor<Text> {
       fontSize,
       color,
       background,
-      padding = 0,
+      padding = 0
     } = t.properties.style || defaultStyle;
     // @ts-expect-error font size type casting
     const scaledFontSize = (fontSize || 1) * zoom;
@@ -410,5 +410,5 @@ export {
   defaultOptions as defaultTextOptions,
   defaultStyle as defaultTextStyle,
   defaultControllerOptions,
-  createText,
+  createText
 };

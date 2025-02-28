@@ -4,7 +4,7 @@ import type {
   Geometry,
   GeometryObject,
   LineString,
-  Polygon,
+  Polygon
 } from "geojson";
 import {
   EVT_ADD,
@@ -18,7 +18,7 @@ import {
   EVT_UNHOVER,
   EVT_UNSELECT,
   EVT_UPDATE,
-  EVT_LINK,
+  EVT_LINK
 } from "./constants";
 
 export const isArrow = (
@@ -44,7 +44,7 @@ export type Id = string | number;
 
 export interface AnnotationFeature<
   G extends GeometryObject = GeometryObject,
-  P = AnnotationProps,
+  P = AnnotationProps
 > extends Feature<G, P> {
   id: string | number;
 }

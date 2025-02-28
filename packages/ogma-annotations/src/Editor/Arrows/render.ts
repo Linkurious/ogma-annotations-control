@@ -7,7 +7,7 @@ import {
   rotateRadians,
   normalize,
   mul,
-  add,
+  add
 } from "../../vec";
 
 const HALO_OPACITY = 0.5;
@@ -68,7 +68,7 @@ export default function draw(
     tail,
     head,
     strokeColor,
-    strokeWidth = 0,
+    strokeWidth = 0
   } = arrow.properties.style || defaultStyle;
   const vec = subtract(end, start);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);

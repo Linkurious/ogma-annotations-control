@@ -93,5 +93,9 @@
     "extends": [
       "@linkurious/eslint-config-ogma"
     ]
+  },
+  "prettier": {
+    "printWidth": 80,
+    "trailingComma": "none"
   }
 }
