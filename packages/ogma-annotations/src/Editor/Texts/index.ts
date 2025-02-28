@@ -200,6 +200,7 @@ export class Texts extends Editor<Text> {
     const dy = (clientY - this.startY) / zoom;
     const angle = this.ogma.view.getAngle();
     const delta = rotateRadians({ x: dx, y: dy }, angle);
+    const dd = rotateRadians({ x: dx, y: dy }, -angle);
 
     let x = this.rect.x;
     let y = this.rect.y;
@@ -236,8 +237,11 @@ export class Texts extends Editor<Text> {
         height += dy;
       } else if (isLeft && isBottom) {
         // Bottom-left corner
+        x += delta.x;
+        width -= dx;
       } else if (isRight && isTop) {
         // Top-right corner
+        width += dx;
       }
       console.log({ x, y, width, height });
     }
