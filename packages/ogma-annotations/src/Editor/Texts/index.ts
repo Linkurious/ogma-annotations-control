@@ -183,11 +183,11 @@ export class Texts extends Editor<Text> {
     const isLeft = handle.classList.contains("left");
     const isRight = handle.classList.contains("right");
     const isBottom = handle.classList.contains("bottom");
-    let isLine = handle.classList.contains("line-handle");
+    let isDrag = handle.classList.contains("line-handle");
 
-    if (!isLine && !isTop && !isBottom && !isLeft && !isRight) {
+    if (!isDrag && !isTop && !isBottom && !isLeft && !isRight) {
       isTop = true;
-      isLine = true;
+      isDrag = true;
     }
 
     const { x: clientX, y: clientY } = clientToContainerPosition(
@@ -200,26 +200,67 @@ export class Texts extends Editor<Text> {
     const dy = (clientY - this.startY) / zoom;
     const angle = this.ogma.view.getAngle();
     const delta = rotateRadians({ x: dx, y: dy }, angle);
-    if ((isBottom && isLeft) || (isTop && isRight)) {
-      delta.y = 0;
-      delta.x = 0;
+
+    let x = this.rect.x;
+    let y = this.rect.y;
+    let width = Math.max(this.rect.width, minSize);
+    let height = Math.max(this.rect.height, minSize);
+
+    console.table({
+      isDrag,
+      isLeft,
+      isRight,
+      isTop,
+      isBottom,
+      angle,
+      dx,
+      dy,
+      adx: delta.x,
+      ady: delta.y,
+      width,
+      height
+    });
+
+    if (isDrag) {
+      x = this.rect.x + delta.x;
+      y = this.rect.y + delta.y;
+    } else {
+      // Resizing the box by dragging one of the corners
+      if (isLeft && isTop) {
+        x += delta.x;
+        y += delta.y;
+        width -= dx;
+        height -= dy;
+      } else if (isRight && isBottom) {
+        width += dx;
+        height += dy;
+      } else if (isLeft && isBottom) {
+        // Bottom-left corner
+      } else if (isRight && isTop) {
+        // Top-right corner
+      }
+      console.log({ x, y, width, height });
     }
-    const x = isLeft || isLine ? this.rect.x + delta.x : this.rect.x;
-    const y = isTop || isLine ? this.rect.y + delta.y : this.rect.y;
-    const width = Math.max(
-      this.rect.width + dx * (isLine || isLeft ? 0 : 1),
-      minSize
-    );
-    const height = Math.max(
-      this.rect.height + dy * (isLine || isTop ? 0 : 1),
-      minSize
-    );
+
     setTextBbox(this.annotation, x, y, width, height);
     this.emit(EVT_DRAG, this.annotation, "text");
 
     this.refreshEditor();
     this.layer.refresh();
   };
+
+  // Calculate movement delta with zoom and rotation adjustments
+  private getMovementDelta(evt: MouseEvent) {
+    const { x: clientX, y: clientY } = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
+
+    const { zoom, angle } = this.ogma.view.get();
+    const x = (clientX - this.startX) / zoom;
+    const y = (clientY - this.startY) / zoom;
+    return rotateRadians({ x, y }, angle);
+  }
 
   private onMouseUp = () => {
     if (!this.isDragging || this.draggedHandle === NONE) return;
@@ -277,7 +318,8 @@ export class Texts extends Editor<Text> {
     svg.innerHTML = "";
     const styleContent = "";
     const angle = this.ogma.view.getAngle();
-    this.elements.forEach((annotation, i) => {
+    for (let i = 0; i < this.elements.length; i++) {
+      const annotation = this.elements[i];
       const className = `class${i}`;
       const size = getTextSize(annotation);
       const position = getTextPosition(annotation);
@@ -331,7 +373,7 @@ export class Texts extends Editor<Text> {
       g.setAttribute("data-annotation", `${annotation.id}`);
       g.setAttribute("data-annotation-type", "text");
       svg.appendChild(g);
-    });
+    }
     const style = createSVGElement<SVGStyleElement>("style");
     style.innerHTML = styleContent;
     if (!svg.firstChild) return;
@@ -340,13 +382,15 @@ export class Texts extends Editor<Text> {
 
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
-    [...this.layer.element.children].forEach((g) => {
+    const groups = this.layer.element.children;
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i] as SVGGElement;
       const id = g.getAttribute("data-annotation");
-      if (!id) return;
+      if (!id) continue;
       const position = getTextPosition(this.getById(id));
       const { x, y } = rotateRadians(position, -angle);
       g.setAttribute("transform", `translate(${x},${y})`);
-    });
+    }
   }
 
   public getDefaultOptions(): Text {
@@ -371,21 +415,24 @@ export class Texts extends Editor<Text> {
     // @ts-expect-error font size type casting
     const scaledFontSize = (fontSize || 1) * zoom;
     this.textArea.value = t.properties.content;
-    this.editor.element.style.transform =
+    const elementStyle = this.editor.element.style;
+    elementStyle.transform =
       `translate(${position.x}px, ${position.y}px)` +
       `translate(-50%, -50%)` +
       `translate(${(size.width / 2) * zoom}px, ${(size.height / 2) * zoom}px)`;
-    this.editor.element.style.width = `${size.width * zoom}px`;
-    this.editor.element.style.height = `${size.height * zoom}px`;
-    this.textArea.style.font = `${scaledFontSize} ${font}`;
-    this.textArea.style.fontFamily = font || "sans-serif";
-    this.textArea.style.fontSize = `${scaledFontSize}px`;
-    this.textArea.style.padding = `${zoom * padding}px`;
-    this.textArea.style.lineHeight = `${scaledFontSize}px`;
+    elementStyle.width = `${size.width * zoom}px`;
+    elementStyle.height = `${size.height * zoom}px`;
 
-    this.textArea.style.boxSizing = "border-box";
-    this.textArea.style.color = color || "black";
-    this.textArea.style.background = background || "transparent";
+    const textAreaStyle = this.textArea.style;
+    textAreaStyle.font = `${scaledFontSize} ${font}`;
+    textAreaStyle.fontFamily = font || "sans-serif";
+    textAreaStyle.fontSize = `${scaledFontSize}px`;
+    textAreaStyle.padding = `${zoom * padding}px`;
+    textAreaStyle.lineHeight = `${scaledFontSize}px`;
+
+    textAreaStyle.boxSizing = "border-box";
+    textAreaStyle.color = color || "black";
+    textAreaStyle.background = background || "transparent";
 
     this.textArea.placeholder = this.placeholder;
 
