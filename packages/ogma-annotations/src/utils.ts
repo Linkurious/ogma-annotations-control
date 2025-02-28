@@ -6,7 +6,7 @@ import type {
   Geometry,
   LineString,
   Polygon,
-  Position,
+  Position
 } from "geojson";
 import { AnnotationCollection, Arrow, Text } from "./types";
 
@@ -25,7 +25,7 @@ export function getTextSize(t: Text) {
   const bbox = getTextBbox(t);
   return {
     width: bbox[2] - bbox[0],
-    height: bbox[3] - bbox[1],
+    height: bbox[3] - bbox[1]
   };
 }
 
@@ -55,8 +55,8 @@ export function setTextBbox(
       [x + width, y],
       [x + width, y + height],
       [x, y + height],
-      [x, y],
-    ],
+      [x, y]
+    ]
   ];
 }
 
@@ -117,7 +117,7 @@ export function getAnnotationsBounds(
       Number.POSITIVE_INFINITY,
       Number.POSITIVE_INFINITY,
       Number.NEGATIVE_INFINITY,
-      Number.NEGATIVE_INFINITY,
+      Number.NEGATIVE_INFINITY
     ]
   );
 }
@@ -190,7 +190,7 @@ export function getAttachmentPointOnNode(
   const angle = Math.atan2(start.y - nodeCenter.y, start.x - nodeCenter.x);
   return {
     x: nodeCenter.x + nodeRadius * Math.cos(angle),
-    y: nodeCenter.y + nodeRadius * Math.sin(angle),
+    y: nodeCenter.y + nodeRadius * Math.sin(angle)
   };
 }
 
@@ -202,6 +202,33 @@ export function clientToContainerPosition(
   const rect = container.getBoundingClientRect();
   return {
     x: evt.clientX - rect.left - container.clientLeft,
-    y: evt.clientY - rect.top - container.clientTop,
+    y: evt.clientY - rect.top - container.clientTop
   };
+}
+
+export function colorToRgba(color: string, alpha: number) {
+  if (color.startsWith("#")) return hexToRgba(color, alpha);
+  if (color.startsWith("rgb")) return rgbToRgba(color, alpha);
+  return color;
+}
+
+export function hexShortToLong(color: string) {
+  if (color.length === 4)
+    return color
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  return color;
+}
+
+export function hexToRgba(color: string, alpha: number) {
+  const [r, g, b] = hexShortToLong(color)
+    .match(/\w\w/g)!
+    .map((c) => parseInt(c, 16));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function rgbToRgba(color: string, alpha: number) {
+  const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

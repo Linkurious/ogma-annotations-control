@@ -1,26 +1,26 @@
-declare module '@borgar/textbox' {
-  type CSS_TEXT_ALIGN = 'left' | 'right' | 'center' | 'justify';
-  type SVG_TEXT_ALIGN = 'start' | 'middle' | 'end';
-  type VERTICAL_ALIGN = 'top' | 'middle' | 'bottom' | 'start' | 'end';
-  type OVERFLOW = 'ellipsis' | 'clip' | string;
+declare module "@borgar/textbox" {
+  type CSS_TEXT_ALIGN = "left" | "right" | "center" | "justify";
+  type SVG_TEXT_ALIGN = "start" | "middle" | "end";
+  type VERTICAL_ALIGN = "top" | "middle" | "bottom" | "start" | "end";
+  type OVERFLOW = "ellipsis" | "clip" | string;
 
-  type FontStyle = 'normal' | 'italic' | 'oblique';
+  type FontStyle = "normal" | "italic" | "oblique";
   type FontWeight =
-    | 'normal'
-    | 'bold'
-    | 'bolder'
-    | 'lighter'
-    | '100'
-    | '200'
-    | '300'
-    | '400'
-    | '500'
-    | '600'
-    | '700'
-    | '800'
-    | '900';
+    | "normal"
+    | "bold"
+    | "bolder"
+    | "lighter"
+    | "100"
+    | "200"
+    | "300"
+    | "400"
+    | "500"
+    | "600"
+    | "700"
+    | "800"
+    | "900";
 
-  type FontVariant = 'normal' | 'small-caps';
+  type FontVariant = "normal" | "small-caps";
 
   export interface TextboxOptions {
     /**
@@ -34,7 +34,7 @@ declare module '@borgar/textbox' {
     align?: CSS_TEXT_ALIGN | SVG_TEXT_ALIGN;
     valign?: VERTICAL_ALIGN;
     overflow?: OVERFLOW;
-    parser?: Parser | 'html' | 'text' | 'latex';
+    parser?: Parser | "html" | "text" | "latex";
     createElement?: ElementFactory;
   }
 
@@ -120,8 +120,8 @@ declare module '@borgar/textbox' {
     /**
      * Sets whether textbox should line-break within a word to prevent text from overflowing. This setting is `normal` by default which allows words to exceed the current line-width (unless line-overflow is set). Alternatively it may be set to `break-word` which will force a break mid-words.
      */
-    overflowWrap(): 'normal' | 'break-word';
-    overflowWrap(indicator: 'normal' | 'break-word'): this;
+    overflowWrap(): "normal" | "break-word";
+    overflowWrap(indicator: "normal" | "break-word"): this;
 
     /**
      * Selects which text parser to use. The available parsers are:
@@ -134,7 +134,7 @@ declare module '@borgar/textbox' {
      *   `Textbox.defaultparser = Textbox.htmlparser;`
      */
     parser(): Parser;
-    parser(parser: Parser | 'html' | 'text' | 'latex'): this;
+    parser(parser: Parser | "html" | "text" | "latex"): this;
 
     createElement(fn: ElementFactory): this;
 

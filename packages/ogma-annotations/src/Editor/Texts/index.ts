@@ -3,7 +3,7 @@ import {
   createText,
   defaultControllerOptions,
   defaultOptions,
-  defaultStyle,
+  defaultStyle
 } from "./defaults";
 import drawText from "./render";
 import {
@@ -11,7 +11,7 @@ import {
   EVT_DRAG_END,
   EVT_DRAG_START,
   EVT_UPDATE,
-  NONE,
+  NONE
 } from "../../constants";
 import { ControllerOptions, Id, Text } from "../../types";
 import {
@@ -20,7 +20,7 @@ import {
   getHandleId,
   getTextPosition,
   getTextSize,
-  setTextBbox,
+  setTextBbox
 } from "../../utils";
 import { rotateRadians, subtract } from "../../vec";
 import { Editor } from "../base";
@@ -60,16 +60,16 @@ export class Texts extends Editor<Text> {
     super(
       ogma,
       `
-    <div class="annotation-text-handle">
-    <span class="handle line-handle top" data-handle-id="0"></span>
-    <span class="handle line-handle bottom" data-handle-id="1"></span>
-    <span class="handle line-handle left" data-handle-id="2"></span>
-    <span class="handle line-handle right" data-handle-id="3"></span>
-    <span class="handle top right point-handle top-right" data-handle-id="4"></span>
-    <span class="handle left top point-handle top-left" data-handle-id="5"></span>
-    <span class="handle bottom right point-handle bottom-right" data-handle-id="6"></span>
-    <span class="handle left bottom left-handle point-handle bottom-left" data-handle-id="7"></span>
-    <textarea wrap="on"></textarea>
+    <div class="annotation-text-handle" data-handle-id="8">
+      <span class="handle line-handle top" data-handle-id="0"></span>
+      <span class="handle line-handle bottom" data-handle-id="1"></span>
+      <span class="handle line-handle left" data-handle-id="2"></span>
+      <span class="handle line-handle right" data-handle-id="3"></span>
+      <span class="handle top right point-handle top-right" data-handle-id="4"></span>
+      <span class="handle left top point-handle top-left" data-handle-id="5"></span>
+      <span class="handle bottom right point-handle bottom-right" data-handle-id="6"></span>
+      <span class="handle left bottom left-handle point-handle bottom-left" data-handle-id="7"></span>
+      <textarea wrap="on"></textarea>
     </div>
   `
     );
@@ -91,6 +91,7 @@ export class Texts extends Editor<Text> {
     this.handles = Array.prototype.slice.call(
       this.editor.element.querySelectorAll(".annotation-text-handle > .handle")
     );
+    this.handles.push(this.editor.element as HTMLDivElement);
 
     // events to move/resize
     this.handles.forEach((handle: HTMLDivElement) =>
@@ -178,36 +179,58 @@ export class Texts extends Editor<Text> {
 
     const handle = this.handles[this.draggedHandle];
 
-    const isTop = handle.classList.contains("top");
+    let isTop = handle.classList.contains("top");
     const isLeft = handle.classList.contains("left");
     const isRight = handle.classList.contains("right");
     const isBottom = handle.classList.contains("bottom");
-    const isLine = handle.classList.contains("line-handle");
+    let isDrag = handle.classList.contains("line-handle");
+
+    if (!isDrag && !isTop && !isBottom && !isLeft && !isRight) {
+      isTop = true;
+      isDrag = true;
+    }
 
     const { x: clientX, y: clientY } = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
     );
 
+    let x = this.rect.x;
+    let y = this.rect.y;
+    let width = Math.max(this.rect.width, minSize);
+    let height = Math.max(this.rect.height, minSize);
+
     const zoom = this.ogma.view.getZoom();
     const dx = (clientX - this.startX) / zoom;
     const dy = (clientY - this.startY) / zoom;
     const angle = this.ogma.view.getAngle();
     const delta = rotateRadians({ x: dx, y: dy }, angle);
-    if ((isBottom && isLeft) || (isTop && isRight)) {
-      delta.y = 0;
-      delta.x = 0;
+    const localDelta = rotateRadians({ x: dx, y: dy }, -angle);
+
+    if (isDrag) {
+      x = this.rect.x + delta.x;
+      y = this.rect.y + delta.y;
+    } else {
+      // Resizing the box by dragging one of the corners
+      if (isLeft && isTop) {
+        x += delta.x;
+        y += delta.y;
+        width -= dx;
+        height -= dy;
+      } else if (isRight && isBottom) {
+        width += dx;
+        height += dy;
+      } else if (isLeft && isBottom) {
+        x += localDelta.x;
+        width -= localDelta.x;
+        height += localDelta.y;
+      } else if (isRight && isTop) {
+        y += localDelta.y;
+        width += localDelta.x;
+        height -= localDelta.y;
+      }
     }
-    const x = isLeft || isLine ? this.rect.x + delta.x : this.rect.x;
-    const y = isTop || isLine ? this.rect.y + delta.y : this.rect.y;
-    const width = Math.max(
-      this.rect.width + dx * (isLine || isLeft ? 0 : 1),
-      minSize
-    );
-    const height = Math.max(
-      this.rect.height + dy * (isLine || isTop ? 0 : 1),
-      minSize
-    );
+
     setTextBbox(this.annotation, x, y, width, height);
     this.emit(EVT_DRAG, this.annotation, "text");
 
@@ -271,11 +294,16 @@ export class Texts extends Editor<Text> {
     svg.innerHTML = "";
     const styleContent = "";
     const angle = this.ogma.view.getAngle();
-    this.elements.forEach((annotation, i) => {
+    for (let i = 0; i < this.elements.length; i++) {
+      const annotation = this.elements[i];
       const className = `class${i}`;
       const size = getTextSize(annotation);
       const position = getTextPosition(annotation);
       const id = annotation.id;
+
+      // edited element is rendered in DOM
+      if (id === this.selectedId) continue;
+
       const {
         color,
         fontSize,
@@ -284,8 +312,8 @@ export class Texts extends Editor<Text> {
         strokeWidth,
         strokeType,
         background,
+        borderRadius
       } = annotation.properties.style || defaultStyle;
-      if (id === this.selectedId) return;
       const g = createSVGElement<SVGGElement>("g");
       g.classList.add("annotation-text");
       g.setAttribute("fill", `${color}`);
@@ -294,6 +322,11 @@ export class Texts extends Editor<Text> {
 
       // rect is used for background and stroke
       const rect = createSVGElement<SVGRectElement>("rect");
+
+      if (borderRadius) {
+        rect.setAttribute("rx", `${borderRadius}`);
+        rect.setAttribute("ry", `${borderRadius}`);
+      }
       let addRect = false;
       if (strokeType && strokeType !== "none") {
         addRect = true;
@@ -319,7 +352,7 @@ export class Texts extends Editor<Text> {
       g.setAttribute("data-annotation", `${annotation.id}`);
       g.setAttribute("data-annotation-type", "text");
       svg.appendChild(g);
-    });
+    }
     const style = createSVGElement<SVGStyleElement>("style");
     style.innerHTML = styleContent;
     if (!svg.firstChild) return;
@@ -328,13 +361,15 @@ export class Texts extends Editor<Text> {
 
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
-    [...this.layer.element.children].forEach((g) => {
-      const id = g.getAttribute("data-annotation");
-      if (!id) return;
+    const groups = this.layer.element.children;
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i] as SVGGElement;
+      if (!g.hasAttribute("data-annotation")) continue;
+      const id = g.getAttribute("data-annotation")!;
       const position = getTextPosition(this.getById(id));
       const { x, y } = rotateRadians(position, -angle);
       g.setAttribute("transform", `translate(${x},${y})`);
-    });
+    }
   }
 
   public getDefaultOptions(): Text {
@@ -354,26 +389,29 @@ export class Texts extends Editor<Text> {
       fontSize,
       color,
       background,
-      padding = 0,
+      padding = 0
     } = t.properties.style || defaultStyle;
     // @ts-expect-error font size type casting
     const scaledFontSize = (fontSize || 1) * zoom;
     this.textArea.value = t.properties.content;
-    this.editor.element.style.transform =
+    const elementStyle = this.editor.element.style;
+    elementStyle.transform =
       `translate(${position.x}px, ${position.y}px)` +
       `translate(-50%, -50%)` +
       `translate(${(size.width / 2) * zoom}px, ${(size.height / 2) * zoom}px)`;
-    this.editor.element.style.width = `${size.width * zoom}px`;
-    this.editor.element.style.height = `${size.height * zoom}px`;
-    this.textArea.style.font = `${scaledFontSize} ${font}`;
-    this.textArea.style.fontFamily = font || "sans-serif";
-    this.textArea.style.fontSize = `${scaledFontSize}px`;
-    this.textArea.style.padding = `${zoom * padding}px`;
-    this.textArea.style.lineHeight = `${scaledFontSize}px`;
+    elementStyle.width = `${size.width * zoom}px`;
+    elementStyle.height = `${size.height * zoom}px`;
 
-    this.textArea.style.boxSizing = "border-box";
-    this.textArea.style.color = color || "black";
-    this.textArea.style.background = background || "transparent";
+    const textAreaStyle = this.textArea.style;
+    textAreaStyle.font = `${scaledFontSize} ${font}`;
+    textAreaStyle.fontFamily = font || "sans-serif";
+    textAreaStyle.fontSize = `${scaledFontSize}px`;
+    textAreaStyle.padding = `${zoom * padding}px`;
+    textAreaStyle.lineHeight = `${scaledFontSize}px`;
+
+    textAreaStyle.boxSizing = "border-box";
+    textAreaStyle.color = color || "black";
+    textAreaStyle.background = background || "transparent";
 
     this.textArea.placeholder = this.placeholder;
 
@@ -382,7 +420,7 @@ export class Texts extends Editor<Text> {
 
   select(id: Id): void {
     super.select(id);
-    this.textArea.focus();
+    this.textArea.classList.add("noevents");
   }
 
   public destroy(): void {
@@ -398,5 +436,5 @@ export {
   defaultOptions as defaultTextOptions,
   defaultStyle as defaultTextStyle,
   defaultControllerOptions,
-  createText,
+  createText
 };

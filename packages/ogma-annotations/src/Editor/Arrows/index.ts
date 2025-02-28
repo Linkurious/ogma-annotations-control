@@ -11,7 +11,7 @@ import {
   getArrowStart,
   getHandleId,
   setArrowEnd,
-  setArrowStart,
+  setArrowStart
 } from "../../utils";
 import {
   divScalar,
@@ -20,7 +20,7 @@ import {
   mul,
   normalize,
   rotateRadians,
-  subtract,
+  subtract
 } from "../../vec";
 import { Editor } from "../base";
 
@@ -104,7 +104,7 @@ export class Arrows extends Editor<Arrow> {
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     const bb = this.ogma.getContainer()?.getBoundingClientRect() || {
       left: 0,
-      top: 0,
+      top: 0
     };
     this.startDragging(
       this.getById(arrow.id),
@@ -183,7 +183,7 @@ export class Arrows extends Editor<Arrow> {
       // p is the vector from mouse pointer to the center of the arrow
       const p = subtract(point, {
         x: (start.x + end.x) / 2,
-        y: (start.y + end.y) / 2,
+        y: (start.y + end.y) / 2
       });
       const vec = subtract(end, start);
       const width = length(vec);
@@ -216,7 +216,7 @@ export class Arrows extends Editor<Arrow> {
 
     const middle = {
       x: (end.x + start.x) / 2,
-      y: (end.y + start.y) / 2,
+      y: (end.y + start.y) / 2
     };
 
     const v = subtract(end, start);
@@ -235,7 +235,8 @@ export class Arrows extends Editor<Arrow> {
     svg.innerHTML = "";
     const g = createSVGElement<SVGGElement>("g");
     const angle = this.ogma.view.getAngle();
-    g.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
+    if (angle !== 0)
+      g.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
     this.elements.forEach((a) =>
       drawArrow(a, g, defaultStyle, this.minArrowHeight, this.maxArrowHeight)
     );
@@ -243,7 +244,7 @@ export class Arrows extends Editor<Arrow> {
   }
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
-    if (this.layer.element !== null)
+    if (this.layer.element !== null && angle !== 0)
       this.layer.element.children[0].setAttribute(
         "transform",
         `rotate(${-angle * (180 / Math.PI)})`
@@ -259,5 +260,5 @@ export class Arrows extends Editor<Arrow> {
 export {
   defaultOptions as defaultArrowOptions,
   defaultStyle as defaultArrowStyle,
-  createArrow,
+  createArrow
 };

@@ -16,7 +16,7 @@ export const defaultColors = [
   "#1E88E5",
   "#333333",
   "#808080",
-  "#cccccc",
+  "#cccccc"
 ];
 export const fonts = [
   "Roboto",
@@ -29,13 +29,13 @@ export const fonts = [
   "Monaco",
   "Consolas",
   "Courier New",
-  "monospace",
+  "monospace"
 ].sort((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()));
 
 export const defaultArrowStyle: ArrowStyles = {
   head: "arrow",
   strokeColor: BLACK,
-  strokeWidth: 5,
+  strokeWidth: 5
 };
 export const RELATIVE_PADDING = 0.25;
 
@@ -45,5 +45,5 @@ export const defaultTextStyle: TextStyle = {
   padding: fontSizes[2] * RELATIVE_PADDING,
   color: BLACK,
   strokeType: TRANSPARENT,
-  background: TRANSPARENT,
+  background: TRANSPARENT
 };

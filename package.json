@@ -1,9 +1,8 @@
 {
   "name": "@linkurious/ogma-annotations-control",
-  "version": "1.1.19",
+  "version": "1.1.20",
   "description": "A tool to draw texts and arrows on top of Ogma",
   "type": "module",
-  "main": "index.js",
   "scripts": {
     "e2e:test": "npm run test:e2e -ws --if-present",
     "test": "npm run test -ws --if-present",
@@ -60,8 +59,12 @@
     "packages/ogma-annotations",
     "packages/ogma-annotations-react"
   ],
+  "prettier": {
+    "printWidth": 80,
+    "trailingComma": "none"
+  },
   "devDependencies": {
-    "@linkurious/code-tools": "^0.0.14",
+    "@linkurious/code-tools": "^0.0.15",
     "@types/node": "^20.12.7",
     "gh-pages": "^6.1.1",
     "vitepress": "^1.1.3"
