@@ -87,7 +87,7 @@
     "typescript": "5.3.3",
     "vite": "5.2.0",
     "vite-plugin-dts": "^4.1.0",
-    "vitest": "1.4.0"
+    "vitest": "3.0.7"
   },
   "eslintConfig": {
     "extends": [
