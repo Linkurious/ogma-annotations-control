@@ -195,32 +195,17 @@ export class Texts extends Editor<Text> {
       this.ogma.getContainer()
     );
 
-    const zoom = this.ogma.view.getZoom();
-    const dx = (clientX - this.startX) / zoom;
-    const dy = (clientY - this.startY) / zoom;
-    const angle = this.ogma.view.getAngle();
-    const delta = rotateRadians({ x: dx, y: dy }, angle);
-    const dd = rotateRadians({ x: dx, y: dy }, -angle);
-
     let x = this.rect.x;
     let y = this.rect.y;
     let width = Math.max(this.rect.width, minSize);
     let height = Math.max(this.rect.height, minSize);
 
-    console.table({
-      isDrag,
-      isLeft,
-      isRight,
-      isTop,
-      isBottom,
-      angle,
-      dx,
-      dy,
-      adx: delta.x,
-      ady: delta.y,
-      width,
-      height
-    });
+    const zoom = this.ogma.view.getZoom();
+    const dx = (clientX - this.startX) / zoom;
+    const dy = (clientY - this.startY) / zoom;
+    const angle = this.ogma.view.getAngle();
+    const delta = rotateRadians({ x: dx, y: dy }, angle);
+    const localDelta = rotateRadians({ x: dx, y: dy }, -angle);
 
     if (isDrag) {
       x = this.rect.x + delta.x;
@@ -236,14 +221,14 @@ export class Texts extends Editor<Text> {
         width += dx;
         height += dy;
       } else if (isLeft && isBottom) {
-        // Bottom-left corner
-        x += delta.x;
-        width -= dx;
+        x += localDelta.x;
+        width -= localDelta.x;
+        height += localDelta.y;
       } else if (isRight && isTop) {
-        // Top-right corner
-        width += dx;
+        y += localDelta.y;
+        width += localDelta.x;
+        height -= localDelta.y;
       }
-      console.log({ x, y, width, height });
     }
 
     setTextBbox(this.annotation, x, y, width, height);
@@ -252,19 +237,6 @@ export class Texts extends Editor<Text> {
     this.refreshEditor();
     this.layer.refresh();
   };
-
-  // Calculate movement delta with zoom and rotation adjustments
-  private getMovementDelta(evt: MouseEvent) {
-    const { x: clientX, y: clientY } = clientToContainerPosition(
-      evt,
-      this.ogma.getContainer()
-    );
-
-    const { zoom, angle } = this.ogma.view.get();
-    const x = (clientX - this.startX) / zoom;
-    const y = (clientY - this.startY) / zoom;
-    return rotateRadians({ x, y }, angle);
-  }
 
   private onMouseUp = () => {
     if (!this.isDragging || this.draggedHandle === NONE) return;
