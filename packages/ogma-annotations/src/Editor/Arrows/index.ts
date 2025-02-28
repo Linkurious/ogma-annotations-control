@@ -235,7 +235,8 @@ export class Arrows extends Editor<Arrow> {
     svg.innerHTML = "";
     const g = createSVGElement<SVGGElement>("g");
     const angle = this.ogma.view.getAngle();
-    g.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
+    if (angle !== 0)
+      g.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
     this.elements.forEach((a) =>
       drawArrow(a, g, defaultStyle, this.minArrowHeight, this.maxArrowHeight)
     );
@@ -243,7 +244,7 @@ export class Arrows extends Editor<Arrow> {
   }
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
-    if (this.layer.element !== null)
+    if (this.layer.element !== null && angle !== 0)
       this.layer.element.children[0].setAttribute(
         "transform",
         `rotate(${-angle * (180 / Math.PI)})`

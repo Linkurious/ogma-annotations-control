@@ -45,9 +45,7 @@ export default function draw(annotation: Text, g: SVGGElement) {
     let query = l;
     while (query.length && index < children.length) {
       if (children[index].innerHTML === "&nbsp;") {
-        if (!query.startsWith("\n")) {
-          toRemove.push(index);
-        }
+        if (!query.startsWith("\n")) toRemove.push(index);
         index++;
         break;
       }
