@@ -112,6 +112,11 @@ svg text {
   transform: translate(-45%, -45%);
 }
 
+.rotated .point-handle.bottom-left,
+.rotated .point-handle.top-right {
+  display: none;
+}
+
 .point-handle.top-left,
 .point-handle.bottom-right {
   cursor: nwse-resize;
