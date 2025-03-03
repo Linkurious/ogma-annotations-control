@@ -1,8 +1,11 @@
 import { ColorPicker } from "./ColorPicker";
 import { useAnnotationsContext } from "../../../src/AnnotationsContext";
-import { fontSizes, fonts } from "../../../src/constants";
+import { fontSizes, fonts } from "../../../src";
 
-const fontOptions = fonts.map((f) => ({ value: f, label: f }));
+const fontOptions = [
+  { value: "IBM Plex sans", label: "default" },
+  ...fonts.map((f) => ({ value: f, label: f }))
+];
 const fontSizeOptions = fontSizes.map((v) => ({ value: `${v}`, label: v }));
 
 export const TextSettings = () => {
