@@ -1,13 +1,24 @@
 import React from "react";
 import { Layer } from "@linkurious/ogma-react";
 import type { Layer as LayerType } from "@linkurious/ogma";
-import { isArrow, isText } from "@linkurious/ogma-annotations";
+import {
+  ArrowStyles,
+  TextStyle,
+  isArrow,
+  isText
+} from "@linkurious/ogma-annotations";
 import "@linkurious/ogma-annotations/style.css";
 import "./Controls.css";
-import { useAnnotationsContext } from "../../../src/AnnotationsContext";
+
 import { AddMenu } from "./AddMenu";
 import { ArrowSettings } from "./ArrowSettings";
 import { TextSettings } from "./TextSettings";
+
+import {
+  useAnnotationsContext,
+  defaultArrowStyle,
+  defaultTextStyle
+} from "../../../src";
 
 const preventDefault = (
   evt: React.MouseEvent<HTMLDivElement, MouseEvent> | WheelEvent
@@ -18,15 +29,20 @@ const preventDefault = (
   }
 };
 
-export const Controls = ({
-  minThickness,
-  maxThickness
-}: {
+interface ControlProps {
   minThickness: number;
   maxThickness: number;
-}) => {
-  const { currentAnnotation } = useAnnotationsContext();
+  defaultArrowStyle?: ArrowStyles;
+  defaultTextStyle?: TextStyle;
+}
 
+export const Controls = ({
+  minThickness,
+  maxThickness,
+  defaultArrowStyle: defaultArrowStyleProp = {},
+  defaultTextStyle: defaultTextStyleProp = {}
+}: ControlProps) => {
+  const { currentAnnotation } = useAnnotationsContext();
   const stopEvent: React.MouseEventHandler<HTMLDivElement> = React.useCallback(
     preventDefault,
     []
@@ -45,8 +61,14 @@ export const Controls = ({
     [stopEvent]
   );
 
+  // update default styles
+  React.useEffect(() => {
+    Object.assign(defaultArrowStyle, defaultArrowStyleProp);
+    Object.assign(defaultTextStyle, defaultTextStyleProp);
+  }, [defaultArrowStyleProp, defaultTextStyleProp]);
+
   return (
-    <Layer className="controls" ref={divRefCallback}>
+    <Layer className="controls" ref={divRefCallback} index={100}>
       <div className="container">
         {!currentAnnotation && <AddMenu />}
         <div className="settings" onMouseDown={stopEvent} onClick={stopEvent}>

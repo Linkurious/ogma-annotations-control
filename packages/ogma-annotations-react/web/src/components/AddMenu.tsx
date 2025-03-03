@@ -1,4 +1,4 @@
-import { defaultArrowStyle, defaultTextStyle } from "../../../src/constants";
+import React from "react";
 import { useOgma } from "@linkurious/ogma-react";
 import { useAnnotationsContext } from "../../../src/AnnotationsContext";
 import {
@@ -10,28 +10,32 @@ import {
 import "../tooltip.css";
 import { Text, ArrowRight, Download } from "iconoir-react";
 import "./AddMenu.css";
+import { defaultArrowStyle, defaultTextStyle } from "../../../src";
 
 export const AddMenu = () => {
   const { editor } = useAnnotationsContext();
   const ogma = useOgma();
-  function addAnnotation(type: "arrow" | "text") {
-    const opts = ogma.getOptions();
-    ogma.setOptions({ cursor: { default: "crosshair" } });
-    ogma.events.once("mousedown", (evt) => {
-      const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const annotation =
-        type === "arrow"
-          ? createArrow(x, y, x, y, { ...defaultArrowStyle })
-          : createText(x, y, 0, 0, "...", { ...defaultTextStyle });
-      setTimeout(() => {
-        if (isArrow(annotation)) editor.startArrow(x, y, annotation);
-        if (isText(annotation)) editor.startText(x, y, annotation);
-      }, 50);
-      editor.once("add", () => {
-        ogma.setOptions(opts);
+  const addAnnotation = React.useCallback(
+    (type: "arrow" | "text") => {
+      const opts = ogma.getOptions();
+      ogma.setOptions({ cursor: { default: "crosshair" } });
+      ogma.events.once("mousedown", (evt) => {
+        const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+        const annotation =
+          type === "arrow"
+            ? createArrow(x, y, x, y, { ...defaultArrowStyle })
+            : createText(x, y, 0, 0, "...", { ...defaultTextStyle });
+        setTimeout(() => {
+          if (isArrow(annotation)) editor.startArrow(x, y, annotation);
+          if (isText(annotation)) editor.startText(x, y, annotation);
+        }, 50);
+        editor.once("add", () => {
+          ogma.setOptions(opts);
+        });
       });
-    });
-  }
+    },
+    [defaultArrowStyle, defaultTextStyle, editor, ogma]
+  );
 
   function save() {
     // download the file
