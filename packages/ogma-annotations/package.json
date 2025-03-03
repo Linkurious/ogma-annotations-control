@@ -21,8 +21,8 @@
       "types": "./dist/types/index.d.ts"
     },
     "./style.css": {
-      "import": "./dist/style.css",
-      "require": "./dist/style.css"
+      "import": "./dist/ogma-annotations.css",
+      "require": "./dist/ogma-annotations.css"
     },
     "./umd": "./dist/index.js",
     "./esm": "./dist/index.mjs"
