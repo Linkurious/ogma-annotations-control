@@ -17,14 +17,14 @@ export default defineConfig({
     dts({
       outDir: "dist/types",
       rollupTypes: true,
-      tsconfigPath: resolve(__dirname, "tsconfig-build.json"),
-    }),
+      tsconfigPath: resolve(__dirname, "tsconfig-build.json")
+    })
   ],
   build: {
     lib: {
       name: resolve(__dirname, "src/index.ts"),
       fileName: (format) => `index.${format === "umd" ? "" : "m"}js`,
-      entry: resolve(__dirname, "src/index.ts"),
+      entry: resolve(__dirname, "src/index.ts")
     },
 
     rollupOptions: {
@@ -32,16 +32,16 @@ export default defineConfig({
         "@linkurious/ogma",
         "@linkurious/ogma-react",
         "react",
-        "react-dom",
+        "react-dom"
       ],
       output: {
         globals: {
           "@linkurious/ogma": "Ogma",
           "@linkurious/ogma-react": "OgmaReact",
           react: "React",
-          "react-dom": "ReactDOM",
-        },
-      },
-    },
-  },
+          "react-dom": "ReactDOM"
+        }
+      }
+    }
+  }
 });
