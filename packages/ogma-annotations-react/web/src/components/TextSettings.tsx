@@ -1,11 +1,9 @@
+import React from "react";
 import { ColorPicker } from "./ColorPicker";
 import { useAnnotationsContext } from "../../../src/AnnotationsContext";
-import { fontSizes, fonts } from "../../../src";
+import { fontSizes, fonts } from "../../../src/constants";
 
-const fontOptions = [
-  { value: "IBM Plex sans", label: "default" },
-  ...fonts.map((f) => ({ value: f, label: f }))
-];
+const fontOptions = fonts.map((f) => ({ value: f, label: f }));
 const fontSizeOptions = fontSizes.map((v) => ({ value: `${v}`, label: v }));
 
 export const TextSettings = () => {
@@ -29,11 +27,9 @@ export const TextSettings = () => {
 
   return (
     <span className="settings-panel">
-      <span>Font</span>
+      <h4>Font</h4>
       <select
-        onChange={(evt) => {
-          setFont(evt.target.value as string);
-        }}
+        onChange={(evt) => setFont(evt.target.value)}
         value={textStyle.font}
       >
         {fontOptions.map((font) => (
@@ -42,10 +38,10 @@ export const TextSettings = () => {
           </option>
         ))}
       </select>
-      <span>Size</span>
+      <h4>Size</h4>
       <select
         onChange={(evt) => setSize(evt.target.value)}
-        value={textStyle.fontSize!.toString()}
+        value={textStyle.fontSize?.toString() || ""}
       >
         {fontSizeOptions.map((fontSize) => (
           <option key={fontSize.value} value={fontSize.value}>
@@ -53,9 +49,9 @@ export const TextSettings = () => {
           </option>
         ))}
       </select>
-      <span>Color</span>
+      <h4>Color</h4>
       <ColorPicker color={textStyle.color} setColor={(c) => setTextColor(c)} />
-      <span>Background</span>
+      <h4>Background</h4>
       <ColorPicker
         hasTransparent={true}
         color={textStyle.background}

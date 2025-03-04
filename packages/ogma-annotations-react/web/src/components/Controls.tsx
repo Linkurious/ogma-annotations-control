@@ -23,10 +23,7 @@ import {
 const preventDefault = (
   evt: React.MouseEvent<HTMLDivElement, MouseEvent> | WheelEvent
 ) => {
-  if (evt.cancelable) {
-    evt.preventDefault();
-    evt.stopPropagation();
-  }
+  if (evt.cancelable) evt.stopPropagation();
 };
 
 interface ControlProps {

@@ -1,3 +1,7 @@
+.controls {
+  z-index: 999;
+}
+
 .text {
   font-size: 10px;
   max-width: 20px;
@@ -39,5 +43,6 @@ button[type="button"].btn {
 
 .settings .settings-panel > h4 {
   margin-top: 0.75em;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.75em;
+  font-weight: 400;
 }

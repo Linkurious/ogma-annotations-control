@@ -21,26 +21,24 @@ export const ColorPicker = ({
   const [selected, setSelected] = React.useState(color);
   return (
     <span className="colorpicker">
-      {colors.map((c) => {
-        return (
-          <div
-            key={c}
-            className={c === selected ? "selected" : ""}
-            style={{
-              width: 12,
-              height: 12,
-              borderRadius: 10,
-              backgroundColor: c === "none" ? "#fff" : c,
-              margin: 5,
-              cursor: "pointer"
-            }}
-            onClick={() => {
-              setSelected(c);
-              setColor && setColor(c);
-            }}
-          />
-        );
-      })}
+      {colors.map((c) => (
+        <div
+          key={c}
+          className={c === selected ? "selected" : ""}
+          style={{
+            width: 12,
+            height: 12,
+            borderRadius: 10,
+            backgroundColor: c === "none" ? "#fff" : c,
+            margin: 5,
+            cursor: "pointer"
+          }}
+          onClick={() => {
+            setSelected(c);
+            setColor && setColor(c);
+          }}
+        />
+      ))}
     </span>
   );
 };
