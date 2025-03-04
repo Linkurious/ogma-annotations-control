@@ -1,4 +1,7 @@
-# Ogma annotations plugin
+# Ogma annotations plugin 
+
+ * `@linkurious/ogma-annotations` [![npm version](https://badge.fury.io/js/@linkurious%2Fogma-annotations.svg)](https://www.npmjs.com/package/@linkurious/ogma-annotations) 
+ * `@linkurious/ogma-annotations-react` [![npm version](https://badge.fury.io/js/@linkurious%2Fogma-annotations-react.svg)](https://www.npmjs.com/package/@linkurious/ogma-annotations-react)
 
 This plugin allows you to add annotations to your [Ogma](https://doc.linkurio.us/ogma/latest/) visualisation.
 You need an Ogma licence to use it. Please [contact us](https://doc.linkurious.com/ogma/latest/contact.html) for more info.
