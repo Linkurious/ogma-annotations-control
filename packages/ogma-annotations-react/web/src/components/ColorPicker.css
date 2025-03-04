@@ -1,0 +1,7 @@
+.colorpicker {
+  display: flex;
+  flex-direction: row;
+}
+.colorpicker > div.selected {
+  border: 2px solid #000;
+}

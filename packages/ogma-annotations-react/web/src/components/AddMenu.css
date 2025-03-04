@@ -1,0 +1,23 @@
+.add-menu {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.add-menu > button {
+  margin: 2px;
+  padding: 5px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  border: 1px solid #fff;
+  background: #fff;
+  color: #444;
+}
+
+.add-menu > button:hover {
+  background: #f0f0f0;
+  color: #222;
+}

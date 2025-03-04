@@ -256,6 +256,9 @@ export class Texts extends Editor<Text> {
   private onViewChanged = () => {
     const w = Math.max(2, this.handleSize / this.ogma.view.getZoom());
     document.documentElement.style.setProperty("--handle-scale", `${1 / w}`);
+    const angle = this.ogma.view.getAngle();
+    if (angle === 0) this.editor.element.classList.remove("rotated");
+    else this.editor.element.classList.add("rotated");
   };
 
   private _onInput = () => {
