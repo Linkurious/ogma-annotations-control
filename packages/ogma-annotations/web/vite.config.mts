@@ -9,6 +9,7 @@ export default defineConfig({
   base: "./",
   root: resolve(__dirname),
   build: {
-    outDir: resolve(__dirname, "..", "..", "..", "docs", "public", "demo"),
-  },
+    target: "esnext",
+    outDir: resolve(__dirname, "..", "..", "..", "docs", "public", "demo")
+  }
 });
