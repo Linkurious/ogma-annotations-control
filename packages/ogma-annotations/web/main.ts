@@ -6,7 +6,7 @@ import { Control, createArrow, createText, AnnotationCollection } from "../src";
 import { EVT_DRAG_END } from "../src/constants";
 
 const ogma = new Ogma({
-  container: "app",
+  container: "app"
 });
 const control = new Control(ogma);
 //@ts-ignore
@@ -14,11 +14,11 @@ window.ogma = ogma;
 
 ogma.styles.addRule({
   nodeAttributes: {
-    color: "#5B97F8",
+    color: "#5B97F8"
   },
   edgeAttributes: {
-    color: "#c9c9c9",
-  },
+    color: "#c9c9c9"
+  }
 });
 
 const annotationsWithLinks: AnnotationCollection = await fetch(
@@ -59,7 +59,7 @@ addArrows.addEventListener("click", () => {
       strokeType: "plain",
       strokeColor: "#3A03CF",
       strokeWidth: 2,
-      head: "arrow",
+      head: "arrow"
     });
     control.startArrow(x, y, arrow);
     control.once(EVT_DRAG_END, (a) => {
@@ -83,7 +83,7 @@ addTexts.addEventListener("click", () => {
       //strokeWidth: 1,
       //strokeType: "dashed",
       borderRadius: 8,
-      padding: 12,
+      padding: 12
     });
     control.startText(x, y, text);
     control.once(EVT_DRAG_END, (a) => {
