@@ -588,7 +588,6 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   *
    * @returns the annotations in the controller
    */
   public getAnnotations() {

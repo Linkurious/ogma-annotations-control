@@ -1,7 +1,7 @@
-import { createOgma } from "./utils";
-import { describe, it, assert, afterEach, beforeEach } from "vitest";
-import { Control, createArrow } from "../../src";
 import Ogma from "@linkurious/ogma";
+import { describe, it, assert, afterEach, beforeEach } from "vitest";
+import { createOgma } from "./utils";
+import { Control, createArrow } from "../../src";
 
 describe("Events", () => {
   let ogma: Ogma;

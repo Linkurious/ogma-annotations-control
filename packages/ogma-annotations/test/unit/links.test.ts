@@ -5,7 +5,7 @@ import {
   Arrow,
   Control,
   createArrow,
-  Link,
+  Link
 } from "../../src";
 import { Links } from "../../src/links";
 import LoadLinksMissing from "../fixtures/load-links-missing.json";
@@ -22,12 +22,12 @@ describe("Links", () => {
 
     links.add(arrow, side, targetId, "node", { x: 0, y: 0 });
     expect(links["linksByTargetId"]).toEqual({
-      [targetId]: [expect.any(String)],
+      [targetId]: [expect.any(String)]
     });
     expect(links["linksByArrowId"]).toEqual({
       [arrowId]: {
-        [side]: expect.any(String),
-      },
+        [side]: expect.any(String)
+      }
     });
   });
 
@@ -48,15 +48,15 @@ describe("Links", () => {
       target: targetId,
       targetType: "text",
       side,
-      connectionPoint,
+      connectionPoint
     });
     expect(links["linksByTargetId"]).toEqual({
-      [targetId]: [expect.any(String)],
+      [targetId]: [expect.any(String)]
     });
     expect(links["linksByArrowId"]).toEqual({
       [arrowId]: {
-        [side]: expect.any(String),
-      },
+        [side]: expect.any(String)
+      }
     });
   });
 
@@ -75,7 +75,7 @@ describe("Links", () => {
     expect(links["links"]).toEqual({});
     expect(links["linksByTargetId"]).toEqual({ [targetId]: [] });
     expect(links["linksByArrowId"]).toEqual({
-      [arrowId]: {},
+      [arrowId]: {}
     });
   });
 
@@ -124,7 +124,7 @@ describe("Links", () => {
       target: "target1",
       targetType: "text",
       connectionPoint: { x: 0, y: 0 },
-      side,
+      side
     };
     links.add(arrow, side, "target1", "text", { x: 0, y: 0 });
     expect(links.getArrowLink(arrowId, side)).toEqual(link);
@@ -157,8 +157,8 @@ describe("Links", () => {
         target: targetId,
         targetType: "node",
         connectionPoint,
-        side,
-      },
+        side
+      }
     ]);
   });
 
@@ -183,7 +183,7 @@ describe("Links", () => {
         target: targetId,
         targetType: "node",
         connectionPoint,
-        side: side1,
+        side: side1
       },
       {
         id: expect.any(String),
@@ -191,8 +191,8 @@ describe("Links", () => {
         target: targetId,
         targetType: "node",
         connectionPoint,
-        side: side2,
-      },
+        side: side2
+      }
     ];
     expect(result).toEqual(expected);
   });
@@ -210,24 +210,24 @@ describe("Links", () => {
       id: targetId,
       side,
       type: "node",
-      magnet: point,
+      magnet: point
     });
     expect(arrow.properties.link?.end).toEqual({
       id: "textId",
       side: "end",
       type: "text",
-      magnet: point,
+      magnet: point
     });
   });
 
   it("should load links", () => {
     const ogma = new Ogma({
-      options: { renderer: null },
+      options: { renderer: null }
     });
     ogma.addNode({ id: "n0" });
     const control = new Control(ogma);
     control.add(LoadLinksData as AnnotationCollection);
-    // @ts-ignore
+    // @ts-expect-error - links is private
     const [link1, link2] = Object.values(control.links.links);
 
     expect(link1.arrow).toEqual(2);
@@ -243,11 +243,11 @@ describe("Links", () => {
 
   it("should not load links if target does not exist", () => {
     const ogma = new Ogma({
-      options: { renderer: null },
+      options: { renderer: null }
     });
     const control = new Control(ogma);
     control.add(LoadLinksMissing as AnnotationCollection);
-    // @ts-ignore
+    // @ts-expect-error - links is private
     const links = Object.values(control.links.links);
     expect(links).toEqual([]);
   });
