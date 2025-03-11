@@ -1,5 +1,5 @@
 import { Arrow, ArrowStyles, Extremity, Point } from "../../types";
-import { colorToRgba, createSVGElement, getArrowEndPoints } from "../../utils";
+import { createSVGElement, getArrowEndPoints } from "../../utils";
 import {
   subtract,
   length,
@@ -105,26 +105,34 @@ function addExtremity(
   strokeWidth: number
 ) {
   if (type === "halo-dot")
-    addDot(lineGroup, point, getHaloColor(color), strokeWidth * 4);
+    addDot(
+      lineGroup,
+      point,
+      getHaloColor(color),
+      HALO_OPACITY,
+      strokeWidth * 4
+    );
   if (type === "dot" || type === "halo-dot")
-    addDot(lineGroup, point, color, strokeWidth * 2);
+    addDot(lineGroup, point, color, 1, strokeWidth * 2);
 }
 
 function getHaloColor(color: string) {
   if (color === "none") return "none";
-  return colorToRgba(color, HALO_OPACITY);
+  return color;
 }
 
 function addDot(
   lineGroup: SVGGElement,
   point: Point,
   color: string,
+  opacity: number,
   size: number
 ) {
   const circle = createSVGElement<SVGCircleElement>("circle");
   circle.setAttribute("cx", `${point.x}`);
   circle.setAttribute("cy", `${point.y}`);
   circle.setAttribute("r", `${size}`);
+  circle.setAttribute("fill-opacity", `${opacity}`);
   circle.setAttribute("fill", color);
   lineGroup.appendChild(circle);
 }
