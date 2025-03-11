@@ -1,7 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { describe, it, assert, beforeEach, afterEach } from "vitest";
-import { Control, createArrow, createText, Text } from "../../src";
 import { createOgma } from "./utils";
+import { Control, createArrow, createText, Text } from "../../src";
 
 describe("Draw API", () => {
   let ogma: Ogma;

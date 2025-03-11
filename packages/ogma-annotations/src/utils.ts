@@ -107,7 +107,7 @@ export const getHandleId = (handle: HTMLDivElement): number =>
  * - [2]: max x
  * - [3]: max y
  */
-type Bounds = [number, number, number, number];
+export type Bounds = [number, number, number, number];
 
 /**
  * Calculate the bounds of a collection of annotations

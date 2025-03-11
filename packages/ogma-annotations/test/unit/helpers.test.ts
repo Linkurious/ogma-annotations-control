@@ -5,7 +5,7 @@ describe("Helpers", () => {
   it("it should create text feature", () => {
     const text = createText(0, 0, 100, 200, "Hello world", {
       fontSize: "12px",
-      strokeColor: "magenta",
+      strokeColor: "magenta"
     });
     assert.equal(text.properties.type, "text");
     assert.equal(text.properties.content, "Hello world");
@@ -25,7 +25,7 @@ describe("Helpers", () => {
 
   it("it should create arrow feature", () => {
     const arrow = createArrow(0, 0, 100, 200, {
-      strokeColor: "magenta",
+      strokeColor: "magenta"
     });
     assert.equal(arrow.properties.type, "arrow");
     assert.equal(arrow.properties.style?.strokeColor, "magenta");

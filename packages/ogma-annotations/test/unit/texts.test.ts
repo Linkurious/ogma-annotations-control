@@ -1,7 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { describe, it, assert, beforeEach, afterAll } from "vitest";
-import { Control } from "../../src";
 import { createOgma } from "./utils";
+import { Control } from "../../src";
 
 describe("text-annotations", () => {
   let ogma: Ogma;
@@ -30,15 +30,15 @@ describe("text-annotations", () => {
       type: "Feature",
       id: 0,
       properties: {
-        type: "arrow",
+        type: "arrow"
       },
       geometry: {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [1, 1],
-        ],
-      },
+          [1, 1]
+        ]
+      }
     });
     assert.equal(control.getAnnotations().features.length, 1);
   });
@@ -53,8 +53,8 @@ describe("text-annotations", () => {
         style: {
           fontSize: "12px",
           font: "Arial",
-          color: "#000000",
-        },
+          color: "#000000"
+        }
       },
       geometry: {
         type: "Polygon",
@@ -64,10 +64,10 @@ describe("text-annotations", () => {
             [1, 0],
             [1, 1],
             [0, 1],
-            [0, 0],
-          ],
-        ],
-      },
+            [0, 0]
+          ]
+        ]
+      }
     });
     assert.equal(control.getAnnotations().features.length, 1);
   });
@@ -81,7 +81,7 @@ describe("text-annotations", () => {
           id: 0,
           properties: {
             type: "text",
-            content: "Hello world",
+            content: "Hello world"
           },
           geometry: {
             type: "Polygon",
@@ -91,27 +91,27 @@ describe("text-annotations", () => {
                 [1, 0],
                 [1, 1],
                 [0, 1],
-                [0, 0],
-              ],
-            ],
-          },
+                [0, 0]
+              ]
+            ]
+          }
         },
         {
           type: "Feature",
           id: 1,
           properties: {
             type: "arrow",
-            style: {},
+            style: {}
           },
           geometry: {
             type: "LineString",
             coordinates: [
               [0, 0],
-              [1, 1],
-            ],
-          },
-        },
-      ],
+              [1, 1]
+            ]
+          }
+        }
+      ]
     });
     assert.equal(control.getAnnotations().features.length, 2);
   });
@@ -129,21 +129,21 @@ describe("text-annotations", () => {
           start: {
             id: "node1",
             side: "start",
-            type: "node",
-          },
-        },
+            type: "node"
+          }
+        }
       },
       geometry: {
         type: "LineString",
         coordinates: [
           [0, 0],
-          [1, 1],
-        ],
-      },
+          [1, 1]
+        ]
+      }
     });
     control.remove(control.getAnnotation(0)!);
     assert.equal(control.getAnnotations().features.length, 0);
-    // @ts-expect-error
+    // @ts-expect-error - links is private
     assert.equal(control.links.getArrowLink(0, "start"), null);
   });
 });

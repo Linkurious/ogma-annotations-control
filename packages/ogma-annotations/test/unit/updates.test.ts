@@ -1,7 +1,7 @@
-import { describe, it, assert, beforeEach, afterEach } from "vitest";
-import { Control, createArrow, createText } from "../../src";
-import { createOgma } from "./utils";
 import Ogma from "@linkurious/ogma";
+import { describe, it, assert, beforeEach, afterEach } from "vitest";
+import { createOgma } from "./utils";
+import { Control, createArrow, createText } from "../../src";
 
 describe("Updates", () => {
   let ogma: Ogma;
@@ -57,14 +57,14 @@ describe("Updates", () => {
     control.setScale(arrow.id, 2, 2, 2);
     assert.deepEqual(arrow.geometry.coordinates, [
       [-2, -2],
-      [-2, -2],
+      [-2, -2]
     ]);
   });
 
   it("should allow to setScale arrow", async () => {
     const text = createText(0, 0, 100, 200, "Hello world", {
       fontSize: 12,
-      strokeColor: "magenta",
+      strokeColor: "magenta"
     });
     control.add(text);
 
@@ -75,8 +75,8 @@ describe("Updates", () => {
         [198, -2],
         [198, 398],
         [-2, 398],
-        [-2, -2],
-      ],
+        [-2, -2]
+      ]
     ]);
   });
 });
