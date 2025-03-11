@@ -100,8 +100,19 @@ export function setArrowEndPoint(
 export const getHandleId = (handle: HTMLDivElement): number =>
   parseInt(handle.getAttribute("data-handle-id") || "-1");
 
+/**
+ * Bounding box object, with the following properties:
+ * - [0]: min x
+ * - [1]: min y
+ * - [2]: max x
+ * - [3]: max y
+ */
 type Bounds = [number, number, number, number];
 
+/**
+ * Calculate the bounds of a collection of annotations
+ * @param annotations
+ */
 export function getAnnotationsBounds(
   annotations: AnnotationCollection
 ): Bounds {
