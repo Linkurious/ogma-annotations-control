@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [
     // @ts-expect-error Types incompatible
     react(),
+    // @ts-expect-error Types incompatible
     libInjectCss(),
     dts({
       outDir: "dist/types",

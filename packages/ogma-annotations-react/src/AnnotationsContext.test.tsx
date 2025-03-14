@@ -1,4 +1,3 @@
-import React from "react";
 import { render, act } from "@testing-library/react";
 import { AnnotationsContextProvider } from "./AnnotationsContext";
 import { useOgma } from "@linkurious/ogma-react";

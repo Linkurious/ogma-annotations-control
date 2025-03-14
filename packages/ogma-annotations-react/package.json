@@ -34,7 +34,8 @@
     "postdocs:build": "bash scripts/postdocs.sh",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts,tsx src",
-    "test:unit": "vitest run"
+    "test:unit": "vitest run",
+    "test": "npm run test:unit"
   },
   "publishConfig": {
     "access": "public"
@@ -68,7 +69,7 @@
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "typescript": "5.3.3",
-    "vite": "6.2.0",
+    "vite": "6.2.2",
     "vite-plugin-dts": "4.5.1",
     "vite-plugin-lib-inject-css": "1.3.0",
     "vitest": "3.0.7"
