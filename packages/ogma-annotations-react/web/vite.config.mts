@@ -12,14 +12,6 @@ export default defineConfig({
   plugins: [react()],
   root: resolve(__dirname),
   build: {
-    outDir: resolve(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "docs",
-      "public",
-      "demo-react"
-    ),
-  },
+    outDir: resolve(__dirname, "..", "..", "..", "docs", "public", "demo-react")
+  }
 });
