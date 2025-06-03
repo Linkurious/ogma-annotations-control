@@ -150,15 +150,12 @@ export class Arrows extends Editor<Arrow> {
   private onMouseMove = (evt: MouseEvent) => {
     if (!this.isDragging || this.draggedHandle === NONE) return;
 
-    const editorRect = this.editor.element.getBoundingClientRect();
+    const { x, y } = clientToContainerPosition(evt, this.ogma.getContainer());
     const handle = this.handles[this.draggedHandle];
     const angle = this.ogma.view.getAngle();
     const { x: dx, y: dy } = rotateRadians(
       divScalar(
-        {
-          x: evt.x - this.startX - editorRect.x,
-          y: evt.y - this.startY - editorRect.y
-        },
+        { x: x - this.startX, y: y - this.startY },
         this.ogma.view.getZoom()
       ),
       angle
