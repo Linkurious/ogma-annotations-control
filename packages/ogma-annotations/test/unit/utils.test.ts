@@ -1,5 +1,18 @@
+import {
+  Feature,
+  FeatureCollection,
+  GeometryCollection,
+  MultiLineString,
+  MultiPoint,
+  MultiPolygon,
+  Point
+} from "geojson";
 import { describe, it, assert } from "vitest";
-import { AnnotationCollection, getAnnotationsBounds } from "../../src";
+import {
+  AnnotationCollection,
+  getAnnotationsBounds,
+  getCoordinates
+} from "../../src";
 
 import Set1 from "../fixtures/set1.json";
 
@@ -192,5 +205,141 @@ describe("Utils", () => {
       bounds.map((n) => Math.floor(n)),
       [-1056, -401, 865, 600]
     );
+  });
+});
+describe("getCoordinates", () => {
+  it("handles Point geometry", () => {
+    const point = {
+      type: "Point",
+      coordinates: [10, 20]
+    } as Point;
+    const coords = getCoordinates(point);
+    assert.deepEqual(coords, [[10, 20]]);
+  });
+
+  it("handles MultiPoint geometry", () => {
+    const multiPoint = {
+      type: "MultiPoint",
+      coordinates: [
+        [0, 0],
+        [10, 10],
+        [20, 20]
+      ]
+    } as MultiPoint;
+    const coords = getCoordinates(multiPoint);
+    assert.deepEqual(coords, [
+      [0, 0],
+      [10, 10],
+      [20, 20]
+    ]);
+  });
+
+  it("handles MultiLineString geometry", () => {
+    const multiLineString = {
+      type: "MultiLineString",
+      coordinates: [
+        [
+          [0, 0],
+          [10, 10]
+        ],
+        [
+          [20, 20],
+          [30, 30]
+        ]
+      ]
+    } as MultiLineString;
+    const coords = getCoordinates(multiLineString);
+    assert.deepEqual(coords, [
+      [0, 0],
+      [10, 10],
+      [20, 20],
+      [30, 30]
+    ]);
+  });
+
+  it("handles MultiPolygon geometry", () => {
+    const multiPolygon = {
+      type: "MultiPolygon",
+      coordinates: [
+        [
+          [
+            [0, 0],
+            [10, 0],
+            [10, 10],
+            [0, 10],
+            [0, 0]
+          ]
+        ],
+        [
+          [
+            [20, 20],
+            [30, 20],
+            [30, 30],
+            [20, 30],
+            [20, 20]
+          ]
+        ]
+      ]
+    } as MultiPolygon;
+    const coords = getCoordinates(multiPolygon);
+    assert.deepEqual(coords, [
+      [0, 0],
+      [10, 0],
+      [10, 10],
+      [0, 10],
+      [0, 0],
+      [20, 20],
+      [30, 20],
+      [30, 30],
+      [20, 30],
+      [20, 20]
+    ]);
+  });
+
+  it("handles GeometryCollection", () => {
+    const geometryCollection = {
+      type: "GeometryCollection",
+      geometries: [
+        {
+          type: "Point",
+          coordinates: [0, 0]
+        },
+        {
+          type: "LineString",
+          coordinates: [
+            [10, 10],
+            [20, 20]
+          ]
+        }
+      ]
+    } as GeometryCollection;
+    const coords = getCoordinates(geometryCollection);
+    assert.deepEqual(coords, [
+      [0, 0],
+      [10, 10],
+      [20, 20]
+    ]);
+  });
+
+  it("handles empty FeatureCollection", () => {
+    const emptyCollection = {
+      type: "FeatureCollection",
+      features: []
+    } as FeatureCollection;
+    const coords = getCoordinates(emptyCollection);
+    assert.deepEqual(coords, []);
+  });
+
+  it("handles nested Feature with Point", () => {
+    const feature = {
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: [5, 5]
+      },
+      properties: {}
+    } as Feature<Point>;
+    const coords = getCoordinates(feature);
+    assert.deepEqual(coords, [[5, 5]]);
   });
 });

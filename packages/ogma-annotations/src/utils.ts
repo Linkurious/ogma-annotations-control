@@ -116,7 +116,7 @@ export type Bounds = [number, number, number, number];
 export function getAnnotationsBounds(
   annotations: AnnotationCollection
 ): Bounds {
-  return getCoordinatesDump(annotations).reduce(
+  return getCoordinates(annotations).reduce(
     (acc: Bounds, coord) => {
       acc[0] = Math.min(coord[0], acc[0]);
       acc[1] = Math.min(coord[1], acc[1]);
@@ -159,7 +159,7 @@ export function scaleGeometry(
   return geometry;
 }
 
-function getCoordinatesDump(
+export function getCoordinates(
   gj: Feature | FeatureCollection | Geometry
 ): Position[] {
   let coords: Position[] = [];
@@ -178,15 +178,15 @@ function getCoordinatesDump(
       []
     );
   } else if (gj.type == "Feature") {
-    coords = getCoordinatesDump(gj.geometry);
+    coords = getCoordinates(gj.geometry);
   } else if (gj.type == "GeometryCollection") {
     coords = gj.geometries.reduce<Position[]>(
-      (dump, g) => dump.concat(getCoordinatesDump(g)),
+      (dump, g) => dump.concat(getCoordinates(g)),
       []
     );
   } else if (gj.type == "FeatureCollection") {
     coords = gj.features.reduce<Position[]>(
-      (dump, f) => dump.concat(getCoordinatesDump(f)),
+      (dump, f) => dump.concat(getCoordinates(f)),
       []
     );
   }

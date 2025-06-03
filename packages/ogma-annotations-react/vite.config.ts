@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [
     // @ts-expect-error Types incompatible
     react(),
+    // @ts-expect-error Types incompatible
     libInjectCss(),
     dts({
       outDir: "dist/types",
@@ -42,6 +43,17 @@ export default defineConfig({
           "react-dom": "ReactDOM"
         }
       }
+    }
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    //setupFiles: "./test/setup.ts",
+    coverage: {
+      reporter: ["json", "cobertura"],
+      include: ["src/**/*.{ts,tsx}"],
+      all: true,
+      reportsDirectory: "reports/coverage"
     }
   }
 });
