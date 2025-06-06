@@ -171,4 +171,36 @@ describe("AnnotationsContextProvider", () => {
     );
     expect(Annotations.Control).not.toHaveBeenCalled();
   });
+
+  it("should add initial annotations if provided", () => {
+    const addMock = vi.fn();
+    // Patch the mockEditor to include add
+    (mockEditor as any).add = addMock;
+
+    const initialAnnotations = {
+      type: "FeatureCollection",
+      features: [
+        {
+          id: "1",
+          type: "Feature",
+          properties: { type: "arrow" },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
+        }
+      ]
+    };
+
+    render(
+      <AnnotationsContextProvider annotations={initialAnnotations}>
+        <div>Test</div>
+      </AnnotationsContextProvider>
+    );
+
+    expect(addMock).toHaveBeenCalledWith(initialAnnotations);
+  });
 });
