@@ -90,6 +90,7 @@ export const useAnnotationsContext = () =>
 
 interface Props {
   children: ReactElement;
+  annotations?: AnnotationCollection;
 }
 
 type AnnotationActionType = "add" | "remove" | "update";
@@ -134,12 +135,18 @@ const annotationsReducer = (
  * @param {Props} props - The component props containing child elements
  * @returns {ReactElement} A context provider with annotation management capabilities
  */
-export const AnnotationsContextProvider = ({ children }: Props) => {
+export const AnnotationsContextProvider = ({
+  children,
+  annotations: initialAnnotations
+}: Props) => {
   const ogma = useOgma();
-  const [annotations, updateAnnotations] = useReducer(annotationsReducer, {
-    type: "FeatureCollection",
-    features: []
-  });
+  const [annotations, updateAnnotations] = useReducer(
+    annotationsReducer,
+    initialAnnotations || {
+      type: "FeatureCollection",
+      features: []
+    }
+  );
   const [currentAnnotation, setCurrentAnnotation] =
     useState<AnnotationFeature | null>(null);
   const [arrowStyle, setArrowStyle] = useState<ArrowStyles>(defaultArrowStyle);
@@ -181,6 +188,8 @@ export const AnnotationsContextProvider = ({ children }: Props) => {
         setCurrentAnnotation(null);
       });
     setEditor(newEditor);
+    // load the initial annotations into the editor
+    if (initialAnnotations) newEditor.add(initialAnnotations);
     return () => {
       newEditor.destroy();
     };

@@ -13,6 +13,7 @@ import {
   Mock,
   MockedFunction
 } from "vitest";
+import { AnnotationCollection } from "@linkurious/ogma-annotations";
 
 vi.mock("@linkurious/ogma-react", () => ({
   useOgma: vi.fn()
@@ -170,5 +171,37 @@ describe("AnnotationsContextProvider", () => {
       </AnnotationsContextProvider>
     );
     expect(Annotations.Control).not.toHaveBeenCalled();
+  });
+
+  it("should add initial annotations if provided", () => {
+    const addMock = vi.fn();
+    // Patch the mockEditor to include add
+    mockEditor.add = addMock;
+
+    const initialAnnotations: AnnotationCollection = {
+      type: "FeatureCollection",
+      features: [
+        {
+          id: "1",
+          type: "Feature",
+          properties: { type: "arrow" },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
+        }
+      ]
+    };
+
+    render(
+      <AnnotationsContextProvider annotations={initialAnnotations}>
+        <div>Test</div>
+      </AnnotationsContextProvider>
+    );
+
+    expect(addMock).toHaveBeenCalledWith(initialAnnotations);
   });
 });
