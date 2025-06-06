@@ -13,6 +13,7 @@ import {
   Mock,
   MockedFunction
 } from "vitest";
+import { AnnotationCollection } from "@linkurious/ogma-annotations";
 
 vi.mock("@linkurious/ogma-react", () => ({
   useOgma: vi.fn()
@@ -177,7 +178,7 @@ describe("AnnotationsContextProvider", () => {
     // Patch the mockEditor to include add
     (mockEditor as any).add = addMock;
 
-    const initialAnnotations = {
+    const initialAnnotations: AnnotationCollection = {
       type: "FeatureCollection",
       features: [
         {
