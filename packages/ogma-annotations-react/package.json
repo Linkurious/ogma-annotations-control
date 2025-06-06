@@ -25,7 +25,7 @@
   },
   "scripts": {
     "dev": "vite -c web/vite.config.mts",
-    "build": "tsc --p ./tsconfig-build.json && vite build",
+    "build": "tsc --p ./tsconfig-build.json && vite build --mode production",
     "postversion": "npm i --save-peer @linkurious/ogma-annotations@${npm_new_version}",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
@@ -61,7 +61,7 @@
     "@testing-library/react": "16.2.0",
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.1",
-    "@vitejs/plugin-react": "4.3.4",
+    "@vitejs/plugin-react": "4.5.1",
     "eslint": "8.56.0",
     "eslint-plugin-react-hooks": "4.6.0",
     "eslint-plugin-react-refresh": "0.4.5",

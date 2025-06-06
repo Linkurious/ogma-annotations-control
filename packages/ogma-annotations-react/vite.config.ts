@@ -11,9 +11,9 @@ const __dirname = dirname(__filename);
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    // @ts-expect-error Types incompatible
-    react(),
-    // @ts-expect-error Types incompatible
+    react({
+      jsxRuntime: "classic"
+    }),
     libInjectCss(),
     dts({
       outDir: "dist/types",
@@ -21,6 +21,7 @@ export default defineConfig({
       tsconfigPath: resolve(__dirname, "tsconfig-build.json")
     })
   ],
+  define: { "process.env": { NODE_ENV: "production" } },
   build: {
     lib: {
       name: resolve(__dirname, "src/index.ts"),
