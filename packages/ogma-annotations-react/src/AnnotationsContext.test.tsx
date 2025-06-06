@@ -176,7 +176,7 @@ describe("AnnotationsContextProvider", () => {
   it("should add initial annotations if provided", () => {
     const addMock = vi.fn();
     // Patch the mockEditor to include add
-    (mockEditor as any).add = addMock;
+    mockEditor.add = addMock;
 
     const initialAnnotations: AnnotationCollection = {
       type: "FeatureCollection",
