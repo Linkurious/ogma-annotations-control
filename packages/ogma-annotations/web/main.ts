@@ -102,3 +102,23 @@ document.addEventListener("keydown", (evt) => {
 control.on("cancelDrawing", () => {
   console.log("cancelDrawing");
 });
+
+document.querySelector("#add-comment")!.addEventListener("click", () => {
+  control.cancelDrawing();
+  ogma.events.once("click", (evt) => {
+    const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+    //const commentPosition = control.getCommentPosition(x, y);
+
+    const comment = control.startComment(
+      evt.x,
+      evt.y,
+      createText(evt.x, evt.y, 200, 100, "This is a comment", {
+        color: "#3A03CF",
+        background: "#EDE6FF",
+        fontSize: 16,
+        font: "IBM Plex Sans"
+      })
+    );
+    console.log("Comment added:", comment);
+  });
+});

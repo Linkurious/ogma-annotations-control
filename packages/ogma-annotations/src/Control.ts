@@ -527,6 +527,111 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.arrows.startDrawing(x, y, arrow);
   }
 
+  public startComment(px: number, py: number, text?: Text) {
+    const zoom = this.ogma.view.getZoom();
+    const distance = 120 * zoom;
+    // we need to find the best spot for the comment, following the heuristics:
+    // 1. it has to be on screen
+    // 2. it has to be at least `distance` pixels away from the x,y
+    // 3. it should not overlap other texts
+    const { width, height } = this.ogma.view.getSize();
+    // let's try to find a good position, stepping by distance pixels
+    // and checking if the position is free and on screen. Every iteration
+    // we will rotate the vector by 45 degrees
+    const angleStep = Math.PI / 8; // 22.5 degrees
+    let angle = 0;
+    let position: Point | undefined;
+    const size = getTextSize(text!);
+
+    const { x, y } = this.ogma.view.screenToGraphCoordinates({ x: px, y: py });
+
+    const lines: [Point, Point][] = [];
+    const debug = this.ogma.layers.addCanvasLayer((ctx) => {
+      ctx.beginPath();
+      ctx.fillStyle = "red";
+      ctx.arc(x, y, 10, 0, Math.PI * 2);
+      lines.forEach((line) => {
+        ctx.moveTo(line[0].x, line[0].y);
+        ctx.lineTo(line[1].x, line[1].y);
+      });
+      ctx.stroke();
+      ctx.fill();
+      ctx.closePath();
+    });
+
+    const w = size.width / zoom;
+    const h = size.height / zoom;
+
+    const tl = this.ogma.view.screenToGraphCoordinates({ x: 0, y: 0 });
+    const br = this.ogma.view.screenToGraphCoordinates({
+      x: width,
+      y: height
+    });
+    while (angle < Math.PI * 2) {
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance;
+      const newX = x + dx;
+      const newY = y + dy;
+
+      // now let's try to place the text box knowing it's size
+      // the distance shoulbe to from the center to the closest edge
+      // so we need to move the center by half the width and height
+
+      const box = {
+        minX: newX,
+        minY: newY - h / 2,
+        maxX: newX + w,
+        maxY: newY + h / 2
+      };
+      // if on the opposite side of the point, we need to move the box
+      if (dx < 0) {
+        box.minX -= w;
+        box.maxX -= w;
+      }
+
+      // check if the position is on screen and not overlapping other texts
+      if (
+        box.minX < tl.x ||
+        box.minY < tl.y ||
+        box.maxX > br.x ||
+        box.maxY > br.y
+      ) {
+        angle += angleStep;
+        continue;
+      } else {
+        //!this.texts.detect({ x: newX, y: newY }, this.options.detectMargin)
+        lines.push(
+          [
+            { x: box.minX, y: box.minY },
+            { x: box.maxX, y: box.minY }
+          ],
+          [
+            { x: box.maxX, y: box.minY },
+            { x: box.maxX, y: box.maxY }
+          ],
+          [
+            { x: box.maxX, y: box.maxY },
+            { x: box.minX, y: box.maxY }
+          ],
+          [
+            { x: box.minX, y: box.maxY },
+            { x: box.minX, y: box.minY }
+          ]
+        );
+
+        position = { x: newX, y: newY };
+        break;
+      }
+    }
+    debug.refresh();
+    console.log("comment position", position);
+
+    this.cancelDrawing();
+    if (position) {
+      this.texts.startDrawing(position.x, position.y, text);
+    }
+  }
+
   /**
    * Start adding a text (add it, and give control to the user)
    * @param x coord of the top left point
