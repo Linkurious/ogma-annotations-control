@@ -624,7 +624,6 @@ export class Control extends EventEmitter<FeatureEvents> {
       }
     }
     debug.refresh();
-    console.log("comment position", position);
 
     this.cancelDrawing();
     if (position) {
