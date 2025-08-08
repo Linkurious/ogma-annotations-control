@@ -20,7 +20,7 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE
 } from "./constants";
-import { Arrows } from "./Editor/Arrows";
+import { Arrows, createArrow } from "./Editor/Arrows";
 import type { Editor } from "./Editor/base";
 import { Texts } from "./Editor/Texts";
 import { Links } from "./links";
@@ -45,7 +45,8 @@ import {
   getTextPosition,
   getTextSize,
   setArrowEndPoint,
-  getAttachmentPointOnNode
+  getAttachmentPointOnNode,
+  setTextBbox
 } from "./utils";
 import { subtract, rotateRadians, add, multiply, length } from "./vec";
 
@@ -545,20 +546,6 @@ export class Control extends EventEmitter<FeatureEvents> {
 
     const { x, y } = this.ogma.view.screenToGraphCoordinates({ x: px, y: py });
 
-    const lines: [Point, Point][] = [];
-    const debug = this.ogma.layers.addCanvasLayer((ctx) => {
-      ctx.beginPath();
-      ctx.fillStyle = "red";
-      ctx.arc(x, y, 10, 0, Math.PI * 2);
-      lines.forEach((line) => {
-        ctx.moveTo(line[0].x, line[0].y);
-        ctx.lineTo(line[1].x, line[1].y);
-      });
-      ctx.stroke();
-      ctx.fill();
-      ctx.closePath();
-    });
-
     const w = size.width / zoom;
     const h = size.height / zoom;
 
@@ -567,6 +554,12 @@ export class Control extends EventEmitter<FeatureEvents> {
       x: width,
       y: height
     });
+    const box = {
+      minX: x,
+      minY: y - h / 2,
+      maxX: x + w,
+      maxY: y + h / 2
+    };
     while (angle < Math.PI * 2) {
       const dx = Math.cos(angle) * distance;
       const dy = Math.sin(angle) * distance;
@@ -577,12 +570,11 @@ export class Control extends EventEmitter<FeatureEvents> {
       // the distance shoulbe to from the center to the closest edge
       // so we need to move the center by half the width and height
 
-      const box = {
-        minX: newX,
-        minY: newY - h / 2,
-        maxX: newX + w,
-        maxY: newY + h / 2
-      };
+      box.minX = newX;
+      box.minY = newY - h / 2;
+      box.maxX = newX + w;
+      box.maxY = newY + h / 2;
+
       // if on the opposite side of the point, we need to move the box
       if (dx < 0) {
         box.minX -= w;
@@ -594,40 +586,31 @@ export class Control extends EventEmitter<FeatureEvents> {
         box.minX < tl.x ||
         box.minY < tl.y ||
         box.maxX > br.x ||
-        box.maxY > br.y
+        box.maxY > br.y ||
+        this.texts.detect({ x: newX, y: newY }, this.options.detectMargin)
       ) {
         angle += angleStep;
         continue;
       } else {
-        //!this.texts.detect({ x: newX, y: newY }, this.options.detectMargin)
-        lines.push(
-          [
-            { x: box.minX, y: box.minY },
-            { x: box.maxX, y: box.minY }
-          ],
-          [
-            { x: box.maxX, y: box.minY },
-            { x: box.maxX, y: box.maxY }
-          ],
-          [
-            { x: box.maxX, y: box.maxY },
-            { x: box.minX, y: box.maxY }
-          ],
-          [
-            { x: box.minX, y: box.maxY },
-            { x: box.minX, y: box.minY }
-          ]
-        );
-
         position = { x: newX, y: newY };
         break;
       }
     }
-    debug.refresh();
-
     this.cancelDrawing();
     if (position) {
-      this.texts.startDrawing(position.x, position.y, text);
+      const line = createArrow(x, y, position.x, position.y);
+      this.arrows.add(line);
+      setTextBbox(
+        text!,
+        box.minX,
+        box.minY,
+        box.maxX - box.minX,
+        box.maxY - box.minY
+      );
+      this.texts.add(text!);
+      //this.texts.startDrawing(position.x, position.y, text);
+      this.links.add(line, "end", text!.id, "text", position);
+      console.log(line.properties.link?.end, position);
     }
   }
 
