@@ -100,8 +100,6 @@ export class BoxEditor<T extends Box | Text> extends Editor<T> {
     this.startX = clientX;
     this.startY = clientY;
     this.disableDragging();
-    // this.textArea.classList.add("noevents");
-    // this.textArea.setAttribute("disabled", "disabled");
     this.emit(EVT_DRAG_START, this.annotation);
     this.isDragging = true;
   }
