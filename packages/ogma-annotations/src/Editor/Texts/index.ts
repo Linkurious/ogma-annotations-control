@@ -116,12 +116,12 @@ export class Texts extends BoxEditor<Text> {
       if (id === this.selectedId) continue;
 
       const {
-        color,
-        fontSize,
-        font,
-        strokeColor,
-        strokeWidth,
-        strokeType,
+        color = defaultStyle.color,
+        fontSize = defaultStyle.fontSize,
+        font = defaultStyle.font,
+        strokeColor = defaultStyle.strokeColor,
+        strokeWidth = defaultStyle.strokeWidth,
+        strokeType = defaultStyle.strokeType,
         background,
         borderRadius
       } = annotation.properties.style || defaultStyle;
