@@ -23,10 +23,12 @@ const minSize = 20;
 
 type DrawContent<T> = (annotation: T, g: SVGGElement) => void;
 
+const defaultDrawContent = () => {};
+
 export type BoxEditorOptions<T> = Pick<
   Partial<ControllerOptions>,
   "textHandleSize" | "textPlaceholder"
-> & { drawContent: DrawContent<T>; addOns?: string };
+> & { drawContent?: DrawContent<T>; addOns?: string };
 
 export class BoxEditor<T extends Box | Text> extends Editor<T> {
   protected handleSize: number;
@@ -41,16 +43,9 @@ export class BoxEditor<T extends Box | Text> extends Editor<T> {
 
   protected drawContent: DrawContent<T>;
 
-  constructor(
-    ogma: Ogma,
-    options: BoxEditorOptions<T> = {
-      drawContent: () => {
-        // Default content drawing function - does nothing
-      }
-    }
-  ) {
+  constructor(ogma: Ogma, options: BoxEditorOptions<T> = {}) {
     super(ogma, getEditorTemplate(options.addOns));
-    this.drawContent = options.drawContent;
+    this.drawContent = options.drawContent || defaultDrawContent;
     this.showeditorOnHover = false;
     this.handleSize = (defaultControllerOptions.handleSize ||
       options.textHandleSize) as number;
