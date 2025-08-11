@@ -307,7 +307,7 @@ export class BoxEditor<T extends Box | Text> extends Editor<T> {
     }
   }
 
-  protected getTransformMatrix(box: T, zoom: number, angle: number) {
+  protected getTransformMatrix(box: T, _zoom: number, angle: number) {
     const position = getBoxPosition(box);
     const { x, y } = rotateRadians(position, -angle);
     // scale it around its center
@@ -341,7 +341,7 @@ export class BoxEditor<T extends Box | Text> extends Editor<T> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  protected _refreshEditorInternal(t: T, zoom: number) {}
+  protected _refreshEditorInternal(_t: T, _zoom: number) {}
 
   public destroy(): void {
     super.destroy();
