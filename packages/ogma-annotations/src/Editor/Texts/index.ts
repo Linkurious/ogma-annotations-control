@@ -296,7 +296,7 @@ export class Texts extends Editor<Text> {
   public draw(svg: SVGSVGElement): void {
     svg.innerHTML = "";
     const styleContent = "";
-    const angle = this.ogma.view.getAngle();
+    const { angle, zoom } = this.ogma.view.get();
     for (let i = 0; i < this.elements.length; i++) {
       const annotation = this.elements[i];
       const className = `class${i}`;
@@ -350,7 +350,10 @@ export class Texts extends Editor<Text> {
       g.appendChild(rect);
       drawText(annotation, g);
       const { x, y } = rotateRadians(position, -angle);
-      g.setAttribute("transform", `translate(${x},${y})`);
+      g.setAttribute(
+        "transform",
+        `translate(${x},${y}) scale(${zoom}, ${zoom})`
+      );
       g.classList.add(className);
       g.setAttribute("data-annotation", `${annotation.id}`);
       g.setAttribute("data-annotation-type", "text");
@@ -365,6 +368,7 @@ export class Texts extends Editor<Text> {
   public refreshDrawing(): void {
     const angle = this.ogma.view.getAngle();
     const groups = this.layer.element.children;
+    const scale = 1; // / this.ogma.view.getZoom();
     for (let i = 0; i < groups.length; i++) {
       const g = groups[i] as SVGGElement;
       if (!g.hasAttribute("data-annotation")) continue;
@@ -372,6 +376,14 @@ export class Texts extends Editor<Text> {
       const position = getTextPosition(this.getById(id));
       const { x, y } = rotateRadians(position, -angle);
       g.setAttribute("transform", `translate(${x},${y})`);
+      // scale it around its center
+      const size = getTextSize(this.getById(id));
+
+      const offsetX = x + (size.width / 2) * (1 - scale);
+      const offsetY = y + (size.height / 2) * (1 - scale);
+
+      const transform = `matrix(${scale}, 0, 0, ${scale}, ${offsetX}, ${offsetY})`;
+      g.setAttribute("transform", transform);
     }
   }
 

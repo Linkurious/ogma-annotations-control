@@ -2,13 +2,9 @@ import Textbox from "@borgar/textbox";
 import { Text } from "../../types";
 import { getTextSize } from "../../utils";
 
-function removeElipse(str: string): string {
-  return str.replace(/…$/, "");
-}
+const removeEllipsis = (str: string) => str.replace(/…$/, "");
+const getText = (e: Element) => e.children[0].innerHTML;
 
-function getText(e: Element) {
-  return e.children[0].innerHTML;
-}
 /**
  * @function draw
  * @param annotation the annotation to draw
@@ -49,7 +45,7 @@ export default function draw(annotation: Text, g: SVGGElement) {
         index++;
         break;
       }
-      const text = removeElipse(getText(children[index]));
+      const text = removeEllipsis(getText(children[index]));
       if (query.startsWith(text)) {
         query = query.slice(text.length).trim();
       }
@@ -69,11 +65,11 @@ export default function draw(annotation: Text, g: SVGGElement) {
         (e) =>
           !!e.children[0] &&
           e.children[0].tagName === "tspan" &&
-          query.startsWith(removeElipse(getText(e)))
+          query.startsWith(removeEllipsis(getText(e)))
       );
       if (!start) break;
       toReplace.push(start);
-      const length = removeElipse(start.children[0].innerHTML).length;
+      const length = removeEllipsis(start.children[0].innerHTML).length;
       if (!length) break;
       query = query.slice(length);
     }

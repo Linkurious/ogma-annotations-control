@@ -608,6 +608,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         box.maxY - box.minY
       );
       this.texts.add(text!);
+      console.log("Adding text", text!);
       //this.texts.startDrawing(position.x, position.y, text);
       this.links.add(line, "end", text!.id, "text", position);
       console.log(line.properties.link?.end, position);
