@@ -33,7 +33,7 @@ export const isAnnotationCollection = (
   a: AnnotationFeature<Geometry, AnnotationProps> | FeatureCollection
 ): a is AnnotationCollection => a.type === "FeatureCollection";
 
-type AnnotationType = "arrow" | "text";
+type AnnotationType = "arrow" | "text" | "box";
 
 export interface AnnotationProps {
   type: AnnotationType;
@@ -75,7 +75,7 @@ export interface ArrowProperties extends AnnotationProps {
 export type Arrow = AnnotationFeature<LineString, ArrowProperties>;
 
 export interface AnnotationCollection extends FeatureCollection {
-  features: (Arrow | Text)[];
+  features: (Arrow | Text | Box)[];
 }
 
 export type StrokeOptions = {
@@ -84,7 +84,21 @@ export type StrokeOptions = {
   strokeWidth?: number;
 };
 
-export interface TextStyle extends StrokeOptions {
+export type Box<T extends BoxProperties = BoxProperties> = AnnotationFeature<
+  Polygon,
+  T
+>;
+
+export interface BoxStyle extends StrokeOptions {
+  /** background color: empty for transparent #f00, yellow...*/
+  background?: string;
+  /** padding around the box */
+  padding?: number;
+  /** border radius */
+  borderRadius?: number;
+}
+
+export interface TextStyle extends BoxStyle {
   /** Helvetica, sans-serif...  */
   font?: string;
   /** Font size, in pixels */
@@ -99,8 +113,14 @@ export interface TextStyle extends StrokeOptions {
   borderRadius?: number;
 }
 
-export interface TextProperties extends AnnotationProps {
+export interface BoxProperties extends AnnotationProps {
+  type: "box";
+  style?: BoxStyle;
+}
+
+export interface TextProperties extends Omit<BoxProperties, "type"> {
   type: "text";
+
   /**text to display*/
   content: string;
   style?: TextStyle;
@@ -120,7 +140,7 @@ export type Extremity = "none" | "arrow" | "arrow-plain" | "dot" | "halo-dot";
 
 export type AnnotationOptions = {
   handleSize: number;
-  placeholder: string;
+  placeholder?: string;
 };
 
 export type Events<T> = {
@@ -252,6 +272,13 @@ export type ControllerOptions = {
   maxArrowHeight: number;
 };
 
-export type Annotation = Arrow | Text;
+export type Annotation = Arrow | Text | Box;
 
 export type Vector = Point;
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}

@@ -35,7 +35,8 @@ import {
   isAnnotationCollection,
   isArrow,
   isText,
-  Link
+  Link,
+  Box
 } from "./types";
 
 import {
@@ -445,7 +446,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Add an annotation to the controller
    * @param annotation The annotation to add
    */
-  public add(annotation: Arrow | Text | AnnotationCollection): this {
+  public add(annotation: Arrow | Text | Box | AnnotationCollection): this {
     if (isAnnotationCollection(annotation)) {
       const [texts, arrows] = annotation.features.reduce(
         (acc, f) => {
@@ -608,10 +609,8 @@ export class Control extends EventEmitter<FeatureEvents> {
         box.maxY - box.minY
       );
       this.texts.add(text!);
-      console.log("Adding text", text!);
       //this.texts.startDrawing(position.x, position.y, text);
       this.links.add(line, "end", text!.id, "text", position);
-      console.log(line.properties.link?.end, position);
     }
   }
 

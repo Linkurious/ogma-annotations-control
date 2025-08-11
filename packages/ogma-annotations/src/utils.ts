@@ -8,7 +8,7 @@ import type {
   Polygon,
   Position
 } from "geojson";
-import { AnnotationCollection, Arrow, Text } from "./types";
+import { AnnotationCollection, Arrow, Box, Text } from "./types";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -16,33 +16,33 @@ export function createSVGElement<T extends SVGElement>(tag: string): T {
   return document.createElementNS(SVG_NS, tag) as T;
 }
 
-export function getTextBbox(t: Text) {
-  if (!t.geometry.bbox) updateTextBbox(t);
-  return t.geometry.bbox as BBox;
+export function getBbox<T extends Box | Text>(b: T) {
+  if (!b.geometry.bbox) updateBbox(b);
+  return b.geometry.bbox as BBox;
 }
 
-export function getTextSize(t: Text) {
-  const bbox = getTextBbox(t);
+export function getBoxSize<T extends Box | Text>(t: T) {
+  const bbox = getBbox(t);
   return {
     width: bbox[2] - bbox[0],
     height: bbox[3] - bbox[1]
   };
 }
 
-export function getTextPosition(t: Text) {
-  const bbox = getTextBbox(t);
+export function getBoxPosition<T extends Box | Text>(t: T) {
+  const bbox = getBbox(t);
   return { x: bbox[0], y: bbox[1] };
 }
 
-export function updateTextBbox(t: Text) {
+export function updateBbox<T extends Box | Text>(t: T) {
   // TODO: maybe check the winding order of the coordinates
   const [x0, y0] = t.geometry.coordinates[0][0];
   const [x1, y1] = t.geometry.coordinates[0][2];
   t.geometry.bbox = [x0, y0, x1, y1];
 }
 
-export function setTextBbox(
-  t: Text,
+export function setBbox(
+  t: Box | Text,
   x: number,
   y: number,
   width: number,
@@ -243,3 +243,11 @@ export function rgbToRgba(color: string, alpha: number) {
   const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
+
+export {
+  getBbox as getTextBbox,
+  updateBbox as updateTextBbox,
+  setBbox as setTextBbox,
+  getBoxSize as getTextSize,
+  getBoxPosition as getTextPosition
+};
