@@ -171,4 +171,22 @@ export class Links {
       });
     });
   }
+
+  updateTextLinks(links: Link[], text: Text, getAnnotation: AnnotationGetter) {
+    const angle = this.ogma.view.getAngle();
+    links.forEach((link) => {
+      const arrow = getAnnotation(link.arrow) as Arrow;
+      const size = getTextSize(text);
+      const position = getTextPosition(text);
+
+      const m = multiply(link.connectionPoint!, {
+        x: size.width,
+        y: size.height
+      });
+      const r = rotateRadians(m, angle);
+      const pt = add(r, position);
+
+      arrow.geometry.coordinates[link.side === "start" ? 0 : 1] = [pt.x, pt.y];
+    });
+  }
 }

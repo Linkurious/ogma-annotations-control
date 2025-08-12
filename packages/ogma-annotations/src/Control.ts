@@ -165,18 +165,10 @@ export class Control extends EventEmitter<FeatureEvents> {
       if (!snapped)
         this.snappingManager.findAndSnapToNode(a, h as EndType, point);
     } else if (isText(a)) {
-      this.activeLinks.forEach(({ arrow: id, side, connectionPoint }) => {
-        const arrow = this.getAnnotation(id) as Arrow;
-        const size = getTextSize(a);
-        const position = getTextPosition(a);
-
-        const m = multiply(connectionPoint!, { x: size.width, y: size.height });
-        const r = rotateRadians(m, this.ogma.view.getAngle());
-        const pt = add(r, position);
-
-        arrow.geometry.coordinates[side === "start" ? 0 : 1] = [pt.x, pt.y];
-      });
-      if (this.activeLinks.length) this.arrows.refreshLayer();
+      if (this.activeLinks.length > 0) {
+        this.links.updateTextLinks(this.activeLinks, a, this.getAnnotation);
+        this.arrows.refreshLayer();
+      }
     }
     this.layer.refresh();
     this.emit(EVT_DRAG, a, key);
