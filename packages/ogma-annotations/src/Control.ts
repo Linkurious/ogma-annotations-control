@@ -23,7 +23,7 @@ import { Arrows, createArrow } from "./Editor/Arrows";
 import type { Editor } from "./Editor/base";
 import { Texts } from "./Editor/Texts";
 import { Links } from "./links";
-import { Snapping } from "./Snapping";
+import { Snapping } from "./snapping";
 import {
   Annotation,
   AnnotationCollection,
