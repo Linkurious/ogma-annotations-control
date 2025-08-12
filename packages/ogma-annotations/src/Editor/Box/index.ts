@@ -30,7 +30,7 @@ export type BoxEditorOptions<T> = Pick<
   "textHandleSize" | "textPlaceholder"
 > & { drawContent?: DrawContent<T>; addOns?: string };
 
-export class BoxEditor<T extends Box | Text> extends Editor<T> {
+export class BoxesEditor<T extends Box | Text> extends Editor<T> {
   protected handleSize: number;
   protected rect: Rect = { x: 0, y: 0, width: 0, height: 0 };
   protected annotation = { ...defaultOptions } as T;

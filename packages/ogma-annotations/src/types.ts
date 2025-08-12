@@ -25,6 +25,10 @@ export const isArrow = (
   a: AnnotationFeature<Geometry, AnnotationProps>
 ): a is Arrow => a.properties.type === "arrow";
 
+export const isBox = (
+  a: AnnotationFeature<Geometry, AnnotationProps>
+): a is Box => a.properties.type === "box";
+
 export const isText = (
   a: AnnotationFeature<Geometry, AnnotationProps>
 ): a is Text => a.properties.type === "text";
@@ -62,7 +66,7 @@ export type Point = {
 type ExportedLink = {
   id: Id;
   side: "start" | "end";
-  type: "node" | "text";
+  type: "node" | "text" | "box" | "comment";
   magnet?: Point;
 };
 
@@ -201,7 +205,7 @@ export type FeatureEvents = {
   [EVT_DRAG_END]: (evt: Annotation) => void;
 };
 
-export type TargetType = "text" | "node";
+export type TargetType = "text" | "node" | "box" | "comment";
 
 export type Side = "start" | "end";
 

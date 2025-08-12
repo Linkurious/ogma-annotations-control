@@ -1,6 +1,16 @@
-import type { Point } from "@linkurious/ogma";
+import type { Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
-import type { Arrow, Id, TargetType, Link, Side } from "./types";
+import type {
+  Arrow,
+  Id,
+  TargetType,
+  Link,
+  Side,
+  Text,
+  Annotation
+} from "./types";
+import { getTextPosition, getTextSize, setArrowEndPoint } from "./utils";
+import { add, multiply, rotateRadians } from "./vec";
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -14,6 +24,8 @@ export class Links {
   private links: Record<Id, Link> = {};
   private linksByTargetId: Record<Id, Id[]> = {};
   private linksByArrowId: Record<Id, { start?: Id; end?: Id }> = {};
+
+  constructor(private ogma: Ogma) {}
 
   public add(
     arrow: Arrow,
@@ -100,5 +112,26 @@ export class Links {
 
   forEach(cb: (link: Link) => void) {
     Object.values(this.links).forEach(cb);
+  }
+
+  refreshLinks(getAnnotation: (id: Id) => Annotation | undefined) {
+    let shouldRefresh = false;
+    const angle = this.ogma.view.getAngle();
+    this.forEach(({ connectionPoint, targetType, target, arrow, side }) => {
+      // @ts-expect-error I don't understand why TS is complaining
+      if (targetType !== "text" || targetType !== "box") return;
+      shouldRefresh = true;
+
+      const text = getAnnotation(target) as Text;
+      const a = getAnnotation(arrow) as Arrow;
+      const size = getTextSize(text);
+      const position = getTextPosition<Text>(text);
+
+      const m = multiply(connectionPoint!, { x: size.width, y: size.height });
+      const r = rotateRadians(m, angle);
+      const point = add(r, position);
+      setArrowEndPoint(a, side, point.x, point.y);
+    });
+    return shouldRefresh;
   }
 }

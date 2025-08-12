@@ -32,7 +32,7 @@ const HANDLE_END = "handle-end";
  * @class Arrows
  * Draw and edit arrows
  */
-export class Arrows extends Editor<Arrow> {
+export class ArrowsEditor extends Editor<Arrow> {
   // active handle id
   private draggedHandle = NONE;
   private start: Point = { x: 0, y: 0 };

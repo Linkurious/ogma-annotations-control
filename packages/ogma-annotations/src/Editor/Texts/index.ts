@@ -9,13 +9,13 @@ import drawText from "./render";
 import { EVT_DRAG_END, EVT_UPDATE, NONE } from "../../constants";
 import { Id, Text } from "../../types";
 import { createSVGElement, getTextSize } from "../../utils";
-import { BoxEditor, BoxEditorOptions } from "../Box";
+import { BoxesEditor, BoxEditorOptions } from "../Box";
 
 /**
  * @class Texts
  * Draw, update, edit texts
  */
-export class Texts extends BoxEditor<Text> {
+export class TextsEditor extends BoxesEditor<Text> {
   private textArea: HTMLTextAreaElement;
   private placeholder = "Type your text here...";
 

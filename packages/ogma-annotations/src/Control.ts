@@ -19,9 +19,10 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE
 } from "./constants";
-import { Arrows, createArrow } from "./Editor/Arrows";
+import { ArrowsEditor, createArrow } from "./Editor/Arrows";
 import type { Editor } from "./Editor/base";
-import { Texts } from "./Editor/Texts";
+import { BoxesEditor } from "./Editor/Box";
+import { TextsEditor } from "./Editor/Texts";
 import { Links } from "./links";
 import { Snapping } from "./snapping";
 import {
@@ -35,7 +36,9 @@ import {
   isAnnotationCollection,
   isArrow,
   isText,
-  Link
+  Link,
+  isBox,
+  Box
 } from "./types";
 
 import {
@@ -66,9 +69,10 @@ type EndType = "start" | "end";
 const ends: EndType[] = ["start", "end"];
 
 export class Control extends EventEmitter<FeatureEvents> {
-  private arrows: Arrows;
-  private texts: Texts;
-  private links = new Links();
+  private arrows: ArrowsEditor;
+  private texts: TextsEditor;
+  private boxes: BoxesEditor<Box>;
+  private links: Links;
   private layer: CanvasLayer;
   private annotations: Editor<Annotation>[];
   private ogma: Ogma;
@@ -85,8 +89,14 @@ export class Control extends EventEmitter<FeatureEvents> {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
-    this.arrows = new Arrows(ogma, this.options);
-    this.texts = new Texts(ogma, this.options);
+
+    // editors
+    this.arrows = new ArrowsEditor(ogma, this.options);
+    this.texts = new TextsEditor(ogma, this.options);
+    this.boxes = new BoxesEditor(ogma, this.options);
+
+    this.links = new Links(ogma);
+
     this.annotations = [this.arrows, this.texts];
     this.snappingManager = new Snapping(
       ogma,
@@ -110,9 +120,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on("nodesDragStart", this._onNodesDragStart)
       .on("nodesDragProgress", this._onNodesDrag)
       .on("layoutEnd", this._onLayoutEnd)
-      .on(["viewChanged", "rotate"], () => {
-        this.refreshTextLinks();
-      });
+      .on(["viewChanged", "rotate"], this.refreshTextLinks);
 
     this.layer = ogma.layers.addCanvasLayer(this._render);
     this.layer.moveToBottom();
@@ -186,7 +194,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         }
       });
     }
-    if (isText(a) || isArrow(a)) this.onUpdate(a);
+    if (isText(a) || isArrow(a) || isBox(a)) this.onUpdate(a);
 
     this.dragged = null;
     this.activeLinks = [];
@@ -286,27 +294,9 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_SELECT, this.selected);
   };
 
-  private refreshTextLinks() {
-    let shouldRefresh = false;
-    this.links.forEach(
-      ({ connectionPoint, targetType, target, arrow, side }) => {
-        if (targetType !== "text") return;
-        shouldRefresh = true;
-
-        const text = this.getAnnotation(target) as Text;
-        const a = this.getAnnotation(arrow) as Arrow;
-        const size = getTextSize(text);
-        const position = getTextPosition(text);
-
-        const m = multiply(connectionPoint!, { x: size.width, y: size.height });
-        const r = rotateRadians(m, this.ogma.view.getAngle());
-        const point = add(r, position);
-        setArrowEndPoint(a, side, point.x, point.y);
-      }
-    );
-    if (!shouldRefresh) return;
-    this.arrows.refreshLayer();
-  }
+  private refreshTextLinks = () => {
+    if (this.links.refreshLinks(this.getAnnotation)) this.arrows.refreshLayer();
+  };
 
   /**
    * @returns the currently selected annotation
@@ -334,8 +324,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public select(id: Id): this {
     const annotation = this.getAnnotations().features.find((a) => a.id === id);
     if (!annotation) return this;
-    if (isArrow(annotation)) this.arrows.select(annotation.id);
-    else if (isText(annotation)) this.texts.select(annotation.id);
+    this.getEditorForAnnotation(annotation)?.select(annotation.id);
     return this;
   }
   /**
@@ -343,8 +332,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    */
   public unselect(): this {
     if (!this.selected) return this;
-    if (isArrow(this.selected)) this.arrows.unselect();
-    else if (isText(this.selected)) this.texts.unselect();
+    this.getEditorForAnnotation(this.selected)?.unselect();
     return this;
   }
   /**
@@ -564,8 +552,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   ): this {
     const annotation = this.getAnnotations().features.find((a) => a.id === id);
     if (!annotation) return this;
-    if (isArrow(annotation)) this.arrows.updateStyle(annotation, style);
-    else if (isText(annotation)) this.texts.updateStyle(annotation, style);
+    this.getEditorForAnnotation(annotation)?.updateStyle(annotation, style);
     this.onUpdate(annotation);
     return this;
   }
@@ -573,10 +560,18 @@ export class Control extends EventEmitter<FeatureEvents> {
   public setScale(id: Id, scale: number, ox: number, oy: number) {
     const annotation = this.getAnnotations().features.find((a) => a.id === id);
     if (!annotation) return this;
-    if (isArrow(annotation)) this.arrows.scale(annotation, scale, ox, oy);
-    else if (isText(annotation)) this.texts.scale(annotation, scale, ox, oy);
+    this.getEditorForAnnotation(annotation)?.scale(annotation, scale, ox, oy);
     this.onUpdate(annotation);
     return this;
+  }
+
+  private getEditorForAnnotation(
+    annotation: Annotation
+  ): Editor<Annotation> | undefined {
+    if (isArrow(annotation)) return this.arrows;
+    if (isText(annotation)) return this.texts;
+    if (isBox(annotation)) return this.boxes;
+    return undefined;
   }
 
   /**
@@ -598,9 +593,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param id the id of the annotation to get
    * @returns The annotation with the given id
    */
-  public getAnnotation(id: Id) {
+  public getAnnotation = (id: Id) => {
     return this.getAnnotations().features.find((a) => a.id === id);
-  }
+  };
 
   /**
    * Destroy the controller and its elements
