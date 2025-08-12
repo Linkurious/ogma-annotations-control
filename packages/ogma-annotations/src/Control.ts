@@ -2,7 +2,6 @@ import type Ogma from "@linkurious/ogma";
 import type {
   CanvasLayer,
   LayoutEndEvent,
-  Node,
   NodeList,
   NodesDragProgressEvent,
   Point
@@ -24,6 +23,7 @@ import { Arrows, createArrow } from "./Editor/Arrows";
 import type { Editor } from "./Editor/base";
 import { Texts } from "./Editor/Texts";
 import { Links } from "./links";
+import { Snapping } from "./Snapping";
 import {
   Annotation,
   AnnotationCollection,
@@ -48,7 +48,7 @@ import {
   getAttachmentPointOnNode,
   setTextBbox
 } from "./utils";
-import { subtract, rotateRadians, add, multiply, length } from "./vec";
+import { rotateRadians, add, multiply } from "./vec";
 
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
@@ -65,23 +65,6 @@ const defaultOptions: ControllerOptions = {
 type EndType = "start" | "end";
 const ends: EndType[] = ["start", "end"];
 
-// TODO: move to methods
-const MAGNETS: Point[] = [
-  { x: 0, y: 0 },
-  { x: 0.5, y: 0 },
-  { x: 1, y: 0 },
-  { x: 0, y: 0.5 },
-  { x: 1, y: 0.5 },
-  { x: 0, y: 1 },
-  { x: 0.5, y: 1 },
-  { x: 1, y: 1 }
-];
-
-type MagnetPoint = {
-  point: Point;
-  magnet: Point;
-};
-
 export class Control extends EventEmitter<FeatureEvents> {
   private arrows: Arrows;
   private texts: Texts;
@@ -92,7 +75,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private options: ControllerOptions;
   private selected: Annotation | null = null;
   private updateTimeout = 0;
-  private hoveredNode: Node | null = null;
+  private snappingManager: Snapping;
 
   private dragged: Arrow | null = null;
   private textToMagnet: Text | undefined = undefined;
@@ -105,6 +88,12 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.arrows = new Arrows(ogma, this.options);
     this.texts = new Texts(ogma, this.options);
     this.annotations = [this.arrows, this.texts];
+    this.snappingManager = new Snapping(
+      ogma,
+      this.options,
+      this.texts,
+      this.links
+    );
 
     this.annotations.forEach((a) => {
       a.on(EVT_DRAG_START, this._onFeatureDragStart)
@@ -134,7 +123,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     ctx.beginPath();
     ctx.fillStyle = "green";
     const z = this.ogma.view.getZoom();
-    MAGNETS.forEach((magnet) => {
+    this.snappingManager.getMagnets().forEach((magnet) => {
       if (!this.textToMagnet) return;
       const size = getTextSize(this.textToMagnet);
       const position = getTextPosition(this.textToMagnet);
@@ -155,14 +144,18 @@ export class Control extends EventEmitter<FeatureEvents> {
     if (isArrow(a) && h === "line") {
       ["start", "end"].find((side) => {
         const point = side === "start" ? getArrowStart(a) : getArrowEnd(a);
-        const snapped = this._snapToText(a, h as EndType, point);
-        return snapped || this._findAndSnapToNode(a, side as EndType, point);
+        const snapped = this.snappingManager.snapToText(a, h as EndType, point);
+        return (
+          snapped ||
+          this.snappingManager.findAndSnapToNode(a, side as EndType, point)
+        );
       });
     } else if (isArrow(a) && h !== "line") {
       const point = h === "start" ? getArrowStart(a) : getArrowEnd(a);
-      const snapped = this._snapToText(a, h as EndType, point);
+      const snapped = this.snappingManager.snapToText(a, h as EndType, point);
       // if no text is detected and option is on, we to snap to node
-      if (!snapped) this._findAndSnapToNode(a, h as EndType, point);
+      if (!snapped)
+        this.snappingManager.findAndSnapToNode(a, h as EndType, point);
     } else if (isText(a)) {
       this.activeLinks.forEach(({ arrow: id, side, connectionPoint }) => {
         const arrow = this.getAnnotation(id) as Arrow;
@@ -274,64 +267,6 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.arrows.refreshLayer();
   }
 
-  private _snapToText(arrow: Arrow, side: EndType, point: Point) {
-    const text = this.texts.detect(point, this.options.detectMargin);
-    this.links.remove(arrow, side);
-    if (!text) return false;
-    this.textToMagnet = text;
-    const anchor = this.findMagnetPoint(MAGNETS, text, point);
-    if (anchor) {
-      setArrowEndPoint(arrow, side, anchor.point.x, anchor.point.y);
-      this.links.add(arrow, side, text.id, "text", anchor.magnet);
-      return true;
-    }
-    return false;
-  }
-
-  private _findAndSnapToNode(arrow: Arrow, side: EndType, point: Point) {
-    const screenPoint = this.ogma.view.graphToScreenCoordinates(point);
-    const element = this.ogma.view.getElementAt(screenPoint);
-    this.links.remove(arrow, side);
-    if (element && element.isNode) {
-      this.hoveredNode?.setSelected(false);
-      this.hoveredNode = element;
-      element.setSelected(true);
-      // if close to the node border, snap to it
-      this._snapToNode(arrow, side, element, screenPoint);
-    } else {
-      this.hoveredNode?.setSelected(false);
-      this.hoveredNode = null;
-    }
-  }
-
-  private _snapToNode(
-    arrow: Arrow,
-    side: EndType,
-    node: Node,
-    screenPoint: Point
-  ) {
-    const pos = node.getPositionOnScreen();
-    const r = +node.getAttribute("radius");
-    const rpx = r * this.ogma.view.getZoom();
-    const dx = screenPoint.x - pos.x;
-    const dy = screenPoint.y - pos.y;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const nodeCenter = node.getPosition();
-
-    // clever snapping, center if close to center, otherwise snap
-    // to border if close to it. Currently just somple way
-    if (dist < rpx + this.options.detectMargin) {
-      let anchor = nodeCenter; // graph space
-      if (dist > rpx / 2) {
-        const otherEnd = getArrowSide(arrow, side === "end" ? "start" : "end");
-        anchor = getAttachmentPointOnNode(otherEnd, anchor, r);
-      }
-      setArrowEndPoint(arrow, side, anchor.x, anchor.y);
-      this.links.add(arrow, side, node.getId(), "node", anchor);
-    }
-    // TODO: handle the other endpoint, if it's connected to a node
-  }
-
   private _onAdded = (annotation: Annotation) => {
     this.emit(EVT_ADD, annotation);
   };
@@ -378,32 +313,6 @@ export class Control extends EventEmitter<FeatureEvents> {
    */
   public getSelected() {
     return this.selected;
-  }
-
-  private findMagnetPoint(magnets: Point[], textToMagnet: Text, point: Point) {
-    let res: MagnetPoint | undefined;
-    for (const magnet of magnets) {
-      const size = getTextSize(textToMagnet);
-      const position = getTextPosition(textToMagnet);
-      const m = multiply(magnet, { x: size.width, y: size.height });
-      const r = rotateRadians(m, this.ogma.view.getAngle());
-      const mPoint = add(r, position);
-      const dist = length(subtract(mPoint, point));
-      const scaledRadius = Math.min(
-        this.options.magnetRadius * this.ogma.view.getZoom(),
-        // when really zoomed in: avoid to snap on too far away magnets
-        size.width / 2,
-        size.height / 2
-      );
-      if (dist < Math.max(scaledRadius, this.options.magnetHandleRadius)) {
-        res = {
-          point: mPoint,
-          magnet
-        };
-        break;
-      }
-    }
-    return res;
   }
 
   /**
