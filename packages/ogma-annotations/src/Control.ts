@@ -340,6 +340,9 @@ export class Control extends EventEmitter<FeatureEvents> {
       return this;
     }
     switch (annotation.properties.type) {
+      case "box":
+        this.boxes.add(annotation as unknown as Box);
+        break;
       case "text":
         this.texts.add(annotation as unknown as Text);
         break;

@@ -104,7 +104,7 @@ document.getElementById("add-box")!.addEventListener("click", () => {
   addTexts.disabled = true;
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-    const box = createBox(x, y, 200, 100, {
+    const box = createBox(x, y, 0, 0, {
       background: "#EDE6FF",
       //strokeWidth: 1,
       //strokeType: "dashed",

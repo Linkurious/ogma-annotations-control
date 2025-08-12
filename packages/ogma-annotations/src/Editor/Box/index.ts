@@ -76,8 +76,8 @@ export class BoxesEditor<T extends Box | Text> extends Editor<T> {
     y: number,
     box = createBox(x, y, 0, 0, defaultStyle) as T
   ) {
-    this.add(box);
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
+    this.add(box);
     this.select(box.id);
     this.startDragging(this.getById(box.id), pos.x, pos.y);
     this.draggedHandle = 6;
