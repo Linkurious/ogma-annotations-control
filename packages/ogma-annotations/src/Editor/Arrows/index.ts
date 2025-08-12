@@ -48,7 +48,6 @@ export class ArrowsEditor extends Editor<Arrow> {
   constructor(
     ogma: Ogma,
     elements: SubCollection<Arrow>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: Pick<
       Partial<ControllerOptions>,
       "arrowHandleSize" | "maxArrowHeight" | "minArrowHeight"
