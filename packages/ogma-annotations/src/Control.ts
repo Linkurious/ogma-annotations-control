@@ -249,29 +249,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   };
 
   private _moveNodes(nodes: NodeList, dx: number, dy: number) {
-    nodes.forEach((node) => {
-      const links = this.links.getTargetLinks(node.getId(), "node");
-      const pos = node.getPosition();
-      links.forEach((link) => {
-        const arrow = this.getAnnotation(link.arrow) as Arrow;
-        const side = link.side;
-        const otherSide = getArrowSide(
-          arrow,
-          side === "start" ? "end" : "start"
-        );
-
-        let anchor = pos; // graph space
-        const r = +node.getAttribute("radius");
-        const eps = 1e-6;
-        if (
-          link.connectionPoint.x - (pos.x - dx) > eps ||
-          link.connectionPoint.y - (pos.y - dy) > eps
-        ) {
-          anchor = getAttachmentPointOnNode(otherSide, pos, r);
-        }
-        setArrowEndPoint(arrow, side, anchor.x, anchor.y);
-      });
-    });
+    this.links.updateLinksForNodes(nodes, this.getAnnotation, dx, dy);
     this.arrows.refreshLayer();
   }
 

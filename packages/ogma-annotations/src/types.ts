@@ -283,3 +283,5 @@ export interface Rect {
   width: number;
   height: number;
 }
+
+export type AnnotationGetter = (id: Id) => Annotation | undefined;
