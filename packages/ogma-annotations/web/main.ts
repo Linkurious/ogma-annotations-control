@@ -2,7 +2,13 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import Ogma, { RawNode } from "@linkurious/ogma";
-import { Control, createArrow, createText, AnnotationCollection } from "../src";
+import {
+  Control,
+  createArrow,
+  createText,
+  AnnotationCollection,
+  createBox
+} from "../src";
 import { EVT_DRAG_END } from "../src/constants";
 
 const ogma = new Ogma({
@@ -88,6 +94,26 @@ addTexts.addEventListener("click", () => {
     control.startText(x, y, text);
     control.once(EVT_DRAG_END, (a) => {
       if (a.id !== text.id) return;
+      addTexts.disabled = false;
+    });
+  });
+});
+
+document.getElementById("add-box")!.addEventListener("click", () => {
+  if (addTexts.disabled) return;
+  addTexts.disabled = true;
+  ogma.events.once("mousedown", (evt) => {
+    const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+    const box = createBox(x, y, 200, 100, {
+      background: "#EDE6FF",
+      //strokeWidth: 1,
+      //strokeType: "dashed",
+      borderRadius: 8,
+      padding: 12
+    });
+    control.startBox(x, y, box);
+    control.once(EVT_DRAG_END, (a) => {
+      if (a.id !== box.id) return;
       addTexts.disabled = false;
     });
   });

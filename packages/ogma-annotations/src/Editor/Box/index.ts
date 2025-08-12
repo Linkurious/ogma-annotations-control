@@ -345,6 +345,7 @@ export class BoxesEditor<T extends Box | Text> extends Editor<T> {
     this.layer.refresh();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected _refreshEditorInternal(_t: T, _zoom: number) {}
 
   public destroy(): void {

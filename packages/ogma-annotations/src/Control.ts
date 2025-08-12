@@ -502,6 +502,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.texts.startDrawing(x, y, text);
   }
 
+  public startBox(x: number, y: number, box?: Box) {
+    this.cancelDrawing();
+    this.boxes.startDrawing(x, y, box);
+  }
+
   /**
    * Cancel drawing on the current frame
    */
