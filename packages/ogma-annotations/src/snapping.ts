@@ -1,6 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import type { Node, Point } from "@linkurious/ogma";
-import { Texts } from "./Editor/Texts";
+import { TextsEditor } from "./Editor/Texts";
 import { Links } from "./links";
 import { Arrow, ControllerOptions, Text } from "./types";
 import {
@@ -33,14 +33,14 @@ type MagnetPoint = {
 export class Snapping {
   private ogma: Ogma;
   private options: ControllerOptions;
-  private texts: Texts;
+  private texts: TextsEditor;
   private links: Links;
   private hoveredNode: Node | null = null;
 
   constructor(
     ogma: Ogma,
     options: ControllerOptions,
-    texts: Texts,
+    texts: TextsEditor,
     links: Links
   ) {
     this.ogma = ogma;
