@@ -7,7 +7,8 @@ import {
   getEditorTemplate
 } from "./defaults";
 import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from "../../constants";
-import { Box, ControllerOptions, Rect, Text } from "../../types";
+import { SubCollection } from "../../storage";
+import { Box, ControllerOptions, Id, Rect, Text } from "../../types";
 import {
   clientToContainerPosition,
   createSVGElement,
@@ -43,8 +44,12 @@ export class BoxesEditor<T extends Box | Text> extends Editor<T> {
 
   protected drawContent: DrawContent<T>;
 
-  constructor(ogma: Ogma, options: BoxEditorOptions<T> = {}) {
-    super(ogma, getEditorTemplate(options.addOns));
+  constructor(
+    ogma: Ogma,
+    elements: SubCollection<T>,
+    options: BoxEditorOptions<T> = {}
+  ) {
+    super(ogma, elements, getEditorTemplate(options.addOns));
     this.drawContent = options.drawContent || defaultDrawContent;
     this.showeditorOnHover = false;
     this.handleSize = (defaultControllerOptions.handleSize ||
@@ -297,7 +302,9 @@ export class BoxesEditor<T extends Box | Text> extends Editor<T> {
     for (let i = 0; i < groups.length; i++) {
       const g = groups[i] as SVGGElement;
       if (!g.hasAttribute("data-annotation")) continue;
-      const id = g.getAttribute("data-annotation")!;
+      let id: Id = g.getAttribute("data-annotation")!;
+      // TODO: restrict this to strings only
+      if (isFinite(Number(id))) id = Number(id);
       g.setAttribute(
         "transform",
         this.getTransformMatrix(this.getById(id), zoom, angle)

@@ -17,6 +17,7 @@ import {
   EVT_UNSELECT,
   NONE
 } from "../constants";
+import { SubCollection } from "../storage";
 import { Annotation, Events, Id } from "../types";
 import { scaleGeometry } from "../utils";
 
@@ -28,8 +29,6 @@ import { scaleGeometry } from "../utils";
 export abstract class Editor<T extends Annotation> extends eventEmmitter<
   Events<T>
 > {
-  protected ogma: Ogma;
-  protected elements: T[];
   // layer to draw elements
   protected layer: SVGLayer;
   protected editor: Overlay;
@@ -41,10 +40,13 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
   protected isDragging: boolean;
   protected showeditorOnHover: boolean;
 
-  constructor(ogma: Ogma, editorHtml: string) {
+  constructor(
+    protected ogma: Ogma,
+    protected elements: SubCollection<T>,
+    editorHtml: string
+  ) {
     super();
-    this.ogma = ogma;
-    this.elements = [];
+    this.elements = elements;
     this.shouldDetect = true;
     this.isDragging = false;
     this.showeditorOnHover = true;
@@ -202,13 +204,7 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
   }
 
   getById(id: Id): T {
-    const nid = Number(id);
-    for (let i = 0; i < this.elements.length; i++) {
-      const element = this.elements[i];
-      if (element.id !== id && element.id !== nid) continue;
-      return element;
-    }
-    return undefined as unknown as T;
+    return this.elements.getById(id) as T;
   }
 
   /**
@@ -272,7 +268,7 @@ export abstract class Editor<T extends Annotation> extends eventEmmitter<
     const element = this.getById(id);
     if (id === this.hoveredId) this.unhover();
     if (id === this.selectedId) this.unselect();
-    this.elements = this.elements.filter((a) => a.id !== id);
+    this.elements.remove(id);
     if (element) this.emit(EVT_REMOVE, element);
     this.layer.refresh();
   }

@@ -11,7 +11,7 @@ export const defaultStyle: ArrowStyles = {
 
 // used when adding a new Arrow
 export const defaultOptions: Arrow = {
-  id: 0,
+  id: undefined as unknown as string, // will be set by the editor
   type: "Feature",
   properties: {
     type: "arrow",

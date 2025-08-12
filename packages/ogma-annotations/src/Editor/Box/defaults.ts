@@ -11,7 +11,7 @@ export const defaultStyle: BoxStyle = {
 
 //used when adding a new Text
 export const defaultOptions: Box = {
-  id: 0,
+  id: undefined as unknown as string, // will be set by the editor
   type: "Feature",
   properties: {
     type: "box",

@@ -25,6 +25,7 @@ import { BoxesEditor } from "./Editor/Box";
 import { TextsEditor } from "./Editor/Texts";
 import { Links } from "./links";
 import { Snapping } from "./snapping";
+import { Storage } from "./storage";
 import {
   Annotation,
   AnnotationCollection,
@@ -80,6 +81,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private selected: Annotation | null = null;
   private updateTimeout = 0;
   private snappingManager: Snapping;
+  private storage: Storage = new Storage();
 
   private dragged: Arrow | null = null;
   private textToMagnet: Text | undefined = undefined;
@@ -91,13 +93,25 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.ogma = ogma;
 
     // editors
-    this.arrows = new ArrowsEditor(ogma, this.options);
-    this.texts = new TextsEditor(ogma, this.options);
-    this.boxes = new BoxesEditor(ogma, this.options);
+    this.arrows = new ArrowsEditor(
+      ogma,
+      this.storage.createCollection(),
+      this.options
+    );
+    this.texts = new TextsEditor(
+      ogma,
+      this.storage.createCollection(),
+      this.options
+    );
+    this.boxes = new BoxesEditor(
+      ogma,
+      this.storage.createCollection(),
+      this.options
+    );
 
     this.links = new Links(ogma);
 
-    this.annotations = [this.arrows, this.texts];
+    this.annotations = [this.arrows, this.texts, this.boxes];
     this.snappingManager = new Snapping(
       ogma,
       this.options,
@@ -548,14 +562,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns the annotations in the controller
    */
   public getAnnotations() {
-    const collection: AnnotationCollection = {
-      type: "FeatureCollection",
-      features: []
-    };
-    this.annotations.forEach((editor) => {
-      collection.features = [...collection.features, ...editor.getElements()];
-    });
-    return collection;
+    return this.storage.getCollection();
   }
 
   /**
@@ -564,7 +571,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns The annotation with the given id
    */
   public getAnnotation = (id: Id) => {
-    return this.getAnnotations().features.find((a) => a.id === id);
+    return this.storage.getById(id);
   };
 
   /**

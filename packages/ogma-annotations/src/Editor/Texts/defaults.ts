@@ -14,7 +14,7 @@ export const defaultStyle: TextStyle = {
 
 //used when adding a new Text
 export const defaultOptions: Text = {
-  id: 0,
+  id: undefined as unknown as string, // will be set by the editor
   type: "Feature",
   properties: {
     type: "text",

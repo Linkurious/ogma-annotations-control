@@ -2,6 +2,7 @@ import Ogma, { Point } from "@linkurious/ogma";
 import { createArrow, defaultOptions, defaultStyle } from "./defaults";
 import drawArrow, { getArrowHeight } from "./render";
 import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from "../../constants";
+import { SubCollection } from "../../storage";
 import { Arrow, ControllerOptions } from "../../types";
 import {
   clientToContainerPosition,
@@ -46,6 +47,7 @@ export class ArrowsEditor extends Editor<Arrow> {
 
   constructor(
     ogma: Ogma,
+    elements: SubCollection<Arrow>,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     options: Pick<
       Partial<ControllerOptions>,
@@ -54,6 +56,7 @@ export class ArrowsEditor extends Editor<Arrow> {
   ) {
     super(
       ogma,
+      elements,
       `
     <div class="arrow-handle">
       <div id="${HANDLE_LINE}" data-handle-id="0" class="handle line"></div>

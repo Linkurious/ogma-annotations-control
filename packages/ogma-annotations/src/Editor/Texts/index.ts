@@ -7,6 +7,7 @@ import {
 } from "./defaults";
 import drawText from "./render";
 import { EVT_DRAG_END, EVT_UPDATE, NONE } from "../../constants";
+import { SubCollection } from "../../storage";
 import { Id, Text } from "../../types";
 import { createSVGElement, getTextSize } from "../../utils";
 import { BoxesEditor, BoxEditorOptions } from "../Box";
@@ -21,12 +22,13 @@ export class TextsEditor extends BoxesEditor<Text> {
 
   constructor(
     ogma: Ogma,
+    elements: SubCollection<Text>,
     options: BoxEditorOptions<Text> = {
       drawContent: drawText,
       addOns: `<textarea wrap="on"></textarea>`
     }
   ) {
-    super(ogma, {
+    super(ogma, elements, {
       ...options,
       addOns: options.addOns || `<textarea wrap="on"></textarea>`,
       drawContent: options.drawContent || drawText
