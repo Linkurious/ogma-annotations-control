@@ -75,7 +75,7 @@ export interface ArrowProperties extends AnnotationProps {
 export type Arrow = AnnotationFeature<LineString, ArrowProperties>;
 
 export interface AnnotationCollection extends FeatureCollection {
-  features: (Arrow | Text | Box)[];
+  features: Annotation[];
 }
 
 export type StrokeOptions = {
@@ -190,18 +190,15 @@ export type FeatureEvents = {
   /**
    * Event trigerred when starting to drag an arrow or a text
    */
-  [EVT_DRAG_START]: (evt: Arrow | Text) => void;
+  [EVT_DRAG_START]: (evt: Annotation) => void;
   /**
    * Event trigerred when dragging an arrow or a text
    */
-  [EVT_DRAG]: (
-    evt: Arrow | Text,
-    key: "line" | "start" | "end" | "text"
-  ) => void;
+  [EVT_DRAG]: (evt: Annotation, key: "line" | "start" | "end" | "text") => void;
   /**
    * Event trigerred when stopped dragging an arrow or a text
    */
-  [EVT_DRAG_END]: (evt: Arrow | Text) => void;
+  [EVT_DRAG_END]: (evt: Annotation) => void;
 };
 
 export type TargetType = "text" | "node";

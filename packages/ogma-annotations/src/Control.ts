@@ -35,8 +35,7 @@ import {
   isAnnotationCollection,
   isArrow,
   isText,
-  Link,
-  Box
+  Link
 } from "./types";
 
 import {
@@ -88,7 +87,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private texts: Texts;
   private links = new Links();
   private layer: CanvasLayer;
-  private annotations: Editor<Arrow | Text>[];
+  private annotations: Editor<Annotation>[];
   private ogma: Ogma;
   private options: ControllerOptions;
   private selected: Annotation | null = null;
@@ -151,10 +150,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     ctx.closePath();
   };
 
-  private _onFeatureDrag = (
-    a: Text | Arrow,
-    key: EndType | "line" | "text"
-  ) => {
+  private _onFeatureDrag = (a: Annotation, key: EndType | "line" | "text") => {
     const h = key;
     if (isArrow(a) && h === "line") {
       ["start", "end"].find((side) => {
@@ -185,7 +181,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_DRAG, a, key);
   };
 
-  private _onFeatureDragEnd = (a: Text | Arrow) => {
+  private _onFeatureDragEnd = (a: Annotation) => {
     if (this.dragged !== null && isArrow(a) && getArrowStart(this.dragged)) {
       ends.forEach((side) => {
         const link = this.links.getArrowLink(a.id, side);
@@ -207,7 +203,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.emit(EVT_DRAG_END, a);
   };
 
-  private _onFeatureDragStart = (d: Arrow | Text) => {
+  private _onFeatureDragStart = (d: Annotation) => {
     this.textToMagnet = undefined;
     if (isArrow(d)) this.dragged = d as Arrow;
     else if (isText(d))
@@ -446,7 +442,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Add an annotation to the controller
    * @param annotation The annotation to add
    */
-  public add(annotation: Arrow | Text | Box | AnnotationCollection): this {
+  public add(annotation: Annotation | AnnotationCollection): this {
     if (isAnnotationCollection(annotation)) {
       const [texts, arrows] = annotation.features.reduce(
         (acc, f) => {
@@ -457,8 +453,8 @@ export class Control extends EventEmitter<FeatureEvents> {
         [[], []] as [Text[], Arrow[]]
       );
       // Add texts first to make sure that arrows can snap to them
-      texts.forEach((f) => this.add(f as unknown as Arrow | Text));
-      arrows.forEach((f) => this.add(f as unknown as Arrow | Text));
+      texts.forEach((f) => this.add(f as unknown as Annotation));
+      arrows.forEach((f) => this.add(f as unknown as Annotation));
       this.arrows.refreshLayer();
       return this;
     }
@@ -478,10 +474,10 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Remove an annotation or an array of annotations from the controller
    * @param annotation The annotation(s) to remove
    */
-  public remove(annotation: Arrow | Text | AnnotationCollection): this {
+  public remove(annotation: Annotation | AnnotationCollection): this {
     if (isAnnotationCollection(annotation)) {
       annotation.features.forEach((f) =>
-        this.remove(f as unknown as Arrow | Text)
+        this.remove(f as unknown as Annotation)
       );
       return this;
     } else if (isArrow(annotation)) {
