@@ -14,7 +14,8 @@ import LoadLinksData from "../fixtures/load-links.json";
 describe("Links", () => {
   // Add a link between an arrow and a node
   it("should add a link between an arrow and a node", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -33,7 +34,8 @@ describe("Links", () => {
 
   // Add a link between an arrow and a text
   it("should add a link between an arrow and a text", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -62,7 +64,8 @@ describe("Links", () => {
 
   // Remove a link between an arrow and a node
   it("should remove a link between an arrow and a node", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -81,7 +84,8 @@ describe("Links", () => {
 
   // Remove a non-existing link
   it("should throw an error when removing a non-existing link", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const side = "start";
 
@@ -90,7 +94,8 @@ describe("Links", () => {
 
   // Remove a link with a non-existing arrow id
   it("should throw an error when removing a link with a non-existing arrow id", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const otherArrow = createArrow();
     const side = "start";
@@ -103,7 +108,8 @@ describe("Links", () => {
 
   // Remove a link with a non-existing side
   it("should not throw an error when removing a link with a non-existing side", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
@@ -114,7 +120,8 @@ describe("Links", () => {
   });
 
   it("should return the link object when it exists for the given arrowId and side", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -132,7 +139,8 @@ describe("Links", () => {
 
   // Returns an empty array when there are no links for the given targetId.
   it("should return an empty array when there are no links for the given targetId", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const targetId = "target1";
     const result = links
       .getTargetLinks(targetId, "node")
@@ -142,7 +150,8 @@ describe("Links", () => {
 
   // Returns an array of links for the given targetId.
   it("should return an array of links for the given targetId", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -164,7 +173,8 @@ describe("Links", () => {
 
   // Returns the correct links for the given targetId.
   it("should return the correct links for the given targetId", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow1: Arrow = createArrow();
     const arrowId1 = arrow1.id;
     const arrow2: Arrow = createArrow();
@@ -198,7 +208,8 @@ describe("Links", () => {
   });
 
   it("should export the links together with arrows", () => {
-    const links = new Links();
+    const ogma = new Ogma();
+    const links = new Links(ogma);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
