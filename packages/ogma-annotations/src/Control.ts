@@ -80,5 +80,6 @@ export class Control extends EventEmitter<FeatureEvents> {
    */
   public destroy() {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public updateStyle(_id: unknown, _s: unknown) {}
 }
