@@ -1,20 +1,17 @@
-import { SVGLayer, SVGDrawingFunction, Ogma, View } from "@linkurious/ogma";
+import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
+import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderText } from "./text";
-import { defaultStyle as defaultBoxStyle } from "../../Editor/Box/defaults";
-import { defaultStyle as defaultTextStyle } from "../../Editor/Texts/defaults";
+import { getTransformMatrix } from "./utils";
+import { DATA_ATTR } from "../../constants";
 import { Store } from "../../store";
-import { Arrow, Box, Text, isArrow, isBox, isText } from "../../types";
-import {
-  createSVGElement,
-  getBoxPosition,
-  getBoxSize,
-  getTextSize
-} from "../../utils";
-import { rotateRadians } from "../../vec";
+import { Id, isArrow, isBox, isText } from "../../types";
+import { createSVGElement } from "../../utils";
 import { Renderer } from "../base";
 
 export class Shapes extends Renderer<SVGLayer> {
+  private minArrowHeight = 20;
+  private maxArrowHeight = 30;
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
     this.layer = this.ogma.layers.addSVGLayer({
@@ -27,22 +24,55 @@ export class Shapes extends Renderer<SVGLayer> {
       }),
       ({ features, liveUpdates }) => {
         const allFeatures = this.store.getState().getAllFeatures();
+        console.log("re");
         this.layer.refresh();
       },
       { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) }
     );
+    this.ogma.events.on("rotate", this._onRotate);
   }
+
+  private _onRotate = () => {
+    const view = this.ogma.view.get();
+    const groups = this.layer.element.children;
+
+    // update transforms for all the groups
+    for (let i = 0; i < groups.length; i++) {
+      const g = groups[i] as SVGGElement;
+
+      if (g.tagName.toLowerCase() !== "g") continue;
+      if (!g.hasAttribute(DATA_ATTR)) {
+        g.setAttribute("transform", `rotate(${-view.angle * (180 / Math.PI)})`);
+        continue;
+      }
+
+      let id: Id = g.getAttribute(DATA_ATTR)!;
+      if (isFinite(Number(id))) id = Number(id);
+      const feature = this.store.getState().getFeature(id);
+      if (feature && (isBox(feature) || isText(feature))) {
+        g.setAttribute("transform", getTransformMatrix(feature, view));
+      }
+    }
+  };
 
   render: SVGDrawingFunction = (root) => {
     const { features } = this.store.getState();
     root.innerHTML = "";
     const view = this.ogma.view.get();
     const styleContent = "";
+    const arrowsRoot = createSVGElement<SVGGElement>("g");
+    root.appendChild(arrowsRoot);
     for (const feature of Object.values(features)) {
       if (isBox(feature)) renderBox(root, feature, view);
       else if (isText(feature)) renderText(root, feature, view);
       else if (isArrow(feature))
-        this.renderArrow(root, feature, view, styleContent);
+        renderArrow(
+          arrowsRoot,
+          feature,
+          view,
+          this.minArrowHeight,
+          this.maxArrowHeight
+        );
 
       // Add more shape rendering logic as needed
     }
@@ -51,6 +81,4 @@ export class Shapes extends Renderer<SVGLayer> {
     if (!root.firstChild) return;
     root.insertBefore(style, root.firstChild);
   };
-
-  renderArrow(root: SVGElement, arrow: Arrow, view: View, styles: string) {}
 }

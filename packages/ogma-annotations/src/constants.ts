@@ -12,3 +12,5 @@ export const EVT_ADD = "add";
 export const EVT_CANCEL_DRAWING = "cancelDrawing";
 export const EVT_UPDATE = "update";
 export const EVT_LINK = "link";
+
+export const DATA_ATTR = "data-annotation";
