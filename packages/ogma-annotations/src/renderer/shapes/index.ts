@@ -24,7 +24,6 @@ export class Shapes extends Renderer<SVGLayer> {
       }),
       ({ features, liveUpdates }) => {
         const allFeatures = this.store.getState().getAllFeatures();
-        console.log("re");
         this.layer.refresh();
       },
       { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) }

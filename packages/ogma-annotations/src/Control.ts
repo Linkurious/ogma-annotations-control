@@ -1,5 +1,7 @@
 import type Ogma from "@linkurious/ogma";
+import { MouseMoveEvent } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
+import { HitDetector } from "./interaction/detect";
 import { Renderer } from "./renderer/base";
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
@@ -11,6 +13,7 @@ import {
   FeatureEvents,
   isAnnotationCollection
 } from "./types";
+import { clientToContainerPosition } from "./utils";
 
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
@@ -29,18 +32,39 @@ export class Control extends EventEmitter<FeatureEvents> {
   private options: ControllerOptions;
   private store = store;
   private renderers: Record<string, Renderer> = {};
+  private hitDetector: HitDetector;
 
   constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
+    this.hitDetector = new HitDetector(this.options.detectMargin, this.store);
     this.initializeRenderers();
+    this.setupEvents();
   }
 
   private initializeRenderers() {
     this.renderers.shapes = new Shapes(this.ogma, this.store);
     this.renderers.handles = new Handles(this.ogma, this.store);
   }
+
+  private setupEvents() {
+    this.ogma.events.on("mousemove", this._onMouseMove);
+  }
+
+  private _onMouseMove = (evt: MouseMoveEvent) => {
+    if (evt.domEvent === null) return;
+    const screenPoint = clientToContainerPosition(
+      evt.domEvent,
+      this.ogma.getContainer()
+    );
+    const pos = this.ogma.view.screenToGraphCoordinates(screenPoint);
+
+    const hit = this.hitDetector.detect(pos.x, pos.y);
+    if (hit) {
+      console.log("Hit detected:", hit);
+    }
+  };
 
   /**
    * Set the options for the controller

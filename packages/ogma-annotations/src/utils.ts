@@ -8,7 +8,15 @@ import type {
   Polygon,
   Position
 } from "geojson";
-import { AnnotationCollection, Arrow, Bounds, Box, Text } from "./types";
+import {
+  Annotation,
+  AnnotationCollection,
+  Arrow,
+  Bounds,
+  Box,
+  isArrow,
+  Text
+} from "./types";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -16,12 +24,12 @@ export function createSVGElement<T extends SVGElement>(tag: string): T {
   return document.createElementNS(SVG_NS, tag) as T;
 }
 
-export function getBbox<T extends Box | Text>(b: T) {
+export function getBbox<T extends Annotation>(b: T) {
   if (!b.geometry.bbox) updateBbox(b);
   return b.geometry.bbox as BBox;
 }
 
-export function getBoxSize<T extends Box | Text>(t: T) {
+export function getBoxSize<T extends Annotation>(t: T) {
   const bbox = getBbox(t);
   return {
     width: bbox[2] - bbox[0],
@@ -29,16 +37,22 @@ export function getBoxSize<T extends Box | Text>(t: T) {
   };
 }
 
-export function getBoxPosition<T extends Box | Text>(t: T) {
+export function getBoxPosition<T extends Annotation>(t: T) {
   const bbox = getBbox(t);
   return { x: bbox[0], y: bbox[1] };
 }
 
-export function updateBbox<T extends Box | Text>(t: T) {
-  // TODO: maybe check the winding order of the coordinates
-  const [x0, y0] = t.geometry.coordinates[0][0];
-  const [x1, y1] = t.geometry.coordinates[0][2];
-  t.geometry.bbox = [x0, y0, x1, y1];
+export function updateBbox<T extends Annotation>(t: T) {
+  if (isArrow(t)) {
+    const [x0, y0] = t.geometry.coordinates[0];
+    const [x1, y1] = t.geometry.coordinates[1];
+    t.geometry.bbox = [x0, y0, x1, y1];
+  } else {
+    // TODO: maybe check the winding order of the coordinates
+    const [x0, y0] = t.geometry.coordinates[0][0];
+    const [x1, y1] = t.geometry.coordinates[0][2];
+    t.geometry.bbox = [x0, y0, x1, y1];
+  }
 }
 
 export function setBbox(
