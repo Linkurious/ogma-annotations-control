@@ -63,6 +63,15 @@ export type Point = {
   y: number;
 };
 
+export type Vector = Point;
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 type ExportedLink = {
   id: Id;
   side: "start" | "end";
@@ -274,14 +283,5 @@ export type ControllerOptions = {
 };
 
 export type Annotation = Arrow | Text | Box;
-
-export type Vector = Point;
-
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 export type AnnotationGetter = (id: Id) => Annotation | undefined;

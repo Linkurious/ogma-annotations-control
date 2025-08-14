@@ -8,7 +8,7 @@ import type {
   Polygon,
   Position
 } from "geojson";
-import { AnnotationCollection, Arrow, Box, Text } from "./types";
+import { AnnotationCollection, Arrow, Bounds, Box, Text } from "./types";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -99,15 +99,6 @@ export function setArrowEndPoint(
 
 export const getHandleId = (handle: HTMLDivElement): number =>
   parseInt(handle.getAttribute("data-handle-id") || "-1");
-
-/**
- * Bounding box object, with the following properties:
- * - [0]: min x
- * - [1]: min y
- * - [2]: max x
- * - [3]: max y
- */
-export type Bounds = [number, number, number, number];
 
 /**
  * Calculate the bounds of a collection of annotations

@@ -70,6 +70,8 @@
     "vitepress": "^1.1.3"
   },
   "dependencies": {
-    "ws": "^8.18.1"
+    "ws": "^8.18.1",
+    "zundo": "2.3.0",
+    "zustand": "5.0.7"
   }
 }

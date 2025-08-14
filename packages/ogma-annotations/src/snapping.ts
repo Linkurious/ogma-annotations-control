@@ -112,9 +112,15 @@ export class Snapping {
     for (const magnet of magnets) {
       const size = getTextSize(textToMagnet);
       const position = getTextPosition(textToMagnet);
-      const m = multiply(magnet, { x: size.width, y: size.height });
-      const r = rotateRadians(m, this.ogma.view.getAngle());
-      const mPoint = add(r, position);
+      const scaledMagnetPosition = multiply(magnet, {
+        x: size.width,
+        y: size.height
+      });
+      const rotatedMagnetPosition = rotateRadians(
+        scaledMagnetPosition,
+        this.ogma.view.getAngle()
+      );
+      const mPoint = add(rotatedMagnetPosition, position);
       const dist = length(subtract(mPoint, point));
       const scaledRadius = Math.min(
         this.options.magnetRadius * this.ogma.view.getZoom(),
@@ -130,6 +136,28 @@ export class Snapping {
       }
     }
     return res;
+  }
+
+  public render(ctx: CanvasRenderingContext2D, textToMagnet?: Text): void {
+    if (!textToMagnet) return;
+    ctx.beginPath();
+    ctx.fillStyle = "green";
+    const { zoom, angle } = this.ogma.view.get();
+    this.getMagnets().forEach((magnet) => {
+      const size = getTextSize(textToMagnet);
+      const position = getTextPosition(textToMagnet);
+      const scaledMagnetPosition = multiply(magnet, {
+        x: size.width,
+        y: size.height
+      });
+      const rotatedMagnetPosition = rotateRadians(scaledMagnetPosition, angle);
+      const { x, y } = add(rotatedMagnetPosition, position);
+
+      ctx.moveTo(x, y);
+      ctx.arc(x, y, this.options.magnetHandleRadius / zoom, 0, Math.PI * 2);
+    });
+    ctx.fill();
+    ctx.closePath();
   }
 
   public getHoveredNode(): Node | null {
