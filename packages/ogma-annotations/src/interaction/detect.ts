@@ -1,8 +1,8 @@
 import Rtree, { BBox } from "rbush";
-import { get } from "http";
 import { Store } from "../store";
-import { Annotation, Box, isArrow, isBox, Text } from "../types";
-import { getBbox, updateBbox } from "../utils";
+import { Annotation, Arrow, Box, isArrow, Point, Text, Vector } from "../types";
+import { getArrowEndPoints, getBbox } from "../utils";
+import { dot, length, subtract, normalize, cross } from "../vec";
 
 class Index extends Rtree<Annotation> {
   compareMinX(a: Annotation, b: Annotation): number {
@@ -41,13 +41,44 @@ export class HitDetector {
     );
   }
 
-  detect(x: number, y: number): Annotation | null {
+  detect(x: number, y: number, threshold = 0): Annotation | null {
+    let result: Annotation | null = null;
+    // broad phase
     const hit = this.index.search({
-      minX: x - this.hitThreshold,
-      minY: y - this.hitThreshold,
-      maxX: x + this.hitThreshold,
-      maxY: y + this.hitThreshold
+      minX: x - threshold,
+      minY: y - threshold,
+      maxX: x + threshold,
+      maxY: y + threshold
     });
-    return hit.length > 0 ? hit[0] : null;
+    if (hit.length === 0) return null;
+    console.log(" ------ broad phase hit:", hit);
+    // narrow phase
+    for (const item of hit) {
+      if (isArrow(item)) {
+        if (this.detectArrow(item, { x, y }, threshold)) {
+          result = item;
+          break;
+        }
+      } else result = item;
+    }
+    return result;
+  }
+
+  detectArrow(a: Arrow, point: Point, threshold: number): boolean {
+    const { start, end } = getArrowEndPoints(a);
+    // p is the vector from mouse pointer to the center of the arrow
+    const p: Vector = subtract(point, start);
+    // detect if point is ON the line between start and end.
+    // line width is the arrow width
+    const width = a.properties.style!.strokeWidth!;
+    const vec = subtract(end, start);
+
+    const lineLen = length(vec);
+    const proj = dot(p, normalize(vec));
+    return (
+      proj > 0 &&
+      proj < lineLen &&
+      Math.abs(cross(p, normalize(vec))) < width / 2 + threshold
+    );
   }
 }

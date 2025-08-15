@@ -17,7 +17,7 @@ import { clientToContainerPosition } from "./utils";
 
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
-  detectMargin: 20,
+  detectMargin: 2,
   magnetHandleRadius: 5,
   magnetRadius: 10,
   textPlaceholder: "Type here",

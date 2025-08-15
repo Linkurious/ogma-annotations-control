@@ -46,12 +46,26 @@ export function updateBbox<T extends Annotation>(t: T) {
   if (isArrow(t)) {
     const [x0, y0] = t.geometry.coordinates[0];
     const [x1, y1] = t.geometry.coordinates[1];
-    t.geometry.bbox = [x0, y0, x1, y1];
+
+    t.geometry.bbox = [
+      Math.min(x0, x1),
+      Math.min(y0, y1),
+      Math.max(x0, x1),
+      Math.max(y0, y1)
+    ];
   } else {
-    // TODO: maybe check the winding order of the coordinates
-    const [x0, y0] = t.geometry.coordinates[0][0];
-    const [x1, y1] = t.geometry.coordinates[0][2];
-    t.geometry.bbox = [x0, y0, x1, y1];
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const coord of t.geometry.coordinates[0]) {
+      const [x, y] = coord;
+      minX = Math.min(minX, x);
+      minY = Math.min(minY, y);
+      maxX = Math.max(maxX, x);
+      maxY = Math.max(maxY, y);
+    }
+    t.geometry.bbox = [minX, minY, maxX, maxY];
   }
 }
 
