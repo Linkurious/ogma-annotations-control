@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { Annotation, createArrow, createText } from "../../src";
+import { Annotation, Text, createArrow, createText } from "../../src";
 import { HitDetector } from "../../src/interaction/detect";
 import { Store } from "../../src/store";
 
@@ -108,6 +108,33 @@ describe("HitDetector", () => {
       // Point on arrow line should detect arrow, not text
       const result = detector.detect(50, 50, 5);
       expect(result?.properties.type).toBe("arrow");
+    });
+
+    it('should find text features with "text" type', () => {
+      const mockFeatures = {
+        text1: createText(0, 0, 100, 50, "Test Text 1"),
+        text2: createText(200, 200, 80, 40, "Test Text 2")
+      };
+
+      const { detector } = createAndFill(mockStore, 5, mockFeatures);
+      const result = detector.detect(25, 25, 10) as Text;
+      expect(result?.properties.type).toBe("text");
+      expect(result?.properties.content).toBe("Test Text 1");
+
+      const result2 = detector.detect(225, 225, 10) as Text;
+      expect(result2?.properties.type).toBe("text");
+      expect(result2?.properties.content).toBe("Test Text 2");
+    });
+
+    it("should find texts with negative coordinates", () => {
+      const mockFeatures = {
+        text1: createText(-100, -100, 50, 50, "Negative Text")
+      };
+
+      const { detector } = createAndFill(mockStore, 5, mockFeatures);
+      const result = detector.detect(-75, -75, 10) as Text;
+      expect(result?.properties.type).toBe("text");
+      expect(result?.properties.content).toBe("Negative Text");
     });
   });
 
