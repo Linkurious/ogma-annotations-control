@@ -11,6 +11,8 @@ interface AnnotationState {
   // Temporary state (no history)
   liveUpdates: Record<Id, Partial<Annotation>>;
   isDragging: boolean;
+  hoveredFeature: Id | null;
+  selectedFeatures: Set<Id>;
 
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
@@ -28,10 +30,20 @@ interface AnnotationState {
   // Batch operations
   batchUpdate: (fn: () => void) => void;
 
+  // State management actions
+  setHoveredFeature: (id: Id | null) => void;
+  setSelectedFeatures: (ids: Id[]) => void;
+  addToSelection: (id: Id) => void;
+  removeFromSelection: (id: Id) => void;
+  toggleSelection: (id: Id) => void;
+  clearSelection: () => void;
+
   // Getters
   getFeature: (id: Id) => Annotation | undefined;
   getAllFeatures: () => Annotation[];
   getMergedFeature: (id: Id) => Annotation | undefined;
+  isHovered: (id: Id) => boolean;
+  isSelected: (id: Id) => boolean;
 }
 
 export const store = create<AnnotationState>()(
@@ -41,6 +53,8 @@ export const store = create<AnnotationState>()(
         features: {},
         liveUpdates: {},
         isDragging: false,
+        hoveredFeature: null,
+        selectedFeatures: new Set(),
 
         removeFeature: (id) =>
           set((state) => {
@@ -169,7 +183,44 @@ export const store = create<AnnotationState>()(
             const update = liveUpdates[id];
             return (update ? { ...feature, ...update } : feature) as Annotation;
           });
-        }
+        },
+
+        // State management actions
+        setHoveredFeature: (id) => set({ hoveredFeature: id }),
+
+        setSelectedFeatures: (ids) => set({ selectedFeatures: new Set(ids) }),
+
+        addToSelection: (id) => {
+          const { selectedFeatures } = get();
+          const newSelection = new Set(selectedFeatures);
+          newSelection.add(id);
+          set({ selectedFeatures: newSelection });
+        },
+
+        removeFromSelection: (id) => {
+          const { selectedFeatures } = get();
+          const newSelection = new Set(selectedFeatures);
+          newSelection.delete(id);
+          set({ selectedFeatures: newSelection });
+        },
+
+        toggleSelection: (id) => {
+          const { selectedFeatures } = get();
+          const newSelection = new Set(selectedFeatures);
+          if (newSelection.has(id)) {
+            newSelection.delete(id);
+          } else {
+            newSelection.add(id);
+          }
+          set({ selectedFeatures: newSelection });
+        },
+
+        clearSelection: () => set({ selectedFeatures: new Set() }),
+
+        // State getters
+        isHovered: (id) => get().hoveredFeature === id,
+
+        isSelected: (id) => get().selectedFeatures.has(id)
       }),
       {
         limit: 50,

@@ -1,8 +1,13 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
 import { Annotation, Arrow, Box, isArrow, Point, Text, Vector } from "../types";
-import { getArrowEndPoints, getBbox } from "../utils";
-import { dot, length, subtract, normalize, cross } from "../vec";
+import {
+  getArrowEndPoints,
+  getBbox,
+  getBoxPosition,
+  getBoxSize
+} from "../utils";
+import { dot, length, subtract, normalize, cross, rotateRadians } from "../vec";
 
 class Index extends Rtree<Annotation> {
   compareMinX(a: Annotation, b: Annotation): number {
@@ -26,8 +31,8 @@ export class HitDetector {
   private index = new Index();
 
   constructor(
-    private hitThreshold: number,
-    private store: Store
+    private store: Store,
+    private threshold: number = 0.5
   ) {
     this.index = new Index();
     this.store.subscribe(
@@ -41,8 +46,9 @@ export class HitDetector {
     );
   }
 
-  detect(x: number, y: number, threshold = 0): Annotation | null {
+  detect(x: number, y: number, angle: number): Annotation | null {
     let result: Annotation | null = null;
+    const threshold = this.threshold;
     // broad phase
     const hit = this.index.search({
       minX: x - threshold,
@@ -58,9 +64,29 @@ export class HitDetector {
           result = item;
           break;
         }
-      } else result = item;
+      } else {
+        if (this.detectBox(item as Box, { x, y }, angle, threshold)) {
+          result = item;
+          break;
+        }
+      }
     }
     return result;
+  }
+
+  detectBox(a: Box, p: Point, angle: number, threshold: number): boolean {
+    // check if the pointer is within the bounding box of the text
+    const { x: tx, y: ty } = getBoxPosition(a);
+    const { width, height } = getBoxSize(a);
+    const origin = { x: tx, y: ty };
+    const { x: dx, y: dy } = rotateRadians(subtract(p, origin), -angle);
+
+    return (
+      dx > -threshold &&
+      dx < width + threshold &&
+      dy > -threshold &&
+      dy < height + threshold
+    );
   }
 
   detectArrow(a: Arrow, point: Point, threshold: number): boolean {

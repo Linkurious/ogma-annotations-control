@@ -20,13 +20,14 @@ export class Shapes extends Renderer<SVGLayer> {
     this.store.subscribe(
       (state) => ({
         features: state.features,
-        liveUpdates: state.liveUpdates
+        liveUpdates: state.liveUpdates,
+        hoveredFeature: state.hoveredFeature,
+        selectedFeatures: state.selectedFeatures
       }),
-      ({ features, liveUpdates }) => {
-        const allFeatures = this.store.getState().getAllFeatures();
+      () => {
         this.layer.refresh();
       },
-      { equalityFn: (a, b) => JSON.stringify(a) === JSON.stringify(b) }
+      { equalityFn: (a, b) => a === b }
     );
     this.ogma.events.on("rotate", this._onRotate);
   }
@@ -55,10 +56,10 @@ export class Shapes extends Renderer<SVGLayer> {
   };
 
   render: SVGDrawingFunction = (root) => {
-    const { features } = this.store.getState();
+    const { features, hoveredFeature, selectedFeatures } = this.store.getState();
     root.innerHTML = "";
     const view = this.ogma.view.get();
-    const styleContent = "";
+    
     const arrowsRoot = createSVGElement<SVGGElement>("g");
     root.appendChild(arrowsRoot);
     for (const feature of Object.values(features)) {
@@ -72,12 +73,27 @@ export class Shapes extends Renderer<SVGLayer> {
           this.minArrowHeight,
           this.maxArrowHeight
         );
-
-      // Add more shape rendering logic as needed
     }
-    const style = createSVGElement<SVGStyleElement>("style");
-    style.innerHTML = styleContent;
-    if (!root.firstChild) return;
-    root.insertBefore(style, root.firstChild);
+    
+    // Apply state classes after rendering
+    this.applyStateClasses(root, hoveredFeature, selectedFeatures);
   };
+
+  private applyStateClasses(root: SVGElement, hoveredFeature: string | number | null, selectedFeatures: Set<string | number>) {
+    // Apply hover state
+    if (hoveredFeature !== null) {
+      const hoveredElement = root.querySelector(`[data-annotation="${hoveredFeature}"]`);
+      if (hoveredElement) {
+        hoveredElement.classList.add('annotation-hovered');
+      }
+    }
+    
+    // Apply selected state
+    selectedFeatures.forEach(featureId => {
+      const selectedElement = root.querySelector(`[data-annotation="${featureId}"]`);
+      if (selectedElement) {
+        selectedElement.classList.add('annotation-selected');
+      }
+    });
+  }
 }

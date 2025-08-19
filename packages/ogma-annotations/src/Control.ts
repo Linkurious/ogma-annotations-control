@@ -1,5 +1,4 @@
 import type Ogma from "@linkurious/ogma";
-import { MouseMoveEvent } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { HitDetector } from "./interaction/detect";
 import { Renderer } from "./renderer/base";
@@ -38,7 +37,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
-    this.hitDetector = new HitDetector(this.options.detectMargin, this.store);
+    this.hitDetector = new HitDetector(this.store, this.options.detectMargin);
     this.initializeRenderers();
     this.setupEvents();
   }
@@ -49,22 +48,76 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
-    this.ogma.events.on("mousemove", this._onMouseMove);
+    // use native mousemove event to detect hover,
+    // so that we can allow interactivity in the
+    // SVG and DOM layers
+    this.ogma.getContainer()?.addEventListener("mousemove", this._onMouseMove, {
+      passive: true,
+      capture: true
+    });
+
+    // Add click event for selection
+    this.ogma.getContainer()?.addEventListener("click", this._onMouseClick, {
+      passive: true,
+      capture: true
+    });
   }
 
-  private _onMouseMove = (evt: MouseMoveEvent) => {
-    if (evt.domEvent === null) return;
+  private _onMouseMove = (evt: MouseEvent) => {
     const screenPoint = clientToContainerPosition(
-      evt.domEvent,
+      evt,
       this.ogma.getContainer()
     );
-    const pos = this.ogma.view.screenToGraphCoordinates(screenPoint);
+    const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
+    const annotation = this.hitDetector.detect(x, y, this.ogma.view.getAngle());
 
-    const hit = this.hitDetector.detect(pos.x, pos.y);
-    if (hit) {
-      console.log("Hit detected:", hit);
+    // Update hover state
+    const newHoveredId = annotation?.id ?? null;
+    const currentHoveredId = this.store.getState().hoveredFeature;
+    if (newHoveredId !== currentHoveredId) {
+      this.store.getState().setHoveredFeature(newHoveredId);
+    }
+
+    this.setCursor(
+      annotation
+        ? "pointer"
+        : this.options.magnetColor === "default"
+          ? "crosshair"
+          : "default"
+    );
+
+    const container = this.ogma.getContainer()?.firstChild;
+    if (container) {
+      (container as HTMLElement).style.cursor = annotation ? "pointer" : "";
     }
   };
+
+  private _onMouseClick = (evt: MouseEvent) => {
+    const screenPoint = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
+    const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
+    const annotation = this.hitDetector.detect(x, y, this.ogma.view.getAngle());
+
+    if (annotation) {
+      if (evt.ctrlKey || evt.metaKey) {
+        // Multi-select with Ctrl/Cmd
+        this.store.getState().toggleSelection(annotation.id);
+      } else {
+        // Single select
+        this.store.getState().setSelectedFeatures([annotation.id]);
+      }
+    } else if (!evt.ctrlKey && !evt.metaKey) {
+      // Clear selection when clicking empty space (unless multi-selecting)
+      this.store.getState().clearSelection();
+    }
+  };
+
+  private setCursor(cursor: string) {
+    const container = this.ogma.getContainer()?.firstChild;
+    if (container) (container as HTMLElement).style.cursor = cursor;
+  }
 
   /**
    * Set the options for the controller
@@ -102,7 +155,12 @@ export class Control extends EventEmitter<FeatureEvents> {
   /**
    * Destroy the controller and its elements
    */
-  public destroy() {}
+  public destroy() {
+    this.ogma
+      .getContainer()
+      ?.removeEventListener("mousemove", this._onMouseMove);
+    this.ogma.getContainer()?.removeEventListener("click", this._onMouseClick);
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public updateStyle(_id: unknown, _s: unknown) {}

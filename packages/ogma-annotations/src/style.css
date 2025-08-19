@@ -190,3 +190,15 @@ svg text {
 .annotation-text a:hover {
   text-decoration: underline;
 }
+
+/* Hover and Selected States */
+.annotation-hovered {
+  filter: brightness(1.1) drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+  cursor: pointer;
+}
+
+.annotation-selected {
+  filter: brightness(1.2) drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
