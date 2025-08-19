@@ -61,7 +61,7 @@ function drawExt(
 export function renderArrow(
   g: SVGGElement,
   arrow: Arrow,
-  _view: View,
+  view: View,
   minArrowHeight: number,
   maxArrowHeight: number
 ) {
@@ -96,6 +96,10 @@ export function renderArrow(
 
   addExtremity(lineGroup, start, color, tail, strokeWidth);
   addExtremity(lineGroup, end, color, head, strokeWidth);
+  lineGroup.setAttribute(
+    "transform",
+    `rotate(${-view.angle! * (180 / Math.PI)})`
+  );
   g.appendChild(lineGroup);
 }
 

@@ -30,9 +30,7 @@ export function renderBox(root: SVGElement, annotation: Box, view: View) {
     addRect = true;
     rect.setAttribute("stroke", strokeColor || "black");
     rect.setAttribute("stroke-width", `${strokeWidth}`);
-    if (strokeType === "dashed") {
-      rect.setAttribute("stroke-dasharray", `5,5`);
-    }
+    if (strokeType === "dashed") rect.setAttribute("stroke-dasharray", `5,5`);
   }
   if ((background && background.length) || addRect) {
     addRect = true;

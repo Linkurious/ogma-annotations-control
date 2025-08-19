@@ -1,7 +1,4 @@
-import { Vector } from "./types";
-
-type Point = Vector;
-type Box = [number, number, number, number];
+import { Point, Bounds } from "./types";
 
 /**
  * Rotates a point around the origin (0,0) by a given angle (in radians).
@@ -48,7 +45,12 @@ function pointSegmentDistance(p: Point, a: Point, b: Point): number {
  * Returns the four corners of a box [x0, y0, x1, y1] as Point objects,
  * in the following order: top-left, top-right, bottom-right, bottom-left.
  */
-export function corners([x0, y0, x1, y1]: Box): [Point, Point, Point, Point] {
+export function corners([x0, y0, x1, y1]: Bounds): [
+  Point,
+  Point,
+  Point,
+  Point
+] {
   return [
     { x: x0, y: y0 },
     { x: x1, y: y0 },
@@ -73,7 +75,7 @@ export function corners([x0, y0, x1, y1]: Box): [Point, Point, Point, Point] {
 export function rotateBoxToFit(
   box: { width: number; height: number },
   origin: Point,
-  fence: Box,
+  fence: Bounds,
   d: number,
   step = Math.PI / 360 // 0.5°
 ): { angle: number; corners: Point[] } | null {
