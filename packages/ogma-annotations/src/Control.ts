@@ -61,6 +61,10 @@ export class Control extends EventEmitter<FeatureEvents> {
       passive: true,
       capture: true
     });
+
+    this.ogma.events
+      .on("dragStart", () => (this.store.getState().isDragging = true))
+      .on("dragEnd", () => (this.store.getState().isDragging = false));
   }
 
   private _onMouseMove = (evt: MouseEvent) => {
@@ -68,6 +72,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       evt,
       this.ogma.getContainer()
     );
+    if (this.store.getState().isDragging) return;
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.hitDetector.detect(x, y, this.ogma.view.getAngle());
 
@@ -92,6 +97,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     }
   };
 
+  /** TODO: move to selection handler */
   private _onMouseClick = (evt: MouseEvent) => {
     const screenPoint = clientToContainerPosition(
       evt,

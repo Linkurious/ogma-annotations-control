@@ -1,5 +1,5 @@
 import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
-import { renderArrow } from "./arrow";
+import { applyTransform, renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderText } from "./text";
 import { getTransformMatrix } from "./utils";
@@ -42,7 +42,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
       if (g.tagName.toLowerCase() !== "g") continue;
       if (!g.hasAttribute(DATA_ATTR)) {
-        g.setAttribute("transform", `rotate(${-view.angle * (180 / Math.PI)})`);
+        applyTransform(g, view.angle);
         continue;
       }
 

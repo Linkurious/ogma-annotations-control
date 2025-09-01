@@ -96,11 +96,12 @@ export function renderArrow(
 
   addExtremity(lineGroup, start, color, tail, strokeWidth);
   addExtremity(lineGroup, end, color, head, strokeWidth);
-  lineGroup.setAttribute(
-    "transform",
-    `rotate(${-view.angle! * (180 / Math.PI)})`
-  );
+  applyTransform(lineGroup, view.angle);
   g.appendChild(lineGroup);
+}
+
+export function applyTransform(element: SVGGElement, angle: number = 0): void {
+  element.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
 }
 
 function addExtremity(
