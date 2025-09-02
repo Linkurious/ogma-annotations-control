@@ -11,6 +11,13 @@ import {
 import { dot, length, subtract, normalize, cross, rotateRadians } from "../vec";
 
 export class InteractionController {
+  private query = {
+    minX: Infinity,
+    minY: Infinity,
+    maxX: Infinity,
+    maxY: Infinity
+  };
+
   constructor(
     private ogma: Ogma,
     private store: Store,
@@ -35,13 +42,12 @@ export class InteractionController {
   detect(x: number, y: number, angle: number): Annotation | null {
     let result: Annotation | null = null;
     const threshold = this.threshold;
+    this.query.minX = x - threshold;
+    this.query.minY = y - threshold;
+    this.query.maxX = x + threshold;
+    this.query.maxY = y + threshold;
     // broad phase
-    const hit = this.index.search({
-      minX: x - threshold,
-      minY: y - threshold,
-      maxX: x + threshold,
-      maxY: y + threshold
-    });
+    const hit = this.index.search(this.query);
     if (hit.length === 0) return null;
     // narrow phase
     for (const item of hit) {
@@ -98,7 +104,9 @@ export class InteractionController {
       evt,
       this.ogma.getContainer()
     );
+
     if (this.store.getState().isDragging) return;
+
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y, this.ogma.view.getAngle());
 
@@ -117,7 +125,6 @@ export class InteractionController {
     }
   };
 
-  /** TODO: move to selection handler */
   private onMouseClick = (evt: MouseEvent) => {
     const screenPoint = clientToContainerPosition(
       evt,
