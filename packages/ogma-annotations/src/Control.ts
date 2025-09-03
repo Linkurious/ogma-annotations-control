@@ -1,5 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
+import { HandlerController } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
@@ -34,6 +35,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private index = new Index(this.store);
   private renderers: Record<string, Renderer> = {};
   private interactions: InteractionController;
+  private handlers: HandlerController;
   // TODO: maybe links should be part of the store?
   private links: Links;
 
@@ -49,6 +51,13 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.links,
       this.options.detectMargin
     );
+    // this.handlers = new HandlerController({
+    //   ogma: this.ogma,
+    //   store: this.store,
+    //   index: this.index,
+    //   interaction: this.interactions,
+    //   links: this.links
+    // });
     this.initializeRenderers();
     this.setupEvents();
   }

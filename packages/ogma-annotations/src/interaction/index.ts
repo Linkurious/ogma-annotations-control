@@ -160,6 +160,10 @@ export class InteractionController {
     const container = this.ogma.getContainer()?.firstChild;
     if (container) (container as HTMLElement).style.cursor = cursor;
   }
+  public setMode(mode: "default" | "add" | "edit" | "link" | "rotate") {
+    // TODO: implement mode switching
+    // this.store.getState().setMode(mode);
+  }
 
   destroy() {
     const container = this.ogma.getContainer();

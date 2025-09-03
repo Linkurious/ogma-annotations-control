@@ -28,7 +28,7 @@ ogma.styles.addRule({
 });
 
 const annotationsWithLinks: AnnotationCollection = await fetch(
-  "annotations.json"
+  "annotations-test.json"
 ).then((response) => response.json());
 
 const graph = await ogma.generate.flower({ depth: 3 });
