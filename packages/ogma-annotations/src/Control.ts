@@ -2,6 +2,7 @@ import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
+import { Links } from "./links";
 import { Renderer } from "./renderer/base";
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
@@ -33,15 +34,19 @@ export class Control extends EventEmitter<FeatureEvents> {
   private index = new Index(this.store);
   private renderers: Record<string, Renderer> = {};
   private interactions: InteractionController;
+  // TODO: maybe links should be part of the store?
+  private links: Links;
 
   constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
+    this.links = new Links(this.ogma);
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
       this.index,
+      this.links,
       this.options.detectMargin
     );
     this.initializeRenderers();

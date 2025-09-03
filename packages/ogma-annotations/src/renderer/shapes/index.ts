@@ -53,6 +53,7 @@ export class Shapes extends Renderer<SVGLayer> {
         g.setAttribute("transform", getTransformMatrix(feature, view));
       }
     }
+    this.layer.refresh();
   };
 
   render: SVGDrawingFunction = (root) => {

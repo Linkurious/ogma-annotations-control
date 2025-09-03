@@ -1,5 +1,8 @@
 import Ogma from "@linkurious/ogma";
+import { Add } from "./add";
+import { Rotation } from "./rotation";
 import { Index } from "./spatialIndex";
+import { Links } from "../links";
 import { Store } from "../store";
 import { Annotation, Arrow, Box, isArrow, Point, Vector } from "../types";
 import {
@@ -17,11 +20,14 @@ export class InteractionController {
     maxX: Infinity,
     maxY: Infinity
   };
-
+  private rotation: Rotation;
+  private links: Links;
+  private add: Add;
   constructor(
     private ogma: Ogma,
     private store: Store,
     private index: Index,
+    private links: Links,
     private threshold: number = 0.5
   ) {
     // use native mousemove event to detect hover,
@@ -37,6 +43,9 @@ export class InteractionController {
       passive: true,
       capture: true
     });
+    this.links = links;
+    this.rotation = new Rotation(ogma, store, links);
+    this.add = new Add(ogma, store, links);
   }
 
   detect(x: number, y: number, angle: number): Annotation | null {
