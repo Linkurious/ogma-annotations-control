@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { TextHandler } from "./handlers/TextHandler";
 import { Store } from "./store";
 import { isText, Text } from "./types";
@@ -12,7 +12,7 @@ export class AnnotationEditor {
   private lastMousePoint: { x: number; y: number } = { x: 0, y: 0 };
   private ogma: Ogma;
   private store: Store;
-  private layer: Ogma.CanvasLayer;
+  private layer: CanvasLayer;
   constructor(ogma: Ogma, store: Store) {
     this.ogma = ogma;
     this.store = store;
@@ -21,8 +21,13 @@ export class AnnotationEditor {
       shouldRotate: false
     });
     // Create all handlers with shared dependencies
-    this.handlers.set("box", new TextHandler());
-    this.handlers.set("text", new TextHandler());
+    this.handlers.set("box", new TextHandler(ogma));
+    this.handlers.set("text", new TextHandler(ogma));
+    this.handlers.forEach((handler) => {
+      handler.addEventListener("dragging", () => {
+        this.layer.refresh();
+      });
+    });
     this.store.subscribe((newState, oldState) => {
       const newlySelected = Array.from(newState.selectedFeatures.keys()).filter(
         (e) => !oldState.selectedFeatures.has(e)
@@ -39,28 +44,6 @@ export class AnnotationEditor {
       });
       this.layer.refresh();
     });
-    // Route mouse events to active handler
-    // options.svgOverlay.getContainer().addEventListener("mousedown", (e) => {
-    //   this.activeHandler?.handleMouseDown(e);
-    // });
-
-    // options.svgOverlay.getContainer().addEventListener("mousemove", (e) => {
-    //   this.lastMousePoint = { x: e.clientX, y: e.clientY };
-    //   this.activeHandler?.handleMouseMove(e);
-    // });
-
-    // options.svgOverlay.getContainer().addEventListener("mouseup", (e) => {
-    //   this.activeHandler?.handleMouseUp(e);
-    // });
-
-    // // Route keyboard events to active handler
-    // document.addEventListener("keydown", (e) => {
-    //   this.activeHandler?.handleKeyDown?.(e);
-    // });
-
-    // document.addEventListener("keyup", (e) => {
-    //   this.activeHandler?.handleKeyUp?.(e);
-    // });
   }
 
   draw(ctx: CanvasRenderingContext2D) {
@@ -99,6 +82,10 @@ export class AnnotationEditor {
 
     if (!handler) return;
     handler.stopEditing();
+    const container = this.ogma.getContainer()!;
+    container.removeEventListener("mousemove", handler.handleMouseMove);
+    container.removeEventListener("mouseup", handler.handleMouseUp);
+    container.removeEventListener("mousedown", handler.handleMouseDown);
   }
   editFeature(featureId: string) {
     const feature = this.store.getState().features[featureId];
@@ -112,6 +99,16 @@ export class AnnotationEditor {
     this.activeHandler = handler;
     // handler.activate("edit");
     handler.setAnnotation(feature as Text);
+    const container = this.ogma.getContainer()!;
+    container.addEventListener(
+      "mousemove",
+      handler.handleMouseMove.bind(handler)
+    );
+    container.addEventListener("mouseup", handler.handleMouseUp.bind(handler));
+    container.addEventListener(
+      "mousedown",
+      handler.handleMouseDown.bind(handler)
+    );
   }
 
   getCurrentTool(): string {

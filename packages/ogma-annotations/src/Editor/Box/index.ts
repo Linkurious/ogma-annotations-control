@@ -125,7 +125,6 @@ export class BoxesEditor<T extends Box | Text> extends Editor<T> {
 
   private _onMouseMove = (evt: MouseEvent) => {
     if (!this.isDragging) return;
-
     evt.stopPropagation();
     evt.preventDefault();
 

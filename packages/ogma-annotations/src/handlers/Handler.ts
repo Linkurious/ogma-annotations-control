@@ -1,10 +1,17 @@
-import { Point } from "@linkurious/ogma";
+import Ogma, { Point } from "@linkurious/ogma";
 import { Annotation } from "../types";
 
-export abstract class Handler<T extends Annotation> {
+export abstract class Handler<T extends Annotation> extends EventTarget {
   protected annotation?: T;
-
-  constructor() {}
+  protected ogma: Ogma;
+  protected dragging: boolean = false;
+  protected dragStartPoint?: Point;
+  protected dragStartAnnotation?: T;
+  protected ogmaPanningOption: boolean = false;
+  constructor(ogma: Ogma) {
+    super();
+    this.ogma = ogma;
+  }
 
   // Lifecycle
   // abstract activate(mode: "draw" | "edit"): void;
@@ -23,11 +30,11 @@ export abstract class Handler<T extends Annotation> {
   // abstract startEdit(featureId: string, point: Point): void;
   abstract cancelEdit(): void;
 
-  // Utilities all handlers can use
   protected clientToCanvas(e: MouseEvent): Point {
-    // Convert client coordinates to canvas coordinates
-    // This would need to be implemented based on your canvas setup
-    return { x: e.clientX, y: e.clientY };
+    return this.ogma.view.screenToGraphCoordinates({
+      x: e.clientX,
+      y: e.clientY
+    });
   }
 
   protected findSnapPoint(point: Point): Point | null {
@@ -35,7 +42,6 @@ export abstract class Handler<T extends Annotation> {
     return null;
   }
 
-  // Annotation management
   setAnnotation(annotation: T): void {
     this.annotation = annotation;
   }
