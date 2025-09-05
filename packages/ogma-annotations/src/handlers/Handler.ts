@@ -1,23 +1,14 @@
-import type { Point } from "@linkurious/ogma";
-import { InteractionController } from "../interaction";
-import { Index } from "../interaction/spatialIndex";
+import { Point } from "@linkurious/ogma";
+import { Annotation } from "../types";
 
-export interface SnapEngine {
-  snap(point: Point): Point | null;
-}
+export abstract class Handler<T extends Annotation> {
+  protected annotation?: T;
 
-export abstract class Handler {
-  protected isActive = false;
-
-  constructor(
-    protected interaction: InteractionController,
-    protected spatialIndex: Index,
-    protected snapEngine: SnapEngine
-  ) {}
+  constructor() {}
 
   // Lifecycle
-  abstract activate(mode: "draw" | "edit"): void;
-  abstract deactivate(): void;
+  // abstract activate(mode: "draw" | "edit"): void;
+  // abstract deactivate(): void;
 
   // Mouse events
   abstract handleMouseDown(e: MouseEvent): void;
@@ -29,19 +20,35 @@ export abstract class Handler {
   handleKeyUp?(e: KeyboardEvent): void;
 
   // Edit existing feature
-  abstract startEdit(featureId: string, point: Point): void;
+  // abstract startEdit(featureId: string, point: Point): void;
   abstract cancelEdit(): void;
 
   // Utilities all handlers can use
   protected clientToCanvas(e: MouseEvent): Point {
-    // This should be implemented by getting the container and converting coordinates
-    // For now, return the client coordinates - this will need to be properly implemented
-    // with the actual Ogma instance reference
+    // Convert client coordinates to canvas coordinates
+    // This would need to be implemented based on your canvas setup
     return { x: e.clientX, y: e.clientY };
   }
 
   protected findSnapPoint(point: Point): Point | null {
     // return this.snapEngine.snap(point);
     return null;
+  }
+
+  // Annotation management
+  setAnnotation(annotation: T): void {
+    this.annotation = annotation;
+  }
+
+  getAnnotation(): T | undefined {
+    return this.annotation;
+  }
+
+  stopEditing() {
+    this.annotation = undefined;
+  }
+
+  isActive() {
+    return this.annotation !== undefined;
   }
 }
