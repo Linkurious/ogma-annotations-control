@@ -19,10 +19,10 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE
 } from "./constants";
-import { ArrowsEditor, createArrow } from "./Editor/Arrows";
-import type { Editor } from "./Editor/base";
-import { BoxesEditor } from "./Editor/Box";
-import { TextsEditor } from "./Editor/Texts";
+import { ArrowsEditor, createArrow } from "./Editor_old/Arrows";
+import type { Editor } from "./Editor_old/base";
+import { BoxesEditor } from "./Editor_old/Box";
+import { TextsEditor } from "./Editor_old/Texts";
 import { Links } from "./links";
 import { Snapping } from "./snapping";
 import { Storage } from "./storage";

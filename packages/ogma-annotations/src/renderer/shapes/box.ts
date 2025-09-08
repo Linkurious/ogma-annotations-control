@@ -1,6 +1,6 @@
 import { View } from "@linkurious/ogma";
 import { getTransformMatrix } from "./utils";
-import { defaultStyle as defaultBoxStyle } from "../../Editor/Box/defaults";
+import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
 import { Box } from "../../types";
 import { createSVGElement, getBoxSize } from "../../utils";
 

@@ -1,6 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
-import { defaultStyle as defaultArrowStyle } from "../Editor/Arrows/defaults";
+import { defaultStyle as defaultArrowStyle } from "../Editor_old/Arrows/defaults";
 import { Arrow } from "../types";
 
 type Handle = {

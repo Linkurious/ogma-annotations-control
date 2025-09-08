@@ -1,6 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
-import { defaultStyle as defaultTextStyle } from "../Editor/Box/defaults";
+import { defaultStyle as defaultTextStyle } from "../Editor_old/Box/defaults";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Text } from "../types";
 import { getBoxSize, updateBbox } from "../utils";

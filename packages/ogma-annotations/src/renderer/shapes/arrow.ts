@@ -1,5 +1,5 @@
 import { View } from "@linkurious/ogma";
-import { defaultStyle } from "../../Editor/Arrows/defaults";
+import { defaultStyle } from "../../Editor_old/Arrows/defaults";
 import { Arrow, Extremity, Point } from "../../types";
 import { createSVGElement, getArrowEndPoints } from "../../utils";
 import {

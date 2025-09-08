@@ -1,6 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import type { Node, Point } from "@linkurious/ogma";
-import { TextsEditor } from "./Editor/Texts";
+import { TextsEditor } from "./Editor_old/Texts";
 import { Links } from "./links";
 import { Arrow, ControllerOptions, Text } from "./types";
 import {

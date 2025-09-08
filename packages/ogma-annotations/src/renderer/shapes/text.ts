@@ -1,7 +1,7 @@
 import Textbox from "@borgar/textbox";
 import { View } from "@linkurious/ogma";
 import { getTransformMatrix } from "./utils";
-import { defaultStyle as defaultTextStyle } from "../../Editor/Texts/defaults";
+import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/defaults";
 import { Text } from "../../types";
 import { createSVGElement, getTextSize } from "../../utils";
 
