@@ -8,9 +8,7 @@ type Handle = {
   point: Point;
 };
 
-export class ArrowHandler extends Handler<Arrow> {
-  private hoveredHandle?: Handle;
-
+export class ArrowHandler extends Handler<Arrow, Handle> {
   constructor(ogma: Ogma) {
     super(ogma);
   }
@@ -48,44 +46,7 @@ export class ArrowHandler extends Handler<Arrow> {
     }
   }
 
-  handleMouseMove(e: MouseEvent): void {
-    if (!this.isActive()) return;
-
-    if (!this.dragging) {
-      return this._detectHandle(e);
-    } else if (this.dragStartPoint) {
-      this._drag(e);
-    }
-  }
-
-  handleMouseDown(e: MouseEvent): void {
-    if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    // start dragging endpoint
-    this.dragging = true;
-    this.dragStartPoint = this.clientToCanvas(e);
-    this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
-    this.ogmaPanningOption = Boolean(
-      this.ogma.getOptions().interactions?.pan?.enabled
-    );
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: false } }
-    });
-  }
-
-  handleMouseUp(e: MouseEvent): void {
-    if (!this.isActive() || !this.dragging) return;
-
-    this.dragging = false;
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: this.ogmaPanningOption } }
-    });
-  }
-
-  private _detectHandle(e: MouseEvent) {
+  _detectHandle(e: MouseEvent) {
     const annotation = this.annotation!;
     const mousePoint = this.clientToCanvas(e);
     const margin = 10; // Larger margin for easier arrow endpoint selection
@@ -118,7 +79,7 @@ export class ArrowHandler extends Handler<Arrow> {
     }
   }
 
-  private _drag(e: MouseEvent) {
+  _drag(e: MouseEvent) {
     if (!this.dragStartPoint || !this.hoveredHandle) return;
 
     e.stopPropagation();
@@ -142,6 +103,4 @@ export class ArrowHandler extends Handler<Arrow> {
       })
     );
   }
-
-  cancelEdit(): void {}
 }

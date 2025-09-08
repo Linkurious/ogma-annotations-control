@@ -12,8 +12,7 @@ type Handle = {
   axis: Point;
   norm: Point;
 };
-export class TextHandler extends Handler<Text> {
-  private hoveredHandle?: Handle;
+export class TextHandler extends Handler<Text, Handle> {
   constructor(ogma: Ogma) {
     super(ogma);
   }
@@ -43,39 +42,8 @@ export class TextHandler extends Handler<Text> {
       ctx.restore();
     }
   }
-  handleMouseMove(e: MouseEvent): void {
-    // compute the distance between the mouse and the edges of te box
-    if (!this.isActive()) return;
-    if (!this.dragging) {
-      return this._detectHandle(e);
-    } else if (this.dragStartPoint) {
-      this._drag(e);
-    }
-  }
-  handleMouseDown(e: MouseEvent): void {
-    if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
-    e.preventDefault();
-    e.stopPropagation();
-    // start resizing
-    this.dragging = true;
-    this.dragStartPoint = this.clientToCanvas(e);
-    this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
-    this.ogmaPanningOption = Boolean(
-      this.ogma.getOptions().interactions?.pan?.enabled
-    );
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: false } }
-    });
-  }
-  handleMouseUp(e: MouseEvent): void {
-    if (!this.isActive() || !this.dragging) return;
-    this.dragging = false;
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: this.ogmaPanningOption } }
-    });
-  }
 
-  private _detectHandle(e: MouseEvent) {
+  _detectHandle(e: MouseEvent) {
     const annotation = this.annotation!;
     const mousePoint = this.clientToCanvas(e);
     const size = getBoxSize(annotation);
@@ -129,7 +97,7 @@ export class TextHandler extends Handler<Text> {
     });
     this.hoveredHandle = hovered;
   }
-  private _drag(e: MouseEvent) {
+  _drag(e: MouseEvent) {
     if (!this.dragStartPoint || !this.hoveredHandle) return;
     e.stopPropagation();
     e.stopImmediatePropagation();
@@ -163,5 +131,4 @@ export class TextHandler extends Handler<Text> {
       })
     );
   }
-  cancelEdit(): void {}
 }
