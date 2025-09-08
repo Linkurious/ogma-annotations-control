@@ -50,7 +50,11 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.links,
       this.options.detectMargin
     );
-    this.editor = new AnnotationEditor(this.ogma, this.store);
+    this.editor = new AnnotationEditor(
+      this.ogma,
+      this.store,
+      this.interactions
+    );
     // TODO: Use state mutations to trigger refresh instead of events?
     this.editor.addEventListener("dragging", () => {
       this.renderers.shapes.layer.refresh();

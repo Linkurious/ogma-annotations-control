@@ -115,7 +115,6 @@ export class InteractionController {
     );
 
     if (this.store.getState().isDragging) return;
-
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y, this.ogma.view.getAngle());
 
@@ -163,6 +162,13 @@ export class InteractionController {
   public setMode(mode: "default" | "add" | "edit" | "link" | "rotate") {
     // TODO: implement mode switching
     // this.store.getState().setMode(mode);
+    if (mode === "default") {
+      this.setCursor(this.ogma.getOptions().cursor?.default || "default");
+    } else if (mode === "add" || this.setCursor("move") || mode === "link") {
+      this.setCursor("crosshair");
+    } else if (mode === "rotate") {
+      this.setCursor("alias");
+    }
   }
 
   destroy() {

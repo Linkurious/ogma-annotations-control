@@ -2,23 +2,23 @@ import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { ArrowHandler } from "./handlers/ArrowHandler";
 import { Handler } from "./handlers/Handler";
 import { TextHandler } from "./handlers/TextHandler";
+import { InteractionController } from "./interaction/index";
 import { Store } from "./store";
-import { Text } from "./types";
-import { InteractionController } from "../interaction/InteractionController";
+import { Annotation, Text } from "./types";
 
 export class AnnotationEditor extends EventTarget {
-  private handlers = new Map<string, Handler<unknown>>();
-  private activeHandler?: Handler<unknown>;
+  private handlers = new Map<string, Handler<Annotation, unknown>>();
+  private activeHandler?: Handler<Annotation, unknown>;
   private currentTool: string = "select";
-  private interactionController: InteractionController;
-  private lastMousePoint: { x: number; y: number } = { x: 0, y: 0 };
+  private interaction: InteractionController;
   private ogma: Ogma;
   private store: Store;
   private layer: CanvasLayer;
-  constructor(ogma: Ogma, store: Store) {
+  constructor(ogma: Ogma, store: Store, interaction: InteractionController) {
     super();
     this.ogma = ogma;
     this.store = store;
+    this.interaction = interaction;
     // TODO: handle rotation on Ogma side
   }
   initRenderer() {
@@ -34,10 +34,12 @@ export class AnnotationEditor extends EventTarget {
       handler.addEventListener("dragstart", () => {
         this.dispatchEvent(new Event("dragstart"));
         this.store.setState({ isDragging: true });
+        this.interaction.setMode("edit");
       });
       handler.addEventListener("dragend", () => {
         this.dispatchEvent(new Event("dragend"));
         this.store.setState({ isDragging: false });
+        this.interaction.setMode("default");
       });
 
       handler.addEventListener("dragging", () => {
