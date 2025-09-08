@@ -110,7 +110,9 @@ export class Control extends EventEmitter<FeatureEvents> {
   /**
    * Destroy the controller and its elements
    */
-  public destroy() {}
+  public destroy() {
+    this.interactions.destroy();
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public updateStyle(_id: unknown, _s: unknown) {}

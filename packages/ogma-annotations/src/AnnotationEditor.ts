@@ -10,19 +10,21 @@ export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();
   private activeHandler?: Handler<Annotation, unknown>;
   private currentTool: string = "select";
-  private interaction: InteractionController;
+  private interactions: InteractionController;
+  private lastMousePoint: { x: number; y: number } = { x: 0, y: 0 };
   private ogma: Ogma;
   private store: Store;
-  private layer: CanvasLayer;
-  constructor(ogma: Ogma, store: Store, interaction: InteractionController) {
+  private layer!: CanvasLayer;
+  constructor(ogma: Ogma, store: Store, interactions: InteractionController) {
     super();
     this.ogma = ogma;
     this.store = store;
-    this.interaction = interaction;
+    this.interactions = interactions;
     // TODO: handle rotation on Ogma side
   }
   initRenderer() {
     this.layer = this.ogma.layers.addCanvasLayer((ctx) => this.draw(ctx), {
+      // @ts-expect-error TODO: fix signature
       shouldRotate: false
     });
     this.layer.element.style.pointerEvents = "none";
@@ -109,6 +111,7 @@ export class AnnotationEditor extends EventTarget {
     container.removeEventListener("mouseup", handler.handleMouseUp);
     container.removeEventListener("mousedown", handler.handleMouseDown);
   }
+
   editFeature(featureId: string) {
     const feature = this.store.getState().features[featureId];
     if (!feature) return;
