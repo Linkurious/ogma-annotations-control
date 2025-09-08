@@ -50,7 +50,11 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.links,
       this.options.detectMargin
     );
-    this.editor = new AnnotationEditor(this.ogma, this.store);
+    this.editor = new AnnotationEditor(
+      this.ogma,
+      this.store,
+      this.interactions
+    );
     // TODO: Use state mutations to trigger refresh instead of events?
     this.editor.addEventListener("dragging", () => {
       this.renderers.shapes.layer.refresh();
@@ -106,7 +110,9 @@ export class Control extends EventEmitter<FeatureEvents> {
   /**
    * Destroy the controller and its elements
    */
-  public destroy() {}
+  public destroy() {
+    this.interactions.destroy();
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public updateStyle(_id: unknown, _s: unknown) {}
