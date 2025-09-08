@@ -17,12 +17,15 @@ export class AnnotationEditor {
     this.ogma = ogma;
     this.store = store;
     // TODO: handle rotation on Ogma side
-    this.layer = ogma.layers.addCanvasLayer((ctx) => this.draw(ctx), {
+  }
+  initRenderer() {
+    this.layer = this.ogma.layers.addCanvasLayer((ctx) => this.draw(ctx), {
       shouldRotate: false
     });
+    this.layer.element.style.pointerEvents = "none";
     // Create all handlers with shared dependencies
-    this.handlers.set("box", new TextHandler(ogma));
-    this.handlers.set("text", new TextHandler(ogma));
+    this.handlers.set("box", new TextHandler(this.ogma));
+    this.handlers.set("text", new TextHandler(this.ogma));
     this.handlers.forEach((handler) => {
       handler.addEventListener("dragging", () => {
         this.layer.refresh();

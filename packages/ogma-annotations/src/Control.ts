@@ -5,7 +5,6 @@ import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
 import { Renderer } from "./renderer/base";
-import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
 import { store } from "./store";
 import {
@@ -58,7 +57,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private initializeRenderers() {
     this.renderers.shapes = new Shapes(this.ogma, this.store);
-    this.renderers.handles = new Handles(this.ogma, this.store);
+    this.editor.initRenderer();
   }
 
   private setupEvents() {

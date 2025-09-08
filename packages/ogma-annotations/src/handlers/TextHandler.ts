@@ -53,7 +53,7 @@ export class TextHandler extends Handler<Text> {
     }
   }
   handleMouseDown(e: MouseEvent): void {
-    if (!this.isActive() || !this.hoveredHandle) return;
+    if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
     e.preventDefault();
     e.stopPropagation();
     // start resizing
