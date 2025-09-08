@@ -2,13 +2,13 @@ import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { ArrowHandler } from "./handlers/ArrowHandler";
 import { Handler } from "./handlers/Handler";
 import { TextHandler } from "./handlers/TextHandler";
+import { InteractionController } from "./interaction/index";
 import { Store } from "./store";
-import { Text } from "./types";
-import { InteractionController } from "../interaction/InteractionController";
+import { Annotation, Text } from "./types";
 
 export class AnnotationEditor extends EventTarget {
-  private handlers = new Map<string, Handler<unknown>>();
-  private activeHandler?: Handler<unknown>;
+  private handlers = new Map<string, Handler<Annotation, unknown>>();
+  private activeHandler?: Handler<Annotation, unknown>;
   private currentTool: string = "select";
   private interactions: InteractionController;
   private lastMousePoint: { x: number; y: number } = { x: 0, y: 0 };
@@ -33,9 +33,27 @@ export class AnnotationEditor extends EventTarget {
     this.handlers.set("text", new TextHandler(this.ogma));
     this.handlers.set("arrow", new ArrowHandler(this.ogma));
     this.handlers.forEach((handler) => {
+      handler.addEventListener("dragstart", () => {
+        this.dispatchEvent(new Event("dragstart"));
+        this.store.setState({ isDragging: true });
+        this.interaction.setMode("edit");
+      });
+      handler.addEventListener("dragend", () => {
+        this.dispatchEvent(new Event("dragend"));
+        this.store.setState({ isDragging: false });
+        this.interaction.setMode("default");
+      });
+
       handler.addEventListener("dragging", () => {
         this.layer.refresh();
         this.dispatchEvent(new Event("dragging"));
+        this.store.setState({ isDragging: true });
+      });
+      handler.addEventListener("mouseenter", () => {
+        this.store.setState({ hoveringHandle: true });
+      });
+      handler.addEventListener("mouseleave", () => {
+        this.store.setState({ hoveringHandle: false });
       });
     });
     this.store.subscribe((newState, oldState) => {

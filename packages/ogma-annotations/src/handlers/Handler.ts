@@ -1,34 +1,85 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Annotation } from "../types";
 
-export abstract class Handler<T extends Annotation> extends EventTarget {
+export abstract class Handler<
+  T extends Annotation,
+  Handle
+> extends EventTarget {
   protected annotation?: T;
   protected ogma: Ogma;
   protected dragging: boolean = false;
   protected dragStartPoint?: Point;
   protected dragStartAnnotation?: T;
+  protected hoveredHandle?: Handle;
   protected ogmaPanningOption: boolean = false;
   constructor(ogma: Ogma) {
     super();
     this.ogma = ogma;
   }
 
-  // Lifecycle
-  // abstract activate(mode: "draw" | "edit"): void;
-  // abstract deactivate(): void;
-
-  // Mouse events
-  abstract handleMouseDown(e: MouseEvent): void;
-  abstract handleMouseMove(e: MouseEvent): void;
-  abstract handleMouseUp(e: MouseEvent): void;
-
+  handleMouseMove(e: MouseEvent): void {
+    // compute the distance between the mouse and the edges of te box
+    if (!this.isActive()) return;
+    const wasHovered = Boolean(this.hoveredHandle);
+    if (!this.dragging) {
+      this._detectHandle(e);
+    } else if (this.dragStartPoint) {
+      this._drag(e);
+    }
+    const isHovered = Boolean(this.hoveredHandle);
+    if (wasHovered !== isHovered) {
+      if (isHovered) this.dispatchEvent(new Event("mouseenter"));
+      else this.dispatchEvent(new Event("mouseleave"));
+    }
+  }
+  handleMouseDown(e: MouseEvent): void {
+    if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
+    e.preventDefault();
+    e.stopPropagation();
+    // start resizing
+    this.dragging = true;
+    this.dragStartPoint = this.clientToCanvas(e);
+    this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
+    this.dispatchEvent(new Event("dragstart"));
+    this.ogmaPanningOption = Boolean(
+      this.ogma.getOptions().interactions?.pan?.enabled
+    );
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: false } }
+    });
+  }
+  handleMouseUp(e: MouseEvent): void {
+    if (!this.isActive() || !this.dragging) return;
+    this.dragging = false;
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: this.ogmaPanningOption } }
+    });
+    this.dispatchEvent(new Event("dragend"));
+  }
+  cancelEdit() {
+    if (!this.isActive() || !this.annotation || !this.dragStartAnnotation)
+      return;
+    this.annotation.geometry = this.dragStartAnnotation?.geometry;
+    this.annotation.bbox = this.dragStartAnnotation?.bbox;
+    this.dragging = false;
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: this.ogmaPanningOption } }
+    });
+  }
   // Keyboard events
   handleKeyDown?(e: KeyboardEvent): void;
   handleKeyUp?(e: KeyboardEvent): void;
 
-  // Edit existing feature
-  // abstract startEdit(featureId: string, point: Point): void;
-  abstract cancelEdit(): void;
+  /**
+   * Detects which handle is being hovered over.
+   * @param e Mouse event
+   */
+  protected abstract _detectHandle(e: MouseEvent): void;
+  /**
+   * Handles the dragging of the selected handle.
+   * @param e Mouse event
+   */
+  protected abstract _drag(e: MouseEvent): void;
 
   protected clientToCanvas(e: MouseEvent): Point {
     return this.ogma.view.screenToGraphCoordinates({

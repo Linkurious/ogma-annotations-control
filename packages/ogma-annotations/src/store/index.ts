@@ -12,6 +12,7 @@ interface AnnotationState {
   liveUpdates: Record<Id, Partial<Annotation>>;
   isDragging: boolean;
   hoveredFeature: Id | null;
+  hoveringHandle: boolean;
   selectedFeatures: Set<Id>;
 
   // Live update actions (for dragging/resizing)
@@ -53,6 +54,7 @@ export const store = create<AnnotationState>()(
         features: {},
         liveUpdates: {},
         isDragging: false,
+        hoveringHandle: false,
         hoveredFeature: null,
         selectedFeatures: new Set(),
 
