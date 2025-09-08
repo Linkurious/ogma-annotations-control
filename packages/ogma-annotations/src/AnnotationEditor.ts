@@ -1,12 +1,14 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
+import { ArrowHandler } from "./handlers/ArrowHandler";
+import { Handler } from "./handlers/Handler";
 import { TextHandler } from "./handlers/TextHandler";
 import { Store } from "./store";
-import { isText, Text } from "./types";
+import { Text } from "./types";
 import { InteractionController } from "../interaction/InteractionController";
 
-export class AnnotationEditor {
-  private handlers = new Map<string, TextHandler>();
-  private activeHandler?: TextHandler;
+export class AnnotationEditor extends EventTarget {
+  private handlers = new Map<string, Handler<unknown>>();
+  private activeHandler?: Handler<unknown>;
   private currentTool: string = "select";
   private interactionController: InteractionController;
   private lastMousePoint: { x: number; y: number } = { x: 0, y: 0 };
@@ -14,6 +16,7 @@ export class AnnotationEditor {
   private store: Store;
   private layer: CanvasLayer;
   constructor(ogma: Ogma, store: Store) {
+    super();
     this.ogma = ogma;
     this.store = store;
     // TODO: handle rotation on Ogma side
@@ -26,9 +29,11 @@ export class AnnotationEditor {
     // Create all handlers with shared dependencies
     this.handlers.set("box", new TextHandler(this.ogma));
     this.handlers.set("text", new TextHandler(this.ogma));
+    this.handlers.set("arrow", new ArrowHandler(this.ogma));
     this.handlers.forEach((handler) => {
       handler.addEventListener("dragging", () => {
         this.layer.refresh();
+        this.dispatchEvent(new Event("dragging"));
       });
     });
     this.store.subscribe((newState, oldState) => {
@@ -50,13 +55,9 @@ export class AnnotationEditor {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    // ctx.save();
-    // const angle = this.ogma.view.getAngle();
-    // ctx.rotate(-angle);
     this.handlers.forEach((handler) => {
       handler.draw(ctx, 0);
     });
-    // ctx.restore();
   }
 
   setTool(tool: string) {
