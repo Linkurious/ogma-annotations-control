@@ -20,10 +20,16 @@ export abstract class Handler<
   handleMouseMove(e: MouseEvent): void {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
+    const wasHovered = Boolean(this.hoveredHandle);
     if (!this.dragging) {
-      return this._detectHandle(e);
+      this._detectHandle(e);
     } else if (this.dragStartPoint) {
       this._drag(e);
+    }
+    const isHovered = Boolean(this.hoveredHandle);
+    if (wasHovered !== isHovered) {
+      if (isHovered) this.dispatchEvent(new Event("mouseenter"));
+      else this.dispatchEvent(new Event("mouseleave"));
     }
   }
   handleMouseDown(e: MouseEvent): void {
@@ -34,6 +40,7 @@ export abstract class Handler<
     this.dragging = true;
     this.dragStartPoint = this.clientToCanvas(e);
     this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
+    this.dispatchEvent(new Event("dragstart"));
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
     );
@@ -47,6 +54,7 @@ export abstract class Handler<
     this.ogma.setOptions({
       interactions: { pan: { enabled: this.ogmaPanningOption } }
     });
+    this.dispatchEvent(new Event("dragend"));
   }
   cancelEdit() {
     if (!this.isActive() || !this.annotation || !this.dragStartAnnotation)
@@ -62,7 +70,15 @@ export abstract class Handler<
   handleKeyDown?(e: KeyboardEvent): void;
   handleKeyUp?(e: KeyboardEvent): void;
 
+  /**
+   * Detects which handle is being hovered over.
+   * @param e Mouse event
+   */
   protected abstract _detectHandle(e: MouseEvent): void;
+  /**
+   * Handles the dragging of the selected handle.
+   * @param e Mouse event
+   */
   protected abstract _drag(e: MouseEvent): void;
 
   protected clientToCanvas(e: MouseEvent): Point {

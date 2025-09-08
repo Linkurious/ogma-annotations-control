@@ -31,9 +31,25 @@ export class AnnotationEditor extends EventTarget {
     this.handlers.set("text", new TextHandler(this.ogma));
     this.handlers.set("arrow", new ArrowHandler(this.ogma));
     this.handlers.forEach((handler) => {
+      handler.addEventListener("dragstart", () => {
+        this.dispatchEvent(new Event("dragstart"));
+        this.store.setState({ isDragging: true });
+      });
+      handler.addEventListener("dragend", () => {
+        this.dispatchEvent(new Event("dragend"));
+        this.store.setState({ isDragging: false });
+      });
+
       handler.addEventListener("dragging", () => {
         this.layer.refresh();
         this.dispatchEvent(new Event("dragging"));
+        this.store.setState({ isDragging: true });
+      });
+      handler.addEventListener("mouseenter", () => {
+        this.store.setState({ hoveringHandle: true });
+      });
+      handler.addEventListener("mouseleave", () => {
+        this.store.setState({ hoveringHandle: false });
       });
     });
     this.store.subscribe((newState, oldState) => {
