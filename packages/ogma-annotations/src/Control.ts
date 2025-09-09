@@ -43,7 +43,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
-    this.links = new Links(this.ogma);
+    this.links = new Links(this.ogma, this.store);
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
@@ -72,7 +72,9 @@ export class Control extends EventEmitter<FeatureEvents> {
   private setupEvents() {
     this.ogma.events
       .on("dragStart", () => (this.store.getState().isDragging = true))
-      .on("dragEnd", () => (this.store.getState().isDragging = false));
+      .on(["dragProgress", "dragEnd"], () => {
+        this.renderers.shapes.layer.refresh();
+      });
   }
 
   /**

@@ -53,6 +53,19 @@ export class InteractionController {
       { detectMargin: 10, magnetRadius: 10 },
       index
     );
+    this.snapping.addEventListener("snapped", (evt) => {
+      const detail = (evt as CustomEvent).detail;
+      this.links.add(
+        detail.annotation,
+        detail.side,
+        detail.node,
+        detail.type,
+        detail.magnet
+      );
+    });
+    this.ogma.events.on(["dragProgress", "dragEnd"], () => {
+      this.links.snap();
+    });
   }
 
   detect(x: number, y: number, angle: number): Annotation | null {

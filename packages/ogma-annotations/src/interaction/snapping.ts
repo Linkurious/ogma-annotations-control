@@ -63,27 +63,33 @@ export type SnappingOptions = {
   // maxArrowHeight: number;
 };
 
-export class Snapping {
+export class Snapping extends EventTarget {
   private ogma: Ogma;
   private options: SnappingOptions;
   private spatialIndex: Index;
   private hoveredNode: Node | null = null;
   constructor(ogma: Ogma, options: SnappingOptions, spatialIndex: Index) {
+    super();
     this.ogma = ogma;
     this.options = options;
     this.spatialIndex = spatialIndex;
   }
 
-  public snap(annotation: Annotation, position: Point, type: "start" | "end") {
+  public snap(annotation: Annotation, position: Point, side: "start" | "end") {
     if (!isArrow(annotation)) return;
     const snapping = this._findMagnet(position);
     if (!snapping) return;
     const { point } = snapping;
-    if (type === "start") {
+    if (side === "start") {
       annotation.geometry.coordinates[0] = [point.x, point.y];
-    } else if (type === "end") {
+    } else if (side === "end") {
       annotation.geometry.coordinates[1] = [point.x, point.y];
     }
+    this.dispatchEvent(
+      new CustomEvent("snapped", {
+        detail: { ...snapping, annotation, side }
+      })
+    );
   }
   private _findMagnet(point: Point) {
     const snapWindow = {
@@ -179,13 +185,18 @@ export class Snapping {
       });
       if (projection < 0 || projection > length(subtract(snap.max, snap.min)))
         continue;
-
+      const snapPoint = {
+        x: snap.min.x + snap.axis.x * projection,
+        y: snap.min.y + snap.axis.y * projection
+      };
+      const magnet = subtract(snapPoint, { x: matrix.x, y: matrix.y }).multiply(
+        { x: 1 / size.width, y: 1 / size.height }
+      );
       return {
-        point: {
-          x: snap.min.x + snap.axis.x * projection,
-          y: snap.min.y + snap.axis.y * projection
-        },
-        text
+        point: snapPoint,
+        magnet,
+        type: "text" as const,
+        text: text.id
       };
     }
     return null;
@@ -199,11 +210,17 @@ export class Snapping {
       if (dist >= Number(xyr.radius) + Number(this.options.detectMargin))
         continue;
       const unit = mul(vec, 1 / dist);
-      const magnet =
-        dist < Number(xyr.radius / 2)
-          ? { x: xyr.x, y: xyr.y }
-          : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
-      return { point: magnet, node: nodes.get(i) };
+      const snapToCenter = dist < Number(xyr.radius) / 2;
+      const snapPoint = snapToCenter
+        ? { x: xyr.x, y: xyr.y }
+        : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
+      const magnet = snapToCenter ? { x: 0.5, y: 0.5 } : unit;
+      return {
+        point: snapPoint,
+        node: nodes.get(i).getId(),
+        magnet,
+        type: "node" as const
+      };
     }
     return null;
   }

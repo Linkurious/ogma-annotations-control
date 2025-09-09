@@ -1,5 +1,6 @@
-import type { NodeList, Ogma, Point } from "@linkurious/ogma";
+import type { NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
+import { Store } from "./store";
 import type {
   Arrow,
   Id,
@@ -12,11 +13,12 @@ import type {
 import {
   getArrowSide,
   getAttachmentPointOnNode,
+  getBbox,
   getTextPosition,
   getTextSize,
   setArrowEndPoint
 } from "./utils";
-import { add, multiply, rotateRadians } from "./vec";
+import { add, mul, multiply, rotateRadians, subtract } from "./vec";
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -27,18 +29,23 @@ import { add, multiply, rotateRadians } from "./vec";
  * An arrow can be connected to only one node or text, but on both ends.
  */
 export class Links {
-  private links: Record<Id, Link> = {};
-  private linksByTargetId: Record<Id, Id[]> = {};
-  private linksByArrowId: Record<Id, { start?: Id; end?: Id }> = {};
-
-  constructor(private ogma: Ogma) {}
+  private links: Map<Id, Link> = new Map();
+  private nodeToLink: Map<Id, Set<Id>> = new Map();
+  private annotationToLink: Map<Id, Set<Id>> = new Map();
+  private linksByArrowId: Map<Id, { start?: Id; end?: Id }> = new Map();
+  private store: Store;
+  private ogma: Ogma;
+  constructor(ogma: Ogma, store: Store) {
+    this.ogma = ogma;
+    this.store = store;
+  }
 
   public add(
     arrow: Arrow,
     side: Side,
     targetId: Id,
     targetType: TargetType,
-    connectionPoint: Point
+    magnet: Point
   ) {
     const id = getId();
     const arrowId = arrow.id;
@@ -48,22 +55,31 @@ export class Links {
       arrow: arrowId,
       target: targetId,
       targetType,
-      connectionPoint,
+      magnet,
       side
     };
-    // add it to the links
-    this.links[id] = link;
-    // add it to the linksByTargetId
-    if (!this.linksByTargetId[targetId]) {
-      this.linksByTargetId[targetId] = [];
+    if (targetType === "node") {
+      const node = this.ogma.getNode(targetId);
+      if (!node) {
+        return;
+      }
     }
-    this.linksByTargetId[targetId].push(id);
+    // cleanup existing link on that side
+    this.remove(arrow, side);
+    // add it to the links
+    this.links.set(id, link);
+    // add it to the linksByTargetId
+    const map = targetType === "node" ? this.nodeToLink : this.annotationToLink;
+    if (!map.has(targetId)) {
+      map.set(targetId, new Set());
+    }
+    map.get(targetId)!.add(id);
 
     // add it to the linksByArrowId
-    if (!this.linksByArrowId[arrowId]) {
-      this.linksByArrowId[arrowId] = {};
+    if (!this.linksByArrowId.has(arrowId)) {
+      this.linksByArrowId.set(arrowId, {});
     }
-    this.linksByArrowId[arrowId][side] = id;
+    this.linksByArrowId.get(arrowId)![side] = id;
 
     // make it serializable
     arrow.properties.link = arrow.properties.link || {};
@@ -71,74 +87,128 @@ export class Links {
       id: targetId,
       side,
       type: targetType,
-      magnet: connectionPoint
+      magnet: magnet
     };
     return this;
   }
 
-  public arrowIsLinked(arrowId: Id, side: Side) {
-    return !!this.linksByArrowId[arrowId]?.[side];
-  }
-
-  // remove the link between the arrow and the target by arrow id and side
   public remove(arrow: Arrow, side: Side) {
     const arrowId = arrow.id;
-    const id = this.linksByArrowId[arrowId]?.[side];
+    const id = this.linksByArrowId.get(arrowId)?.[side];
     delete arrow.properties.link?.[side];
     if (!id) return this;
-    const link = this.links[id];
+    const link = this.links.get(id);
+    if (!link) return this;
     // remove the link from the links
-    delete this.links[id];
+    this.links.delete(id);
     // remove the link from the linksByTargetId
-    const targetLinks = this.linksByTargetId[link.target];
-    for (let i = 0; i < targetLinks.length; i++) {
-      if (targetLinks[i] === id) {
-        targetLinks.splice(i, 1);
-        break;
-      }
-    }
+    this.nodeToLink.get(link.target)?.delete(id);
+    this.annotationToLink.get(link.target)?.delete(id);
     // remove the link from the linksByArrowId
-    delete this.linksByArrowId[arrowId][side];
+    this.linksByArrowId.has(arrowId) &&
+      (this.linksByArrowId.get(arrowId)![side] = undefined);
     return this;
   }
 
   getArrowLink(arrowId: Id, side: Side): Link | null {
-    const id = this.linksByArrowId[arrowId]?.[side];
+    const id = this.linksByArrowId.get(arrowId)?.[side];
     if (!id) return null;
-    return this.links[id];
-  }
-
-  getTargetLinks(targetId: Id, type: TargetType): Link[] {
-    return (
-      this.linksByTargetId[targetId]
-        ?.map((id) => this.links[id])
-        .filter((l) => l.targetType === type) ?? []
-    );
+    return this.links.get(id) || null;
   }
 
   forEach(cb: (link: Link) => void) {
-    Object.values(this.links).forEach(cb);
+    this.links.forEach(cb);
   }
 
-  refreshLinks(getAnnotation: AnnotationGetter) {
-    let shouldRefresh = false;
-    const angle = this.ogma.view.getAngle();
-    this.forEach(({ connectionPoint, targetType, target, arrow, side }) => {
-      // @ts-expect-error I don't understand why TS is complaining
-      if (targetType !== "text" || targetType !== "box") return;
-      shouldRefresh = true;
-
-      const text = getAnnotation(target) as Text;
-      const a = getAnnotation(arrow) as Arrow;
-      const size = getTextSize(text);
-      const position = getTextPosition<Text>(text);
-
-      const m = multiply(connectionPoint!, { x: size.width, y: size.height });
-      const r = rotateRadians(m, angle);
-      const point = add(r, position);
-      setArrowEndPoint(a, side, point.x, point.y);
+  snap() {
+    const state = this.store.getState();
+    const nodeIds = Array.from(this.nodeToLink.keys());
+    const nodeIdToIndex = new Map<NodeId, number>();
+    nodeIds.forEach((id, i) => nodeIdToIndex.set(id, i));
+    const nodes = this.ogma.getNodes(nodeIds);
+    const xyr = nodes.getAttributes(["x", "y", "radius"]) as {
+      x: number;
+      y: number;
+      radius: number;
+    }[];
+    this.linksByArrowId.forEach((links, arrowId) => {
+      // case when both sides are linked
+      const start = this.links.get(links.start!);
+      const end = this.links.get(links.end!);
+      const arrow = state.getFeature(arrowId) as Arrow;
+      let startPoint = arrow.geometry.coordinates[0];
+      let endPoint = arrow.geometry.coordinates[1];
+      if (start && end) {
+        const startIndex = nodeIdToIndex.get(start.target)!;
+        const endIndex = nodeIdToIndex.get(end.target)!;
+        if (start.targetType === "node" && end.targetType === "node") {
+          const vec = subtract(xyr[endIndex], xyr[startIndex]);
+          startPoint = this._getNodeSnapPoint(xyr[startIndex], vec);
+          endPoint = this._getNodeSnapPoint(xyr[endIndex], mul(vec, -1));
+        } else if (start.targetType === "node") {
+          // compute first the box snap point
+          const box = state.getFeature(end.target) as Text;
+          endPoint = this._getBoxSnapPoint(box, end);
+          const vec = subtract(xyr[startIndex], {
+            x: endPoint[0],
+            y: endPoint[1]
+          });
+          startPoint = this._getNodeSnapPoint(xyr[startIndex], mul(vec, -1));
+        } else if (end.targetType === "node") {
+          const box = state.getFeature(start.target) as Text;
+          const startPoint = this._getBoxSnapPoint(box, start);
+          const vec = subtract(xyr[endIndex], {
+            x: startPoint[0],
+            y: startPoint[1]
+          });
+          endPoint = this._getNodeSnapPoint(xyr[endIndex], vec);
+        }
+      } else if (start) {
+        const startIndex = nodeIdToIndex.get(start.target)!;
+        if (start.targetType === "node") {
+          const vec = subtract(
+            { x: endPoint[0], y: endPoint[1] },
+            { x: startPoint[0], y: startPoint[1] }
+          );
+          startPoint = this._getNodeSnapPoint(xyr[startIndex], vec);
+        } else {
+          const box = state.getFeature(start.target) as Text;
+          startPoint = this._getBoxSnapPoint(box, start);
+        }
+      } else if (end) {
+        const endIndex = nodeIdToIndex.get(end.target)!;
+        if (end.targetType === "node") {
+          const vec = subtract(
+            { x: startPoint[0], y: startPoint[1] },
+            { x: endPoint[0], y: endPoint[1] }
+          );
+          endPoint = this._getNodeSnapPoint(xyr[endIndex], vec);
+        }
+      }
+      arrow.geometry.coordinates[0] = [startPoint[0], startPoint[1]];
+      arrow.geometry.coordinates[1] = [endPoint[0], endPoint[1]];
     });
-    return shouldRefresh;
+  }
+
+  _getBoxSnapPoint(box: Text, link: Link) {
+    const bb = getBbox(box);
+    const point = add(
+      { x: bb[0], y: bb[1] },
+      multiply(link.magnet!, { x: bb[2] - bb[0], y: bb[3] - bb[1] })
+    );
+    return [point.x, point.y];
+  }
+  _getNodeSnapPoint(xyr: { x: number; y: number; radius: number }, vec: Point) {
+    if (vec.x === 0 && vec.y === 0) {
+      return [xyr.x, xyr.y];
+    }
+    const dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+    const unit = mul(vec, 1 / dist);
+    const snapPoint =
+      dist < Number(xyr.radius) / 2
+        ? { x: xyr.x, y: xyr.y }
+        : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
+    return [snapPoint.x, snapPoint.y];
   }
 
   updateLinksForNodes(
@@ -162,8 +232,8 @@ export class Links {
         const r = +node.getAttribute("radius");
         const eps = 1e-6;
         if (
-          link.connectionPoint.x - (pos.x - dx) > eps ||
-          link.connectionPoint.y - (pos.y - dy) > eps
+          link.magnet.x - (pos.x - dx) > eps ||
+          link.magnet.y - (pos.y - dy) > eps
         ) {
           anchor = getAttachmentPointOnNode(otherSide, pos, r);
         }
@@ -179,7 +249,7 @@ export class Links {
       const size = getTextSize(text);
       const position = getTextPosition(text);
 
-      const m = multiply(link.connectionPoint!, {
+      const m = multiply(link.magnet!, {
         x: size.width,
         y: size.height
       });

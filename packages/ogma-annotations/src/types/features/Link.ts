@@ -20,9 +20,9 @@ export type Link = {
   targetType: TargetType;
   /**
    * On which point relative to topleft corner the arrow is tighten, in case of
-   * node, it can be deduced from the arrow itself
+   * node, a 0 vector represents the center, otherwise it can be deduced from the arrow itself
    */
-  connectionPoint: Point;
+  magnet: Point;
 };
 
 export type ExportedLink = {

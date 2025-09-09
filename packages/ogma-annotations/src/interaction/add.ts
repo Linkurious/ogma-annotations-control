@@ -27,9 +27,6 @@ export class Add {
       const feature = state.getFeature(id);
       if (!feature || feature.properties.type !== "arrow") return;
       const arrow = feature as Arrow;
-      if (this.links.arrowIsLinked(arrow.id, "start")) return;
-      if (this.links.arrowIsLinked(arrow.id, "end")) return;
-      // if the arrow is added with links already (deserialized):
       if (arrow.properties.link?.start) {
         this.links.add(
           arrow,

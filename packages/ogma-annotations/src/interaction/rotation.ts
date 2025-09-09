@@ -17,19 +17,17 @@ export class Rotation {
   }
 
   private refreshTextLinks() {
-    this.links.forEach(
-      ({ connectionPoint, targetType, target, arrow, side }) => {
-        if (targetType !== "text") return;
-        const text = this.store.getState().getFeature(target)!;
-        const a = this.store.getState().getFeature(arrow) as Arrow;
-        const size = getTextSize(text);
-        const position = getTextPosition(text);
+    this.links.forEach(({ magnet, targetType, target, arrow, side }) => {
+      if (targetType !== "text") return;
+      const text = this.store.getState().getFeature(target)!;
+      const a = this.store.getState().getFeature(arrow) as Arrow;
+      const size = getTextSize(text);
+      const position = getTextPosition(text);
 
-        const m = multiply(connectionPoint!, { x: size.width, y: size.height });
-        const r = rotateRadians(m, this.ogma.view.getAngle());
-        const point = add(r, position);
-        setArrowEndPoint(a, side, point.x, point.y);
-      }
-    );
+      const m = multiply(magnet!, { x: size.width, y: size.height });
+      const r = rotateRadians(m, this.ogma.view.getAngle());
+      const point = add(r, position);
+      setArrowEndPoint(a, side, point.x, point.y);
+    });
   }
 }
