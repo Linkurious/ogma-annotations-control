@@ -10,25 +10,14 @@ export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();
   private activeHandler?: Handler<Annotation, unknown>;
   private currentTool: string = "select";
-  private interactions: InteractionController;
-  private lastMousePoint: { x: number; y: number } = { x: 0, y: 0 };
+  private interaction: InteractionController;
   private ogma: Ogma;
   private store: Store;
-  private layer!: CanvasLayer;
   constructor(ogma: Ogma, store: Store, interactions: InteractionController) {
     super();
     this.ogma = ogma;
     this.store = store;
-    this.interactions = interactions;
-    // TODO: handle rotation on Ogma side
-  }
-  initRenderer() {
-    this.layer = this.ogma.layers.addCanvasLayer((ctx) => this.draw(ctx), {
-      // @ts-expect-error TODO: fix signature
-      shouldRotate: false
-    });
-    this.layer.element.style.pointerEvents = "none";
-    // Create all handlers with shared dependencies
+    this.interaction = interactions;
     this.handlers.set("box", new TextHandler(this.ogma));
     this.handlers.set("text", new TextHandler(this.ogma));
     this.handlers.set("arrow", new ArrowHandler(this.ogma));
@@ -45,7 +34,6 @@ export class AnnotationEditor extends EventTarget {
       });
 
       handler.addEventListener("dragging", () => {
-        this.layer.refresh();
         this.dispatchEvent(new Event("dragging"));
         this.store.setState({ isDragging: true });
       });
@@ -70,30 +58,7 @@ export class AnnotationEditor extends EventTarget {
       newlySelected.forEach((e) => {
         this.editFeature(e);
       });
-      this.layer.refresh();
     });
-  }
-
-  draw(ctx: CanvasRenderingContext2D) {
-    this.handlers.forEach((handler) => {
-      handler.draw(ctx, 0);
-    });
-  }
-
-  setTool(tool: string) {
-    // Deactivate previous
-    return;
-    this.activeHandler?.deactivate();
-
-    if (tool === "select") {
-      this.activeHandler = undefined;
-      this.interactionController.setMode("select");
-    } else {
-      this.activeHandler = this.handlers.get(tool);
-      this.activeHandler?.activate("draw");
-    }
-
-    this.currentTool = tool;
   }
 
   stopEditingFeature(featureId: string) {
@@ -120,9 +85,7 @@ export class AnnotationEditor extends EventTarget {
     const handler = this.handlers.get(handlerType);
 
     if (!handler) return;
-    // this.activeHandler?.deactivate();
     this.activeHandler = handler;
-    // handler.activate("edit");
     handler.setAnnotation(feature as Text);
     const container = this.ogma.getContainer()!;
     container.addEventListener(
@@ -146,8 +109,5 @@ export class AnnotationEditor extends EventTarget {
 
   destroy() {
     return;
-
-    this.activeHandler?.deactivate();
-    this.handlers.clear();
   }
 }

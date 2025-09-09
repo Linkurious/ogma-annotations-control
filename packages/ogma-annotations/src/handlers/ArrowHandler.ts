@@ -1,6 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
-import { defaultStyle as defaultArrowStyle } from "../Editor_old/Arrows/defaults";
 import { Arrow } from "../types";
 
 type Handle = {
@@ -11,39 +10,6 @@ type Handle = {
 export class ArrowHandler extends Handler<Arrow, Handle> {
   constructor(ogma: Ogma) {
     super(ogma);
-  }
-
-  draw(ctx: CanvasRenderingContext2D, angle: number): void {
-    if (!this.isActive()) return;
-
-    const annotation = this.annotation!;
-    const { strokeColor, strokeWidth, strokeType } =
-      annotation.properties.style || defaultArrowStyle;
-
-    const startPoint = annotation.geometry.coordinates[0];
-    const endPoint = annotation.geometry.coordinates[1];
-
-    if (strokeType && strokeType !== "none") {
-      ctx.strokeStyle = strokeColor || "black";
-      // TODO: this is thicker for debugging.
-      ctx.lineWidth = 8 * (strokeWidth || 1);
-
-      if (strokeType === "dashed") {
-        ctx.setLineDash([5, 5]);
-      } else {
-        ctx.setLineDash([]);
-      }
-
-      // Draw handle circles at endpoints
-      ctx.fillStyle = strokeColor || "black";
-      ctx.beginPath();
-      ctx.arc(startPoint[0], startPoint[1], 4, 0, 2 * Math.PI);
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(endPoint[0], endPoint[1], 4, 0, 2 * Math.PI);
-      ctx.fill();
-    }
   }
 
   _detectHandle(e: MouseEvent) {

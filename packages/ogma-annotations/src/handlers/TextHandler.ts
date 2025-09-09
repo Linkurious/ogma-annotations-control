@@ -16,32 +16,6 @@ export class TextHandler extends Handler<Text, Handle> {
   constructor(ogma: Ogma) {
     super(ogma);
   }
-  draw(ctx: CanvasRenderingContext2D, angle: number): void {
-    if (!this.isActive()) return;
-    const annotation = this.annotation!;
-    const size = getBoxSize(annotation);
-    const { strokeColor, strokeWidth, strokeType } =
-      annotation.properties.style || defaultTextStyle;
-    const matrix = getTransformMatrix(annotation, { angle }, false);
-    if (strokeType && strokeType !== "none") {
-      ctx.strokeStyle = strokeColor || "black";
-      // TODO: this is thicker for debugging.
-      ctx.lineWidth = 8 * (strokeWidth || 1);
-
-      if (strokeType === "dashed") {
-        ctx.setLineDash([5, 5]);
-      } else {
-        ctx.setLineDash([]);
-      }
-      ctx.save();
-      ctx.transform(1, 0, 0, 1, matrix.x, matrix.y);
-      ctx.moveTo(matrix.x, matrix.y);
-      ctx.beginPath();
-      ctx.rect(0, 0, size.width, size.height);
-      ctx.stroke();
-      ctx.restore();
-    }
-  }
 
   _detectHandle(e: MouseEvent) {
     const annotation = this.annotation!;
