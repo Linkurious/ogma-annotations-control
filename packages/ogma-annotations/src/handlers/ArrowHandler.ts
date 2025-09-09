@@ -65,7 +65,11 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     this.dispatchEvent(
       new CustomEvent("dragging", {
-        detail: {}
+        detail: {
+          point: mousePoint,
+          annotation,
+          handle
+        }
       })
     );
   }

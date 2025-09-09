@@ -4,7 +4,7 @@ import { Handler } from "./Handler";
 import { TextHandler } from "./TextHandler";
 import { InteractionController } from "../interaction/index";
 import { Store } from "../store";
-import { Annotation, Text } from "../types";
+import { Annotation, isArrow, Text } from "../types";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();
@@ -33,8 +33,12 @@ export class AnnotationEditor extends EventTarget {
         this.interaction.setMode("default");
       });
 
-      handler.addEventListener("dragging", () => {
-        this.dispatchEvent(new Event("dragging"));
+      handler.addEventListener("dragging", (e) => {
+        const position = (e as CustomEvent).detail.point;
+        const annotation = (e as CustomEvent).detail.annotation as Annotation;
+        const handle = (e as CustomEvent).detail.handle;
+        this.interaction.snapping.snap(annotation, position, handle.type);
+        this.dispatchEvent(new CustomEvent("dragging", e));
         this.store.setState({ isDragging: true });
       });
       handler.addEventListener("mouseenter", () => {

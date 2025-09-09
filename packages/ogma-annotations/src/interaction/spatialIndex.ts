@@ -34,4 +34,8 @@ export class Index extends Rtree<Annotation> {
       maxY: bbox[3]
     };
   }
+
+  query(bbox: BBox): Annotation[] {
+    return super.search(bbox);
+  }
 }

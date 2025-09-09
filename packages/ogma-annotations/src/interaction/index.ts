@@ -1,6 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { Add } from "./add";
 import { Rotation } from "./rotation";
+import { Snapping } from "./snapping";
 import { Index } from "./spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
@@ -23,6 +24,7 @@ export class InteractionController {
   private rotation: Rotation;
   private links: Links;
   private add: Add;
+  public snapping: Snapping;
   constructor(
     private ogma: Ogma,
     private store: Store,
@@ -46,6 +48,11 @@ export class InteractionController {
     this.links = links;
     this.rotation = new Rotation(ogma, store, links);
     this.add = new Add(ogma, store, links);
+    this.snapping = new Snapping(
+      ogma,
+      { detectMargin: 10, magnetRadius: 10 },
+      index
+    );
   }
 
   detect(x: number, y: number, angle: number): Annotation | null {

@@ -238,50 +238,6 @@ export type Link = {
   connectionPoint: Point;
 };
 
-export type ControllerOptions = {
-  /**
-   * The color of the magnet points
-   */
-  magnetColor: string;
-  /**
-   * The radius in which arrows are attracted
-   */
-  magnetRadius: number;
-  /**
-   * The margin in which the Texts are detected when looking for magnet points
-   */
-  detectMargin: number;
-  /**
-   * Display size of the magnet point
-   */
-  magnetHandleRadius: number;
-
-  /**
-   * Placeholder for the text input
-   */
-  textPlaceholder: string;
-
-  /**
-   * Size of the text handle
-   */
-  textHandleSize: number;
-
-  /**
-   * Size of the arrow handle
-   */
-  arrowHandleSize: number;
-
-  /**
-   * Minimum height of the arrow in units
-   */
-  minArrowHeight: number;
-
-  /**
-   * Maximum height of the arrow in units
-   */
-  maxArrowHeight: number;
-};
-
 export type Annotation = Arrow | Text | Box;
 
 export type AnnotationGetter = (id: Id) => Annotation | undefined;

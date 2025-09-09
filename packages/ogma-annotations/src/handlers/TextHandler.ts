@@ -101,8 +101,18 @@ export class TextHandler extends Handler<Text, Handle> {
     updateBbox(annotation);
     this.dispatchEvent(
       new CustomEvent("dragging", {
-        detail: {}
+        detail: {
+          point: mousePoint,
+          annotation,
+          handle
+        }
       })
     );
+
+    // this.dispatchEvent(
+    //   new CustomEvent("dragging", {
+    //     detail: {}
+    //   })
+    // );
   }
 }
