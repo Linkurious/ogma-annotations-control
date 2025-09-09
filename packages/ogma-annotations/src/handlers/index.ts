@@ -1,10 +1,10 @@
-import Ogma, { CanvasLayer } from "@linkurious/ogma";
-import { ArrowHandler } from "./handlers/ArrowHandler";
-import { Handler } from "./handlers/Handler";
-import { TextHandler } from "./handlers/TextHandler";
-import { InteractionController } from "./interaction/index";
-import { Store } from "./store";
-import { Annotation, Text } from "./types";
+import Ogma from "@linkurious/ogma";
+import { ArrowHandler } from "./ArrowHandler";
+import { Handler } from "./Handler";
+import { TextHandler } from "./TextHandler";
+import { InteractionController } from "../interaction/index";
+import { Store } from "../store";
+import { Annotation, Text } from "../types";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();

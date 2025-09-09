@@ -1,6 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import { AnnotationEditor } from "./AnnotationEditor";
+import { AnnotationEditor } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";

@@ -164,7 +164,7 @@ export class InteractionController {
     // this.store.getState().setMode(mode);
     if (mode === "default") {
       this.setCursor(this.ogma.getOptions().cursor?.default || "default");
-    } else if (mode === "add" || this.setCursor("move") || mode === "link") {
+    } else if (mode === "add" || mode === "link") {
       this.setCursor("crosshair");
     } else if (mode === "rotate") {
       this.setCursor("alias");
