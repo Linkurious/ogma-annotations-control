@@ -22,6 +22,7 @@ export class AnnotationEditor extends EventTarget {
     this.interactions = interactions;
     // TODO: handle rotation on Ogma side
   }
+
   initRenderer() {
     this.layer = this.ogma.layers.addCanvasLayer((ctx) => this.draw(ctx), {
       // @ts-expect-error TODO: fix signature
@@ -36,12 +37,12 @@ export class AnnotationEditor extends EventTarget {
       handler.addEventListener("dragstart", () => {
         this.dispatchEvent(new Event("dragstart"));
         this.store.setState({ isDragging: true });
-        this.interaction.setMode("edit");
+        this.interactions.setMode("edit");
       });
       handler.addEventListener("dragend", () => {
         this.dispatchEvent(new Event("dragend"));
         this.store.setState({ isDragging: false });
-        this.interaction.setMode("default");
+        this.interactions.setMode("default");
       });
 
       handler.addEventListener("dragging", () => {

@@ -1,4 +1,4 @@
-import Ogma, { Point } from "@linkurious/ogma";
+import { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
 import { defaultStyle as defaultArrowStyle } from "../Editor_old/Arrows/defaults";
 import { Arrow } from "../types";
@@ -9,11 +9,7 @@ type Handle = {
 };
 
 export class ArrowHandler extends Handler<Arrow, Handle> {
-  constructor(ogma: Ogma) {
-    super(ogma);
-  }
-
-  draw(ctx: CanvasRenderingContext2D, angle: number): void {
+  draw(ctx: CanvasRenderingContext2D, _angle: number): void {
     if (!this.isActive()) return;
 
     const annotation = this.annotation!;

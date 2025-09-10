@@ -12,6 +12,7 @@ import { Renderer } from "../base";
 export class Shapes extends Renderer<SVGLayer> {
   private minArrowHeight = 20;
   private maxArrowHeight = 30;
+
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
     this.layer = this.ogma.layers.addSVGLayer({
@@ -105,5 +106,11 @@ export class Shapes extends Renderer<SVGLayer> {
         selectedElement.classList.add("annotation-selected");
       }
     });
+  }
+
+  public destroy(): void {
+    this.ogma.events.off(this._onRotate);
+    this.layer.destroy();
+    super.destroy();
   }
 }

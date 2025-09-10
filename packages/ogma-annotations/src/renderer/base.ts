@@ -8,4 +8,6 @@ export abstract class Renderer<LayerType extends Layer = Layer> {
     protected ogma: Ogma,
     protected store: Store
   ) {}
+
+  public destroy() {}
 }
