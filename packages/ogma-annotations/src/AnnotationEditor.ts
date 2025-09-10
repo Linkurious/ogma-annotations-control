@@ -76,9 +76,9 @@ export class AnnotationEditor extends EventTarget {
   }
 
   draw(ctx: CanvasRenderingContext2D) {
-    this.handlers.forEach((handler) => {
-      handler.draw(ctx, 0);
-    });
+    // this.handlers.forEach((handler) => {
+    //   handler.draw(ctx, 0);
+    // });
   }
 
   setTool(tool: string) {

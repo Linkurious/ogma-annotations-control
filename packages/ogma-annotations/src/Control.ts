@@ -14,6 +14,7 @@ import {
   FeatureEvents,
   isAnnotationCollection
 } from "./types";
+import { Handles } from "./renderer/handles";
 
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
@@ -29,7 +30,7 @@ const defaultOptions: ControllerOptions = {
 
 interface RendererMap {
   shapes: Shapes;
-  //handles: Handles;
+  handles: Handles;
 }
 
 export class Control extends EventEmitter<FeatureEvents> {
@@ -70,6 +71,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private initializeRenderers() {
     this.renderers.shapes = new Shapes(this.ogma, this.store);
+    this.renderers.handles = new Handles(this.ogma, this.store);
     this.editor.initRenderer();
   }
 
