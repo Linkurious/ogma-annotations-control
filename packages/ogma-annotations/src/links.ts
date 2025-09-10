@@ -1,24 +1,9 @@
-import type { NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
+import type { NodeId, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
 import { Store } from "./store";
-import type {
-  Arrow,
-  Id,
-  TargetType,
-  Link,
-  Side,
-  Text,
-  AnnotationGetter
-} from "./types";
-import {
-  getArrowSide,
-  getAttachmentPointOnNode,
-  getBbox,
-  getTextPosition,
-  getTextSize,
-  setArrowEndPoint
-} from "./utils";
-import { add, mul, multiply, rotateRadians, subtract } from "./vec";
+import type { Arrow, Id, TargetType, Link, Side, Text } from "./types";
+import { getBbox } from "./utils";
+import { add, mul, multiply, subtract } from "./vec";
 
 /**
  * Class that implements linking between annotation arrows and different items.
