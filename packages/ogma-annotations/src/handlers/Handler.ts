@@ -88,11 +88,6 @@ export abstract class Handler<
     });
   }
 
-  protected findSnapPoint(point: Point): Point | null {
-    // return this.snapEngine.snap(point);
-    return null;
-  }
-
   setAnnotation(annotation: T): void {
     this.annotation = annotation;
   }

@@ -53,14 +53,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     const annotation = this.annotation!;
     const mousePoint = this.clientToCanvas(e);
-    const snappedPoint = this.findSnapPoint(mousePoint) || mousePoint;
-
     const handle = this.hoveredHandle;
 
     if (handle.type === "start") {
-      annotation.geometry.coordinates[0] = [snappedPoint.x, snappedPoint.y];
+      annotation.geometry.coordinates[0] = [mousePoint.x, mousePoint.y];
     } else if (handle.type === "end") {
-      annotation.geometry.coordinates[1] = [snappedPoint.x, snappedPoint.y];
+      annotation.geometry.coordinates[1] = [mousePoint.x, mousePoint.y];
     }
 
     this.dispatchEvent(
