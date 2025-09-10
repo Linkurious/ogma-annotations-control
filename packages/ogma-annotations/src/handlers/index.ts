@@ -4,7 +4,7 @@ import { Handler } from "./Handler";
 import { TextHandler } from "./TextHandler";
 import { InteractionController } from "../interaction/index";
 import { Store } from "../store";
-import { Annotation, isArrow, Text } from "../types";
+import { Annotation, Text } from "../types";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();

@@ -56,10 +56,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.store,
       this.interactions
     );
-    // TODO: Use state mutations to trigger refresh instead of events?
-    this.editor.addEventListener("dragging", () => {
-      this.renderers.shapes.layer.refresh();
-    });
+
     this.initializeRenderers();
     this.setupEvents();
   }
@@ -75,6 +72,10 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on(["dragProgress", "dragEnd"], () => {
         this.renderers.shapes.layer.refresh();
       });
+    // TODO: Use state mutations to trigger refresh instead of events?
+    this.editor.addEventListener("dragging", () => {
+      this.renderers.shapes.layer.refresh();
+    });
   }
 
   /**
