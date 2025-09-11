@@ -74,6 +74,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on("dragProgress", () => {
         this.renderers.shapes.layer.refresh();
       })
+      // @ts-expect-error private event
       .on("setMultipleAttributes", this.links.onSetMultipleAttributes);
     // TODO: Use state mutations to trigger refresh instead of events?
     this.editor.addEventListener("dragging", () => {
