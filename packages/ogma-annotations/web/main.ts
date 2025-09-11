@@ -148,3 +148,10 @@ document.querySelector("#add-comment")!.addEventListener("click", () => {
     console.log("Comment added:", comment);
   });
 });
+
+document.getElementById("undo")!.addEventListener("click", () => {
+  control.undo();
+});
+document.getElementById("redo")!.addEventListener("click", () => {
+  control.redo();
+});

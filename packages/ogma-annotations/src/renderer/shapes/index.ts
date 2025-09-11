@@ -112,6 +112,10 @@ export class Shapes extends Renderer<SVGLayer> {
     });
   }
 
+  public refresh = (): void => {
+    this.layer.refresh();
+  };
+
   public destroy(): void {
     this.ogma.events.off(this._onRotate);
     this.layer.destroy();

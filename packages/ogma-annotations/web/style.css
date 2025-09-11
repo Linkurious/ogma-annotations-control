@@ -41,6 +41,14 @@ body {
   color: #444;
 }
 
+#controls > .separator {
+  border-left: 1px solid #ccc;
+  margin: 0 5px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 #controls > button:hover {
   background: #f0f0f0;
   color: #222;

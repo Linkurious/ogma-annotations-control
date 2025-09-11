@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Annotation, Text, createArrow, createText } from "../../src";
-import { HitDetector } from "../../src/interaction/detect";
+import { InteractionController as HitDetector } from "../../src/interaction/index";
 import { Store } from "../../src/store";
 
 describe("HitDetector", () => {

@@ -6,7 +6,7 @@ import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
-import { store } from "./store";
+import { store, undo, redo } from "./store";
 import {
   Annotation,
   AnnotationCollection,
@@ -74,16 +74,9 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private setupEvents() {
     this.ogma.events
-      .on("dragStart", () => (this.store.getState().isDragging = true))
-      .on("dragProgress", () => {
-        this.renderers.shapes.layer.refresh();
-      })
       // @ts-expect-error private event
       .on("setMultipleAttributes", this.links.onSetMultipleAttributes);
     // TODO: Use state mutations to trigger refresh instead of events?
-    this.editor.addEventListener("dragging", () => {
-      this.renderers.shapes.layer.refresh();
-    });
   }
 
   /**
@@ -119,6 +112,34 @@ export class Control extends EventEmitter<FeatureEvents> {
     } else this.store.getState().removeFeature(annotation.id);
     return this;
   }
+  /**
+   * Undo the last change
+   * @returns true if undo was successful, false if no changes to undo
+   */
+  public undo(): boolean {
+    if (!this.canUndo()) return false;
+    this.store.temporal.getState().undo();
+    return true;
+  }
+
+  /**
+   * Redo the last undone change
+   * @returns true if redo was successful, false if no changes to redo
+   */
+  public redo(): boolean {
+    if (!this.canRedo()) return false;
+    this.store.temporal.getState().redo();
+    return true;
+  }
+
+  public canUndo(): boolean {
+    return this.store.temporal.getState().pastStates.length > 0;
+  }
+
+  public canRedo(): boolean {
+    return this.store.temporal.getState().futureStates.length > 0;
+  }
+
   /**
    * Destroy the controller and its elements
    */
