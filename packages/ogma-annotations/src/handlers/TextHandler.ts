@@ -1,6 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
-import { defaultStyle as defaultTextStyle } from "../Editor_old/Box/defaults";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Text } from "../types";
 import { getBoxSize, updateBbox } from "../utils";
@@ -115,4 +114,6 @@ export class TextHandler extends Handler<Text, Handle> {
     //   })
     // );
   }
+  protected _dragStart(e: MouseEvent): void {}
+  protected _dragEnd(e: MouseEvent): void {}
 }

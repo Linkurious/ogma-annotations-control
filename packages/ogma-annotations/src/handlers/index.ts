@@ -1,8 +1,11 @@
 import Ogma from "@linkurious/ogma";
 import { ArrowHandler } from "./ArrowHandler";
 import { Handler } from "./Handler";
+import { Snapping } from "./snapping";
 import { TextHandler } from "./TextHandler";
 import { InteractionController } from "../interaction/index";
+import { Index } from "../interaction/spatialIndex";
+import { Links } from "../links";
 import { Store } from "../store";
 import { Annotation, Text } from "../types";
 
@@ -12,15 +15,31 @@ export class AnnotationEditor extends EventTarget {
   private currentTool: string = "select";
   private interaction: InteractionController;
   private ogma: Ogma;
+  private snapping: Snapping;
   private store: Store;
-  constructor(ogma: Ogma, store: Store, interactions: InteractionController) {
+  constructor(
+    ogma: Ogma,
+    store: Store,
+    index: Index,
+    links: Links,
+    interactions: InteractionController
+  ) {
     super();
     this.ogma = ogma;
     this.store = store;
     this.interaction = interactions;
+    this.snapping = new Snapping(
+      ogma,
+      { detectMargin: 10, magnetRadius: 10 },
+      index
+    );
     this.handlers.set("box", new TextHandler(this.ogma));
     this.handlers.set("text", new TextHandler(this.ogma));
-    this.handlers.set("arrow", new ArrowHandler(this.ogma));
+    this.handlers.set(
+      "arrow",
+      new ArrowHandler(this.ogma, this.snapping, links)
+    );
+
     this.handlers.forEach((handler) => {
       handler.addEventListener("dragstart", () => {
         this.dispatchEvent(new Event("dragstart"));
@@ -34,10 +53,6 @@ export class AnnotationEditor extends EventTarget {
       });
 
       handler.addEventListener("dragging", (e) => {
-        const position = (e as CustomEvent).detail.point;
-        const annotation = (e as CustomEvent).detail.annotation as Annotation;
-        const handle = (e as CustomEvent).detail.handle;
-        this.interaction.snapping.snap(annotation, position, handle.type);
         this.dispatchEvent(new CustomEvent("dragging", e));
         this.store.setState({ isDragging: true });
       });
@@ -48,6 +63,7 @@ export class AnnotationEditor extends EventTarget {
         this.store.setState({ hoveringHandle: false });
       });
     });
+    // TODO: use the right store subscription method
     this.store.subscribe((newState, oldState) => {
       const newlySelected = Array.from(newState.selectedFeatures.keys()).filter(
         (e) => !oldState.selectedFeatures.has(e)
@@ -92,15 +108,9 @@ export class AnnotationEditor extends EventTarget {
     this.activeHandler = handler;
     handler.setAnnotation(feature as Text);
     const container = this.ogma.getContainer()!;
-    container.addEventListener(
-      "mousemove",
-      handler.handleMouseMove.bind(handler)
-    );
-    container.addEventListener("mouseup", handler.handleMouseUp.bind(handler));
-    container.addEventListener(
-      "mousedown",
-      handler.handleMouseDown.bind(handler)
-    );
+    container.addEventListener("mousemove", handler.handleMouseMove);
+    container.addEventListener("mouseup", handler.handleMouseUp);
+    container.addEventListener("mousedown", handler.handleMouseDown);
   }
 
   getCurrentTool(): string {

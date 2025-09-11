@@ -54,6 +54,8 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.editor = new AnnotationEditor(
       this.ogma,
       this.store,
+      this.index,
+      this.links,
       this.interactions
     );
 

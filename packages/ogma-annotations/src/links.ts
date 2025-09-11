@@ -105,7 +105,7 @@ export class Links {
     this.links.forEach(cb);
   }
 
-  snap() {
+  update() {
     const state = this.store.getState();
     const nodeIds = Array.from(this.nodeToLink.keys());
     const nodeIdToIndex = new Map<NodeId, number>();

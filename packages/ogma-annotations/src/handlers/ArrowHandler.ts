@@ -1,15 +1,21 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
+import { Snap, Snapping } from "./snapping";
+import { Links } from "../links";
 import { Arrow } from "../types";
-
 type Handle = {
   type: "start" | "end";
   point: Point;
 };
 
 export class ArrowHandler extends Handler<Arrow, Handle> {
-  constructor(ogma: Ogma) {
+  private snapping: Snapping;
+  private links: Links;
+  private snap: Snap | null = null;
+  constructor(ogma: Ogma, snapping: Snapping, links: Links) {
     super(ogma);
+    this.snapping = snapping;
+    this.links = links;
   }
 
   _detectHandle(e: MouseEvent) {
@@ -54,21 +60,35 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     const annotation = this.annotation!;
     const mousePoint = this.clientToCanvas(e);
     const handle = this.hoveredHandle;
-
+    this.snap = this.snapping.snap(annotation, mousePoint);
+    const point = this.snap?.point || mousePoint;
     if (handle.type === "start") {
-      annotation.geometry.coordinates[0] = [mousePoint.x, mousePoint.y];
+      annotation.geometry.coordinates[0] = [point.x, point.y];
     } else if (handle.type === "end") {
-      annotation.geometry.coordinates[1] = [mousePoint.x, mousePoint.y];
+      annotation.geometry.coordinates[1] = [point.x, point.y];
     }
 
     this.dispatchEvent(
       new CustomEvent("dragging", {
         detail: {
-          point: mousePoint,
+          point,
           annotation,
           handle
         }
       })
     );
   }
+  protected _dragEnd(e: MouseEvent) {
+    if (!this.snap || !this.annotation || !this.hoveredHandle) return;
+    const handle = this.hoveredHandle;
+
+    this.links.add(
+      this.annotation,
+      handle.type,
+      this.snap.id,
+      this.snap.type,
+      this.snap.magnet
+    );
+  }
+  protected _dragStart(e: MouseEvent): void {}
 }

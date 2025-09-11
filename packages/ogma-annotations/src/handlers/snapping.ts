@@ -1,8 +1,8 @@
 import type Ogma from "@linkurious/ogma";
-import type { Node, NodeList, Point } from "@linkurious/ogma";
-import { Index } from "./spatialIndex";
+import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
+import { Index } from "../interaction/spatialIndex";
 import { getTransformMatrix } from "../renderer/shapes/utils";
-import { Annotation, Text, isArrow, isText } from "../types";
+import { Annotation, Id, Text, isArrow, isText } from "../types";
 import { getBoxSize, getTextBbox } from "../utils";
 import { subtract, add, multiply, length, mul, dot } from "../vec";
 
@@ -18,8 +18,20 @@ const MAGNETS: Point[] = [
 ];
 const xs = { x: 1, y: 0 };
 const ys = { x: 0, y: 1 };
-
-export type SnappingOptions = {
+export type TextSnap = {
+  point: Point;
+  magnet: Point;
+  type: "text";
+  id: Id;
+};
+export type NodeSnap = {
+  point: Point;
+  id: NodeId;
+  magnet: Point;
+  type: "node";
+};
+export type Snap = TextSnap | NodeSnap;
+type SnappingOptions = {
   /**
    * The color of the magnet points
    */
@@ -75,21 +87,11 @@ export class Snapping extends EventTarget {
     this.spatialIndex = spatialIndex;
   }
 
-  public snap(annotation: Annotation, position: Point, side: "start" | "end") {
-    if (!isArrow(annotation)) return;
+  public snap(annotation: Annotation, position: Point) {
+    if (!isArrow(annotation)) return null;
     const snapping = this._findMagnet(position);
-    if (!snapping) return;
-    const { point } = snapping;
-    if (side === "start") {
-      annotation.geometry.coordinates[0] = [point.x, point.y];
-    } else if (side === "end") {
-      annotation.geometry.coordinates[1] = [point.x, point.y];
-    }
-    this.dispatchEvent(
-      new CustomEvent("snapped", {
-        detail: { ...snapping, annotation, side }
-      })
-    );
+    if (!snapping) return null;
+    return snapping;
   }
   private _findMagnet(point: Point) {
     const snapWindow = {
@@ -116,7 +118,7 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private _snapToText(point: Point, texts: Text[]) {
+  private _snapToText(point: Point, texts: Text[]): TextSnap | null {
     for (const text of texts) {
       const bbox = getTextBbox(text);
       const tl = { x: bbox[0], y: bbox[1] };
@@ -128,9 +130,9 @@ export class Snapping extends EventTarget {
         if (dist >= this.options.magnetRadius) continue;
         return {
           point: { x: magnet.x, y: magnet.y },
-          // point: magnet,
+          type: "text" as const,
           magnet: vec,
-          text
+          id: text.id
         };
       }
 
@@ -189,19 +191,23 @@ export class Snapping extends EventTarget {
         x: snap.min.x + snap.axis.x * projection,
         y: snap.min.y + snap.axis.y * projection
       };
-      const magnet = subtract(snapPoint, { x: matrix.x, y: matrix.y }).multiply(
-        { x: 1 / size.width, y: 1 / size.height }
+      const magnet = multiply(
+        subtract(snapPoint, { x: matrix.x, y: matrix.y }),
+        {
+          x: 1 / size.width,
+          y: 1 / size.height
+        }
       );
       return {
         point: snapPoint,
         magnet,
         type: "text" as const,
-        text: text.id
+        id: text.id
       };
     }
     return null;
   }
-  private _snapToNodes(point: Point, nodes: NodeList) {
+  private _snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {
     const xyrs = nodes.getAttributes(["x", "y", "radius"]);
     for (let i = 0; i < xyrs.length; i++) {
       const xyr = xyrs[i];
@@ -217,7 +223,7 @@ export class Snapping extends EventTarget {
       const magnet = snapToCenter ? { x: 0.5, y: 0.5 } : unit;
       return {
         point: snapPoint,
-        node: nodes.get(i).getId(),
+        id: nodes.get(i).getId(),
         magnet,
         type: "node" as const
       };

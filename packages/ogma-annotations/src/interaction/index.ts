@@ -1,7 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { Add } from "./add";
 import { Rotation } from "./rotation";
-import { Snapping } from "./snapping";
 import { Index } from "./spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
@@ -21,10 +20,9 @@ export class InteractionController {
     maxX: Infinity,
     maxY: Infinity
   };
-  private rotation: Rotation;
   private links: Links;
+  private rotation: Rotation;
   private add: Add;
-  public snapping: Snapping;
   constructor(
     private ogma: Ogma,
     private store: Store,
@@ -46,25 +44,12 @@ export class InteractionController {
       capture: true
     });
     this.links = links;
-    this.rotation = new Rotation(ogma, store, links);
-    this.add = new Add(ogma, store, links);
-    this.snapping = new Snapping(
-      ogma,
-      { detectMargin: 10, magnetRadius: 10 },
-      index
-    );
-    this.snapping.addEventListener("snapped", (evt) => {
-      const detail = (evt as CustomEvent).detail;
-      this.links.add(
-        detail.annotation,
-        detail.side,
-        detail.node,
-        detail.type,
-        detail.magnet
-      );
-    });
+    this.rotation = new Rotation(ogma, links);
+    this.add = new Add(store, links);
+
+    // TODO: use the setMultipleAttributes instead
     this.ogma.events.on(["dragProgress", "dragEnd"], () => {
-      this.links.snap();
+      this.links.update();
     });
   }
 

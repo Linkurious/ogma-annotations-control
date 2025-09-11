@@ -17,7 +17,7 @@ export abstract class Handler<
     this.ogma = ogma;
   }
 
-  handleMouseMove(e: MouseEvent): void {
+  handleMouseMove = (e: MouseEvent): void => {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
     const wasHovered = Boolean(this.hoveredHandle);
@@ -31,8 +31,8 @@ export abstract class Handler<
       if (isHovered) this.dispatchEvent(new Event("mouseenter"));
       else this.dispatchEvent(new Event("mouseleave"));
     }
-  }
-  handleMouseDown(e: MouseEvent): void {
+  };
+  handleMouseDown = (e: MouseEvent): void => {
     if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
     e.preventDefault();
     e.stopPropagation();
@@ -40,6 +40,7 @@ export abstract class Handler<
     this.dragging = true;
     this.dragStartPoint = this.clientToCanvas(e);
     this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
+    this._dragStart(e);
     this.dispatchEvent(new Event("dragstart"));
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
@@ -47,15 +48,16 @@ export abstract class Handler<
     this.ogma.setOptions({
       interactions: { pan: { enabled: false } }
     });
-  }
-  handleMouseUp(e: MouseEvent): void {
+  };
+  handleMouseUp = (e: MouseEvent): void => {
     if (!this.isActive() || !this.dragging) return;
     this.dragging = false;
     this.ogma.setOptions({
       interactions: { pan: { enabled: this.ogmaPanningOption } }
     });
+    this._dragEnd(e);
     this.dispatchEvent(new Event("dragend"));
-  }
+  };
   cancelEdit() {
     if (!this.isActive() || !this.annotation || !this.dragStartAnnotation)
       return;
@@ -80,6 +82,9 @@ export abstract class Handler<
    * @param e Mouse event
    */
   protected abstract _drag(e: MouseEvent): void;
+
+  protected abstract _dragStart(e: MouseEvent): void;
+  protected abstract _dragEnd(e: MouseEvent): void;
 
   protected clientToCanvas(e: MouseEvent): Point {
     return this.ogma.view.screenToGraphCoordinates({

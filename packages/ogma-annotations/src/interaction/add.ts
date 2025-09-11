@@ -1,14 +1,11 @@
-import Ogma from "@linkurious/ogma";
 import { Links } from "../links";
-import { Store, store } from "../store";
+import { Store } from "../store";
 import { Arrow } from "../types";
 
 export class Add {
-  private ogma: Ogma;
   private links: Links;
   private store: Store;
-  constructor(ogma: Ogma, store: Store, links: Links) {
-    this.ogma = ogma;
+  constructor(store: Store, links: Links) {
     this.store = store;
     this.links = links;
     this.store.subscribe(this.onAddArrow);
@@ -45,13 +42,6 @@ export class Add {
           arrow.properties.link.end.magnet!
         );
       }
-
-      // const points = arrow.points;
-      // if (points.length < 2) return;
-      // const start = points[0];
-      // const end = points[points.length - 1];
-      // this.links.add(arrow, "start", "", "none", start);
-      // this.links.add(arrow, "end", "", "none", end);
     });
   };
 }
