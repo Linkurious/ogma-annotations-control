@@ -1,4 +1,9 @@
-import type { NodeId, Ogma, Point } from "@linkurious/ogma";
+import type {
+  NodeId,
+  Ogma,
+  Point,
+  SetMultipleAttributesEvent
+} from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
 import { Store } from "./store";
 import type { Arrow, Id, TargetType, Link, Side, Text } from "./types";
@@ -95,15 +100,20 @@ export class Links {
     return this;
   }
 
-  getArrowLink(arrowId: Id, side: Side): Link | null {
-    const id = this.linksByArrowId.get(arrowId)?.[side];
-    if (!id) return null;
-    return this.links.get(id) || null;
-  }
-
-  forEach(cb: (link: Link) => void) {
-    this.links.forEach(cb);
-  }
+  public onSetMultipleAttributes = ({
+    elements,
+    updatedAttributes
+  }: SetMultipleAttributesEvent<unknown, unknown>) => {
+    const attributesSet = new Set(updatedAttributes);
+    if (
+      !elements.isNode ||
+      (!attributesSet.has("x") &&
+        !attributesSet.has("y") &&
+        !attributesSet.has("radius"))
+    )
+      return;
+    this.update();
+  };
 
   update() {
     const state = this.store.getState();
@@ -175,7 +185,8 @@ export class Links {
     });
   }
 
-  _getBoxSnapPoint(box: Text, link: Link) {
+  private _getBoxSnapPoint(box: Text, link: Link) {
+    // TODO: handle rotated views
     const bb = getBbox(box);
     const point = add(
       { x: bb[0], y: bb[1] },
@@ -183,7 +194,10 @@ export class Links {
     );
     return [point.x, point.y];
   }
-  _getNodeSnapPoint(xyr: { x: number; y: number; radius: number }, vec: Point) {
+  private _getNodeSnapPoint(
+    xyr: { x: number; y: number; radius: number },
+    vec: Point
+  ) {
     if (vec.x === 0 && vec.y === 0) {
       return [xyr.x, xyr.y];
     }

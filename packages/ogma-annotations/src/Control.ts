@@ -71,9 +71,10 @@ export class Control extends EventEmitter<FeatureEvents> {
   private setupEvents() {
     this.ogma.events
       .on("dragStart", () => (this.store.getState().isDragging = true))
-      .on(["dragProgress", "dragEnd"], () => {
+      .on("dragProgress", () => {
         this.renderers.shapes.layer.refresh();
-      });
+      })
+      .on("setMultipleAttributes", this.links.onSetMultipleAttributes);
     // TODO: Use state mutations to trigger refresh instead of events?
     this.editor.addEventListener("dragging", () => {
       this.renderers.shapes.layer.refresh();

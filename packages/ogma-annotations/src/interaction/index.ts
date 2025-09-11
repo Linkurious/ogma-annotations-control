@@ -46,11 +46,6 @@ export class InteractionController {
     this.links = links;
     this.rotation = new Rotation(ogma, links);
     this.add = new Add(store, links);
-
-    // TODO: use the setMultipleAttributes instead
-    this.ogma.events.on(["dragProgress", "dragEnd"], () => {
-      this.links.update();
-    });
   }
 
   detect(x: number, y: number, angle: number): Annotation | null {
