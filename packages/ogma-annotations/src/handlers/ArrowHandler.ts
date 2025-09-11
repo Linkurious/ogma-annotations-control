@@ -4,6 +4,8 @@ import { Snap, Snapping } from "./snapping";
 import { Links } from "../links";
 import { Arrow } from "../types";
 import { Store } from "../store";
+import { handleDetectionThreshold } from "../constants";
+
 type Handle = {
   type: "start" | "end";
   point: Point;
@@ -20,10 +22,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.links = links;
   }
 
-  protected _detectHandle(evt: MouseEvent) {
+  protected _detectHandle(evt: MouseEvent, zoom: number) {
     const annotation = this.annotation!;
     const mousePoint = this.clientToCanvas(evt);
-    const margin = 10; // Larger margin for easier arrow endpoint selection
+    const margin = handleDetectionThreshold; // Larger margin for easier arrow endpoint selection
 
     const startPoint = annotation.geometry.coordinates[0];
     const endPoint = annotation.geometry.coordinates[1];

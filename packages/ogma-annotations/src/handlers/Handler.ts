@@ -1,6 +1,7 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Annotation } from "../types";
 import { Store } from "../store";
+import { clientToContainerPosition } from "../utils";
 
 export abstract class Handler<
   T extends Annotation,
@@ -21,12 +22,12 @@ export abstract class Handler<
     this.ogma = ogma;
   }
 
-  handleMouseMove = (e: MouseEvent): void => {
+  handleMouseMove = (evt: MouseEvent): void => {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
     const wasHovered = Boolean(this.hoveredHandle);
-    if (!this.dragging) this._detectHandle(e);
-    else if (this.dragStartPoint) this._drag(e);
+    if (!this.dragging) this._detectHandle(evt, this.ogma.view.getZoom());
+    else if (this.dragStartPoint) this._drag(evt);
 
     const isHovered = Boolean(this.hoveredHandle);
     if (wasHovered !== isHovered) {
@@ -34,15 +35,16 @@ export abstract class Handler<
       else this.dispatchEvent(new Event("mouseleave"));
     }
   };
-  handleMouseDown = (e: MouseEvent): void => {
+
+  handleMouseDown = (evt: MouseEvent): void => {
     if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
-    e.preventDefault();
-    e.stopPropagation();
+    evt.preventDefault();
+    evt.stopPropagation();
     // start resizing
     this.dragging = true;
-    this.dragStartPoint = this.clientToCanvas(e);
+    this.dragStartPoint = this.clientToCanvas(evt);
     this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
-    this._dragStart(e);
+    this._dragStart(evt);
     this.dispatchEvent(new Event("dragstart"));
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
@@ -51,15 +53,17 @@ export abstract class Handler<
       interactions: { pan: { enabled: false } }
     });
   };
-  handleMouseUp = (e: MouseEvent): void => {
+
+  handleMouseUp = (evt: MouseEvent): void => {
     if (!this.isActive() || !this.dragging) return;
     this.dragging = false;
     this.ogma.setOptions({
       interactions: { pan: { enabled: this.ogmaPanningOption } }
     });
-    this._dragEnd(e);
+    this._dragEnd(evt);
     this.dispatchEvent(new Event("dragend"));
   };
+
   cancelEdit() {
     if (!this.isActive() || !this.annotation || !this.dragStartAnnotation)
       return;
@@ -70,29 +74,29 @@ export abstract class Handler<
       interactions: { pan: { enabled: this.ogmaPanningOption } }
     });
   }
+
   // Keyboard events
-  handleKeyDown?(e: KeyboardEvent): void;
-  handleKeyUp?(e: KeyboardEvent): void;
+  handleKeyDown?(evt: KeyboardEvent): void;
+  handleKeyUp?(evt: KeyboardEvent): void;
 
   /**
    * Detects which handle is being hovered over.
-   * @param e Mouse event
+   * @param evt Mouse event
    */
-  protected abstract _detectHandle(e: MouseEvent): void;
+  protected abstract _detectHandle(evt: MouseEvent, zoom: number): void;
   /**
    * Handles the dragging of the selected handle.
-   * @param e Mouse event
+   * @param evt Mouse event
    */
-  protected abstract _drag(e: MouseEvent): void;
+  protected abstract _drag(evt: MouseEvent): void;
 
-  protected abstract _dragStart(e: MouseEvent): void;
-  protected abstract _dragEnd(e: MouseEvent): void;
+  protected abstract _dragStart(evt: MouseEvent): void;
+  protected abstract _dragEnd(evt: MouseEvent): void;
 
-  protected clientToCanvas(e: MouseEvent): Point {
-    return this.ogma.view.screenToGraphCoordinates({
-      x: e.clientX,
-      y: e.clientY
-    });
+  protected clientToCanvas(evt: MouseEvent): Point {
+    const ogma = this.ogma;
+    const screenPoint = clientToContainerPosition(evt, ogma.getContainer());
+    return ogma.view.screenToGraphCoordinates(screenPoint);
   }
 
   setAnnotation(annotation: T): void {

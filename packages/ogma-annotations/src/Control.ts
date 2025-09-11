@@ -6,7 +6,7 @@ import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
-import { store, undo, redo } from "./store";
+import { store } from "./store";
 import {
   Annotation,
   AnnotationCollection,
@@ -145,6 +145,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    */
   public destroy() {
     this.interactions.destroy();
+    this.editor.destroy();
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

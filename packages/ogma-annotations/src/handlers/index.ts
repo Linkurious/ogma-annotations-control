@@ -7,7 +7,7 @@ import { InteractionController } from "../interaction/index";
 import { Index } from "../interaction/spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
-import { Annotation, Text } from "../types";
+import { Annotation, Id, Text } from "../types";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();
@@ -17,6 +17,7 @@ export class AnnotationEditor extends EventTarget {
   private ogma: Ogma;
   private snapping: Snapping;
   private store: Store;
+
   constructor(
     ogma: Ogma,
     store: Store,
@@ -65,27 +66,24 @@ export class AnnotationEditor extends EventTarget {
     });
     this.store.subscribe(
       (state) => state.selectedFeatures,
-      (selectedFeatures, previousSelectedFeatures) => {
-        const newlySelected = Array.from(selectedFeatures.keys()).filter(
-          (e) => !previousSelectedFeatures.has(e)
+      (current, previous) => {
+        const selected = Array.from(current.keys()).filter(
+          (f) => !previous.has(f)
         );
-        const removedFromSelection = Array.from(
-          previousSelectedFeatures
-        ).filter((e) => !selectedFeatures.has(e));
-        if (!newlySelected.length && !removedFromSelection.length) return;
+        const unselected = Array.from(previous.keys()).filter(
+          (f) => !current.has(f)
+        );
 
-        removedFromSelection.forEach((e) => {
-          this.stopEditingFeature(e);
-        });
-        newlySelected.forEach((e) => {
-          this.editFeature(e);
-        });
+        if (!selected.length && !unselected.length) return;
+
+        unselected.forEach((f) => this.stopEditingFeature(f));
+        selected.forEach((f) => this.editFeature(f));
       }
     );
   }
 
-  stopEditingFeature(featureId: string) {
-    const feature = this.store.getState().features[featureId];
+  stopEditingFeature(id: Id) {
+    const feature = this.store.getState().features[id];
     if (!feature) return;
 
     // Get handler for this feature type
@@ -100,8 +98,8 @@ export class AnnotationEditor extends EventTarget {
     container.removeEventListener("mousedown", handler.handleMouseDown);
   }
 
-  editFeature(featureId: string) {
-    const feature = this.store.getState().features[featureId];
+  editFeature(id: Id) {
+    const feature = this.store.getState().features[id];
     if (!feature) return;
     // Get handler for this feature type
     const handlerType = feature.properties.type;
@@ -120,7 +118,7 @@ export class AnnotationEditor extends EventTarget {
     return this.currentTool;
   }
 
-  getActiveHandler(): TextHandler | undefined {
+  getActiveHandler() {
     return this.activeHandler;
   }
 

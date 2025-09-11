@@ -123,12 +123,7 @@ export class InteractionController {
     if (newHoveredId !== currentHoveredId)
       state.setHoveredFeature(newHoveredId);
 
-    this.setCursor(annotation ? "pointer" : "default");
-
-    const container = this.ogma.getContainer()?.firstChild;
-    if (container) {
-      (container as HTMLElement).style.cursor = annotation ? "pointer" : "";
-    }
+    this.setCursor(newHoveredId ? "pointer" : "default");
   };
 
   private onMouseClick = (evt: MouseEvent) => {

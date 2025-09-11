@@ -14,3 +14,5 @@ export const EVT_UPDATE = "update";
 export const EVT_LINK = "link";
 
 export const DATA_ATTR = "data-annotation";
+
+export const handleDetectionThreshold = 10; // pixels

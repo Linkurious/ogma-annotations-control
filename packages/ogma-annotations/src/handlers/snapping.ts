@@ -18,19 +18,23 @@ const MAGNETS: Point[] = [
 ];
 const xs = { x: 1, y: 0 };
 const ys = { x: 0, y: 1 };
+
 export type TextSnap = {
   point: Point;
   magnet: Point;
   type: "text";
   id: Id;
 };
+
 export type NodeSnap = {
   point: Point;
   id: NodeId;
   magnet: Point;
   type: "node";
 };
+
 export type Snap = TextSnap | NodeSnap;
+
 type SnappingOptions = {
   /**
    * The color of the magnet points
@@ -93,6 +97,7 @@ export class Snapping extends EventTarget {
     if (!snapping) return null;
     return snapping;
   }
+
   private _findMagnet(point: Point) {
     const snapWindow = {
       minX: point.x - this.options.detectMargin,
