@@ -14,7 +14,10 @@ export class Handles extends Renderer<CanvasLayer> {
     super(ogma, store);
     this.layer = ogma.layers.addCanvasLayer(this.render);
     this.store.subscribe(
-      (state) => state.selectedFeatures,
+      (state) => ({
+        selectedFeatures: state.selectedFeatures,
+        liveUpdates: state.liveUpdates
+      }),
       this.refresh
     );
     ogma.events.on("zoom", this.refresh);
@@ -27,6 +30,7 @@ export class Handles extends Renderer<CanvasLayer> {
   render = (ctx: CanvasRenderingContext2D) => {
     const state = this.store.getState();
     const features = state.features;
+    const liveUpdates = state.liveUpdates;
     const scale = 1 / this.ogma.view.getZoom();
 
     ctx.beginPath();
@@ -34,9 +38,15 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.fillStyle = "#fff";
     ctx.lineWidth = 2 * scale;
     ctx.strokeStyle = "#0099ff";
-    Object.values(features).forEach((feature) => {
+
+    Object.values(features).forEach((baseFeature) => {
       // Only render handles for selected features
-      if (!state.isSelected(feature.id)) return;
+      if (!state.isSelected(baseFeature.id)) return;
+
+      // Merge feature with live updates if they exist
+      const feature = liveUpdates[baseFeature.id]
+        ? { ...baseFeature, ...liveUpdates[baseFeature.id] }
+        : baseFeature;
 
       if (isArrow(feature)) {
         // render two circle handles at the start and end of the arrow

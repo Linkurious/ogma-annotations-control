@@ -33,11 +33,11 @@ export class AnnotationEditor extends EventTarget {
       { detectMargin: 10, magnetRadius: 10 },
       index
     );
-    this.handlers.set("box", new TextHandler(this.ogma));
-    this.handlers.set("text", new TextHandler(this.ogma));
+    this.handlers.set("box", new TextHandler(this.ogma, this.store));
+    this.handlers.set("text", new TextHandler(this.ogma, this.store));
     this.handlers.set(
       "arrow",
-      new ArrowHandler(this.ogma, this.snapping, links)
+      new ArrowHandler(this.ogma, this.store, this.snapping, links)
     );
 
     this.handlers.forEach((handler) => {
@@ -69,11 +69,11 @@ export class AnnotationEditor extends EventTarget {
         const newlySelected = Array.from(selectedFeatures.keys()).filter(
           (e) => !previousSelectedFeatures.has(e)
         );
-        const removedFromSelection = Array.from(previousSelectedFeatures).filter(
-          (e) => !selectedFeatures.has(e)
-        );
+        const removedFromSelection = Array.from(
+          previousSelectedFeatures
+        ).filter((e) => !selectedFeatures.has(e));
         if (!newlySelected.length && !removedFromSelection.length) return;
-        
+
         removedFromSelection.forEach((e) => {
           this.stopEditingFeature(e);
         });

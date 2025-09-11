@@ -112,16 +112,16 @@ export class InteractionController {
       this.ogma.getContainer()
     );
 
-    if (this.store.getState().isDragging) return;
+    const state = this.store.getState();
+    if (state.isDragging) return;
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y, this.ogma.view.getAngle());
 
     // Update hover state
     const newHoveredId = annotation?.id ?? null;
-    const currentHoveredId = this.store.getState().hoveredFeature;
-    if (newHoveredId !== currentHoveredId) {
-      this.store.getState().setHoveredFeature(newHoveredId);
-    }
+    const currentHoveredId = state.hoveredFeature;
+    if (newHoveredId !== currentHoveredId)
+      state.setHoveredFeature(newHoveredId);
 
     this.setCursor(annotation ? "pointer" : "default");
 
@@ -157,6 +157,7 @@ export class InteractionController {
     const container = this.ogma.getContainer()?.firstChild;
     if (container) (container as HTMLElement).style.cursor = cursor;
   }
+
   public setMode(mode: "default" | "add" | "edit" | "link" | "rotate") {
     // TODO: implement mode switching
     // this.store.getState().setMode(mode);

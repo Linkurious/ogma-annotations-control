@@ -14,6 +14,7 @@ interface AnnotationState {
   hoveredFeature: Id | null;
   hoveringHandle: boolean;
   selectedFeatures: Set<Id>;
+  lastChangedFeatures: Id[];
 
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
@@ -57,6 +58,7 @@ export const store = create<AnnotationState>()(
         hoveringHandle: false,
         hoveredFeature: null,
         selectedFeatures: new Set(),
+        lastChangedFeatures: [],
 
         removeFeature: (id) =>
           set((state) => {
@@ -94,14 +96,7 @@ export const store = create<AnnotationState>()(
               ...state.liveUpdates,
               [id]: {
                 ...state.liveUpdates[id],
-                ...updates,
-                // Deep merge for nested properties
-                properties: updates.properties
-                  ? {
-                      ...state.liveUpdates[id]?.properties,
-                      ...updates.properties
-                    }
-                  : state.liveUpdates[id]?.properties
+                ...updates
               } as Annotation
             }
           }));
@@ -111,21 +106,24 @@ export const store = create<AnnotationState>()(
         commitLiveUpdates: () => {
           const { features, liveUpdates } = get();
           const updatedFeatures = { ...features };
+          const changedFeatureIds: Id[] = [];
 
-          // Merge live updates into features
+          // Merge live updates into features and track changes
           Object.entries(liveUpdates).forEach(([id, updates]) => {
             if (updatedFeatures[id] && Object.keys(updates).length > 0) {
               updatedFeatures[id] = {
                 ...updatedFeatures[id],
                 ...updates
               } as Annotation;
+              changedFeatureIds.push(id);
             }
           });
 
           set({
             features: updatedFeatures,
             liveUpdates: {},
-            isDragging: false
+            isDragging: false,
+            lastChangedFeatures: changedFeatureIds // Track which features changed
           });
         },
 

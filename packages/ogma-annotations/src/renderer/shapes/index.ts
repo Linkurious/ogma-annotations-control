@@ -5,7 +5,7 @@ import { renderText } from "./text";
 import { getTransformMatrix } from "./utils";
 import { DATA_ATTR } from "../../constants";
 import { Store } from "../../store";
-import { Id, isArrow, isBox, isText } from "../../types";
+import { Annotation, Id, isArrow, isBox, isText } from "../../types";
 import { createSVGElement } from "../../utils";
 import { Renderer } from "../base";
 
@@ -58,14 +58,18 @@ export class Shapes extends Renderer<SVGLayer> {
   };
 
   render: SVGDrawingFunction = (root) => {
-    const { features, hoveredFeature, selectedFeatures } =
+    const { features, hoveredFeature, selectedFeatures, liveUpdates } =
       this.store.getState();
     root.innerHTML = "";
     const view = this.ogma.view.get();
 
     const arrowsRoot = createSVGElement<SVGGElement>("g");
     root.appendChild(arrowsRoot);
-    for (const feature of Object.values(features)) {
+
+    for (let feature of Object.values(features)) {
+      if (liveUpdates[feature.id])
+        feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
+
       if (isBox(feature)) renderBox(root, feature, view);
       else if (isText(feature)) renderText(root, feature, view);
       else if (isArrow(feature))

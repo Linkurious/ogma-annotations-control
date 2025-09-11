@@ -1,5 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Annotation } from "../types";
+import { Store } from "../store";
 
 export abstract class Handler<
   T extends Annotation,
@@ -12,8 +13,11 @@ export abstract class Handler<
   protected dragStartAnnotation?: T;
   protected hoveredHandle?: Handle;
   protected ogmaPanningOption: boolean = false;
-  constructor(ogma: Ogma) {
+  protected store: Store;
+
+  constructor(ogma: Ogma, store: Store) {
     super();
+    this.store = store;
     this.ogma = ogma;
   }
 
@@ -21,11 +25,9 @@ export abstract class Handler<
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
     const wasHovered = Boolean(this.hoveredHandle);
-    if (!this.dragging) {
-      this._detectHandle(e);
-    } else if (this.dragStartPoint) {
-      this._drag(e);
-    }
+    if (!this.dragging) this._detectHandle(e);
+    else if (this.dragStartPoint) this._drag(e);
+
     const isHovered = Boolean(this.hoveredHandle);
     if (wasHovered !== isHovered) {
       if (isHovered) this.dispatchEvent(new Event("mouseenter"));

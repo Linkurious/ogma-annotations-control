@@ -4,6 +4,8 @@ import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Text } from "../types";
 import { getBoxSize, updateBbox } from "../utils";
 import { dot } from "../vec";
+import { Store } from "../store";
+
 type Handle = {
   edge: "top" | "right" | "bottom" | "left";
   min: Point;
@@ -12,8 +14,8 @@ type Handle = {
   norm: Point;
 };
 export class TextHandler extends Handler<Text, Handle> {
-  constructor(ogma: Ogma) {
-    super(ogma);
+  constructor(ogma: Ogma, store: Store) {
+    super(ogma, store);
   }
 
   _detectHandle(e: MouseEvent) {

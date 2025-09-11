@@ -9,12 +9,41 @@ export class Index extends Rtree<Annotation> {
   constructor(store: Store) {
     super();
     this.store = store;
+
+    // Rebuild index when features are added/removed
     this.store.subscribe(
       (state) => state.features,
       (features) => {
         this.clear();
         Object.values(features).forEach((feature) => this.insert(feature));
       }
+    );
+
+    // Update index when live updates are committed (features are modified)
+    this.store.subscribe(
+      (state) => ({
+        features: state.features,
+        isDragging: state.isDragging,
+        lastChangedFeatures: state.lastChangedFeatures
+      }),
+      (current, previous) => {
+        // Only update when dragging stops (live updates are committed)
+        if (previous && previous.isDragging && !current.isDragging) {
+          // Efficiently update only changed features instead of rebuilding entire index
+          if (current.lastChangedFeatures.length > 0) {
+            current.lastChangedFeatures.forEach((id) => {
+              // Remove old version of the feature from index
+              const oldFeature = previous.features[id];
+              if (oldFeature) this.remove(oldFeature);
+
+              // Insert updated version
+              const newFeature = current.features[id];
+              if (newFeature) this.insert(newFeature);
+            });
+          }
+        }
+      },
+      { equalityFn: (a, b) => a.isDragging === b.isDragging }
     );
   }
   compareMinX(a: Annotation, b: Annotation): number {

@@ -3,6 +3,7 @@ import { Handler } from "./Handler";
 import { Snap, Snapping } from "./snapping";
 import { Links } from "../links";
 import { Arrow } from "../types";
+import { Store } from "../store";
 type Handle = {
   type: "start" | "end";
   point: Point;
@@ -12,15 +13,16 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   private snapping: Snapping;
   private links: Links;
   private snap: Snap | null = null;
-  constructor(ogma: Ogma, snapping: Snapping, links: Links) {
-    super(ogma);
+
+  constructor(ogma: Ogma, store: Store, snapping: Snapping, links: Links) {
+    super(ogma, store);
     this.snapping = snapping;
     this.links = links;
   }
 
-  _detectHandle(e: MouseEvent) {
+  protected _detectHandle(evt: MouseEvent) {
     const annotation = this.annotation!;
-    const mousePoint = this.clientToCanvas(e);
+    const mousePoint = this.clientToCanvas(evt);
     const margin = 10; // Larger margin for easier arrow endpoint selection
 
     const startPoint = annotation.geometry.coordinates[0];
@@ -36,59 +38,82 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         Math.pow(mousePoint.y - endPoint[1], 2)
     );
 
-    if (startDistance < margin) {
+    this.hoveredHandle = undefined;
+    if (startDistance < margin)
       this.hoveredHandle = {
         type: "start",
         point: { x: startPoint[0], y: startPoint[1] }
       };
-    } else if (endDistance < margin) {
+    else if (endDistance < margin)
       this.hoveredHandle = {
         type: "end",
         point: { x: endPoint[0], y: endPoint[1] }
       };
-    } else {
-      this.hoveredHandle = undefined;
-    }
   }
 
-  _drag(e: MouseEvent) {
-    if (!this.dragStartPoint || !this.hoveredHandle) return;
+  protected _drag(evt: MouseEvent) {
+    if (!this.dragStartPoint || !this.hoveredHandle || !this.annotation) return;
 
-    e.stopPropagation();
-    e.stopImmediatePropagation();
+    evt.stopPropagation();
+    evt.stopImmediatePropagation();
 
-    const annotation = this.annotation!;
-    const mousePoint = this.clientToCanvas(e);
+    const mousePoint = this.clientToCanvas(evt);
     const handle = this.hoveredHandle;
-    this.snap = this.snapping.snap(annotation, mousePoint);
+    this.snap = this.snapping.snap(this.annotation, mousePoint);
     const point = this.snap?.point || mousePoint;
+
+    // Create updated coordinates
+    const newCoordinates = [...this.annotation.geometry.coordinates];
     if (handle.type === "start") {
-      annotation.geometry.coordinates[0] = [point.x, point.y];
+      newCoordinates[0] = [point.x, point.y];
     } else if (handle.type === "end") {
-      annotation.geometry.coordinates[1] = [point.x, point.y];
+      newCoordinates[1] = [point.x, point.y];
     }
+
+    // Apply live update to store instead of direct mutation
+    this.store.getState().applyLiveUpdate(this.annotation.id, {
+      id: this.annotation.id,
+      properties: this.annotation.properties,
+      geometry: {
+        type: this.annotation.geometry.type,
+        coordinates: newCoordinates
+      }
+    });
 
     this.dispatchEvent(
       new CustomEvent("dragging", {
         detail: {
           point,
-          annotation,
+          annotation: this.annotation,
           handle
         }
       })
     );
   }
-  protected _dragEnd() {
-    if (!this.snap || !this.annotation || !this.hoveredHandle) return;
-    const handle = this.hoveredHandle;
-
-    this.links.add(
-      this.annotation,
-      handle.type,
-      this.snap.id,
-      this.snap.type,
-      this.snap.magnet
-    );
+  protected _dragStart() {
+    if (!this.annotation) return;
+    // Start live update tracking for this annotation
+    this.store.getState().startLiveUpdate([this.annotation.id]);
   }
-  protected _dragStart() {}
+
+  protected _dragEnd() {
+    if (!this.annotation) return;
+
+    // Commit all live updates to create a single history entry
+    this.store.getState().commitLiveUpdates();
+
+    // Handle snapping if applicable
+    if (this.snap && this.hoveredHandle) {
+      const handle = this.hoveredHandle;
+      this.links.add(
+        this.annotation,
+        handle.type,
+        this.snap.id,
+        this.snap.type,
+        this.snap.magnet
+      );
+    }
+
+    this.snap = null;
+  }
 }
