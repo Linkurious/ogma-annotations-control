@@ -13,8 +13,12 @@ export class Handles extends Renderer<CanvasLayer> {
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
     this.layer = ogma.layers.addCanvasLayer(this.render);
-    ogma.events.on("zoom", () => this.layer.refresh);
+    ogma.events.on("zoom", this.refresh);
   }
+
+  private refresh = () => {
+    this.layer.refresh();
+  };
 
   render = (ctx: CanvasRenderingContext2D) => {
     const state = this.store.getState();
