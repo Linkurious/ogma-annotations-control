@@ -4,7 +4,6 @@ import { AnnotationEditor } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
-import { Renderer } from "./renderer/base";
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
 import { store } from "./store";
@@ -28,12 +27,17 @@ const defaultOptions: ControllerOptions = {
   maxArrowHeight: 30
 };
 
+interface RendererMap {
+  shapes: Shapes;
+  handles: Handles;
+}
+
 export class Control extends EventEmitter<FeatureEvents> {
   private ogma: Ogma;
   private options: ControllerOptions;
   private store = store;
   private index = new Index(this.store);
-  private renderers: Record<string, Renderer> = {};
+  private renderers = {} as RendererMap;
   private interactions: InteractionController;
   private editor: AnnotationEditor;
   // TODO: maybe links should be part of the store?

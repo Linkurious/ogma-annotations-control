@@ -20,7 +20,6 @@ export class InteractionController {
     maxX: Infinity,
     maxY: Infinity
   };
-  private links: Links;
   private rotation: Rotation;
   private add: Add;
   constructor(
@@ -43,7 +42,6 @@ export class InteractionController {
       passive: true,
       capture: true
     });
-    this.links = links;
     this.rotation = new Rotation(ogma, links);
     this.add = new Add(store, links);
   }

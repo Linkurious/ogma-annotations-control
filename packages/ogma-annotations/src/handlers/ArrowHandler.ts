@@ -78,7 +78,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       })
     );
   }
-  protected _dragEnd(e: MouseEvent) {
+  protected _dragEnd() {
     if (!this.snap || !this.annotation || !this.hoveredHandle) return;
     const handle = this.hoveredHandle;
 
@@ -90,5 +90,5 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       this.snap.magnet
     );
   }
-  protected _dragStart(e: MouseEvent): void {}
+  protected _dragStart() {}
 }

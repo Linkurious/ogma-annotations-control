@@ -114,6 +114,6 @@ export class TextHandler extends Handler<Text, Handle> {
     //   })
     // );
   }
-  protected _dragStart(e: MouseEvent): void {}
-  protected _dragEnd(e: MouseEvent): void {}
+  protected _dragStart() {}
+  protected _dragEnd() {}
 }
