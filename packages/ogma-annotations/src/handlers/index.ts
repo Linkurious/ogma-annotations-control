@@ -63,22 +63,25 @@ export class AnnotationEditor extends EventTarget {
         this.store.setState({ hoveringHandle: false });
       });
     });
-    // TODO: use the right store subscription method
-    this.store.subscribe((newState, oldState) => {
-      const newlySelected = Array.from(newState.selectedFeatures.keys()).filter(
-        (e) => !oldState.selectedFeatures.has(e)
-      );
-      const removedFromSelection = Array.from(oldState.selectedFeatures).filter(
-        (e) => !newState.selectedFeatures.has(e)
-      );
-      if (!newlySelected.length && !removedFromSelection.length) return;
-      removedFromSelection.forEach((e) => {
-        this.stopEditingFeature(e);
-      });
-      newlySelected.forEach((e) => {
-        this.editFeature(e);
-      });
-    });
+    this.store.subscribe(
+      (state) => state.selectedFeatures,
+      (selectedFeatures, previousSelectedFeatures) => {
+        const newlySelected = Array.from(selectedFeatures.keys()).filter(
+          (e) => !previousSelectedFeatures.has(e)
+        );
+        const removedFromSelection = Array.from(previousSelectedFeatures).filter(
+          (e) => !selectedFeatures.has(e)
+        );
+        if (!newlySelected.length && !removedFromSelection.length) return;
+        
+        removedFromSelection.forEach((e) => {
+          this.stopEditingFeature(e);
+        });
+        newlySelected.forEach((e) => {
+          this.editFeature(e);
+        });
+      }
+    );
   }
 
   stopEditingFeature(featureId: string) {
