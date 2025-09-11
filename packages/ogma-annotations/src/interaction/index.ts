@@ -20,9 +20,6 @@ export class InteractionController {
     maxX: Infinity,
     maxY: Infinity
   };
-  private rotation: Rotation;
-  private links: Links;
-  private add: Add;
   constructor(
     private ogma: Ogma,
     private store: Store,

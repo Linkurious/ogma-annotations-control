@@ -13,6 +13,10 @@ export class Handles extends Renderer<CanvasLayer> {
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
     this.layer = ogma.layers.addCanvasLayer(this.render);
+    this.store.subscribe(
+      (state) => state.selectedFeatures,
+      this.refresh
+    );
     ogma.events.on("zoom", this.refresh);
   }
 
@@ -31,6 +35,9 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.lineWidth = 2 * scale;
     ctx.strokeStyle = "#0099ff";
     Object.values(features).forEach((feature) => {
+      // Only render handles for selected features
+      if (!state.isSelected(feature.id)) return;
+
       if (isArrow(feature)) {
         // render two circle handles at the start and end of the arrow
         const start = getArrowStart(feature);

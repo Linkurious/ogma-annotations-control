@@ -209,11 +209,8 @@ export const store = create<AnnotationState>()(
         toggleSelection: (id) => {
           const { selectedFeatures } = get();
           const newSelection = new Set(selectedFeatures);
-          if (newSelection.has(id)) {
-            newSelection.delete(id);
-          } else {
-            newSelection.add(id);
-          }
+          if (newSelection.has(id)) newSelection.delete(id);
+          else newSelection.add(id);
           set({ selectedFeatures: newSelection });
         },
 
