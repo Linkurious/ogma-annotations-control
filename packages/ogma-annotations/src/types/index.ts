@@ -50,3 +50,30 @@ export type AnnotationOptions = {
   handleSize: number;
   placeholder?: string;
 };
+
+export type Cursor =
+  | "default"
+  | "pointer"
+  | "move"
+  | "grab"
+  | "grabbing"
+  | "auto"
+  // Resize cursors
+  | "resize"
+  | "col-resize"
+  | "row-resize"
+  | "all-scroll"
+  | "n-resize"
+  | "e-resize"
+  | "s-resize"
+  | "w-resize"
+  | "ne-resize"
+  | "nw-resize"
+  | "se-resize"
+  | "sw-resize"
+  | "ew-resize"
+  | "ns-resize"
+  | "nesw-resize"
+  | "nwse-resize"
+  | "alias"
+  | "crosshair";

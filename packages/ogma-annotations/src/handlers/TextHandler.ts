@@ -1,8 +1,8 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
 import { getTransformMatrix } from "../renderer/shapes/utils";
-import { Text } from "../types";
-import { getBoxSize, updateBbox } from "../utils";
+import { Cursor, Text } from "../types";
+import { getBoxSize } from "../utils";
 import { dot } from "../vec";
 import { Store } from "../store";
 
@@ -79,6 +79,12 @@ type Handle = {
   norm: Point;
 };
 
+const cursors: Cursor[] = [
+  "nw-resize", // top-left (0)
+  "ne-resize", // top-right (1)
+  "se-resize", // bottom-right (2)
+  "sw-resize" // bottom-left (3)
+];
 export class TextHandler extends Handler<Text, Handle> {
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
@@ -93,6 +99,7 @@ export class TextHandler extends Handler<Text, Handle> {
 
     this.hoveredHandle = undefined;
     this.store.setState({ hoveredHandle: -1 });
+    this.setCursor("default");
 
     // Check corner handles first (higher priority)
     for (let i = 0; i < CORNER_HANDLES.length; i++) {
@@ -117,6 +124,7 @@ export class TextHandler extends Handler<Text, Handle> {
           norm: AXIS_Y // Default norm for corners
         };
         this.store.setState({ hoveredHandle: i });
+        this.setCursor(this.getCornerCursor(i));
         return; // Exit early if corner handle found
       }
     }
@@ -159,17 +167,17 @@ export class TextHandler extends Handler<Text, Handle> {
           norm
         };
         this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
+        this.setCursor(this.getEdgeCursor(edge));
         break;
       }
     }
   }
 
   _drag(evt: MouseEvent) {
-    if (!this.dragStartPoint || !this.hoveredHandle) return;
+    if (!this.dragStartPoint || !this.hoveredHandle || !this.annotation) return;
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    const annotation = this.annotation!;
     const mousePoint = this.clientToCanvas(evt);
     const delta = {
       x: mousePoint.x - this.dragStartPoint.x,
@@ -178,43 +186,48 @@ export class TextHandler extends Handler<Text, Handle> {
     const handle = this.hoveredHandle;
     const original = this.dragStartAnnotation!;
 
+    // Create updated geometry based on handle type
+    let updatedGeometry;
+
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
-      this.handleCornerDrag(annotation, original, delta, handle.corner!);
+      updatedGeometry = this.calculateCornerDrag(
+        original,
+        delta,
+        handle.corner!
+      );
     } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
-      const movement = dot(handle.norm, delta);
-      points[handle.edge].forEach((i: number) => {
-        const rect = annotation.geometry.coordinates[0];
-        const originalRect = original.geometry.coordinates[0][i];
-        rect[i] = [
-          originalRect[0] + handle.norm.x * movement,
-          originalRect[1] + handle.norm.y * movement
-        ];
-      });
+      updatedGeometry = this.calculateEdgeDrag(original, delta, handle);
     }
 
-    updateBbox(annotation);
+    if (updatedGeometry) {
+      // Apply live update to store instead of direct mutation
+      this.store.getState().applyLiveUpdate(this.annotation.id, {
+        id: this.annotation.id,
+        properties: this.annotation.properties,
+        geometry: updatedGeometry
+      });
+    }
 
     this.dispatchEvent(
       new CustomEvent("dragging", {
         detail: {
           point: mousePoint,
-          annotation,
+          annotation: this.annotation,
           handle
         }
       })
     );
   }
 
-  private handleCornerDrag(
-    annotation: Text,
+  private calculateCornerDrag(
     original: Text,
     delta: Point,
     cornerIndex: number
   ) {
-    const rect = annotation.geometry.coordinates[0];
-    const originalRect = original.geometry.coordinates[0];
+    const originalCoords = [...original.geometry.coordinates[0]];
+    const newCoords = originalCoords.map((coord) => [...coord]);
 
     cornerMapping[cornerIndex].forEach((i: number) => {
       let deltaX = 0;
@@ -257,10 +270,64 @@ export class TextHandler extends Handler<Text, Handle> {
           break;
       }
 
-      rect[i] = [originalRect[i][0] + deltaX, originalRect[i][1] + deltaY];
+      newCoords[i] = [
+        originalCoords[i][0] + deltaX,
+        originalCoords[i][1] + deltaY
+      ];
     });
+
+    return {
+      type: original.geometry.type,
+      coordinates: [newCoords]
+    };
   }
 
-  protected _dragStart() {}
-  protected _dragEnd() {}
+  private calculateEdgeDrag(original: Text, delta: Point, handle: Handle) {
+    const originalCoords = [...original.geometry.coordinates[0]];
+    const newCoords = originalCoords.map((coord) => [...coord]);
+    const movement = dot(handle.norm, delta);
+
+    points[handle.edge!].forEach((i: number) => {
+      newCoords[i] = [
+        originalCoords[i][0] + handle.norm.x * movement,
+        originalCoords[i][1] + handle.norm.y * movement
+      ];
+    });
+
+    return {
+      type: original.geometry.type,
+      coordinates: [newCoords]
+    };
+  }
+
+  protected _dragStart() {
+    if (!this.annotation) return;
+    // Start live update tracking for this annotation
+    this.store.getState().startLiveUpdate([this.annotation.id]);
+  }
+
+  protected _dragEnd() {
+    if (!this.annotation) return;
+    // Commit all live updates to create a single history entry
+    this.store.getState().commitLiveUpdates();
+  }
+
+  private getCornerCursor(cornerIndex: number): Cursor {
+    // Return resize cursors based on corner position
+    return cursors[cornerIndex];
+  }
+
+  private getEdgeCursor(edge: EdgeType): Cursor {
+    // Return resize cursors based on edge direction
+    switch (edge) {
+      case EdgeType.TOP:
+      case EdgeType.BOTTOM:
+        return "ns-resize"; // vertical resize
+      case EdgeType.LEFT:
+      case EdgeType.RIGHT:
+        return "ew-resize"; // horizontal resize
+      default:
+        return "default";
+    }
+  }
 }

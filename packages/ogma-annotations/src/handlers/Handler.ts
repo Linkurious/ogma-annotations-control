@@ -1,5 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Annotation } from "../types";
+import { Annotation, Cursor } from "../types";
 import { Store } from "../store";
 import { clientToContainerPosition } from "../utils";
 
@@ -105,6 +105,13 @@ export abstract class Handler<
 
   getAnnotation(): T | undefined {
     return this.annotation;
+  }
+
+  protected setCursor(cursor: Cursor) {
+    const container = this.ogma.getContainer()?.firstChild;
+    if (container) {
+      (container as HTMLElement).style.cursor = cursor;
+    }
   }
 
   stopEditing() {

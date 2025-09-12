@@ -50,7 +50,6 @@ export class AnnotationEditor extends EventTarget {
       handler.addEventListener("dragend", () => {
         this.dispatchEvent(new Event("dragend"));
         this.store.setState({ isDragging: false });
-        this.interaction.setMode("default");
       });
 
       handler.addEventListener("dragging", (e) => {
