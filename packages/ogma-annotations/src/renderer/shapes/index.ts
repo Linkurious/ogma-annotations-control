@@ -67,8 +67,9 @@ export class Shapes extends Renderer<SVGLayer> {
     root.appendChild(arrowsRoot);
 
     for (let feature of Object.values(features)) {
-      if (liveUpdates[feature.id])
+      if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
+      }
 
       if (isBox(feature)) renderBox(root, feature, view);
       else if (isText(feature)) renderText(root, feature, view);

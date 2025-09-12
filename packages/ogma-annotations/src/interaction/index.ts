@@ -4,7 +4,15 @@ import { Rotation } from "./rotation";
 import { Index } from "./spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
-import { Annotation, Arrow, Box, isArrow, Point, Vector } from "../types";
+import {
+  Annotation,
+  Arrow,
+  Box,
+  Cursor,
+  isArrow,
+  Point,
+  Vector
+} from "../types";
 import {
   clientToContainerPosition,
   getArrowEndPoints,
@@ -148,7 +156,7 @@ export class InteractionController {
     }
   };
 
-  private setCursor(cursor: string) {
+  private setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
     if (container) (container as HTMLElement).style.cursor = cursor;
   }
@@ -157,7 +165,9 @@ export class InteractionController {
     // TODO: implement mode switching
     // this.store.getState().setMode(mode);
     if (mode === "default") {
-      this.setCursor(this.ogma.getOptions().cursor?.default || "default");
+      this.setCursor(
+        (this.ogma.getOptions().cursor?.default as Cursor) || "default"
+      );
     } else if (mode === "add" || mode === "link") {
       this.setCursor("crosshair");
     } else if (mode === "rotate") {

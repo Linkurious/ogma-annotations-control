@@ -52,6 +52,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         point: { x: endPoint[0], y: endPoint[1] }
       };
       this.store.setState({ hoveredHandle: 1 });
+      this.setCursor("move");
     } else {
       this.store.setState({ hoveredHandle: -1 });
       this.hoveredHandle = undefined;
