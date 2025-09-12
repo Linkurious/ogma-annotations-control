@@ -10,12 +10,24 @@ import { Store } from "../store";
 const AXIS_X = { x: 1, y: 0 } as const;
 const AXIS_Y = { x: 0, y: 1 } as const;
 
+enum HandleType {
+  EDGE = "edge",
+  CORNER = "corner"
+}
+
+enum EdgeType {
+  TOP = "top",
+  RIGHT = "right",
+  BOTTOM = "bottom",
+  LEFT = "left"
+}
+
 // Edge template definitions: [edge, axis, norm, xStart, yStart, xEnd, yEnd]
 const EDGE_TEMPLATES = [
-  ["top", AXIS_X, AXIS_Y, 0, 0, 1, 0],
-  ["right", AXIS_Y, AXIS_X, 1, 0, 1, 1],
-  ["bottom", AXIS_X, AXIS_Y, 0, 1, 1, 1],
-  ["left", AXIS_Y, AXIS_X, 0, 0, 0, 1]
+  [EdgeType.TOP, AXIS_X, AXIS_Y, 0, 0, 1, 0],
+  [EdgeType.RIGHT, AXIS_Y, AXIS_X, 1, 0, 1, 1],
+  [EdgeType.BOTTOM, AXIS_X, AXIS_Y, 0, 1, 1, 1],
+  [EdgeType.LEFT, AXIS_Y, AXIS_X, 0, 0, 0, 1]
 ] as const;
 
 const points = {
@@ -47,9 +59,17 @@ const CORNER_HANDLES = [
   [0, 1] // bottom-left (index 3)
 ] as const;
 
+// Get corner mapping: which corners to update for each dragged corner
+const cornerMapping = [
+  [0], // corner 0 (top-left): update corner 0
+  [0, 1], // corner 1 (top-right): update corners 0, 1
+  [0, 1, 2], // corner 2 (bottom-right): update corners 0, 1, 2
+  [0, 3] // corner 3 (bottom-left): update corners 0, 3
+];
+
 type Handle = {
-  type: "edge" | "corner";
-  edge?: "top" | "right" | "bottom" | "left";
+  type: HandleType;
+  edge?: EdgeType;
   corner?: number; // 0=top-left, 1=top-right, 2=bottom-right, 3=bottom-left
   minX: number;
   minY: number;
@@ -87,7 +107,7 @@ export class TextHandler extends Handler<Text, Handle> {
         y <= cornerY + margin
       ) {
         this.hoveredHandle = {
-          type: "corner",
+          type: HandleType.CORNER,
           corner: i,
           minX: cornerX,
           minY: cornerY,
@@ -129,7 +149,7 @@ export class TextHandler extends Handler<Text, Handle> {
         y <= maxY + margin
       ) {
         this.hoveredHandle = {
-          type: "edge",
+          type: HandleType.EDGE,
           edge,
           minX,
           minY,
@@ -158,10 +178,10 @@ export class TextHandler extends Handler<Text, Handle> {
     const handle = this.hoveredHandle;
     const original = this.dragStartAnnotation!;
 
-    if (handle.type === "corner") {
+    if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
       this.handleCornerDrag(annotation, original, delta, handle.corner!);
-    } else if (handle.type === "edge" && handle.edge) {
+    } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
       const movement = dot(handle.norm, delta);
       points[handle.edge].forEach((i: number) => {
@@ -195,14 +215,6 @@ export class TextHandler extends Handler<Text, Handle> {
   ) {
     const rect = annotation.geometry.coordinates[0];
     const originalRect = original.geometry.coordinates[0];
-
-    // Get corner mapping: which corners to update for each dragged corner
-    const cornerMapping = [
-      [0], // corner 0 (top-left): update corner 0
-      [0, 1], // corner 1 (top-right): update corners 0, 1
-      [0, 1, 2], // corner 2 (bottom-right): update corners 0, 1, 2
-      [0, 3] // corner 3 (bottom-left): update corners 0, 3
-    ];
 
     cornerMapping[cornerIndex].forEach((i: number) => {
       let deltaX = 0;
@@ -248,6 +260,7 @@ export class TextHandler extends Handler<Text, Handle> {
       rect[i] = [originalRect[i][0] + deltaX, originalRect[i][1] + deltaY];
     });
   }
+
   protected _dragStart() {}
   protected _dragEnd() {}
 }
