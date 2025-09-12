@@ -225,7 +225,7 @@ export class Snapping extends EventTarget {
       const snapPoint = snapToCenter
         ? { x: xyr.x, y: xyr.y }
         : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
-      const magnet = snapToCenter ? { x: 0.5, y: 0.5 } : unit;
+      const magnet = snapToCenter ? { x: 0, y: 0 } : unit;
       return {
         point: snapPoint,
         id: nodes.get(i).getId(),

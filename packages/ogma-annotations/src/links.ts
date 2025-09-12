@@ -138,8 +138,16 @@ export class Links {
         const endIndex = nodeIdToIndex.get(end.target)!;
         if (start.targetType === "node" && end.targetType === "node") {
           const vec = subtract(xyr[endIndex], xyr[startIndex]);
-          startPoint = this._getNodeSnapPoint(xyr[startIndex], vec);
-          endPoint = this._getNodeSnapPoint(xyr[endIndex], mul(vec, -1));
+          startPoint = this._getNodeSnapPoint(
+            xyr[startIndex],
+            vec,
+            this._isLinkedToCenter(start)
+          );
+          endPoint = this._getNodeSnapPoint(
+            xyr[endIndex],
+            mul(vec, -1),
+            this._isLinkedToCenter(end)
+          );
         } else if (start.targetType === "node") {
           // compute first the box snap point
           const box = state.getFeature(end.target) as Text;
@@ -148,7 +156,11 @@ export class Links {
             x: endPoint[0],
             y: endPoint[1]
           });
-          startPoint = this._getNodeSnapPoint(xyr[startIndex], mul(vec, -1));
+          startPoint = this._getNodeSnapPoint(
+            xyr[startIndex],
+            mul(vec, -1),
+            start.magnet.x === 0 && start.magnet.y === 0
+          );
         } else if (end.targetType === "node") {
           const box = state.getFeature(start.target) as Text;
           const startPoint = this._getBoxSnapPoint(box, start);
@@ -156,7 +168,11 @@ export class Links {
             x: startPoint[0],
             y: startPoint[1]
           });
-          endPoint = this._getNodeSnapPoint(xyr[endIndex], vec);
+          endPoint = this._getNodeSnapPoint(
+            xyr[endIndex],
+            vec,
+            this._isLinkedToCenter(end)
+          );
         }
       } else if (start) {
         const startIndex = nodeIdToIndex.get(start.target)!;
@@ -165,7 +181,11 @@ export class Links {
             { x: endPoint[0], y: endPoint[1] },
             { x: startPoint[0], y: startPoint[1] }
           );
-          startPoint = this._getNodeSnapPoint(xyr[startIndex], vec);
+          startPoint = this._getNodeSnapPoint(
+            xyr[startIndex],
+            vec,
+            this._isLinkedToCenter(start)
+          );
         } else {
           const box = state.getFeature(start.target) as Text;
           startPoint = this._getBoxSnapPoint(box, start);
@@ -177,12 +197,23 @@ export class Links {
             { x: startPoint[0], y: startPoint[1] },
             { x: endPoint[0], y: endPoint[1] }
           );
-          endPoint = this._getNodeSnapPoint(xyr[endIndex], vec);
+          endPoint = this._getNodeSnapPoint(
+            xyr[endIndex],
+            vec,
+            this._isLinkedToCenter(end)
+          );
         }
       }
-      arrow.geometry.coordinates[0] = [startPoint[0], startPoint[1]];
-      arrow.geometry.coordinates[1] = [endPoint[0], endPoint[1]];
+      state.applyLiveUpdate(arrow.id, {
+        geometry: {
+          coordinates: [startPoint, endPoint]
+        }
+      });
     });
+  }
+
+  private _isLinkedToCenter(link: Link) {
+    return link.magnet.x === 0 && link.magnet.y === 0;
   }
 
   private _getBoxSnapPoint(box: Text, link: Link) {
@@ -196,9 +227,10 @@ export class Links {
   }
   private _getNodeSnapPoint(
     xyr: { x: number; y: number; radius: number },
-    vec: Point
+    vec: Point,
+    center: boolean
   ) {
-    if (vec.x === 0 && vec.y === 0) {
+    if (center) {
       return [xyr.x, xyr.y];
     }
     const dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
