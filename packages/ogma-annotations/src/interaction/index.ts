@@ -30,6 +30,7 @@ export class InteractionController {
   };
   private rotation: Rotation;
   private add: Add;
+  private suppressClickUntil = 0;
   constructor(
     private ogma: Ogma,
     private store: Store,
@@ -135,6 +136,11 @@ export class InteractionController {
   };
 
   private onMouseClick = (evt: MouseEvent) => {
+    // Ignore clicks that occur shortly after drag operations
+    if (Date.now() < this.suppressClickUntil) {
+      return;
+    }
+    
     const screenPoint = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
@@ -142,6 +148,7 @@ export class InteractionController {
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y, this.ogma.view.getAngle());
 
+    console.log("click", annotation);
     if (annotation) {
       if (evt.ctrlKey || evt.metaKey) {
         // Multi-select with Ctrl/Cmd
@@ -173,6 +180,14 @@ export class InteractionController {
     } else if (mode === "rotate") {
       this.setCursor("alias");
     }
+  }
+
+  /**
+   * Suppress click events for a brief period after drag operations
+   * to prevent accidental deselection
+   */
+  public suppressClicksTemporarily(durationMs: number = 100) {
+    this.suppressClickUntil = Date.now() + durationMs;
   }
 
   destroy() {

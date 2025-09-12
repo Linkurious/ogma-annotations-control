@@ -308,8 +308,7 @@ export class TextHandler extends Handler<Text, Handle> {
 
   protected _dragEnd() {
     if (!this.annotation) return;
-    // Commit all live updates to create a single history entry
-    this.store.getState().commitLiveUpdates();
+    this.commitChange();
   }
 
   private getCornerCursor(cornerIndex: number): Cursor {

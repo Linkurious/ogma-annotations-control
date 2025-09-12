@@ -6,8 +6,13 @@ import { Arrow } from "../types";
 import { Store } from "../store";
 import { handleDetectionThreshold } from "../constants";
 
+enum HandleType {
+  START = "start",
+  END = "end"
+}
+
 type Handle = {
-  type: "start" | "end";
+  type: HandleType;
   point: Point;
 };
 
@@ -42,13 +47,13 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     if (startDistance < margin) {
       this.hoveredHandle = {
-        type: "start",
+        type: HandleType.START,
         point: { x: startPoint[0], y: startPoint[1] }
       };
       this.store.setState({ hoveredHandle: 0 });
     } else if (endDistance < margin) {
       this.hoveredHandle = {
-        type: "end",
+        type: HandleType.END,
         point: { x: endPoint[0], y: endPoint[1] }
       };
       this.store.setState({ hoveredHandle: 1 });
@@ -72,9 +77,9 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     // Create updated coordinates
     const newCoordinates = [...this.annotation.geometry.coordinates];
-    if (handle.type === "start") {
+    if (handle.type === HandleType.START) {
       newCoordinates[0] = [point.x, point.y];
-    } else if (handle.type === "end") {
+    } else if (handle.type === HandleType.END) {
       newCoordinates[1] = [point.x, point.y];
     }
 
@@ -107,8 +112,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   protected _dragEnd() {
     if (!this.annotation) return;
 
-    // Commit all live updates to create a single history entry
-    this.store.getState().commitLiveUpdates();
+    this.commitChange();
 
     // Handle snapping if applicable
     if (this.snap && this.hoveredHandle) {

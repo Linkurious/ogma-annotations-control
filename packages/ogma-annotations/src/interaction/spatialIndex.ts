@@ -31,6 +31,10 @@ export class Index extends Rtree<Annotation> {
         if (previous && previous.isDragging && !current.isDragging) {
           // Efficiently update only changed features instead of rebuilding entire index
           if (current.lastChangedFeatures.length > 0) {
+            console.log(
+              "Updating spatial index for changed features:",
+              current.lastChangedFeatures
+            );
             current.lastChangedFeatures.forEach((id) => {
               // Remove old version of the feature from index
               const oldFeature = previous.features[id];

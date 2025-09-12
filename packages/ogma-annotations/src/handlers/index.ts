@@ -50,17 +50,13 @@ export class AnnotationEditor extends EventTarget {
       handler.addEventListener("dragend", () => {
         this.dispatchEvent(new Event("dragend"));
         this.store.setState({ isDragging: false });
+        // Suppress clicks briefly after drag ends to prevent accidental deselection
+        this.interaction.suppressClicksTemporarily();
       });
 
       handler.addEventListener("dragging", (e) => {
         this.dispatchEvent(new CustomEvent("dragging", e));
         this.store.setState({ isDragging: true });
-      });
-      handler.addEventListener("mouseenter", () => {
-        this.store.setState({ hoveringHandle: true });
-      });
-      handler.addEventListener("mouseleave", () => {
-        this.store.setState({ hoveringHandle: false });
       });
     });
     this.store.subscribe(
@@ -109,7 +105,7 @@ export class AnnotationEditor extends EventTarget {
     handler.setAnnotation(feature as Text);
     const container = this.ogma.getContainer()!;
     container.addEventListener("mousemove", handler.handleMouseMove);
-    container.addEventListener("mouseup", handler.handleMouseUp);
+    container.addEventListener("mouseup", handler.handleMouseUp, true);
     container.addEventListener("mousedown", handler.handleMouseDown);
   }
 

@@ -79,6 +79,14 @@ export abstract class Handler<
   handleKeyDown?(evt: KeyboardEvent): void;
   handleKeyUp?(evt: KeyboardEvent): void;
 
+  protected commitChange() {
+    // Commit all live updates to create a single history entry
+    this.store.getState().commitLiveUpdates();
+    this.annotation = this.store
+      .getState()
+      .getFeature(this.annotation!.id) as T;
+  }
+
   /**
    * Detects which handle is being hovered over.
    * @param evt Mouse event
