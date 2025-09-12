@@ -185,7 +185,7 @@ export class TextHandler extends Handler<Text, Handle> {
       y: mousePoint.y - this.dragStartPoint.y
     };
     const handle = this.hoveredHandle;
-    const original = this.dragStartAnnotation!;
+    const original = this.getAnnotation()!;
 
     // Create updated geometry based on handle type
     let updatedGeometry;

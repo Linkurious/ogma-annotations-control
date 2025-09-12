@@ -2,13 +2,14 @@ import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./Handler";
 import { Snap, Snapping } from "./snapping";
 import { Links } from "../links";
-import { Arrow } from "../types";
+import { Arrow, detectArrow } from "../types";
 import { Store } from "../store";
 import { handleDetectionThreshold } from "../constants";
 
 enum HandleType {
   START = "start",
-  END = "end"
+  END = "end",
+  BODY = "body"
 }
 
 type Handle = {
@@ -59,19 +60,30 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       this.store.setState({ hoveredHandle: 1 });
       this.setCursor("move");
     } else {
-      this.store.setState({ hoveredHandle: -1 });
-      this.hoveredHandle = undefined;
+      // on the line?
+      if (detectArrow(annotation, mousePoint, margin)) {
+        this.setCursor("move");
+        this.hoveredHandle = {
+          type: HandleType.BODY,
+          point: mousePoint
+        };
+        this.store.setState({ hoveredHandle: 2 });
+      } else {
+        this.store.setState({ hoveredHandle: -1 });
+        this.hoveredHandle = undefined;
+      }
     }
   }
 
   protected _drag(evt: MouseEvent) {
-    if (!this.dragStartPoint || !this.hoveredHandle || !this.annotation) return;
+    if (!(this.dragStartPoint || !this.hoveredHandle) || !this.annotation)
+      return;
 
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
     const mousePoint = this.clientToCanvas(evt);
-    const handle = this.hoveredHandle;
+    const handle = this.hoveredHandle!;
     const annotation = this.getAnnotation()!;
     this.snap = this.snapping.snap(annotation, mousePoint);
     const point = this.snap?.point || mousePoint;
@@ -82,6 +94,14 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       newCoordinates[0] = [point.x, point.y];
     } else if (handle.type === HandleType.END) {
       newCoordinates[1] = [point.x, point.y];
+    } else if (handle.type === HandleType.BODY) {
+      // translate both points
+      const dx = point.x - handle.point.x;
+      const dy = point.y - handle.point.y;
+      const start = annotation.geometry.coordinates[0];
+      const end = annotation.geometry.coordinates[1];
+      newCoordinates[0] = [start[0] + dx, start[1] + dy];
+      newCoordinates[1] = [end[0] + dx, end[1] + dy];
     }
 
     // Apply live update to store instead of direct mutation
@@ -118,13 +138,14 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     // Handle snapping if applicable
     if (this.snap && this.hoveredHandle) {
       const handle = this.hoveredHandle;
-      this.links.add(
-        this.getAnnotation()!,
-        handle.type,
-        this.snap.id,
-        this.snap.type,
-        this.snap.magnet
-      );
+      if (handle.type !== HandleType.BODY)
+        this.links.add(
+          this.getAnnotation()!,
+          handle.type,
+          this.snap.id,
+          this.snap.type,
+          this.snap.magnet
+        );
     }
 
     this.snap = null;

@@ -6,20 +6,13 @@ import { Links } from "../links";
 import { Store } from "../store";
 import {
   Annotation,
-  Arrow,
+  detectArrow,
   Box,
+  detectBox,
   Cursor,
-  isArrow,
-  Point,
-  Vector
+  isArrow
 } from "../types";
-import {
-  clientToContainerPosition,
-  getArrowEndPoints,
-  getBoxPosition,
-  getBoxSize
-} from "../utils";
-import { dot, length, subtract, normalize, cross, rotateRadians } from "../vec";
+import { clientToContainerPosition } from "../utils";
 
 export class InteractionController {
   private query = {
@@ -68,51 +61,18 @@ export class InteractionController {
     // narrow phase
     for (const item of hit) {
       if (isArrow(item)) {
-        if (this.detectArrow(item, { x, y }, threshold)) {
+        if (detectArrow(item, { x, y }, threshold)) {
           result = item;
           break;
         }
       } else {
-        if (this.detectBox(item as Box, { x, y }, angle, threshold)) {
+        if (detectBox(item as Box, { x, y }, angle, threshold)) {
           result = item;
           break;
         }
       }
     }
     return result;
-  }
-
-  detectBox(a: Box, p: Point, angle: number, threshold: number): boolean {
-    // check if the pointer is within the bounding box of the text
-    const { x: tx, y: ty } = getBoxPosition(a);
-    const { width, height } = getBoxSize(a);
-    const origin = { x: tx, y: ty };
-    const { x: dx, y: dy } = rotateRadians(subtract(p, origin), -angle);
-
-    return (
-      dx > -threshold &&
-      dx < width + threshold &&
-      dy > -threshold &&
-      dy < height + threshold
-    );
-  }
-
-  detectArrow(a: Arrow, point: Point, threshold: number): boolean {
-    const { start, end } = getArrowEndPoints(a);
-    // p is the vector from mouse pointer to the center of the arrow
-    const p: Vector = subtract(point, start);
-    // detect if point is ON the line between start and end.
-    // line width is the arrow width
-    const width = a.properties.style!.strokeWidth!;
-    const vec = subtract(end, start);
-
-    const lineLen = length(vec);
-    const proj = dot(p, normalize(vec));
-    return (
-      proj > 0 &&
-      proj < lineLen &&
-      Math.abs(cross(p, normalize(vec))) < width / 2 + threshold
-    );
   }
 
   private onMouseMove = (evt: MouseEvent) => {

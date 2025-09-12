@@ -11,7 +11,6 @@ export abstract class Handler<
   protected ogma: Ogma;
   protected dragging: boolean = false;
   protected dragStartPoint?: Point;
-  protected dragStartAnnotation?: T;
   protected hoveredHandle?: Handle;
   protected ogmaPanningOption: boolean = false;
   protected store: Store;
@@ -29,21 +28,21 @@ export abstract class Handler<
     if (!this.dragging) this._detectHandle(evt, this.ogma.view.getZoom());
     else if (this.dragStartPoint) this._drag(evt);
 
-    const isHovered = Boolean(this.hoveredHandle);
-    if (wasHovered !== isHovered) {
-      if (isHovered) this.dispatchEvent(new Event("mouseenter"));
-      else this.dispatchEvent(new Event("mouseleave"));
-    }
+    // const isHovered = Boolean(this.hoveredHandle);
+    // if (wasHovered !== isHovered) {
+    //   if (isHovered) this.dispatchEvent(new Event("mouseenter"));
+    //   else this.dispatchEvent(new Event("mouseleave"));
+    // }
   };
 
   handleMouseDown = (evt: MouseEvent): void => {
     if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
     evt.preventDefault();
     evt.stopPropagation();
+
     // start resizing
     this.dragging = true;
     this.dragStartPoint = this.clientToCanvas(evt);
-    this.dragStartAnnotation = JSON.parse(JSON.stringify(this.annotation));
     this._dragStart(evt);
     this.dispatchEvent(new Event("dragstart"));
     this.ogmaPanningOption = Boolean(
@@ -65,8 +64,7 @@ export abstract class Handler<
   };
 
   cancelEdit() {
-    if (!this.isActive() || !this.annotation || !this.dragStartAnnotation)
-      return;
+    if (!this.isActive() || !this.annotation) return;
     this.dragging = false;
     this.ogma.setOptions({
       interactions: { pan: { enabled: this.ogmaPanningOption } }
