@@ -1,13 +1,23 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
 import { Store } from "../store";
-import { isArrow, isText } from "../types";
+import { Arrow, Box, Text, isArrow, isText } from "../types";
 import {
   getArrowEnd,
   getArrowStart,
   getBoxPosition,
   getBoxSize
 } from "../utils";
+
+const handleMagnifier = 1.5;
+
+// Corner offsets for text box handles: [x, y] multipliers
+const CORNER_OFFSETS = [
+  [0, 0], // top-left
+  [1, 0], // top-right
+  [1, 1], // bottom-left
+  [0, 1] // bottom-right
+] as const;
 
 export class Handles extends Renderer<CanvasLayer> {
   constructor(ogma: Ogma, store: Store) {
@@ -49,34 +59,58 @@ export class Handles extends Renderer<CanvasLayer> {
         : baseFeature;
 
       if (isArrow(feature)) {
-        // render two circle handles at the start and end of the arrow
-        const start = getArrowStart(feature);
-        const end = getArrowEnd(feature);
-
-        ctx.moveTo(start.x + r, start.y);
-        ctx.arc(start.x, start.y, r, 0, 2 * Math.PI);
-
-        ctx.moveTo(end.x + r, end.y);
-        ctx.arc(end.x, end.y, r, 0, 2 * Math.PI);
+        this.renderArrowHandles(feature, ctx, r, state.hoveredHandle);
       } else if (isText(feature)) {
-        // a circle handle at each corner of the text box
-        const boxSize = getBoxSize(feature);
-        const position = getBoxPosition(feature);
-        const corners = [
-          { x: position.x, y: position.y },
-          { x: position.x + boxSize.width, y: position.y },
-          { x: position.x, y: position.y + boxSize.height },
-          { x: position.x + boxSize.width, y: position.y + boxSize.height }
-        ];
-        corners.forEach((corner) => {
-          ctx.moveTo(corner.x + r, corner.y);
-          ctx.arc(corner.x, corner.y, r, 0, 2 * Math.PI);
-        });
+        this.renderBoxHandles(feature, ctx, r, state.hoveredHandle);
       }
     });
     ctx.fill();
     ctx.stroke();
   };
+
+  private renderArrowHandles(
+    feature: Arrow,
+    ctx: CanvasRenderingContext2D,
+    r: number,
+    hoveredHandle: -1 | number
+  ) {
+    const start = getArrowStart(feature);
+    const end = getArrowEnd(feature);
+
+    const startHovered = +(hoveredHandle === 0);
+    const endHovered = +(hoveredHandle === 1);
+
+    const startR = r * (1 + (handleMagnifier - 1) * startHovered);
+    const endR = r * (1 + (handleMagnifier - 1) * endHovered);
+
+    ctx.moveTo(start.x + startR, start.y);
+    ctx.arc(start.x, start.y, startR, 0, 2 * Math.PI);
+
+    ctx.moveTo(end.x + endR, end.y);
+    ctx.arc(end.x, end.y, endR, 0, 2 * Math.PI);
+  }
+
+  private renderBoxHandles(
+    feature: Text | Box,
+    ctx: CanvasRenderingContext2D,
+    r: number,
+    hoveredHandle: -1 | number
+  ) {
+    // a circle handle at each corner of the text box
+    const boxSize = getBoxSize(feature);
+    const position = getBoxPosition(feature);
+
+    CORNER_OFFSETS.forEach(([xOffset, yOffset], index) => {
+      const x = position.x + boxSize.width * xOffset;
+      const y = position.y + boxSize.height * yOffset;
+
+      // Make hovered corner handles larger
+      const handleR = hoveredHandle === index ? r * handleMagnifier : r;
+
+      ctx.moveTo(x + handleR, y);
+      ctx.arc(x, y, handleR, 0, 2 * Math.PI);
+    });
+  }
 
   public destroy(): void {
     this.layer.destroy();

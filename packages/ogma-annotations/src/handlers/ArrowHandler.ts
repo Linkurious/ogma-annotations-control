@@ -40,17 +40,22 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         Math.pow(mousePoint.y - endPoint[1], 2)
     );
 
-    this.hoveredHandle = undefined;
-    if (startDistance < margin)
+    if (startDistance < margin) {
       this.hoveredHandle = {
         type: "start",
         point: { x: startPoint[0], y: startPoint[1] }
       };
-    else if (endDistance < margin)
+      this.store.setState({ hoveredHandle: 0 });
+    } else if (endDistance < margin) {
       this.hoveredHandle = {
         type: "end",
         point: { x: endPoint[0], y: endPoint[1] }
       };
+      this.store.setState({ hoveredHandle: 1 });
+    } else {
+      this.store.setState({ hoveredHandle: -1 });
+      this.hoveredHandle = undefined;
+    }
   }
 
   protected _drag(evt: MouseEvent) {
