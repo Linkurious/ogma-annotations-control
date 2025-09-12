@@ -28,7 +28,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   }
 
   protected _detectHandle(evt: MouseEvent, zoom: number) {
-    const annotation = this.annotation!;
+    const annotation = this.getAnnotation()!;
     const mousePoint = this.clientToCanvas(evt);
     const margin = handleDetectionThreshold; // Larger margin for easier arrow endpoint selection
 
@@ -72,11 +72,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     const mousePoint = this.clientToCanvas(evt);
     const handle = this.hoveredHandle;
-    this.snap = this.snapping.snap(this.annotation, mousePoint);
+    const annotation = this.getAnnotation()!;
+    this.snap = this.snapping.snap(annotation, mousePoint);
     const point = this.snap?.point || mousePoint;
 
     // Create updated coordinates
-    const newCoordinates = [...this.annotation.geometry.coordinates];
+    const newCoordinates = [...annotation.geometry.coordinates];
     if (handle.type === HandleType.START) {
       newCoordinates[0] = [point.x, point.y];
     } else if (handle.type === HandleType.END) {
@@ -84,11 +85,11 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     }
 
     // Apply live update to store instead of direct mutation
-    this.store.getState().applyLiveUpdate(this.annotation.id, {
-      id: this.annotation.id,
-      properties: this.annotation.properties,
+    this.store.getState().applyLiveUpdate(annotation.id, {
+      id: annotation.id,
+      properties: annotation.properties,
       geometry: {
-        type: this.annotation.geometry.type,
+        type: annotation.geometry.type,
         coordinates: newCoordinates
       }
     });
@@ -106,7 +107,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   protected _dragStart() {
     if (!this.annotation) return;
     // Start live update tracking for this annotation
-    this.store.getState().startLiveUpdate([this.annotation.id]);
+    this.store.getState().startLiveUpdate([this.annotation]);
   }
 
   protected _dragEnd() {
@@ -118,7 +119,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     if (this.snap && this.hoveredHandle) {
       const handle = this.hoveredHandle;
       this.links.add(
-        this.annotation,
+        this.getAnnotation()!,
         handle.type,
         this.snap.id,
         this.snap.type,

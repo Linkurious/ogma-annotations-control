@@ -1,5 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Annotation, Cursor } from "../types";
+import { Annotation, Cursor, Id } from "../types";
 import { Store } from "../store";
 import { clientToContainerPosition } from "../utils";
 
@@ -7,7 +7,7 @@ export abstract class Handler<
   T extends Annotation,
   Handle
 > extends EventTarget {
-  protected annotation?: T;
+  protected annotation?: Id;
   protected ogma: Ogma;
   protected dragging: boolean = false;
   protected dragStartPoint?: Point;
@@ -67,8 +67,6 @@ export abstract class Handler<
   cancelEdit() {
     if (!this.isActive() || !this.annotation || !this.dragStartAnnotation)
       return;
-    this.annotation.geometry = this.dragStartAnnotation?.geometry;
-    this.annotation.bbox = this.dragStartAnnotation?.bbox;
     this.dragging = false;
     this.ogma.setOptions({
       interactions: { pan: { enabled: this.ogmaPanningOption } }
@@ -82,9 +80,6 @@ export abstract class Handler<
   protected commitChange() {
     // Commit all live updates to create a single history entry
     this.store.getState().commitLiveUpdates();
-    this.annotation = this.store
-      .getState()
-      .getFeature(this.annotation!.id) as T;
   }
 
   /**
@@ -108,11 +103,11 @@ export abstract class Handler<
   }
 
   setAnnotation(annotation: T): void {
-    this.annotation = annotation;
+    this.annotation = annotation.id;
   }
 
   getAnnotation(): T | undefined {
-    return this.annotation;
+    return this.store.getState().getFeature(this.annotation!) as T;
   }
 
   protected setCursor(cursor: Cursor) {

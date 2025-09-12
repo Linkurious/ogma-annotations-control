@@ -91,7 +91,7 @@ export class TextHandler extends Handler<Text, Handle> {
   }
 
   _detectHandle(evt: MouseEvent) {
-    const annotation = this.annotation!;
+    const annotation = this.getAnnotation()!;
     const { x, y } = this.clientToCanvas(evt);
     const size = getBoxSize(annotation);
     const matrix = getTransformMatrix(annotation, { angle: 0 }, false);
@@ -178,6 +178,7 @@ export class TextHandler extends Handler<Text, Handle> {
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
+    const annotation = this.getAnnotation()!;
     const mousePoint = this.clientToCanvas(evt);
     const delta = {
       x: mousePoint.x - this.dragStartPoint.x,
@@ -203,9 +204,9 @@ export class TextHandler extends Handler<Text, Handle> {
 
     if (updatedGeometry) {
       // Apply live update to store instead of direct mutation
-      this.store.getState().applyLiveUpdate(this.annotation.id, {
-        id: this.annotation.id,
-        properties: this.annotation.properties,
+      this.store.getState().applyLiveUpdate(annotation.id, {
+        id: annotation.id,
+        properties: annotation.properties,
         geometry: updatedGeometry
       });
     }
@@ -303,7 +304,7 @@ export class TextHandler extends Handler<Text, Handle> {
   protected _dragStart() {
     if (!this.annotation) return;
     // Start live update tracking for this annotation
-    this.store.getState().startLiveUpdate([this.annotation.id]);
+    this.store.getState().startLiveUpdate([this.annotation]);
   }
 
   protected _dragEnd() {

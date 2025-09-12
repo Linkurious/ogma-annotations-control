@@ -140,7 +140,7 @@ export class InteractionController {
     if (Date.now() < this.suppressClickUntil) {
       return;
     }
-    
+
     const screenPoint = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
@@ -148,7 +148,6 @@ export class InteractionController {
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y, this.ogma.view.getAngle());
 
-    console.log("click", annotation);
     if (annotation) {
       if (evt.ctrlKey || evt.metaKey) {
         // Multi-select with Ctrl/Cmd
