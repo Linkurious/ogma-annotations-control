@@ -1,3 +1,4 @@
+import { Ogma } from "@linkurious/ogma";
 import { Point, Bounds } from "./types";
 
 /**
@@ -39,6 +40,31 @@ function pointSegmentDistance(p: Point, a: Point, b: Point): number {
   const dy = py - (ay + t * vy);
   // Return Euclidean distance
   return Math.hypot(dx, dy);
+}
+
+function segmentIntersection(
+  p1: Point,
+  p2: Point,
+  q1: Point,
+  q2: Point
+): Point | null {
+  const s1x = p2.x - p1.x;
+  const s1y = p2.y - p1.y;
+  const s2x = q2.x - q1.x;
+  const s2y = q2.y - q1.y;
+
+  const denom = -s2x * s1y + s1x * s2y;
+  if (denom === 0) return null; // Parallel lines
+  const s = (-s1y * (p1.x - q1.x) + s1x * (p1.y - q1.y)) / denom;
+  const t = (s2x * (p1.y - q1.y) - s2y * (p1.x - q1.x)) / denom;
+
+  if (s < 0 || s > 1 || t < 0 || t > 1) return null; // Intersection not within segments
+
+  // Compute intersection point
+  return {
+    x: p1.x + s * s1x,
+    y: p1.y + s * s1y
+  };
 }
 
 /**
@@ -126,5 +152,73 @@ export function rotateBoxToFit(
   }
 
   // No valid rotation found
+  return null;
+}
+
+export function boxToSegmentIntersection(
+  box: { x: number; y: number; width: number; height: number },
+  angle: number,
+  point: Point
+) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+
+  const tl = { x: box.x, y: box.y };
+  const br = {
+    x: box.x + box.width * cos - box.height * sin,
+    y: box.y + box.width * sin + box.height * cos
+  };
+  const tr = { x: br.x + box.height * sin, y: br.y - box.height * cos };
+  const bl = { x: tl.x - box.height * sin, y: tl.y + box.height * cos };
+  const center = {
+    x: (tl.x + br.x) / 2,
+    y: (tl.y + br.y) / 2
+  };
+
+  let intersects: Point | null = null;
+  intersects = Ogma.geometry.segmentIntersection(
+    point.x,
+    point.y,
+    center.x,
+    center.y,
+    tl.x,
+    tl.y,
+    tr.x,
+    tr.y
+  );
+  if (intersects) return intersects;
+  intersects = Ogma.geometry.segmentIntersection(
+    point.x,
+    point.y,
+    center.x,
+    center.y,
+    tr.x,
+    tr.y,
+    br.x,
+    br.y
+  );
+  if (intersects) return intersects;
+  intersects = Ogma.geometry.segmentIntersection(
+    point.x,
+    point.y,
+    center.x,
+    center.y,
+    br.x,
+    br.y,
+    bl.x,
+    bl.y
+  );
+  if (intersects) return intersects;
+  intersects = Ogma.geometry.segmentIntersection(
+    point.x,
+    point.y,
+    center.x,
+    center.y,
+    bl.x,
+    bl.y,
+    tl.x,
+    tl.y
+  );
+  if (intersects) return intersects;
   return null;
 }

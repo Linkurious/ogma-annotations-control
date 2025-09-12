@@ -41,6 +41,10 @@ export function getBoxPosition<T extends Annotation>(t: T) {
   const bbox = getBbox(t);
   return { x: bbox[0], y: bbox[1] };
 }
+export function getBoxCenter<T extends Annotation>(t: T) {
+  const bbox = getBbox(t);
+  return { x: (bbox[0] + bbox[2]) / 2, y: (bbox[1] + bbox[3]) / 2 };
+}
 
 export function updateBbox<T extends Annotation>(t: T) {
   if (isArrow(t)) {

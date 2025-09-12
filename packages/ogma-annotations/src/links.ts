@@ -1,14 +1,12 @@
-import type {
-  NodeId,
-  Ogma,
-  Point,
-  SetMultipleAttributesEvent
-} from "@linkurious/ogma";
+import type { NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
+import { boxToSegmentIntersection } from "./geom";
 import { Store } from "./store";
 import type { Arrow, Id, TargetType, Link, Side, Text } from "./types";
-import { getBbox } from "./utils";
-import { add, mul, multiply, subtract } from "./vec";
+import { getBbox, getBoxCenter } from "./utils";
+import { add, mul, subtract } from "./vec";
+
+type XYR = { x: number; y: number; radius: number };
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -103,7 +101,10 @@ export class Links {
   public onSetMultipleAttributes = ({
     elements,
     updatedAttributes
-  }: SetMultipleAttributesEvent<unknown, unknown>) => {
+  }: {
+    elements: NodeList;
+    updatedAttributes: string[];
+  }) => {
     const attributesSet = new Set(updatedAttributes);
     if (
       !elements.isNode ||
@@ -126,6 +127,7 @@ export class Links {
       y: number;
       radius: number;
     }[];
+    const angle = this.ogma.view.getAngle();
     this.linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
       const start = this.links.get(links.start!);
@@ -133,75 +135,47 @@ export class Links {
       const arrow = state.getFeature(arrowId) as Arrow;
       let startPoint = arrow.geometry.coordinates[0];
       let endPoint = arrow.geometry.coordinates[1];
-      if (start && end) {
-        const startIndex = nodeIdToIndex.get(start.target)!;
-        const endIndex = nodeIdToIndex.get(end.target)!;
-        if (start.targetType === "node" && end.targetType === "node") {
-          const vec = subtract(xyr[endIndex], xyr[startIndex]);
-          startPoint = this._getNodeSnapPoint(
-            xyr[startIndex],
-            vec,
-            this._isLinkedToCenter(start)
-          );
-          endPoint = this._getNodeSnapPoint(
-            xyr[endIndex],
-            mul(vec, -1),
-            this._isLinkedToCenter(end)
-          );
-        } else if (start.targetType === "node") {
-          // compute first the box snap point
-          const box = state.getFeature(end.target) as Text;
-          endPoint = this._getBoxSnapPoint(box, end);
-          const vec = subtract(xyr[startIndex], {
-            x: endPoint[0],
-            y: endPoint[1]
-          });
-          startPoint = this._getNodeSnapPoint(
-            xyr[startIndex],
-            mul(vec, -1),
-            start.magnet.x === 0 && start.magnet.y === 0
-          );
-        } else if (end.targetType === "node") {
-          const box = state.getFeature(start.target) as Text;
-          const startPoint = this._getBoxSnapPoint(box, start);
-          const vec = subtract(xyr[endIndex], {
-            x: startPoint[0],
-            y: startPoint[1]
-          });
-          endPoint = this._getNodeSnapPoint(
-            xyr[endIndex],
-            vec,
-            this._isLinkedToCenter(end)
-          );
-        }
-      } else if (start) {
-        const startIndex = nodeIdToIndex.get(start.target)!;
+
+      const startCenter = start
+        ? start.targetType === "node"
+          ? xyr[nodeIdToIndex.get(start.target)!]
+          : getBoxCenter(state.getFeature(start.target) as Text)
+        : {
+            x: arrow.geometry.coordinates[0][0],
+            y: arrow.geometry.coordinates[0][1]
+          };
+      const endCenter = end
+        ? end.targetType === "node"
+          ? xyr[nodeIdToIndex.get(end.target)!]
+          : getBoxCenter(state.getFeature(end.target) as Text)
+        : {
+            x: arrow.geometry.coordinates[1][0],
+            y: arrow.geometry.coordinates[1][1]
+          };
+
+      const vec = subtract(endCenter!, startCenter!);
+      if (start) {
         if (start.targetType === "node") {
-          const vec = subtract(
-            { x: endPoint[0], y: endPoint[1] },
-            { x: startPoint[0], y: startPoint[1] }
-          );
           startPoint = this._getNodeSnapPoint(
-            xyr[startIndex],
+            startCenter as XYR,
             vec,
             this._isLinkedToCenter(start)
           );
         } else {
           const box = state.getFeature(start.target) as Text;
-          startPoint = this._getBoxSnapPoint(box, start);
+          startPoint = this._getBoxSnapPoint(box, endCenter, angle);
         }
-      } else if (end) {
-        const endIndex = nodeIdToIndex.get(end.target)!;
+      }
+      if (end) {
         if (end.targetType === "node") {
-          const vec = subtract(
-            { x: startPoint[0], y: startPoint[1] },
-            { x: endPoint[0], y: endPoint[1] }
-          );
           endPoint = this._getNodeSnapPoint(
-            xyr[endIndex],
-            vec,
+            endCenter as XYR,
+            mul(vec, -1),
             this._isLinkedToCenter(end)
           );
+        } else {
+          const box = state.getFeature(end.target) as Text;
+          endPoint = this._getBoxSnapPoint(box, startCenter, angle);
         }
       }
       state.applyLiveUpdate(arrow.id, {
@@ -216,20 +190,19 @@ export class Links {
     return link.magnet.x === 0 && link.magnet.y === 0;
   }
 
-  private _getBoxSnapPoint(box: Text, link: Link) {
-    // TODO: handle rotated views
+  private _getBoxSnapPoint(box: Text, point: Point, angle = 0) {
     const bb = getBbox(box);
-    const point = add(
-      { x: bb[0], y: bb[1] },
-      multiply(link.magnet!, { x: bb[2] - bb[0], y: bb[3] - bb[1] })
+    const intersection = boxToSegmentIntersection(
+      { x: bb[0], y: bb[1], width: bb[2] - bb[0], height: bb[3] - bb[1] },
+      angle,
+      point
     );
-    return [point.x, point.y];
+    if (intersection) {
+      return [intersection.x, intersection.y];
+    }
+    return [bb[0], bb[1]];
   }
-  private _getNodeSnapPoint(
-    xyr: { x: number; y: number; radius: number },
-    vec: Point,
-    center: boolean
-  ) {
+  private _getNodeSnapPoint(xyr: XYR, vec: Point, center: boolean) {
     if (center) {
       return [xyr.x, xyr.y];
     }
