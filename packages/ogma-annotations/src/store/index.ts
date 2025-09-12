@@ -13,6 +13,7 @@ interface AnnotationState {
   isDragging: boolean;
   hoveredFeature: Id | null;
   hoveringHandle: boolean;
+  hoveredHandle: -1 | number;
   selectedFeatures: Set<Id>;
   lastChangedFeatures: Id[];
 
@@ -56,6 +57,7 @@ export const store = create<AnnotationState>()(
         liveUpdates: {},
         isDragging: false,
         hoveringHandle: false,
+        hoveredHandle: -1,
         hoveredFeature: null,
         selectedFeatures: new Set(),
         lastChangedFeatures: [],
