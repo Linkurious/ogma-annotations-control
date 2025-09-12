@@ -76,21 +76,21 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.ogma.events
       // @ts-expect-error private event
       .on("setMultipleAttributes", this.links.onSetMultipleAttributes)
+      // TODO: Make it work
       .on("dragStart", (evt) => {
         if (!evt.target) return;
         // node/edge dragging might trigger liveUpdates in the links,
         // so we need to notify the state about it
         const state = this.store.getState();
-        if (!state.historyEnabled) return;
-        this.store.getState().toggleHistory();
+        // if (!state.historyEnabled) return;
+        // this.store.getState().toggleHistory();
       })
       .on("dragEnd", () => {
         const state = this.store.getState();
-        state.commitLiveUpdates();
-        if (state.historyEnabled) return;
-        state.toggleHistory();
+        // state.commitLiveUpdates();
+        // if (state.historyEnabled) return;
+        // state.toggleHistory();
       });
-    // TODO: Use state mutations to trigger refresh instead of events?
   }
 
   /**
