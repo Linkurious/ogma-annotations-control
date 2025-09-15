@@ -143,6 +143,7 @@ export class Links {
       const start = this.links.get(links.start!);
       const end = this.links.get(links.end!);
       const arrow = state.getFeature(arrowId) as Arrow;
+
       let startPoint = arrow.geometry.coordinates[0];
       let endPoint = arrow.geometry.coordinates[1];
 
@@ -150,18 +151,13 @@ export class Links {
         ? start.targetType === "node"
           ? xyr[nodeIdToIndex.get(start.target)!]
           : getBoxCenter(state.getFeature(start.target) as Text)
-        : {
-            x: arrow.geometry.coordinates[0][0],
-            y: arrow.geometry.coordinates[0][1]
-          };
+        : { x: startPoint[0], y: startPoint[1] };
+
       const endCenter = end
         ? end.targetType === "node"
           ? xyr[nodeIdToIndex.get(end.target)!]
           : getBoxCenter(state.getFeature(end.target) as Text)
-        : {
-            x: arrow.geometry.coordinates[1][0],
-            y: arrow.geometry.coordinates[1][1]
-          };
+        : { x: endPoint[0], y: endPoint[1] };
 
       const vec = subtract(endCenter!, startCenter!);
       if (start) {
@@ -192,7 +188,7 @@ export class Links {
         geometry: {
           coordinates: [startPoint, endPoint]
         }
-      });
+      } as Partial<Arrow>);
     });
   }
 
