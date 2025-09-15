@@ -27,12 +27,6 @@ export abstract class Handler<
     //const wasHovered = Boolean(this.hoveredHandle);
     if (!this.dragging) this._detectHandle(evt, this.ogma.view.getZoom());
     else if (this.dragStartPoint) this.onDrag(evt);
-
-    // const isHovered = Boolean(this.hoveredHandle);
-    // if (wasHovered !== isHovered) {
-    //   if (isHovered) this.dispatchEvent(new Event("mouseenter"));
-    //   else this.dispatchEvent(new Event("mouseleave"));
-    // }
   };
 
   handleMouseDown = (evt: MouseEvent): void => {

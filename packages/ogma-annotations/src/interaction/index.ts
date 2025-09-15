@@ -1,6 +1,5 @@
 import Ogma from "@linkurious/ogma";
 import { Add } from "./add";
-import { Rotation } from "./rotation";
 import { Index } from "./spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
@@ -21,7 +20,6 @@ export class InteractionController {
     maxX: Infinity,
     maxY: Infinity
   };
-  private rotation: Rotation;
   private add: Add;
   private suppressClickUntil = 0;
   constructor(
@@ -44,7 +42,7 @@ export class InteractionController {
       passive: true,
       capture: true
     });
-    this.rotation = new Rotation(ogma, links);
+    this.ogma.events.on("rotate", () => this.links.update());
     this.add = new Add(store, links);
   }
 
