@@ -1,5 +1,4 @@
 import Ogma from "@linkurious/ogma";
-import { Add } from "./add";
 import { Index } from "./spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
@@ -9,7 +8,8 @@ import {
   Box,
   detectBox,
   Cursor,
-  isArrow
+  isArrow,
+  Arrow
 } from "../types";
 import { clientToContainerPosition } from "../utils";
 
@@ -20,7 +20,6 @@ export class InteractionController {
     maxX: Infinity,
     maxY: Infinity
   };
-  private add: Add;
   private suppressClickUntil = 0;
   constructor(
     private ogma: Ogma,
@@ -43,7 +42,6 @@ export class InteractionController {
       capture: true
     });
     this.ogma.events.on("rotate", () => this.links.update());
-    this.add = new Add(store, links);
   }
 
   detect(x: number, y: number, angle: number): Annotation | null {

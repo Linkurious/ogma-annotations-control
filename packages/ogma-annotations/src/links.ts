@@ -2,7 +2,15 @@ import type { NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
 import { boxToSegmentIntersection } from "./geom";
 import { Store } from "./store";
-import type { Arrow, Id, TargetType, Link, Side, Text } from "./types";
+import type {
+  Arrow,
+  Id,
+  TargetType,
+  Link,
+  Side,
+  Text,
+  Annotation
+} from "./types";
 import { getBbox, getBoxCenter } from "./utils";
 import { add, mul, subtract } from "./vec";
 
@@ -26,6 +34,8 @@ export class Links {
   constructor(ogma: Ogma, store: Store) {
     this.ogma = ogma;
     this.store = store;
+
+    this.store.subscribe((state) => state.features, this.onAddArrow);
   }
 
   public add(
@@ -186,6 +196,38 @@ export class Links {
     });
   }
 
+  private onAddArrow = (
+    newFeatures: Record<string, Annotation>,
+    prevFeatures: Record<string, Annotation>
+  ) => {
+    const state = this.store.getState();
+    const oldIds = new Set(Object.keys(prevFeatures));
+    const newIds = Object.keys(newFeatures).filter((id) => !oldIds.has(id));
+    newIds.forEach((id) => {
+      const feature = state.getFeature(id);
+      if (!feature || feature.properties.type !== "arrow") return;
+      const arrow = feature as Arrow;
+      if (arrow.properties.link?.start) {
+        this.add(
+          arrow,
+          "start",
+          arrow.properties.link.start.id,
+          arrow.properties.link.start.type,
+          arrow.properties.link.start.magnet!
+        );
+      }
+      if (arrow.properties.link?.end) {
+        this.add(
+          arrow,
+          "end",
+          arrow.properties.link.end.id,
+          arrow.properties.link.end.type,
+          arrow.properties.link.end.magnet!
+        );
+      }
+    });
+  };
+
   private _isLinkedToCenter(link: Link) {
     return link.magnet.x === 0 && link.magnet.y === 0;
   }
@@ -202,6 +244,7 @@ export class Links {
     }
     return [bb[0], bb[1]];
   }
+
   private _getNodeSnapPoint(xyr: XYR, vec: Point, center: boolean) {
     if (center) {
       return [xyr.x, xyr.y];
