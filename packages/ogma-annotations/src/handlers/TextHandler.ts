@@ -3,8 +3,9 @@ import { Handler } from "./handler";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
 import { Cursor, Text } from "../types";
-import { getBoxSize } from "../utils";
-import { dot } from "../vec";
+import { getBoxPosition, getBoxSize } from "../utils";
+import { dot, rotateRadians } from "../vec";
+import { get } from "http";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;
@@ -61,10 +62,10 @@ const CORNER_HANDLES = [
 
 // Get corner mapping: which corners to update for each dragged corner
 const cornerMapping = [
-  [0], // corner 0 (top-left): update corner 0
-  [0, 1], // corner 1 (top-right): update corners 0, 1
-  [0, 1, 2], // corner 2 (bottom-right): update corners 0, 1, 2
-  [0, 3] // corner 3 (bottom-left): update corners 0, 3
+  [0, 1, 3], // corner 0 (top-left): update corners 0, 3
+  [0, 1, 2], // corner 1 (top-right): update corners 0, 1, 2
+  [1, 2, 3], // corner 2 (bottom-right): update corners 1, 2, 3
+  [0, 1, 3] // corner 3 (bottom-left): update corners 0, 3
 ];
 
 type Handle = {
@@ -229,79 +230,78 @@ export class TextHandler extends Handler<Text, Handle> {
     delta: Point,
     cornerIndex: number
   ) {
-    const originalCoords = [...original.geometry.coordinates[0]];
-    const newCoords = originalCoords.map((coord) => [...coord]);
+    let isTop = cornerIndex === 0 || cornerIndex === 1;
+    let isLeft = cornerIndex === 0 || cornerIndex === 3;
+    let isRight = cornerIndex === 1 || cornerIndex === 2;
+    let isBottom = cornerIndex === 2 || cornerIndex === 3;
 
-    console.log("Corner Drag", cornerIndex, delta);
+    let { x, y } = getBoxPosition(original);
+    let { width, height } = getBoxSize(original);
 
-    cornerMapping[cornerIndex].forEach((i: number) => {
-      let deltaX = 0;
-      let deltaY = 0;
-
-      // Apply delta based on which corner is being dragged and which corner we're updating
-      switch (cornerIndex) {
-        case 0: // top-left
-          if (i === 0) {
-            deltaX = delta.x;
-            deltaY = delta.y;
-          }
-          break;
-        case 1: // top-right
-          if (i === 0) {
-            deltaY = delta.y;
-          }
-          if (i === 1) {
-            deltaX = delta.x;
-            deltaY = delta.y;
-          }
-          break;
-        case 2: // bottom-right
-          if (i === 1) {
-            deltaX = delta.x;
-          }
-          if (i === 2) {
-            deltaX = delta.x;
-            deltaY = delta.y;
-          }
-          break;
-        case 3: // bottom-left
-          if (i === 0) {
-            deltaY = delta.y;
-          }
-          if (i === 3) {
-            deltaX = delta.x;
-            deltaY = delta.y;
-          }
-          break;
-      }
-
-      newCoords[i] = [
-        originalCoords[i][0] + deltaX,
-        originalCoords[i][1] + deltaY
-      ];
-    });
-
+    // Resizing the box by dragging one of the corners
+    if (isLeft && isTop) {
+      x += delta.x;
+      y += delta.y;
+      width -= delta.x;
+      height -= delta.y;
+    } else if (isRight && isBottom) {
+      width += delta.x;
+      height += delta.y;
+    } else if (isLeft && isBottom) {
+      x += delta.x;
+      width -= delta.x;
+      height += delta.y;
+    } else if (isRight && isTop) {
+      y += delta.y;
+      width += delta.x;
+      height -= delta.y;
+    }
     return {
       type: original.geometry.type,
-      coordinates: [newCoords]
+      coordinates: [
+        [
+          [x, y],
+          [x + width, y],
+          [x + width, y + height],
+          [x, y + height],
+          [x, y]
+        ]
+      ]
     };
   }
 
   private calculateEdgeDrag(original: Text, delta: Point, handle: Handle) {
-    const originalCoords = [...original.geometry.coordinates[0]];
-    const newCoords = originalCoords.map((coord) => [...coord]);
-    const movement = dot(handle.norm, delta);
+    let { x, y } = getBoxPosition(original);
+    let { width, height } = getBoxSize(original);
 
-    points[handle.edge!].forEach((i: number) => {
-      newCoords[i] = [
-        originalCoords[i][0] + handle.norm.x * movement,
-        originalCoords[i][1] + handle.norm.y * movement
-      ];
-    });
+    switch (handle.edge) {
+      case EdgeType.TOP:
+        y += delta.y;
+        height -= delta.y;
+        break;
+      case EdgeType.BOTTOM:
+        height += delta.y;
+        break;
+      case EdgeType.LEFT:
+        x += delta.x;
+        width -= delta.x;
+        break;
+      case EdgeType.RIGHT:
+        width += delta.x;
+        break;
+    }
 
     return {
       type: original.geometry.type,
-      coordinates: [newCoords]
+      coordinates: [
+        [
+          [x, y],
+          [x + width, y],
+          [x + width, y + height],
+          [x, y + height],
+          [x, y]
+        ]
+      ]
     };
   }
 
