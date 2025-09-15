@@ -176,8 +176,8 @@ svg text {
 }
 
 .annotation-text {
-  pointer-events: visible;
-  cursor: pointer;
+  /* pointer-events: visible; */
+  /* cursor: pointer; */
 }
 .annotation-text:hover > rect {
   stroke: var(--handle-color);
@@ -194,7 +194,7 @@ svg text {
 /* Hover and Selected States */
 .annotation-hovered {
   filter: brightness(1.1) drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
-  cursor: pointer;
+  /* cursor: pointer; */
 }
 
 .annotation-selected {

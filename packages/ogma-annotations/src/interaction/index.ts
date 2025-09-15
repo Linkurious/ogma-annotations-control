@@ -97,9 +97,7 @@ export class InteractionController {
 
   private onMouseClick = (evt: MouseEvent) => {
     // Ignore clicks that occur shortly after drag operations
-    if (Date.now() < this.suppressClickUntil) {
-      return;
-    }
+    if (Date.now() < this.suppressClickUntil) return;
 
     const screenPoint = clientToContainerPosition(
       evt,
@@ -108,17 +106,18 @@ export class InteractionController {
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y, this.ogma.view.getAngle());
 
+    const state = this.store.getState();
     if (annotation) {
       if (evt.ctrlKey || evt.metaKey) {
         // Multi-select with Ctrl/Cmd
-        this.store.getState().toggleSelection(annotation.id);
+        state.toggleSelection(annotation.id);
       } else {
         // Single select
-        this.store.getState().setSelectedFeatures([annotation.id]);
+        state.setSelectedFeatures([annotation.id]);
       }
     } else if (!evt.ctrlKey && !evt.metaKey) {
       // Clear selection when clicking empty space (unless multi-selecting)
-      this.store.getState().clearSelection();
+      state.clearSelection();
     }
   };
 

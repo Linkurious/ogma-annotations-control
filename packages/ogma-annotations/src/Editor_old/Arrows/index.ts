@@ -72,12 +72,8 @@ export class ArrowsEditor extends Editor<Arrow> {
       this.editor.element.querySelectorAll(".arrow-handle>.handle")
     );
 
-    // events to move/resize
-    this.handles.forEach((handle: HTMLDivElement) =>
-      handle.addEventListener("mousedown", this.onHandleMouseDown)
-    );
-    document.addEventListener("mousemove", this.onMouseMove, true);
-    document.addEventListener("mouseup", this.onMouseUp);
+    window.addEventListener("mousemove", this.onMouseMove, true);
+    window.addEventListener("mouseup", this.onMouseUp);
   }
 
   private onHandleMouseDown = (evt: MouseEvent) => {

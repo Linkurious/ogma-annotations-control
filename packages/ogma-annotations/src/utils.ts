@@ -267,6 +267,12 @@ export function rgbToRgba(color: string, alpha: number) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+export function getBrowserWindow() {
+  return typeof window !== "undefined"
+    ? (window as unknown as HTMLElement)
+    : undefined;
+}
+
 export {
   getBbox as getTextBbox,
   updateBbox as updateTextBbox,

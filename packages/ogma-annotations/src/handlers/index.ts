@@ -1,6 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { ArrowHandler } from "./ArrowHandler";
-import { Handler } from "./Handler";
+import { Handler } from "./handler";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./TextHandler";
 import { InteractionController } from "../interaction/index";
@@ -8,6 +8,7 @@ import { Index } from "../interaction/spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
 import { Annotation, Id, Text } from "../types";
+import { getBrowserWindow } from "../utils";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();
@@ -88,8 +89,9 @@ export class AnnotationEditor extends EventTarget {
     if (!handler) return;
     handler.stopEditing();
     const container = this.ogma.getContainer()!;
-    container.removeEventListener("mousemove", handler.handleMouseMove);
-    container.removeEventListener("mouseup", handler.handleMouseUp);
+    const win = getBrowserWindow() || container;
+    win.removeEventListener("mousemove", handler.handleMouseMove);
+    win.removeEventListener("mouseup", handler.handleMouseUp);
     container.removeEventListener("mousedown", handler.handleMouseDown);
   }
 
@@ -104,8 +106,9 @@ export class AnnotationEditor extends EventTarget {
     this.activeHandler = handler;
     handler.setAnnotation(feature as Text);
     const container = this.ogma.getContainer()!;
-    container.addEventListener("mousemove", handler.handleMouseMove);
-    container.addEventListener("mouseup", handler.handleMouseUp, true);
+    const win = getBrowserWindow() || container;
+    win.addEventListener("mousemove", handler.handleMouseMove);
+    win.addEventListener("mouseup", handler.handleMouseUp, true);
     container.addEventListener("mousedown", handler.handleMouseDown);
   }
 

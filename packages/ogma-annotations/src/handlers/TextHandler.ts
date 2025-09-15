@@ -1,10 +1,10 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Handler } from "./Handler";
+import { Handler } from "./handler";
 import { getTransformMatrix } from "../renderer/shapes/utils";
+import { Store } from "../store";
 import { Cursor, Text } from "../types";
 import { getBoxSize } from "../utils";
 import { dot } from "../vec";
-import { Store } from "../store";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;
@@ -85,6 +85,7 @@ const cursors: Cursor[] = [
   "se-resize", // bottom-right (2)
   "sw-resize" // bottom-left (3)
 ];
+
 export class TextHandler extends Handler<Text, Handle> {
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
@@ -99,7 +100,6 @@ export class TextHandler extends Handler<Text, Handle> {
 
     this.hoveredHandle = undefined;
     this.store.setState({ hoveredHandle: -1 });
-    this.setCursor("default");
 
     // Check corner handles first (higher priority)
     for (let i = 0; i < CORNER_HANDLES.length; i++) {
@@ -168,13 +168,15 @@ export class TextHandler extends Handler<Text, Handle> {
         };
         this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
         this.setCursor(this.getEdgeCursor(edge));
-        break;
+        return;
       }
     }
+    this.setCursor("default");
   }
 
-  _drag(evt: MouseEvent) {
-    if (!this.dragStartPoint || !this.hoveredHandle || !this.annotation) return;
+  onDrag(evt: MouseEvent) {
+    if (!this.dragStartPoint || !this.hoveredHandle || !this.isActive()) return;
+
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
@@ -188,7 +190,7 @@ export class TextHandler extends Handler<Text, Handle> {
     const original = this.getAnnotation()!;
 
     // Create updated geometry based on handle type
-    let updatedGeometry;
+    let updatedGeometry: Text["geometry"] | null = null;
 
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
@@ -229,6 +231,8 @@ export class TextHandler extends Handler<Text, Handle> {
   ) {
     const originalCoords = [...original.geometry.coordinates[0]];
     const newCoords = originalCoords.map((coord) => [...coord]);
+
+    console.log("Corner Drag", cornerIndex, delta);
 
     cornerMapping[cornerIndex].forEach((i: number) => {
       let deltaX = 0;
@@ -301,15 +305,18 @@ export class TextHandler extends Handler<Text, Handle> {
     };
   }
 
-  protected _dragStart() {
-    if (!this.annotation) return;
+  protected onDragStart() {
+    if (!this.isActive()) return;
     // Start live update tracking for this annotation
-    this.store.getState().startLiveUpdate([this.annotation]);
+    this.store.getState().startLiveUpdate([this.annotation!]);
   }
 
-  protected _dragEnd() {
-    if (!this.annotation) return;
+  protected onDragEnd() {
+    if (!this.isActive()) return;
     this.commitChange();
+    this.hoveredHandle = undefined;
+    this.dragStartPoint = undefined;
+    this.dragging = false;
   }
 
   private getCornerCursor(cornerIndex: number): Cursor {

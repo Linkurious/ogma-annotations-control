@@ -1,10 +1,10 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Handler } from "./Handler";
+import { Handler } from "./handler";
 import { Snap, Snapping } from "./snapping";
-import { Links } from "../links";
-import { Arrow, detectArrow } from "../types";
-import { Store } from "../store";
 import { handleDetectionThreshold } from "../constants";
+import { Links } from "../links";
+import { Store } from "../store";
+import { Arrow, detectArrow } from "../types";
 
 enum HandleType {
   START = "start",
@@ -62,7 +62,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     } else {
       // on the line?
       if (detectArrow(annotation, mousePoint, margin)) {
-        this.setCursor("move");
+        this.setCursor("grab");
         this.hoveredHandle = {
           type: HandleType.BODY,
           point: mousePoint
@@ -75,8 +75,8 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     }
   }
 
-  protected _drag(evt: MouseEvent) {
-    if (!(this.dragStartPoint || !this.hoveredHandle) || !this.annotation)
+  protected onDrag(evt: MouseEvent) {
+    if (!(this.dragStartPoint || !this.hoveredHandle) || !this.isActive())
       return;
 
     evt.stopPropagation();
@@ -124,14 +124,14 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       })
     );
   }
-  protected _dragStart() {
-    if (!this.annotation) return;
+  protected onDragStart() {
+    if (!this.isActive()) return;
     // Start live update tracking for this annotation
-    this.store.getState().startLiveUpdate([this.annotation]);
+    this.store.getState().startLiveUpdate([this.annotation!]);
   }
 
-  protected _dragEnd() {
-    if (!this.annotation) return;
+  protected onDragEnd() {
+    if (!this.isActive()) return;
 
     this.commitChange();
 
@@ -147,6 +147,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
           this.snap.magnet
         );
     }
+    this.clearDragState();
 
     this.snap = null;
   }

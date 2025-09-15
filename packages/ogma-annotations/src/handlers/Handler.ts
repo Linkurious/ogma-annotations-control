@@ -1,13 +1,13 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Annotation, Cursor, Id } from "../types";
 import { Store } from "../store";
+import { Annotation, Cursor, Id } from "../types";
 import { clientToContainerPosition } from "../utils";
 
 export abstract class Handler<
   T extends Annotation,
   Handle
 > extends EventTarget {
-  protected annotation?: Id;
+  protected annotation: Id | null = null;
   protected ogma: Ogma;
   protected dragging: boolean = false;
   protected dragStartPoint?: Point;
@@ -24,9 +24,9 @@ export abstract class Handler<
   handleMouseMove = (evt: MouseEvent): void => {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
-    const wasHovered = Boolean(this.hoveredHandle);
+    //const wasHovered = Boolean(this.hoveredHandle);
     if (!this.dragging) this._detectHandle(evt, this.ogma.view.getZoom());
-    else if (this.dragStartPoint) this._drag(evt);
+    else if (this.dragStartPoint) this.onDrag(evt);
 
     // const isHovered = Boolean(this.hoveredHandle);
     // if (wasHovered !== isHovered) {
@@ -37,13 +37,14 @@ export abstract class Handler<
 
   handleMouseDown = (evt: MouseEvent): void => {
     if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
+
     evt.preventDefault();
     evt.stopPropagation();
 
     // start resizing
     this.dragging = true;
     this.dragStartPoint = this.clientToCanvas(evt);
-    this._dragStart(evt);
+    this.onDragStart(evt);
     this.dispatchEvent(new Event("dragstart"));
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
@@ -59,21 +60,27 @@ export abstract class Handler<
     this.ogma.setOptions({
       interactions: { pan: { enabled: this.ogmaPanningOption } }
     });
-    this._dragEnd(evt);
+    this.onDragEnd(evt);
     this.dispatchEvent(new Event("dragend"));
   };
 
   cancelEdit() {
-    if (!this.isActive() || !this.annotation) return;
-    this.dragging = false;
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: this.ogmaPanningOption } }
-    });
+    if (!this.isActive() || this.annotation === null) return;
+    this.clearDragState();
   }
 
   // Keyboard events
   handleKeyDown?(evt: KeyboardEvent): void;
   handleKeyUp?(evt: KeyboardEvent): void;
+
+  protected clearDragState() {
+    this.dragging = false;
+    this.dragStartPoint = undefined;
+    this.hoveredHandle = undefined;
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: this.ogmaPanningOption } }
+    });
+  }
 
   protected commitChange() {
     // Commit all live updates to create a single history entry
@@ -89,10 +96,10 @@ export abstract class Handler<
    * Handles the dragging of the selected handle.
    * @param evt Mouse event
    */
-  protected abstract _drag(evt: MouseEvent): void;
+  protected abstract onDrag(evt: MouseEvent): void;
 
-  protected abstract _dragStart(evt: MouseEvent): void;
-  protected abstract _dragEnd(evt: MouseEvent): void;
+  protected abstract onDragStart(evt: MouseEvent): void;
+  protected abstract onDragEnd(evt: MouseEvent): void;
 
   protected clientToCanvas(evt: MouseEvent): Point {
     const ogma = this.ogma;
@@ -100,8 +107,8 @@ export abstract class Handler<
     return ogma.view.screenToGraphCoordinates(screenPoint);
   }
 
-  setAnnotation(annotation: T): void {
-    this.annotation = annotation.id;
+  setAnnotation(annotation: T | null): void {
+    this.annotation = annotation ? annotation.id : null;
   }
 
   getAnnotation(): T | undefined {
@@ -110,16 +117,15 @@ export abstract class Handler<
 
   protected setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
-    if (container) {
-      (container as HTMLElement).style.cursor = cursor;
-    }
+    if (container) (container as HTMLElement).style.cursor = cursor;
   }
 
   stopEditing() {
-    this.annotation = undefined;
+    this.setAnnotation(null);
+    this.clearDragState();
   }
 
   isActive() {
-    return this.annotation !== undefined;
+    return this.annotation !== null;
   }
 }
