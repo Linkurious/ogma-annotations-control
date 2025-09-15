@@ -8,8 +8,7 @@ import {
   Box,
   detectBox,
   Cursor,
-  isArrow,
-  Arrow
+  isArrow
 } from "../types";
 import { clientToContainerPosition } from "../utils";
 
