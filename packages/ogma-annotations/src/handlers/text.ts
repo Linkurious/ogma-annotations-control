@@ -12,7 +12,8 @@ const AXIS_Y = { x: 0, y: 1 } as const;
 
 enum HandleType {
   EDGE = "edge",
-  CORNER = "corner"
+  CORNER = "corner",
+  BODY = "body"
 }
 
 enum EdgeType {
@@ -24,10 +25,10 @@ enum EdgeType {
 
 // Edge template definitions: [edge, axis, norm, xStart, yStart, xEnd, yEnd]
 const EDGE_TEMPLATES = [
-  [EdgeType.TOP, AXIS_X, AXIS_Y, 0, 0, 1, 0],
-  [EdgeType.RIGHT, AXIS_Y, AXIS_X, 1, 0, 1, 1],
-  [EdgeType.BOTTOM, AXIS_X, AXIS_Y, 0, 1, 1, 1],
-  [EdgeType.LEFT, AXIS_Y, AXIS_X, 0, 0, 0, 1]
+  [EdgeType.TOP, AXIS_Y, 0, 0, 1, 0],
+  [EdgeType.RIGHT, AXIS_X, 1, 0, 1, 1],
+  [EdgeType.BOTTOM, AXIS_Y, 0, 1, 1, 1],
+  [EdgeType.LEFT, AXIS_X, 0, 0, 0, 1]
 ] as const;
 
 const points = {
@@ -59,24 +60,10 @@ const CORNER_HANDLES = [
   [0, 1] // bottom-left (index 3)
 ] as const;
 
-// Get corner mapping: which corners to update for each dragged corner
-const cornerMapping = [
-  [0, 1, 3], // corner 0 (top-left): update corners 0, 3
-  [0, 1, 2], // corner 1 (top-right): update corners 0, 1, 2
-  [1, 2, 3], // corner 2 (bottom-right): update corners 1, 2, 3
-  [0, 1, 3] // corner 3 (bottom-left): update corners 0, 3
-];
-
 type Handle = {
   type: HandleType;
   edge?: EdgeType;
   corner?: number; // 0=top-left, 1=top-right, 2=bottom-right, 3=bottom-left
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  axis: Point;
-  norm: Point;
 };
 
 const cursors: Cursor[] = [
@@ -115,13 +102,7 @@ export class TextHandler extends Handler<Text, Handle> {
       ) {
         this.hoveredHandle = {
           type: HandleType.CORNER,
-          corner: i,
-          minX: cornerX,
-          minY: cornerY,
-          maxX: cornerX,
-          maxY: cornerY,
-          axis: AXIS_X, // Default axis for corners
-          norm: AXIS_Y // Default norm for corners
+          corner: i
         };
         this.store.setState({ hoveredHandle: i });
         this.setCursor(this.getCornerCursor(i));
@@ -130,24 +111,13 @@ export class TextHandler extends Handler<Text, Handle> {
     }
 
     // Check edge handles if no corner handle was found
-    for (const [
-      edge,
-      axis,
-      norm,
-      xStart,
-      yStart,
-      xEnd,
-      yEnd
-    ] of EDGE_TEMPLATES) {
+    for (const [edge, norm, xStart, yStart, xEnd, yEnd] of EDGE_TEMPLATES) {
       const minX = matrix.x + size.width * xStart;
       const minY = matrix.y + size.height * yStart;
       const maxX = matrix.x + size.width * xEnd;
       const maxY = matrix.y + size.height * yEnd;
 
-      const dist = dot(norm, {
-        x: x - minX,
-        y: y - minY
-      });
+      const dist = dot(norm, { x: x - minX, y: y - minY });
 
       if (
         Math.abs(dist) < margin &&
@@ -156,21 +126,27 @@ export class TextHandler extends Handler<Text, Handle> {
         y >= minY - margin &&
         y <= maxY + margin
       ) {
-        this.hoveredHandle = {
-          type: HandleType.EDGE,
-          edge,
-          minX,
-          minY,
-          maxX,
-          maxY,
-          axis,
-          norm
-        };
+        this.hoveredHandle = { type: HandleType.EDGE, edge };
         this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
         this.setCursor(this.getEdgeCursor(edge));
         return;
       }
     }
+
+    // detect if we are inside the box (for moving)
+    if (
+      x >= matrix.x - margin &&
+      x <= matrix.x + size.width + margin &&
+      y >= matrix.y - margin &&
+      y <= matrix.y + size.height + margin
+    ) {
+      this.store.setState({ hoveredHandle: 8 }); // 8 = body
+      // Treat body as edge for dragging
+      this.hoveredHandle = { type: HandleType.BODY };
+      this.setCursor("move");
+      return;
+    }
+
     this.setCursor("default");
   }
 
@@ -202,6 +178,9 @@ export class TextHandler extends Handler<Text, Handle> {
     } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
       updatedGeometry = this.calculateEdgeDrag(original, delta, handle);
+    } else if (handle.type === HandleType.BODY) {
+      // Body drag: move the entire box
+      updatedGeometry = this.calculateBodyDrag(original, delta);
     }
 
     if (updatedGeometry) {
@@ -222,6 +201,23 @@ export class TextHandler extends Handler<Text, Handle> {
         }
       })
     );
+  }
+
+  private calculateBodyDrag(original: Text, delta: Point) {
+    const { x, y } = getBoxPosition(original);
+    const { width, height } = getBoxSize(original);
+    return {
+      type: original.geometry.type,
+      coordinates: [
+        [
+          [x + delta.x, y + delta.y],
+          [x + delta.x + width, y + delta.y],
+          [x + delta.x + width, y + delta.y + height],
+          [x + delta.x, y + delta.y + height],
+          [x + delta.x, y + delta.y]
+        ]
+      ]
+    };
   }
 
   private calculateCornerDrag(
