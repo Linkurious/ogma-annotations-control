@@ -4,8 +4,7 @@ import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
 import { Cursor, Text } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
-import { dot, rotateRadians } from "../vec";
-import { get } from "http";
+import { dot } from "../vec";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;
