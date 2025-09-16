@@ -154,6 +154,20 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this.store.temporal.getState().futureStates.length > 0;
   }
 
+  public getAnnotations(): AnnotationCollection {
+    const features = this.store.getState().features;
+    return {
+      type: "FeatureCollection",
+      features: Object.values(features)
+    };
+  }
+
+  public cancelDrawing() {}
+
+  public startComment(x: number, y: number, text: Annotation) {}
+  public startBox(x: number, y: number, box: Annotation) {}
+  public startArrow(x: number, y: number, arrow: Annotation) {}
+
   /**
    * Destroy the controller and its elements
    */

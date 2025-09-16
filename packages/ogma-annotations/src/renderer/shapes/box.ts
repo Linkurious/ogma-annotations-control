@@ -1,5 +1,4 @@
 import { View } from "@linkurious/ogma";
-import { getTransformMatrix } from "./utils";
 import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
 import { Box } from "../../types";
 import { createSVGElement, getBoxSize } from "../../utils";
@@ -41,11 +40,18 @@ export function renderBox(root: SVGElement, annotation: Box, view: View) {
     rect.setAttribute("height", `${size.height}`);
   }
   g.appendChild(rect);
-  //this.drawContent(annotation, g);
 
-  g.setAttribute("transform", getTransformMatrix(annotation, view));
+  g.setAttribute("transform", getRotationMatrix(-view.angle!, 0, 0));
   g.classList.add(className);
   g.setAttribute("data-annotation", `${annotation.id}`);
   g.setAttribute("data-annotation-type", annotation.properties.type);
   root.appendChild(g);
+}
+
+function getRotationMatrix(angle: number, cx: number, cy: number) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const tx = cx * (1 - cos) + cy * sin;
+  const ty = cy * (1 - cos) - cx * sin;
+  return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${tx}, ${ty})`;
 }

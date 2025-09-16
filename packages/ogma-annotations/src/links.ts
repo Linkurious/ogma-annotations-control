@@ -190,6 +190,7 @@ export class Links {
         }
       } as Partial<Arrow>);
     });
+    state.commitLiveUpdates();
   }
 
   private onAddArrow = (

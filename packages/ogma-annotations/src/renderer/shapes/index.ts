@@ -1,11 +1,10 @@
 import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
-import { applyTransform, renderArrow } from "./arrow";
+import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderText } from "./text";
-import { getTransformMatrix } from "./utils";
 import { DATA_ATTR } from "../../constants";
 import { Store } from "../../store";
-import { Annotation, Id, isArrow, isBox, isText } from "../../types";
+import { Annotation, isArrow, isBox, isText } from "../../types";
 import { createSVGElement } from "../../utils";
 import { Renderer } from "../base";
 
@@ -34,26 +33,6 @@ export class Shapes extends Renderer<SVGLayer> {
   }
 
   private _onRotate = () => {
-    const view = this.ogma.view.get();
-    const groups = this.layer.element.children;
-
-    // update transforms for all the groups
-    for (let i = 0; i < groups.length; i++) {
-      const g = groups[i] as SVGGElement;
-
-      if (g.tagName.toLowerCase() !== "g") continue;
-      if (!g.hasAttribute(DATA_ATTR)) {
-        applyTransform(g, view.angle);
-        continue;
-      }
-
-      let id: Id = g.getAttribute(DATA_ATTR)!;
-      if (isFinite(Number(id))) id = Number(id);
-      const feature = this.store.getState().getFeature(id);
-      if (feature && (isBox(feature) || isText(feature))) {
-        g.setAttribute("transform", getTransformMatrix(feature, view));
-      }
-    }
     this.layer.refresh();
   };
 
@@ -64,15 +43,16 @@ export class Shapes extends Renderer<SVGLayer> {
     const view = this.ogma.view.get();
 
     const arrowsRoot = createSVGElement<SVGGElement>("g");
-    root.appendChild(arrowsRoot);
+    const annotationsRoot = createSVGElement<SVGGElement>("g");
+    annotationsRoot.appendChild(arrowsRoot);
 
     for (let feature of Object.values(features)) {
       if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
 
-      if (isBox(feature)) renderBox(root, feature, view);
-      else if (isText(feature)) renderText(root, feature, view);
+      if (isBox(feature)) renderBox(annotationsRoot, feature, view);
+      else if (isText(feature)) renderText(annotationsRoot, feature, view);
       else if (isArrow(feature))
         renderArrow(
           arrowsRoot,
@@ -85,6 +65,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
     // Apply state classes after rendering
     this.applyStateClasses(root, hoveredFeature, selectedFeatures);
+    root.appendChild(annotationsRoot);
   };
 
   private applyStateClasses(
@@ -122,4 +103,12 @@ export class Shapes extends Renderer<SVGLayer> {
     this.layer.destroy();
     super.destroy();
   }
+}
+
+function getRotationMatrix(angle: number, cx: number, cy: number) {
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const tx = cx * (1 - cos) + cy * sin;
+  const ty = cy * (1 - cos) - cx * sin;
+  return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${tx}, ${ty})`;
 }

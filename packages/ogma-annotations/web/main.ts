@@ -7,7 +7,8 @@ import {
   createArrow,
   createText,
   AnnotationCollection,
-  createBox
+  createBox,
+  getAnnotationsBounds
 } from "../src";
 import { EVT_DRAG_END } from "../src/constants";
 
@@ -51,9 +52,7 @@ await ogma.layouts.force({ locate: true });
 control.add(annotationsWithLinks);
 
 // @ts-ignore
-window.control = control;
-// @ts-ignore
-window.createArrow = createArrow;
+Object.assign(window, { Ogma, Control, createArrow, createText, createBox });
 
 const addArrows = document.getElementById("add-arrow")! as HTMLButtonElement;
 addArrows.addEventListener("click", () => {
@@ -155,3 +154,31 @@ document.getElementById("undo")!.addEventListener("click", () => {
 document.getElementById("redo")!.addEventListener("click", () => {
   control.redo();
 });
+document.getElementById("center-view")!.addEventListener("click", async () => {
+  const bounds = ogma.view.getGraphBoundingBox();
+
+  await ogma.view.moveToBounds(
+    bounds.extend(getAnnotationsBounds(control.getAnnotations())),
+    { duration: 200 }
+  );
+});
+document.getElementById("export")!.addEventListener("click", () => {
+  const annotations = control.getAnnotations();
+  const dataStr =
+    "data:text/json;charset=utf-8," +
+    encodeURIComponent(JSON.stringify(annotations, null, 2));
+  const dl = document.createElement("a")!;
+  document.body.appendChild(dl);
+  dl.setAttribute("href", dataStr);
+  dl.setAttribute("download", "annotations.json");
+  dl.click();
+  dl.remove();
+
+  console.log("Exported annotations:", annotations);
+});
+
+setTimeout(async () => {
+  await ogma.view.rotate(Math.PI / 8);
+  const bounds = getAnnotationsBounds(control.getAnnotations());
+  await ogma.view.moveToBounds(bounds, { duration: 0 });
+}, 1000);
