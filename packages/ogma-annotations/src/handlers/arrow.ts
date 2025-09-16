@@ -1,5 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Handler } from "./handler";
+import { Handler } from "./base";
 import { Snap, Snapping } from "./snapping";
 import { handleDetectionThreshold } from "../constants";
 import { Links } from "../links";

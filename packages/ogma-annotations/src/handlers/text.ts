@@ -1,5 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Handler } from "./handler";
+import { Handler } from "./base";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
 import { Cursor, Text } from "../types";

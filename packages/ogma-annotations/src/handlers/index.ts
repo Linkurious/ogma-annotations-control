@@ -1,6 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { ArrowHandler } from "./arrow";
-import { Handler } from "./handler";
+import { Handler } from "./base";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
 import { InteractionController } from "../interaction/index";
