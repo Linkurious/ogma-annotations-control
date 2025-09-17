@@ -154,13 +154,18 @@ document.getElementById("undo")!.addEventListener("click", () => {
 document.getElementById("redo")!.addEventListener("click", () => {
   control.redo();
 });
-document.getElementById("center-view")!.addEventListener("click", async () => {
+
+async function fit() {
   const bounds = ogma.view.getGraphBoundingBox();
 
   await ogma.view.moveToBounds(
     bounds.extend(getAnnotationsBounds(control.getAnnotations())),
     { duration: 200 }
   );
+}
+
+document.getElementById("center-view")!.addEventListener("click", async () => {
+  await fit();
 });
 document.getElementById("export")!.addEventListener("click", () => {
   const annotations = control.getAnnotations();
@@ -175,6 +180,20 @@ document.getElementById("export")!.addEventListener("click", () => {
   dl.remove();
 
   console.log("Exported annotations:", annotations);
+});
+
+document.addEventListener("keyup", (event) => {
+  switch (event.key) {
+    case "1":
+      console.log("draw arrow keyup", event);
+      break;
+    // cmd + 0 = reset zoom
+    case "0":
+      fit();
+      break;
+    default:
+      break;
+  }
 });
 
 // setTimeout(async () => {

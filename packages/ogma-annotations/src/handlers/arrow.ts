@@ -4,7 +4,7 @@ import { Snap, Snapping } from "./snapping";
 import { handleDetectionThreshold } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
-import { Arrow, detectArrow } from "../types";
+import { Arrow, ArrowProperties, detectArrow } from "../types";
 
 enum HandleType {
   START = "start",
@@ -28,7 +28,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.links = links;
   }
 
-  protected _detectHandle(evt: MouseEvent, _zoom: number) {
+  protected _detectHandle(evt: MouseEvent) {
     const annotation = this.getAnnotation()!;
     const mousePoint = this.clientToCanvas(evt);
     const margin = handleDetectionThreshold; // Larger margin for easier arrow endpoint selection
@@ -87,13 +87,30 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     const annotation = this.getAnnotation()!;
     this.snap = this.snapping.snap(annotation, mousePoint);
     const point = this.snap?.point || mousePoint;
+    const link = annotation.properties.link || {};
 
     // Create updated coordinates
     const newCoordinates = [...annotation.geometry.coordinates];
     if (handle.type === HandleType.START) {
       newCoordinates[0] = [point.x, point.y];
+      if (this.snap) {
+        link.start = {
+          side: handle.type,
+          id: this.snap.id,
+          type: this.snap.type,
+          magnet: this.snap.magnet
+        };
+      }
     } else if (handle.type === HandleType.END) {
       newCoordinates[1] = [point.x, point.y];
+      if (this.snap) {
+        link.end = {
+          side: handle.type,
+          id: this.snap.id,
+          type: this.snap.type,
+          magnet: this.snap.magnet
+        };
+      }
     } else if (handle.type === HandleType.BODY) {
       // translate both points
       const dx = point.x - handle.point.x;
@@ -107,7 +124,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     // Apply live update to store instead of direct mutation
     this.store.getState().applyLiveUpdate(annotation.id, {
       id: annotation.id,
-      properties: annotation.properties,
+      properties: { ...annotation.properties, link } as ArrowProperties,
       geometry: {
         type: annotation.geometry.type,
         coordinates: newCoordinates

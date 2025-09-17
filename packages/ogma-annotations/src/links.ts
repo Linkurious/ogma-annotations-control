@@ -11,7 +11,7 @@ import type {
   Text,
   Annotation
 } from "./types";
-import { getBbox, getBoxCenter } from "./utils";
+import { getArrowSide, getBbox, getBoxCenter } from "./utils";
 import { add, mul, subtract } from "./vec";
 
 type XYR = { x: number; y: number; radius: number };
@@ -31,23 +31,53 @@ export class Links {
   private linksByArrowId: Map<Id, { start?: Id; end?: Id }> = new Map();
   private store: Store;
   private ogma: Ogma;
+
   constructor(ogma: Ogma, store: Store) {
     this.ogma = ogma;
     this.store = store;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
-    this.store.subscribe(
-      (state) => ({
-        features: state.features,
-        isDragging: state.isDragging,
-        lastChangedFeatures: state.lastChangedFeatures
-      }),
-      (current, previous) => {
-        if (previous && previous.isDragging && !current.isDragging)
-          this.update();
-      },
-      { equalityFn: (a, b) => a.isDragging === b.isDragging }
-    );
+  }
+
+  /**
+   * Called by handlers during drag operations to update linked arrows
+   * This method applies live updates directly without causing recursion
+   */
+  public updateLinkedArrowsDuringDrag(annotationId: Id, displacement: Point) {
+    const state = this.store.getState();
+    const annotation = state.getFeature(annotationId) as Text;
+    if (!annotation) return;
+
+    const links = this.annotationToLink.get(annotationId);
+
+    if (!links) return;
+
+    for (const linkId of links) {
+      const link = this.links.get(linkId);
+      if (!link) continue;
+
+      const arrow = state.getFeature(link.arrow) as Arrow;
+      const currentEndPoint = getArrowSide(arrow, link.side);
+      const newEndPoint = add(currentEndPoint, displacement);
+
+      // Apply live update to the arrow
+      const updatedGeometry = {
+        ...arrow.geometry,
+        coordinates: arrow.geometry.coordinates.map((coord, idx) => {
+          if (
+            (link.side === "start" && idx === 0) ||
+            (link.side === "end" && idx === 1)
+          ) {
+            return [newEndPoint.x, newEndPoint.y];
+          }
+          return [...coord];
+        })
+      };
+
+      state.applyLiveUpdate(arrow.id, {
+        geometry: updatedGeometry
+      } as Partial<Arrow>);
+    }
   }
 
   public add(
@@ -80,9 +110,7 @@ export class Links {
     this.links.set(id, link);
     // add it to the linksByTargetId
     const map = targetType === "node" ? this.nodeToLink : this.annotationToLink;
-    if (!map.has(targetId)) {
-      map.set(targetId, new Set());
-    }
+    if (!map.has(targetId)) map.set(targetId, new Set());
     map.get(targetId)!.add(id);
 
     // add it to the linksByArrowId

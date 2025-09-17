@@ -1,5 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { Links } from "../links";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
 import { Cursor, Text } from "../types";
@@ -74,8 +75,11 @@ const cursors: Cursor[] = [
 ];
 
 export class TextHandler extends Handler<Text, Handle> {
-  constructor(ogma: Ogma, store: Store) {
+  private links: Links;
+
+  constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
+    this.links = links;
   }
 
   _detectHandle(evt: MouseEvent) {
@@ -190,6 +194,7 @@ export class TextHandler extends Handler<Text, Handle> {
         properties: annotation.properties,
         geometry: updatedGeometry
       });
+      this.links.updateLinkedArrowsDuringDrag(annotation.id, delta);
     }
 
     this.dispatchEvent(

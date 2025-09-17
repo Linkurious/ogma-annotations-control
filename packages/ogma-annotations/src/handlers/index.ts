@@ -35,8 +35,8 @@ export class AnnotationEditor extends EventTarget {
       { detectMargin: 10, magnetRadius: 10 },
       index
     );
-    this.handlers.set("box", new TextHandler(this.ogma, this.store));
-    this.handlers.set("text", new TextHandler(this.ogma, this.store));
+    this.handlers.set("box", new TextHandler(this.ogma, this.store, links));
+    this.handlers.set("text", new TextHandler(this.ogma, this.store, links));
     this.handlers.set(
       "arrow",
       new ArrowHandler(this.ogma, this.store, this.snapping, links)
@@ -55,10 +55,10 @@ export class AnnotationEditor extends EventTarget {
         this.interaction.suppressClicksTemporarily();
       });
 
-      handler.addEventListener("dragging", (e) => {
-        this.dispatchEvent(new CustomEvent("dragging", e));
-        this.store.setState({ isDragging: true });
-      });
+      // handler.addEventListener("dragging", (e) => {
+      //   this.dispatchEvent(new CustomEvent("dragging", e));
+      //   this.store.setState({ isDragging: true });
+      // });
     });
     this.store.subscribe(
       (state) => state.selectedFeatures,

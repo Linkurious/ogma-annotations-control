@@ -84,6 +84,7 @@ export class Snapping extends EventTarget {
   private options: SnappingOptions;
   private spatialIndex: Index;
   private hoveredNode: Node | null = null;
+
   constructor(ogma: Ogma, options: SnappingOptions, spatialIndex: Index) {
     super();
     this.ogma = ogma;
@@ -117,9 +118,7 @@ export class Snapping extends EventTarget {
       snapWindow.maxY
     ).nodes;
     const snapToNode = this._snapToNodes(point, nodes);
-    if (snapToNode) {
-      return snapToNode;
-    }
+    if (snapToNode) return snapToNode;
     return null;
   }
 
@@ -213,7 +212,9 @@ export class Snapping extends EventTarget {
           }
         }
       }
+
       if (!snap) continue;
+
       const projection = dot(snap.axis, {
         x: point.x - snap.min.x,
         y: point.y - snap.min.y
@@ -238,8 +239,10 @@ export class Snapping extends EventTarget {
         id: text.id
       };
     }
+
     return null;
   }
+
   private _snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {
     const xyrs = nodes.getAttributes(["x", "y", "radius"]);
     for (let i = 0; i < xyrs.length; i++) {
