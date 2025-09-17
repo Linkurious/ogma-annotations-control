@@ -5,7 +5,7 @@ import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
 import { Cursor, Text } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
-import { dot } from "../vec";
+import { dot, subtract } from "../vec";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;
@@ -188,13 +188,18 @@ export class TextHandler extends Handler<Text, Handle> {
     }
 
     if (updatedGeometry) {
-      // Apply live update to store instead of direct mutation
-      this.store.getState().applyLiveUpdate(annotation.id, {
+      const update = {
         id: annotation.id,
         properties: annotation.properties,
         geometry: updatedGeometry
-      });
-      this.links.updateLinkedArrowsDuringDrag(annotation.id, delta);
+      } as Text;
+      // Apply live update to store instead of direct mutation
+      this.store.getState().applyLiveUpdate(annotation.id, update);
+      const displacement = subtract(
+        getBoxPosition(update),
+        getBoxPosition(original)
+      );
+      this.links.updateLinkedArrowsDuringDrag(annotation.id, displacement);
     }
 
     this.dispatchEvent(
@@ -277,20 +282,19 @@ export class TextHandler extends Handler<Text, Handle> {
     switch (handle.edge) {
       case EdgeType.TOP:
         y += delta.y;
-        height -= delta.y;
+        height = Math.max(0, height - delta.y);
         break;
       case EdgeType.BOTTOM:
-        height += delta.y;
+        height = Math.max(0, height + delta.y);
         break;
       case EdgeType.LEFT:
         x += delta.x;
-        width -= delta.x;
+        width = Math.max(0, width - delta.x);
         break;
       case EdgeType.RIGHT:
-        width += delta.x;
+        width = Math.max(0, width + delta.x);
         break;
     }
-
     return {
       type: original.geometry.type,
       coordinates: [
