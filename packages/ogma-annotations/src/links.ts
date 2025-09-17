@@ -15,7 +15,7 @@ import { getArrowSide, getBbox, getBoxCenter } from "./utils";
 import { add, mul, subtract } from "./vec";
 
 type XYR = { x: number; y: number; radius: number };
-
+type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 /**
  * Class that implements linking between annotation arrows and different items.
  * An arrow can be connected to a text or to a node. It supports double indexing
@@ -28,7 +28,7 @@ export class Links {
   private links: Map<Id, Link> = new Map();
   private nodeToLink: Map<Id, Set<Id>> = new Map();
   private annotationToLink: Map<Id, Set<Id>> = new Map();
-  private linksByArrowId: Map<Id, { start?: Id; end?: Id }> = new Map();
+  private linksByArrowId: LinksByArrowId = new Map();
   private store: Store;
   private ogma: Ogma;
 
@@ -163,10 +163,22 @@ export class Links {
         !attributesSet.has("radius"))
     )
       return;
-    this.update();
+    const ids = elements.getId();
+    const links: LinksByArrowId = new Map();
+    ids.forEach((id) => {
+      const nodeLinks = this.nodeToLink.get(id);
+      if (!nodeLinks) return;
+      nodeLinks.forEach((linkId) => {
+        const link = this.links.get(linkId);
+        if (!link) return;
+        const arrowId = link.arrow;
+        links.set(arrowId, this.linksByArrowId.get(arrowId)!);
+      });
+    });
+    this.update(links);
   };
 
-  update() {
+  update(linksByArrowId: LinksByArrowId = this.linksByArrowId) {
     const state = this.store.getState();
     const nodeIds = Array.from(this.nodeToLink.keys());
     const nodeIdToIndex = new Map<NodeId, number>();
@@ -178,7 +190,7 @@ export class Links {
       radius: number;
     }[];
     const angle = this.ogma.view.getAngle();
-    this.linksByArrowId.forEach((links, arrowId) => {
+    linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
       const start = this.links.get(links.start!);
       const end = this.links.get(links.end!);
