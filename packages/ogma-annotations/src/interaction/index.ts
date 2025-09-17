@@ -52,7 +52,9 @@ export class InteractionController {
     this.query.maxY = y + threshold;
     // broad phase
     const hit = this.index.search(this.query);
+
     if (hit.length === 0) return null;
+
     // narrow phase
     for (const item of hit) {
       if (isArrow(item)) {

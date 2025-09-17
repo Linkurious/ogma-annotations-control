@@ -1,7 +1,7 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
 import { Annotation } from "../types";
-import { getBbox } from "../utils";
+import { getBbox, updateBbox } from "../utils";
 
 export class Index extends Rtree<Annotation> {
   private store: Store;
@@ -32,13 +32,13 @@ export class Index extends Rtree<Annotation> {
           // Efficiently update only changed features instead of rebuilding entire index
           if (current.lastChangedFeatures.length > 0) {
             current.lastChangedFeatures.forEach((id) => {
-              // Remove old version of the feature from index
-              const oldFeature = previous.features[id];
-              if (oldFeature) this.remove(oldFeature);
-
               // Insert updated version
               const newFeature = current.features[id];
-              if (newFeature) this.insert(newFeature);
+              updateBbox(newFeature);
+              if (newFeature) {
+                this.remove(newFeature);
+                this.insert(newFeature);
+              }
             });
           }
         }
