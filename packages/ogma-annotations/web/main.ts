@@ -177,8 +177,8 @@ document.getElementById("export")!.addEventListener("click", () => {
   console.log("Exported annotations:", annotations);
 });
 
-setTimeout(async () => {
-  await ogma.view.rotate(Math.PI / 8);
-  const bounds = getAnnotationsBounds(control.getAnnotations());
-  await ogma.view.moveToBounds(bounds, { duration: 0 });
-}, 1000);
+// setTimeout(async () => {
+//   await ogma.view.rotate(Math.PI / 8);
+//   const bounds = getAnnotationsBounds(control.getAnnotations());
+//   await ogma.view.moveToBounds(bounds, { duration: 0 });
+// }, 1000);

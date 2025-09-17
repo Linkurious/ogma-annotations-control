@@ -36,6 +36,18 @@ export class Links {
     this.store = store;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
+    this.store.subscribe(
+      (state) => ({
+        features: state.features,
+        isDragging: state.isDragging,
+        lastChangedFeatures: state.lastChangedFeatures
+      }),
+      (current, previous) => {
+        if (previous && previous.isDragging && !current.isDragging)
+          this.update();
+      },
+      { equalityFn: (a, b) => a.isDragging === b.isDragging }
+    );
   }
 
   public add(

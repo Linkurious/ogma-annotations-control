@@ -143,48 +143,76 @@ export class Snapping extends EventTarget {
 
       const size = getBoxSize(text);
       const matrix = getTransformMatrix(text, { angle: 0 }, false);
-      const snap = [
-        {
-          edge: "top",
-          min: { x: matrix.x, y: matrix.y },
-          max: { x: matrix.x + size.width, y: matrix.y },
-          axis: xs,
-          norm: ys
-        },
-        {
-          edge: "right",
-          min: { x: matrix.x + size.width, y: matrix.y },
-          max: { x: matrix.x + size.width, y: matrix.y + size.height },
-          axis: ys,
-          norm: xs
-        },
-        {
-          edge: "bottom",
-          min: { x: matrix.x, y: matrix.y + size.height },
-          max: { x: matrix.x + size.width, y: matrix.y + size.height },
-          axis: xs,
-          norm: ys
-        },
-        {
-          edge: "left",
-          min: { x: matrix.x, y: matrix.y },
-          max: { x: matrix.x, y: matrix.y + size.height },
-          axis: ys,
-          norm: xs
+      const magnetRadius = this.options.magnetRadius;
+      let snap:
+        | {
+            edge: string;
+            min: { x: number; y: number };
+            max: { x: number; y: number };
+            axis: { x: number; y: number };
+            norm: { x: number; y: number };
+          }
+        | undefined;
+
+      // Check top edge
+      let min = { x: matrix.x, y: matrix.y };
+      let max = { x: matrix.x + size.width, y: matrix.y };
+      let norm = ys;
+      let dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
+      if (
+        Math.abs(dist) < magnetRadius &&
+        point.x >= min.x - magnetRadius &&
+        point.x <= max.x + magnetRadius &&
+        point.y >= min.y - magnetRadius &&
+        point.y <= max.y + magnetRadius
+      ) {
+        snap = { edge: "top", min, max, axis: xs, norm };
+      } else {
+        // Check right edge
+        min = { x: matrix.x + size.width, y: matrix.y };
+        max = { x: matrix.x + size.width, y: matrix.y + size.height };
+        norm = xs;
+        dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
+        if (
+          Math.abs(dist) < magnetRadius &&
+          point.x >= min.x - magnetRadius &&
+          point.x <= max.x + magnetRadius &&
+          point.y >= min.y - magnetRadius &&
+          point.y <= max.y + magnetRadius
+        ) {
+          snap = { edge: "right", min, max, axis: ys, norm };
+        } else {
+          // Check bottom edge
+          min = { x: matrix.x, y: matrix.y + size.height };
+          max = { x: matrix.x + size.width, y: matrix.y + size.height };
+          norm = ys;
+          dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
+          if (
+            Math.abs(dist) < magnetRadius &&
+            point.x >= min.x - magnetRadius &&
+            point.x <= max.x + magnetRadius &&
+            point.y >= min.y - magnetRadius &&
+            point.y <= max.y + magnetRadius
+          ) {
+            snap = { edge: "bottom", min, max, axis: xs, norm };
+          } else {
+            // Check left edge
+            min = { x: matrix.x, y: matrix.y };
+            max = { x: matrix.x, y: matrix.y + size.height };
+            norm = xs;
+            dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
+            if (
+              Math.abs(dist) < magnetRadius &&
+              point.x >= min.x - magnetRadius &&
+              point.x <= max.x + magnetRadius &&
+              point.y >= min.y - magnetRadius &&
+              point.y <= max.y + magnetRadius
+            ) {
+              snap = { edge: "left", min, max, axis: ys, norm };
+            }
+          }
         }
-      ].find(({ min, max, norm }) => {
-        const dist = dot(norm, {
-          x: point.x - min.x,
-          y: point.y - min.y
-        });
-        return (
-          Math.abs(dist) < this.options.magnetRadius &&
-          point.x >= min.x - this.options.magnetRadius &&
-          point.x <= max.x + this.options.magnetRadius &&
-          point.y >= min.y - this.options.magnetRadius &&
-          point.y <= max.y + this.options.magnetRadius
-        );
-      });
+      }
       if (!snap) continue;
       const projection = dot(snap.axis, {
         x: point.x - snap.min.x,

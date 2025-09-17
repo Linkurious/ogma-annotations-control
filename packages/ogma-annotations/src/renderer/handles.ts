@@ -100,6 +100,20 @@ export class Handles extends Renderer<CanvasLayer> {
     const boxSize = getBoxSize(feature);
     const position = getBoxPosition(feature);
 
+    const view = this.ogma.view.get();
+    // text boxes are rotated back around their centers by -view.angle
+    // so we need to apply the inverse rotation to the handles
+    ctx.save();
+
+    const centerX = position.x - boxSize.width / 2;
+    const centerY = position.y - boxSize.height / 2;
+
+    ctx.translate(centerX, centerY);
+    ctx.rotate(view.angle);
+    ctx.translate(-centerX, -centerY);
+
+    // Draw corner handles
+
     CORNER_OFFSETS.forEach(([xOffset, yOffset], index) => {
       const x = position.x + boxSize.width * xOffset;
       const y = position.y + boxSize.height * yOffset;
@@ -110,6 +124,7 @@ export class Handles extends Renderer<CanvasLayer> {
       ctx.moveTo(x + handleR, y);
       ctx.arc(x, y, handleR, 0, 2 * Math.PI);
     });
+    ctx.restore();
   }
 
   public destroy(): void {

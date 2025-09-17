@@ -2,7 +2,6 @@ import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderText } from "./text";
-import { DATA_ATTR } from "../../constants";
 import { Store } from "../../store";
 import { Annotation, isArrow, isBox, isText } from "../../types";
 import { createSVGElement } from "../../utils";
@@ -103,12 +102,4 @@ export class Shapes extends Renderer<SVGLayer> {
     this.layer.destroy();
     super.destroy();
   }
-}
-
-function getRotationMatrix(angle: number, cx: number, cy: number) {
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const tx = cx * (1 - cos) + cy * sin;
-  const ty = cy * (1 - cos) - cx * sin;
-  return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${tx}, ${ty})`;
 }

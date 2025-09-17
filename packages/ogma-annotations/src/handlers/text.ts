@@ -225,10 +225,10 @@ export class TextHandler extends Handler<Text, Handle> {
     delta: Point,
     cornerIndex: number
   ) {
-    let isTop = cornerIndex === 0 || cornerIndex === 1;
-    let isLeft = cornerIndex === 0 || cornerIndex === 3;
-    let isRight = cornerIndex === 1 || cornerIndex === 2;
-    let isBottom = cornerIndex === 2 || cornerIndex === 3;
+    const isTop = cornerIndex === 0 || cornerIndex === 1;
+    const isLeft = cornerIndex === 0 || cornerIndex === 3;
+    const isRight = cornerIndex === 1 || cornerIndex === 2;
+    const isBottom = cornerIndex === 2 || cornerIndex === 3;
 
     let { x, y } = getBoxPosition(original);
     let { width, height } = getBoxSize(original);
