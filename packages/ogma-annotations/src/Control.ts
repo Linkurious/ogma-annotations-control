@@ -1,5 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
+import { off } from "process";
 import { AnnotationEditor } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
@@ -75,8 +76,12 @@ export class Control extends EventEmitter<FeatureEvents> {
   private setupEvents() {
     this.ogma.events
       // @ts-expect-error private event
-      .on("setMultipleAttributes", this.links.onSetMultipleAttributes);
+      .on("setMultipleAttributes", this.links.onSetMultipleAttributes)
+      .on("rotate", this.onRotate);
   }
+
+  private onRotate = () =>
+    this.store.getState().setRotation(this.ogma.view.getAngle());
 
   /**
    * Set the options for the controller
@@ -157,6 +162,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
+    this.ogma.events.off(this.links.onSetMultipleAttributes).off(this.onRotate);
+    Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();
     this.editor.destroy();
   }

@@ -16,6 +16,7 @@ interface AnnotationState {
   hoveredHandle: -1 | number;
   selectedFeatures: Set<Id>;
   lastChangedFeatures: Id[];
+  rotation: number;
 
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
@@ -47,6 +48,7 @@ interface AnnotationState {
   getMergedFeature: (id: Id) => Annotation | undefined;
   isHovered: (id: Id) => boolean;
   isSelected: (id: Id) => boolean;
+  setRotation: (rotation: number) => void;
 }
 
 export const store = create<AnnotationState>()(
@@ -61,6 +63,7 @@ export const store = create<AnnotationState>()(
         hoveredFeature: null,
         selectedFeatures: new Set(),
         lastChangedFeatures: [],
+        rotation: 0,
 
         removeFeature: (id) =>
           set((state) => {
@@ -219,7 +222,12 @@ export const store = create<AnnotationState>()(
         // State getters
         isHovered: (id) => get().hoveredFeature === id,
 
-        isSelected: (id) => get().selectedFeatures.has(id)
+        isSelected: (id) => get().selectedFeatures.has(id),
+
+        setRotation: (rotation: number) => {
+          set({ rotation });
+          // Don't trigger history for camera changes
+        }
       }),
       {
         limit: 50,

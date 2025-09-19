@@ -1,7 +1,7 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
-import { Annotation } from "../types";
-import { getBbox, updateBbox } from "../utils";
+import { Annotation, isText } from "../types";
+import { getBbox, getBoxSize, updateBbox } from "../utils";
 
 export class Index extends Rtree<Annotation> {
   private store: Store;
@@ -45,7 +45,52 @@ export class Index extends Rtree<Annotation> {
       },
       { equalityFn: (a, b) => a.isDragging === b.isDragging }
     );
+    this.store.subscribe((state) => state.rotation, this.onRotationChange);
   }
+
+  private onRotationChange = (angle: number) => {
+    const texts = this.store
+      .getState()
+      .getAllFeatures()
+      .filter((feature) => isText(feature));
+    const sin = Math.sin(-angle);
+    const cos = Math.cos(-angle);
+    for (const text of texts) {
+      this.remove(text);
+      // counter rotate bbox around text center
+      const [x0, y0, x1, y1] = getBbox(text);
+      const cx = (x0 + x1) / 2;
+      const cy = (y0 + y1) / 2;
+
+      const corners = [
+        { x: x0, y: y0 },
+        { x: x1, y: y0 },
+        { x: x1, y: y1 },
+        { x: x0, y: y1 }
+      ];
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      const rotatedCorners = corners.map((corner) => {
+        const dx = corner.x - cx;
+        const dy = corner.y - cy;
+        const x = cx + (dx * cos - dy * sin);
+        const y = cy + (dx * sin + dy * cos);
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+        return { x, y };
+      });
+
+      this.insert({
+        ...text,
+        bbox: [minX, minY, maxX, maxY]
+      });
+    }
+  };
+
   compareMinX(a: Annotation, b: Annotation): number {
     return getBbox(a)[0] - getBbox(b)[0];
   }
