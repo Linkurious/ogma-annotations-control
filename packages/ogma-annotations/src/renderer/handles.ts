@@ -1,5 +1,6 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
+import { handleRadius } from "../constants";
 import { Store } from "../store";
 import { Arrow, Box, Text, isArrow, isText } from "../types";
 import {
@@ -44,7 +45,7 @@ export class Handles extends Renderer<CanvasLayer> {
     const scale = 1 / this.ogma.view.getZoom();
 
     ctx.beginPath();
-    const r = 3 * scale;
+    const r = handleRadius * scale;
     ctx.fillStyle = "#fff";
     ctx.lineWidth = 2 * scale;
     ctx.strokeStyle = "#0099ff";

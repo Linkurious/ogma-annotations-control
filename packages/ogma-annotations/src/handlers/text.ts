@@ -1,5 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { handleRadius } from "../constants";
 import { Links } from "../links";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
@@ -82,15 +83,17 @@ export class TextHandler extends Handler<Text, Handle> {
     this.links = links;
   }
 
-  _detectHandle(evt: MouseEvent) {
+  _detectHandle(evt: MouseEvent, zoom: number) {
     const annotation = this.getAnnotation()!;
     const { x, y } = this.clientToCanvas(evt);
     const size = getBoxSize(annotation);
     const matrix = getTransformMatrix(annotation, { angle: 0 }, false);
-    const margin = 5;
+    const margin = 3;
 
     this.hoveredHandle = undefined;
     this.store.setState({ hoveredHandle: -1 });
+
+    const handleSize = handleRadius * (1 / zoom);
 
     // Check corner handles first (higher priority)
     for (let i = 0; i < CORNER_HANDLES.length; i++) {
@@ -99,10 +102,10 @@ export class TextHandler extends Handler<Text, Handle> {
       const cornerY = matrix.y + size.height * yOffset;
 
       if (
-        x >= cornerX - margin &&
-        x <= cornerX + margin &&
-        y >= cornerY - margin &&
-        y <= cornerY + margin
+        x >= cornerX - handleSize - margin &&
+        x <= cornerX + handleSize + margin &&
+        y >= cornerY - handleSize - margin &&
+        y <= cornerY + handleSize + margin
       ) {
         this.hoveredHandle = {
           type: HandleType.CORNER,

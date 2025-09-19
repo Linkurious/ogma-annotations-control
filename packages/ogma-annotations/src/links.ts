@@ -163,12 +163,30 @@ export class Links {
         !attributesSet.has("radius"))
     )
       return;
-    this.update();
+    //this.update(elements.getId());
+    this.updateNodeLinks(elements.getId());
   };
 
-  update() {
+  private updateNodeLinks(nodeIds: NodeId[]) {
+    for (const nodeId of nodeIds) {
+      const links = this.nodeToLink.get(nodeId);
+      if (!links) continue;
+      for (const linkId of links) {
+        this.updateNodeLink(
+          this.links.get(linkId)!,
+          nodeId,
+          this.ogma.getNode(nodeId)!.getAttributes(["x", "y", "radius"]) as XYR
+        );
+      }
+    }
+  }
+
+  private updateNodeLink(link: Link, nodeId: NodeId, node: XYR) {
+    console.log("Updating link", link);
+  }
+
+  update(nodeIds: NodeId[] = Array.from(this.nodeToLink.keys())) {
     const state = this.store.getState();
-    const nodeIds = Array.from(this.nodeToLink.keys());
     const nodeIdToIndex = new Map<NodeId, number>();
     nodeIds.forEach((id, i) => nodeIdToIndex.set(id, i));
     const nodes = this.ogma.getNodes(nodeIds);
@@ -178,7 +196,22 @@ export class Links {
       radius: number;
     }[];
     const angle = this.ogma.view.getAngle();
-    this.linksByArrowId.forEach((links, arrowId) => {
+    // get links attached to these nodes
+    const linksByArrowId = nodeIds.reduce((acc, nodeId) => {
+      const links = this.nodeToLink.get(nodeId);
+      if (!links) return acc;
+      links.forEach((linkId) => {
+        const link = this.links.get(linkId);
+        if (!link) return;
+        acc.set(link.arrow, {
+          start: link.side === "start" ? nodeId : undefined,
+          end: link.side === "end" ? nodeId : undefined
+        });
+      });
+      return acc;
+    }, new Map<Id, { start?: Id; end?: Id }>());
+
+    linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
       const start = this.links.get(links.start!);
       const end = this.links.get(links.end!);
@@ -224,6 +257,7 @@ export class Links {
           endPoint = this._getBoxSnapPoint(box, startCenter, angle);
         }
       }
+      // Apply live update to the arrow
       state.applyLiveUpdate(arrow.id, {
         geometry: {
           coordinates: [startPoint, endPoint]
