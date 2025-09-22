@@ -1,6 +1,5 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import { off } from "process";
 import { AnnotationEditor } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
@@ -151,9 +150,9 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   public cancelDrawing() {}
 
-  public startComment(x: number, y: number, text: Annotation) {}
-  public startBox(x: number, y: number, box: Annotation) {}
-  public startArrow(x: number, y: number, arrow: Annotation) {}
+  public startComment(_x: number, _y: number, _text: Annotation) {}
+  public startBox(_x: number, _y: number, _box: Annotation) {}
+  public startArrow(_x: number, _y: number, _arrow: Annotation) {}
 
   /**
    * Destroy the controller and its elements
@@ -166,6 +165,5 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.editor.destroy();
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   public updateStyle(_id: unknown, _s: unknown) {}
 }

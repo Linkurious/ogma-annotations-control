@@ -24,6 +24,7 @@ import type { Editor } from "./Editor_old/base";
 import { BoxesEditor } from "./Editor_old/Box";
 import { TextsEditor } from "./Editor_old/Texts";
 import { Links } from "./links";
+// eslint-disable-next-line import/no-unresolved
 import { Snapping } from "./snapping";
 import { Storage } from "./storage";
 import {

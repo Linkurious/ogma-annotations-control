@@ -1,4 +1,4 @@
-import { Ogma } from "@linkurious/ogma";
+import { Ogma, geometry } from "@linkurious/ogma";
 import { Point, Bounds } from "./types";
 
 /**
@@ -42,7 +42,7 @@ function pointSegmentDistance(p: Point, a: Point, b: Point): number {
   return Math.hypot(dx, dy);
 }
 
-function segmentIntersection(
+export function segmentIntersection(
   p1: Point,
   p2: Point,
   q1: Point,
@@ -176,7 +176,7 @@ export function boxToSegmentIntersection(
   };
 
   let intersects: Point | null = null;
-  intersects = Ogma.geometry.segmentIntersection(
+  intersects = geometry.segmentIntersection(
     point.x,
     point.y,
     center.x,
@@ -187,7 +187,7 @@ export function boxToSegmentIntersection(
     tr.y
   );
   if (intersects) return intersects;
-  intersects = Ogma.geometry.segmentIntersection(
+  intersects = geometry.segmentIntersection(
     point.x,
     point.y,
     center.x,

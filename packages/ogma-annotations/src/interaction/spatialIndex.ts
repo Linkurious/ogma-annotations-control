@@ -1,7 +1,7 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
 import { Annotation, isText } from "../types";
-import { getBbox, getBoxSize, updateBbox } from "../utils";
+import { getBbox, updateBbox } from "../utils";
 
 export class Index extends Rtree<Annotation> {
   private store: Store;
@@ -72,7 +72,7 @@ export class Index extends Rtree<Annotation> {
       let minY = Infinity;
       let maxX = -Infinity;
       let maxY = -Infinity;
-      const rotatedCorners = corners.map((corner) => {
+      const _rotatedCorners = corners.map((corner) => {
         const dx = corner.x - cx;
         const dy = corner.y - cy;
         const x = cx + (dx * cos - dy * sin);
