@@ -8,7 +8,6 @@ import { Index } from "../interaction/spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
 import { Annotation, Id, Text } from "../types";
-import { getBrowserWindow } from "../utils";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<string, Handler<Annotation, unknown>>();
@@ -54,11 +53,6 @@ export class AnnotationEditor extends EventTarget {
         // Suppress clicks briefly after drag ends to prevent accidental deselection
         this.interaction.suppressClicksTemporarily();
       });
-
-      // handler.addEventListener("dragging", (e) => {
-      //   this.dispatchEvent(new CustomEvent("dragging", e));
-      //   this.store.setState({ isDragging: true });
-      // });
     });
     this.store.subscribe(
       (state) => state.selectedFeatures,
@@ -78,7 +72,7 @@ export class AnnotationEditor extends EventTarget {
     );
   }
 
-  stopEditingFeature(id: Id) {
+  public stopEditingFeature(id: Id) {
     const feature = this.store.getState().features[id];
     if (!feature) return;
 
@@ -86,16 +80,10 @@ export class AnnotationEditor extends EventTarget {
     const handlerType = feature.properties.type;
     const handler = this.handlers.get(handlerType);
 
-    if (!handler) return;
-    handler.stopEditing();
-    const container = this.ogma.getContainer()!;
-    const win = getBrowserWindow() || container;
-    win.removeEventListener("mousemove", handler.handleMouseMove);
-    win.removeEventListener("mouseup", handler.handleMouseUp);
-    container.removeEventListener("mousedown", handler.handleMouseDown);
+    if (handler) handler.stopEditing();
   }
 
-  editFeature(id: Id) {
+  public editFeature(id: Id) {
     const feature = this.store.getState().features[id];
     if (!feature) return;
     // Get handler for this feature type
@@ -105,11 +93,6 @@ export class AnnotationEditor extends EventTarget {
     if (!handler) return;
     this.activeHandler = handler;
     handler.setAnnotation(feature as Text);
-    const container = this.ogma.getContainer()!;
-    const win = getBrowserWindow() || container;
-    win.addEventListener("mousemove", handler.handleMouseMove);
-    win.addEventListener("mouseup", handler.handleMouseUp, true);
-    container.addEventListener("mousedown", handler.handleMouseDown);
   }
 
   getCurrentTool(): string {

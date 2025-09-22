@@ -83,7 +83,7 @@ export class TextHandler extends Handler<Text, Handle> {
     this.links = links;
   }
 
-  _detectHandle(evt: MouseEvent, zoom: number) {
+  detectHandle(evt: MouseEvent, zoom: number) {
     const annotation = this.getAnnotation()!;
     const { x, y } = this.clientToCanvas(evt);
     const size = getBoxSize(annotation);

@@ -14,6 +14,7 @@ import {
   Arrow,
   Bounds,
   Box,
+  ClientMouseEvent,
   isArrow,
   Text
 } from "./types";
@@ -229,7 +230,7 @@ export function getAttachmentPointOnNode(
 }
 
 export function clientToContainerPosition(
-  evt: { clientX: number; clientY: number },
+  evt: ClientMouseEvent,
   container?: HTMLElement | null
 ) {
   if (!container) return { x: evt.clientX, y: evt.clientY };

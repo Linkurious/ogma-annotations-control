@@ -28,7 +28,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.links = links;
   }
 
-  protected _detectHandle(evt: MouseEvent) {
+  protected detectHandle(evt: MouseEvent) {
     const annotation = this.getAnnotation()!;
     const mousePoint = this.clientToCanvas(evt);
     const margin = handleDetectionThreshold; // Larger margin for easier arrow endpoint selection

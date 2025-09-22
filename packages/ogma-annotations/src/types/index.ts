@@ -77,3 +77,8 @@ export type Cursor =
   | "nwse-resize"
   | "alias"
   | "crosshair";
+
+export type ClientMouseEvent = {
+  clientX: number;
+  clientY: number;
+};

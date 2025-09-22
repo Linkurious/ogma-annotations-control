@@ -1,7 +1,7 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Store } from "../store";
-import { Annotation, Cursor, Id } from "../types";
-import { clientToContainerPosition } from "../utils";
+import { Annotation, ClientMouseEvent, Cursor, Id } from "../types";
+import { clientToContainerPosition, getBrowserWindow } from "../utils";
 
 export abstract class Handler<
   T extends Annotation,
@@ -21,11 +21,11 @@ export abstract class Handler<
     this.ogma = ogma;
   }
 
-  handleMouseMove = (evt: MouseEvent): void => {
+  handleMouseMove = (evt: ClientMouseEvent): void => {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
     //const wasHovered = Boolean(this.hoveredHandle);
-    if (!this.dragging) this._detectHandle(evt, this.ogma.view.getZoom());
+    if (!this.dragging) this.detectHandle(evt, this.ogma.view.getZoom());
     else if (this.dragStartPoint) this.onDrag(evt);
   };
 
@@ -85,17 +85,17 @@ export abstract class Handler<
    * Detects which handle is being hovered over.
    * @param evt Mouse event
    */
-  protected abstract _detectHandle(evt: MouseEvent, zoom: number): void;
+  protected abstract detectHandle(evt: ClientMouseEvent, zoom: number): void;
   /**
    * Handles the dragging of the selected handle.
    * @param evt Mouse event
    */
-  protected abstract onDrag(evt: MouseEvent): void;
+  protected abstract onDrag(evt: ClientMouseEvent): void;
 
-  protected abstract onDragStart(evt: MouseEvent): void;
-  protected abstract onDragEnd(evt: MouseEvent): void;
+  protected abstract onDragStart(evt: ClientMouseEvent): void;
+  protected abstract onDragEnd(evt: ClientMouseEvent): void;
 
-  protected clientToCanvas(evt: MouseEvent): Point {
+  protected clientToCanvas(evt: ClientMouseEvent): Point {
     const ogma = this.ogma;
     const screenPoint = clientToContainerPosition(evt, ogma.getContainer());
     return ogma.view.screenToGraphCoordinates(screenPoint);
@@ -103,6 +103,15 @@ export abstract class Handler<
 
   setAnnotation(annotation: T | null): void {
     this.annotation = annotation ? annotation.id : null;
+    if (this.annotation !== null) {
+      const container = this.ogma.getContainer()!;
+      const win = getBrowserWindow() || container;
+      win.addEventListener("mousemove", this.handleMouseMove);
+      win.addEventListener("mouseup", this.handleMouseUp, true);
+      container.addEventListener("mousedown", this.handleMouseDown);
+      const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
+      this.handleMouseMove({ clientX, clientY });
+    }
   }
 
   getAnnotation(): T | undefined {
@@ -115,6 +124,11 @@ export abstract class Handler<
   }
 
   stopEditing() {
+    const container = this.ogma.getContainer()!;
+    const win = getBrowserWindow() || container;
+    win.removeEventListener("mousemove", this.handleMouseMove);
+    win.removeEventListener("mouseup", this.handleMouseUp);
+    container.removeEventListener("mousedown", this.handleMouseDown);
     this.setAnnotation(null);
     this.clearDragState();
   }
