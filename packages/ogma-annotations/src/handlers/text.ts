@@ -150,7 +150,7 @@ export class TextHandler extends Handler<Text, Handle> {
       this.store.setState({ hoveredHandle: 8 }); // 8 = body
       // Treat body as edge for dragging
       this.hoveredHandle = { type: HandleType.BODY };
-      this.setCursor("move");
+      this.setCursor("grab");
       return;
     }
 

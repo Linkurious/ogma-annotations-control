@@ -51,9 +51,6 @@ await ogma.setGraph(graph);
 await ogma.layouts.force({ locate: true });
 control.add(annotationsWithLinks);
 
-// @ts-ignore
-Object.assign(window, { Ogma, Control, createArrow, createText, createBox });
-
 const addArrows = document.getElementById("add-arrow")! as HTMLButtonElement;
 addArrows.addEventListener("click", () => {
   if (addArrows.disabled) return;
@@ -201,3 +198,13 @@ document.addEventListener("keyup", (event) => {
 //   const bounds = getAnnotationsBounds(control.getAnnotations());
 //   await ogma.view.moveToBounds(bounds, { duration: 0 });
 // }, 1000);
+
+// @ts-ignore
+Object.assign(window, {
+  Ogma,
+  Control,
+  createArrow,
+  createText,
+  createBox,
+  control
+});

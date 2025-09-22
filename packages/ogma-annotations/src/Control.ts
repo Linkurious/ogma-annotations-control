@@ -74,10 +74,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
-    this.ogma.events
-      // @ts-expect-error private event
-      .on("setMultipleAttributes", this.links.onSetMultipleAttributes)
-      .on("rotate", this.onRotate);
+    this.ogma.events.on("rotate", this.onRotate);
   }
 
   private onRotate = () =>
@@ -162,7 +159,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events.off(this.links.onSetMultipleAttributes).off(this.onRotate);
+    this.ogma.events.off(this.onRotate);
+    this.links.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();
     this.editor.destroy();

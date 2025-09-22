@@ -1,4 +1,4 @@
-import type { NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
+import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
 import { boxToSegmentIntersection } from "./geom";
 import { Store } from "./store";
@@ -11,11 +11,14 @@ import type {
   Text,
   Annotation
 } from "./types";
-import { getArrowSide, getBbox, getBoxCenter } from "./utils";
+import { getArrowSide, getBbox, getBoxCenter, updateBbox } from "./utils";
 import { add, mul, subtract } from "./vec";
 
 type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
+
+const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
+const COMMIT_DELAY = 100; // ms
 /**
  * Class that implements linking between annotation arrows and different items.
  * An arrow can be connected to a text or to a node. It supports double indexing
@@ -37,6 +40,8 @@ export class Links {
     this.store = store;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
+    // @ts-expect-error private event
+    this.ogma.events.on("setMultipleAttributes", this.onSetMultipleAttributes);
   }
 
   /**
@@ -152,7 +157,7 @@ export class Links {
     elements,
     updatedAttributes
   }: {
-    elements: NodeList;
+    elements: Node | NodeList;
     updatedAttributes: string[];
   }) => {
     const attributesSet = new Set(updatedAttributes);
@@ -163,10 +168,20 @@ export class Links {
         !attributesSet.has("radius"))
     )
       return;
-    const ids = elements.getId();
+    this.requestUpdateFromNodePositions(elements.toList() as NodeList);
+  };
+
+  private requestUpdateFromNodePositions(nodes: NodeList) {
+    // debounce to next tick to get the real coordinates
+    setTimeout(() => this.updateFromNodePositions(nodes), 1);
+  }
+
+  private updateFromNodePositions(nodes: NodeList) {
+    const ids = nodes.getId();
     const links: LinksByArrowId = new Map();
     ids.forEach((id) => {
       const nodeLinks = this.nodeToLink.get(id);
+
       if (!nodeLinks) return;
       nodeLinks.forEach((linkId) => {
         const link = this.links.get(linkId);
@@ -175,8 +190,56 @@ export class Links {
         links.set(arrowId, this.linksByArrowId.get(arrowId)!);
       });
     });
-    this.update(links);
-  };
+
+    const xyr = nodes.getAttributes(XYR_ATTRIBUTES) as XYR[];
+    const state = this.store.getState();
+    for (let i = 0; i < ids.length; i++) {
+      const nodeId = ids[i];
+      const nodeLinks = this.nodeToLink.get(nodeId);
+      if (!nodeLinks) continue;
+      for (const linkId of nodeLinks) {
+        const link = this.links.get(linkId);
+        if (!link) continue;
+        const arrowId = link.arrow;
+        const arrow = this.store.getState().getFeature(arrowId) as Arrow;
+        const coordinates = arrow.geometry.coordinates.slice();
+        const start = getArrowSide(arrow, "end");
+        const end = getArrowSide(arrow, "start");
+
+        const positionAndRadius = xyr[i];
+        // Update the arrow's position
+        const snapPoint = this._getNodeSnapPoint(
+          positionAndRadius,
+          mul(subtract(end, start), -1),
+          this._isLinkedToCenter(link)
+        );
+        coordinates[link.side === "start" ? 0 : 1] = snapPoint;
+        state.applyLiveUpdate(arrowId, {
+          ...arrow,
+          geometry: {
+            coordinates
+          }
+        } as Arrow);
+        link.magnet = {
+          x: snapPoint[0] - positionAndRadius.x,
+          y: snapPoint[1] - positionAndRadius.y
+        };
+        updateBbox(arrow);
+      }
+    }
+
+    this.debouncedCommit();
+  }
+
+  private debouncedCommit = (() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    return () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        this.store.getState().commitLiveUpdates();
+      }, COMMIT_DELAY);
+    };
+  })();
 
   update(linksByArrowId: LinksByArrowId = this.linksByArrowId) {
     const state = this.store.getState();
@@ -189,6 +252,7 @@ export class Links {
       y: number;
       radius: number;
     }[];
+
     const angle = this.ogma.view.getAngle();
     linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
@@ -294,10 +358,12 @@ export class Links {
     return [bb[0], bb[1]];
   }
 
-  private _getNodeSnapPoint(xyr: XYR, vec: Point, center: boolean) {
-    if (center) {
-      return [xyr.x, xyr.y];
-    }
+  private _getNodeSnapPoint(
+    xyr: XYR,
+    vec: Point,
+    center: boolean
+  ): [number, number] {
+    if (center) return [xyr.x, xyr.y];
     const dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
     const unit = mul(vec, 1 / dist);
     const snapPoint =
@@ -305,5 +371,9 @@ export class Links {
         ? { x: xyr.x, y: xyr.y }
         : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
     return [snapPoint.x, snapPoint.y];
+  }
+
+  public destroy() {
+    this.ogma.events.off(this.onSetMultipleAttributes);
   }
 }
