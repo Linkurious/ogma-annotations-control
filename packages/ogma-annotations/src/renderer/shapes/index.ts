@@ -63,13 +63,23 @@ export class Shapes extends Renderer<SVGLayer> {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
 
-      const existingElement = this.features.get(feature.id);
+      let existingElement = this.features.get(feature.id);
       if (isBox(feature))
-        renderBox(annotationsRoot, feature, view, existingElement);
+        existingElement = renderBox(
+          annotationsRoot,
+          feature,
+          view,
+          existingElement
+        );
       else if (isText(feature))
-        renderText(annotationsRoot, feature, view, existingElement);
+        existingElement = renderText(
+          annotationsRoot,
+          feature,
+          view,
+          existingElement
+        );
       else if (isArrow(feature))
-        renderArrow(
+        existingElement = renderArrow(
           arrowsRoot,
           feature,
           view,
@@ -77,6 +87,9 @@ export class Shapes extends Renderer<SVGLayer> {
           this.maxArrowHeight,
           existingElement
         );
+      if (existingElement) {
+        this.features.set(feature.id, existingElement);
+      }
     }
 
     // Apply state classes after rendering
@@ -127,6 +140,7 @@ export class Shapes extends Renderer<SVGLayer> {
   };
 
   public destroy(): void {
+    this.features.clear();
     this.ogma.events.off(this._onRotate);
     this.layer.destroy();
     super.destroy();

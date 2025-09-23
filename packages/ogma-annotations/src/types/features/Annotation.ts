@@ -1,6 +1,6 @@
 import { Feature, GeometryObject } from "geojson";
 
-type AnnotationType = "arrow" | "text" | "box" | "comment";
+export type AnnotationType = "arrow" | "text" | "box" | "comment";
 
 export interface AnnotationProps {
   type: AnnotationType;

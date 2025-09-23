@@ -1,34 +1,49 @@
 import { View } from "@linkurious/ogma";
 import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
-import { Box } from "../../types";
+import { Box, Id, AnnotationType } from "../../types";
 import { createSVGElement, getBoxSize } from "../../utils";
+
+function createDom(
+  elt: SVGGElement | undefined,
+  id: Id,
+  type: AnnotationType = "box"
+): SVGGElement {
+  if (!elt) {
+    elt = createSVGElement<SVGGElement>("g");
+    elt.setAttribute("data-annotation", `${id}`);
+    elt.setAttribute("data-annotation-type", type);
+    elt.classList.add(`annotation-${type}`);
+    // rect is used for background and stroke
+    const rect = createSVGElement<SVGRectElement>("rect");
+    elt.appendChild(rect);
+  }
+  return elt;
+}
 
 export function renderBox(
   root: SVGElement,
   annotation: Box,
   view: View,
-  _elt: SVGGElement | undefined
+  cachedElement: SVGGElement | undefined
 ) {
   const id = annotation.id;
   const className = `class${id}`;
   const size = getBoxSize(annotation);
 
-  // TODO: edited element is rendered in DOM
-  //if (this.store.getState().id === this.selectedId) continue;
-
+  const g = createDom(cachedElement, id, annotation.properties.type);
   const { strokeColor, strokeWidth, strokeType, background, borderRadius } =
     annotation.properties.style || defaultBoxStyle;
-  const g = createSVGElement<SVGGElement>("g");
   g.classList.add("annotation-box");
   g.setAttribute("fill", `${background || "transparent"}`);
 
   // rect is used for background and stroke
-  const rect = createSVGElement<SVGRectElement>("rect");
+  const rect = g.firstChild as SVGRectElement;
 
   if (borderRadius) {
     rect.setAttribute("rx", `${borderRadius}`);
     rect.setAttribute("ry", `${borderRadius}`);
   }
+
   let addRect = false;
   if (strokeType && strokeType !== "none") {
     addRect = true;
@@ -51,6 +66,7 @@ export function renderBox(
   g.setAttribute("data-annotation", `${annotation.id}`);
   g.setAttribute("data-annotation-type", annotation.properties.type);
   root.appendChild(g);
+  return g;
 }
 
 function getRotationMatrix(angle: number, cx: number, cy: number) {

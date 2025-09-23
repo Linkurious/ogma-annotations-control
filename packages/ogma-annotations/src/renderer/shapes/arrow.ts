@@ -1,6 +1,6 @@
 import { View } from "@linkurious/ogma";
 import { defaultStyle } from "../../Editor_old/Arrows/defaults";
-import { Arrow, Extremity, Point } from "../../types";
+import { Arrow, Extremity, Id, Point } from "../../types";
 import { createSVGElement, getArrowEndPoints } from "../../utils";
 import {
   subtract,
@@ -53,18 +53,33 @@ function drawExt(
   }`;
 }
 
+function createDom(elt: SVGGElement | undefined, id: Id): SVGGElement {
+  if (!elt) {
+    elt = createSVGElement<SVGGElement>("g");
+    const path = createSVGElement<SVGPathElement>("path");
+    elt.classList.add("annotation-arrow");
+    elt.setAttribute("data-annotation", `${id}`);
+    elt.setAttribute("data-annotation-type", "arrow");
+    elt.appendChild(path);
+    const endpointsGroup = createSVGElement<SVGGElement>("g");
+    endpointsGroup.classList.add("annotation-arrow-endpoints");
+    elt.appendChild(endpointsGroup);
+  }
+  return elt;
+}
+
 /**
  * @function draw
  * @param arrow The arrow to draw
  * @param g the group in which to draw
  */
 export function renderArrow(
-  g: SVGGElement,
+  root: SVGGElement,
   arrow: Arrow,
   view: View,
   minArrowHeight: number,
   maxArrowHeight: number,
-  _elt: SVGGElement | undefined
+  chachedElement: SVGGElement | undefined
 ) {
   const { start, end } = getArrowEndPoints(arrow);
   const {
@@ -75,10 +90,9 @@ export function renderArrow(
   } = arrow.properties.style || defaultStyle;
   const vec = subtract(end, start);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
-  const lineGroup = createSVGElement<SVGGElement>("g");
-  const path = createSVGElement<SVGPathElement>("path");
-  lineGroup.setAttribute("data-annotation", `${arrow.id}`);
-  lineGroup.setAttribute("data-annotation-type", "arrow");
+
+  const lineGroup = createDom(chachedElement, arrow.id);
+  const path = lineGroup.firstChild as SVGPathElement;
 
   const filled = head === "arrow-plain" || tail === "arrow";
   const color = strokeColor || "none";
@@ -93,12 +107,15 @@ export function renderArrow(
 
   const d = headD + `M ${start.x} ${start.y} ${end.x} ${end.y}` + tailD;
   path.setAttribute("d", d);
-  lineGroup.appendChild(path);
 
-  addExtremity(lineGroup, start, color, tail, strokeWidth);
-  addExtremity(lineGroup, end, color, head, strokeWidth);
+  const endpointsGroup = lineGroup.children[1] as SVGGElement;
+  endpointsGroup.innerHTML = "";
+
+  addExtremity(endpointsGroup, start, color, tail, strokeWidth);
+  addExtremity(endpointsGroup, end, color, head, strokeWidth);
   applyTransform(lineGroup, view.angle);
-  g.appendChild(lineGroup);
+  root.appendChild(lineGroup);
+  return lineGroup;
 }
 
 export function applyTransform(element: SVGGElement, angle: number = 0): void {

@@ -1,70 +1,68 @@
 import Textbox from "@borgar/textbox";
 import { View } from "@linkurious/ogma";
+import { create } from "domain";
+import { renderBox } from "./box";
 import { getTransformMatrix } from "./utils";
 import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/defaults";
-import { Text } from "../../types";
-import { createSVGElement, getTextSize } from "../../utils";
+import { Box, Text } from "../../types";
+import { getTextSize, getBoxPosition, createSVGElement } from "../../utils";
 
 export function renderText(
   root: SVGElement,
   annotation: Text,
   view: View,
-  _elt: SVGGElement | undefined
+  cachedElement: SVGGElement | undefined
 ) {
-  const id = annotation.id;
-  const className = `class${id}`;
   const size = getTextSize(annotation);
+  const position = getBoxPosition(annotation);
 
   // TODO: edited element is rendered in DOM
   //if (id === this.selectedId) continue;
 
   const {
     color = defaultTextStyle.color,
-    fontSize = defaultTextStyle.fontSize,
-    font = defaultTextStyle.font,
     strokeColor = defaultTextStyle.strokeColor,
     strokeWidth = defaultTextStyle.strokeWidth,
     strokeType = defaultTextStyle.strokeType,
     background,
     borderRadius
   } = annotation.properties.style || defaultTextStyle;
-  const g = createSVGElement<SVGGElement>("g");
+
+  const g = renderBox(root, annotation as unknown as Box, view, cachedElement);
+  g.setAttribute("data-annotation-type", annotation.properties.type);
   g.classList.add("annotation-text");
   g.setAttribute("fill", `${color}`);
-  g.setAttribute("font-size", `${fontSize}px`);
-  g.setAttribute("font-family", `${font}`);
 
   // rect is used for background and stroke
-  const rect = createSVGElement<SVGRectElement>("rect");
+  const rect = g.firstChild as SVGRectElement;
 
   if (borderRadius) {
     rect.setAttribute("rx", `${borderRadius}`);
     rect.setAttribute("ry", `${borderRadius}`);
   }
-  let addRect = false;
+
   if (strokeType && strokeType !== "none") {
-    addRect = true;
     rect.setAttribute("stroke", strokeColor || "black");
     rect.setAttribute("stroke-width", `${strokeWidth}`);
-    if (strokeType === "dashed") {
-      rect.setAttribute("stroke-dasharray", `5,5`);
-    }
+    if (strokeType === "dashed") rect.setAttribute("stroke-dasharray", `5,5`);
   }
-  if ((background && background.length) || addRect) {
-    addRect = true;
+  if (background && background.length) {
     rect.setAttribute("fill", background || "transparent");
   }
-  if (addRect) {
-    rect.setAttribute("width", `${size.width}`);
-    rect.setAttribute("height", `${size.height}`);
+  rect.setAttribute("width", `${size.width}`);
+  rect.setAttribute("height", `${size.height}`);
+
+  // rect.setAttribute("x", `-${size.width / 2}`);
+  // rect.setAttribute("y", `-${size.height / 2}`);
+
+  for (const child of g.children) {
+    if (child.tagName !== "rect") g.removeChild(child);
   }
-  g.appendChild(rect);
   drawContent(annotation, g);
+
   g.setAttribute("transform", getTransformMatrix(annotation, view));
-  g.classList.add(className);
-  g.setAttribute("data-annotation", `${annotation.id}`);
-  g.setAttribute("data-annotation-type", annotation.properties.type);
   root.appendChild(g);
+  return g;
 }
 
 const removeEllipsis = (str: string) => str.replace(/…$/, "");
@@ -75,7 +73,7 @@ const getText = (e: Element) => e.children[0].innerHTML;
  * @param annotation the annotation to draw
  * @param g the group in which the text should be drawn
  */
-function drawContent(annotation: Text, g: SVGGElement) {
+function drawContent(annotation: Text, parent: SVGGElement) {
   // make sure text does not overflow
   const size = getTextSize(annotation);
   const {
@@ -116,12 +114,11 @@ function drawContent(annotation: Text, g: SVGGElement) {
         break;
       }
       const text = removeEllipsis(getText(children[index]));
-      if (query.startsWith(text)) {
-        query = query.slice(text.length).trim();
-      }
+      if (query.startsWith(text)) query = query.slice(text.length).trim();
       index++;
     }
   });
+
   toRemove.forEach((i) => text.removeChild(children[i]));
   // replace spans with links:
   const matches = annotation.properties.content.match(/(https?:\/\/.*)/gm);
@@ -152,6 +149,5 @@ function drawContent(annotation: Text, g: SVGGElement) {
       e.children[0].appendChild(link);
     });
   });
-
-  g.appendChild(text);
+  parent.appendChild(text);
 }
