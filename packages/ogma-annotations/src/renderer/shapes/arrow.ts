@@ -63,7 +63,8 @@ export function renderArrow(
   arrow: Arrow,
   view: View,
   minArrowHeight: number,
-  maxArrowHeight: number
+  maxArrowHeight: number,
+  _elt: SVGGElement | undefined
 ) {
   const { start, end } = getArrowEndPoints(arrow);
   const {

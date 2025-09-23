@@ -5,7 +5,12 @@ import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/default
 import { Text } from "../../types";
 import { createSVGElement, getTextSize } from "../../utils";
 
-export function renderText(root: SVGElement, annotation: Text, view: View) {
+export function renderText(
+  root: SVGElement,
+  annotation: Text,
+  view: View,
+  _elt: SVGGElement | undefined
+) {
   const id = annotation.id;
   const className = `class${id}`;
   const size = getTextSize(annotation);

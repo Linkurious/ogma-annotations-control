@@ -3,7 +3,12 @@ import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
 import { Box } from "../../types";
 import { createSVGElement, getBoxSize } from "../../utils";
 
-export function renderBox(root: SVGElement, annotation: Box, view: View) {
+export function renderBox(
+  root: SVGElement,
+  annotation: Box,
+  view: View,
+  _elt: SVGGElement | undefined
+) {
   const id = annotation.id;
   const className = `class${id}`;
   const size = getBoxSize(annotation);

@@ -3,13 +3,17 @@ import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderText } from "./text";
 import { Store } from "../../store";
-import { Annotation, isArrow, isBox, isText } from "../../types";
+import { Annotation, Id, isArrow, isBox, isText } from "../../types";
 import { createSVGElement } from "../../utils";
 import { Renderer } from "../base";
 
 export class Shapes extends Renderer<SVGLayer> {
   private minArrowHeight = 20;
   private maxArrowHeight = 30;
+  private features = new Map<Id, SVGGElement>();
+  private root: SVGGElement | null = null;
+  private arrowsRoot: SVGGElement | null = null;
+  private annotationsRoot: SVGGElement | null = null;
 
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
@@ -45,20 +49,33 @@ export class Shapes extends Renderer<SVGLayer> {
     const annotationsRoot = createSVGElement<SVGGElement>("g");
     annotationsRoot.appendChild(arrowsRoot);
 
+    if (!this.root) this.root = createSVGElement<SVGGElement>("g");
+    if (!this.arrowsRoot) this.arrowsRoot = createSVGElement<SVGGElement>("g");
+    if (!this.annotationsRoot)
+      this.annotationsRoot = createSVGElement<SVGGElement>("g");
+
+    // delete features that are no longer present
+    const featureIds = new Set(Object.keys(features));
+    this.removeFeatures(featureIds);
+
     for (let feature of Object.values(features)) {
       if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
 
-      if (isBox(feature)) renderBox(annotationsRoot, feature, view);
-      else if (isText(feature)) renderText(annotationsRoot, feature, view);
+      const existingElement = this.features.get(feature.id);
+      if (isBox(feature))
+        renderBox(annotationsRoot, feature, view, existingElement);
+      else if (isText(feature))
+        renderText(annotationsRoot, feature, view, existingElement);
       else if (isArrow(feature))
         renderArrow(
           arrowsRoot,
           feature,
           view,
           this.minArrowHeight,
-          this.maxArrowHeight
+          this.maxArrowHeight,
+          existingElement
         );
     }
 
@@ -66,6 +83,18 @@ export class Shapes extends Renderer<SVGLayer> {
     this.applyStateClasses(root, hoveredFeature, selectedFeatures);
     root.appendChild(annotationsRoot);
   };
+
+  private removeFeatures(featureIds: Set<Id>) {
+    for (const id of this.features.keys()) {
+      if (!featureIds.has(id)) {
+        const element = this.features.get(id);
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+        this.features.delete(id);
+      }
+    }
+  }
 
   private applyStateClasses(
     root: SVGElement,
