@@ -1,7 +1,8 @@
 import { View } from "@linkurious/ogma";
+import { getRotationMatrix } from "./utils";
 import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
 import { Box, Id, AnnotationType } from "../../types";
-import { createSVGElement, getBoxSize } from "../../utils";
+import { createSVGElement, getBoxPosition, getBoxSize } from "../../utils";
 
 function createDom(
   elt: SVGGElement | undefined,
@@ -56,8 +57,11 @@ export function renderBox(
     rect.setAttribute("fill", background || "transparent");
   }
   if (addRect) {
+    const position = getBoxPosition(annotation);
     rect.setAttribute("width", `${size.width}`);
     rect.setAttribute("height", `${size.height}`);
+    rect.setAttribute("x", `${position.x}`);
+    rect.setAttribute("y", `${position.y}`);
   }
   g.appendChild(rect);
 
@@ -67,12 +71,4 @@ export function renderBox(
   g.setAttribute("data-annotation-type", annotation.properties.type);
   root.appendChild(g);
   return g;
-}
-
-function getRotationMatrix(angle: number, cx: number, cy: number) {
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
-  const tx = cx * (1 - cos) + cy * sin;
-  const ty = cy * (1 - cos) - cx * sin;
-  return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${tx}, ${ty})`;
 }

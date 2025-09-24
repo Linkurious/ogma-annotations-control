@@ -14,6 +14,7 @@ export abstract class Handler<
   protected hoveredHandle?: Handle;
   protected ogmaPanningOption: boolean = false;
   protected store: Store;
+  protected draggingWasEnabled: boolean = true;
 
   constructor(ogma: Ogma, store: Store) {
     super();
@@ -92,8 +93,21 @@ export abstract class Handler<
    */
   protected abstract onDrag(evt: ClientMouseEvent): void;
 
-  protected abstract onDragStart(evt: ClientMouseEvent): void;
-  protected abstract onDragEnd(evt: ClientMouseEvent): void;
+  protected onDragStart(_evt: ClientMouseEvent) {
+    if (!this.isActive()) return false;
+    this.draggingWasEnabled =
+      this.ogma.getOptions().interactions?.drag?.enabled ?? true;
+    this.ogma.setOptions({ interactions: { drag: { enabled: false } } });
+    return true;
+  }
+
+  protected onDragEnd(_evt: ClientMouseEvent) {
+    if (!this.isActive()) return false;
+    this.ogma.setOptions({
+      interactions: { drag: { enabled: this.draggingWasEnabled } }
+    });
+    return true;
+  }
 
   protected clientToCanvas(evt: ClientMouseEvent): Point {
     const ogma = this.ogma;
@@ -108,7 +122,7 @@ export abstract class Handler<
       const win = getBrowserWindow() || container;
       win.addEventListener("mousemove", this.handleMouseMove);
       win.addEventListener("mouseup", this.handleMouseUp, true);
-      container.addEventListener("mousedown", this.handleMouseDown);
+      container.addEventListener("mousedown", this.handleMouseDown, true);
       const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
       this.handleMouseMove({ clientX, clientY });
     }

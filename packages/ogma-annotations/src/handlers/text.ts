@@ -4,7 +4,7 @@ import { handleRadius } from "../constants";
 import { Links } from "../links";
 import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
-import { Cursor, Text } from "../types";
+import { ClientMouseEvent, Cursor, Text } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
@@ -312,18 +312,20 @@ export class TextHandler extends Handler<Text, Handle> {
     };
   }
 
-  protected onDragStart() {
-    if (!this.isActive()) return;
+  protected onDragStart(evt: ClientMouseEvent) {
+    if (!super.onDragEnd(evt)) return false;
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
+    return true;
   }
 
-  protected onDragEnd() {
-    if (!this.isActive()) return;
+  protected onDragEnd(evt: ClientMouseEvent) {
+    if (!super.onDragEnd(evt)) return false;
     this.commitChange();
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;
     this.dragging = false;
+    return true;
   }
 
   private getCornerCursor(cornerIndex: number): Cursor {

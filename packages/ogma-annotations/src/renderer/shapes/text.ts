@@ -1,11 +1,10 @@
 import Textbox from "@borgar/textbox";
 import { View } from "@linkurious/ogma";
-import { create } from "domain";
 import { renderBox } from "./box";
 import { getTransformMatrix } from "./utils";
 import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/defaults";
 import { Box, Text } from "../../types";
-import { getTextSize, getBoxPosition, createSVGElement } from "../../utils";
+import { getTextSize } from "../../utils";
 
 export function renderText(
   root: SVGElement,
@@ -14,7 +13,7 @@ export function renderText(
   cachedElement: SVGGElement | undefined
 ) {
   const size = getTextSize(annotation);
-  const position = getBoxPosition(annotation);
+  //const position = getBoxPosition(annotation);
 
   // TODO: edited element is rendered in DOM
   //if (id === this.selectedId) continue;
@@ -97,15 +96,16 @@ function drawContent(annotation: Text, parent: SVGGElement) {
   });
   box.overflowWrap("break-word");
 
-  const lines = box.linebreak(
-    annotation.properties.content.replaceAll("\n", "<br>")
-  );
+  const content = annotation.properties.content || "";
+  if (content.length === 0) return;
+
+  const lines = box.linebreak(content.replaceAll("\n", "<br>"));
   const text = lines.render();
   const children = [...text.children];
   // remove extra blank lines
   let index = 0;
   const toRemove: number[] = [];
-  annotation.properties.content.split("\n").forEach((l) => {
+  content.split("\n").forEach((l) => {
     let query = l;
     while (query.length && index < children.length) {
       if (children[index].innerHTML === "&nbsp;") {
@@ -121,12 +121,12 @@ function drawContent(annotation: Text, parent: SVGGElement) {
 
   toRemove.forEach((i) => text.removeChild(children[i]));
   // replace spans with links:
-  const matches = annotation.properties.content.match(/(https?:\/\/.*)/gm);
+  const matches = content.match(/(https?:\/\/.*)/gm);
   const links = matches ? matches.map((match) => match.split(" ")[0]) : [];
   text.setAttribute("transform", `translate(${padding}, ${padding})`);
   links.forEach((l) => {
     let query = l;
-    const toReplace = [];
+    const toReplace: typeof children = [];
     while (query.length > 0) {
       const start = children.find(
         (e) =>

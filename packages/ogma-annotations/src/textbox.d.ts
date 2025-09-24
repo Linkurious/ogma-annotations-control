@@ -168,6 +168,8 @@ declare module "@borgar/textbox" {
     font: Font;
   }
 
+  interface RenderOptions {}
+
   export interface Lines extends Array<Line> {
     height: number;
     width: number;

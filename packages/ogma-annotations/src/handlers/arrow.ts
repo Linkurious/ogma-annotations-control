@@ -4,7 +4,12 @@ import { Snap, Snapping } from "./snapping";
 import { handleDetectionThreshold } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
-import { Arrow, ArrowProperties, detectArrow } from "../types";
+import {
+  Arrow,
+  ArrowProperties,
+  ClientMouseEvent,
+  detectArrow
+} from "../types";
 
 enum HandleType {
   START = "start",
@@ -141,15 +146,15 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       })
     );
   }
-  protected onDragStart() {
-    if (!this.isActive()) return;
+  protected onDragStart(evt: ClientMouseEvent) {
+    if (!super.onDragStart(evt)) return false;
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
+    return true;
   }
 
-  protected onDragEnd() {
-    if (!this.isActive()) return;
-
+  protected onDragEnd(evt: ClientMouseEvent) {
+    if (!super.onDragEnd(evt)) return false;
     this.commitChange();
 
     // Handle snapping if applicable
@@ -167,5 +172,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.clearDragState();
 
     this.snap = null;
+    return true;
   }
 }
