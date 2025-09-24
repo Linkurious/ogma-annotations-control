@@ -45,24 +45,19 @@ export function renderBox(
     rect.setAttribute("ry", `${borderRadius}`);
   }
 
-  let addRect = false;
   if (strokeType && strokeType !== "none") {
-    addRect = true;
     rect.setAttribute("stroke", strokeColor || "black");
     rect.setAttribute("stroke-width", `${strokeWidth}`);
     if (strokeType === "dashed") rect.setAttribute("stroke-dasharray", `5,5`);
   }
-  if ((background && background.length) || addRect) {
-    addRect = true;
+  if (background && background.length) {
     rect.setAttribute("fill", background || "transparent");
   }
-  if (addRect) {
-    const position = getBoxPosition(annotation);
-    rect.setAttribute("width", `${size.width}`);
-    rect.setAttribute("height", `${size.height}`);
-    rect.setAttribute("x", `${position.x}`);
-    rect.setAttribute("y", `${position.y}`);
-  }
+  const position = getBoxPosition(annotation);
+  rect.setAttribute("width", `${size.width}`);
+  rect.setAttribute("height", `${size.height}`);
+  rect.setAttribute("x", `${position.x}`);
+  rect.setAttribute("y", `${position.y}`);
   g.appendChild(rect);
 
   g.setAttribute("transform", getRotationMatrix(-view.angle!, 0, 0));

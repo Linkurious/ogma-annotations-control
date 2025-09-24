@@ -32,6 +32,9 @@ export function renderText(
   g.classList.add("annotation-text");
   g.setAttribute("fill", `${color}`);
 
+  for (const child of g.children) {
+    if (child.tagName !== "rect") g.removeChild(child);
+  }
   // rect is used for background and stroke
   const rect = g.firstChild as SVGRectElement;
 
@@ -50,16 +53,13 @@ export function renderText(
   }
   rect.setAttribute("width", `${size.width}`);
   rect.setAttribute("height", `${size.height}`);
+  rect.setAttribute("x", "0");
+  rect.setAttribute("y", `0`);
 
-  // rect.setAttribute("x", `-${size.width / 2}`);
-  // rect.setAttribute("y", `-${size.height / 2}`);
-
-  for (const child of g.children) {
-    if (child.tagName !== "rect") g.removeChild(child);
-  }
   drawContent(annotation, g);
 
   g.setAttribute("transform", getTransformMatrix(annotation, view));
+
   root.appendChild(g);
   return g;
 }
