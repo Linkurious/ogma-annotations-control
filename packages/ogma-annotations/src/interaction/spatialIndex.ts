@@ -1,6 +1,6 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
-import { Annotation, isText } from "../types";
+import { Annotation, isBox, isText } from "../types";
 import { getBbox, updateBbox } from "../utils";
 
 export class Index extends Rtree<Annotation> {
@@ -46,21 +46,35 @@ export class Index extends Rtree<Annotation> {
       { equalityFn: (a, b) => a.isDragging === b.isDragging }
     );
     this.store.subscribe((state) => state.rotation, this.onRotationChange);
+
+    this.polygons = [];
+    this.layer = window.ogma.layers.addCanvasLayer((ctx) => {
+      ctx.beginPath();
+      this.polygons.forEach((p) => {
+        ctx.moveTo(p[0].x, p[0].y);
+        for (const pt of p) ctx.lineTo(pt.x, pt.y);
+        ctx.lineTo(p[0].x, p[0].y);
+      });
+      ctx.stroke();
+    });
   }
 
   private onRotationChange = (angle: number) => {
     const texts = this.store
       .getState()
       .getAllFeatures()
-      .filter((feature) => isText(feature));
-    const sin = Math.sin(-angle);
-    const cos = Math.cos(-angle);
+      .filter((feature) => isBox(feature));
+
+    const sin = Math.sin(angle);
+    const cos = Math.cos(angle);
+
+    this.polygons = [];
     for (const text of texts) {
       this.remove(text);
       // counter rotate bbox around text center
       const [x0, y0, x1, y1] = getBbox(text);
-      const cx = (x0 + x1) / 2;
-      const cy = (y0 + y1) / 2;
+      const cx = x0; //(x0 + x1) / 2;
+      const cy = y0; //(y0 + y1) / 2;
 
       const corners = [
         { x: x0, y: y0 },
@@ -72,17 +86,20 @@ export class Index extends Rtree<Annotation> {
       let minY = Infinity;
       let maxX = -Infinity;
       let maxY = -Infinity;
-      const _rotatedCorners = corners.map((corner) => {
+      const poly = [];
+      corners.forEach((corner) => {
         const dx = corner.x - cx;
         const dy = corner.y - cy;
         const x = cx + (dx * cos - dy * sin);
         const y = cy + (dx * sin + dy * cos);
+        poly.push({ x, y });
         if (x < minX) minX = x;
         if (y < minY) minY = y;
         if (x > maxX) maxX = x;
         if (y > maxY) maxY = y;
         return { x, y };
       });
+      this.polygons.push(poly);
 
       this.insert({
         ...text,

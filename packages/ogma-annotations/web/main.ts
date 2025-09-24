@@ -15,9 +15,10 @@ import { EVT_DRAG_END } from "../src/constants";
 const ogma = new Ogma({
   container: "app"
 });
-const control = new Control(ogma);
 //@ts-ignore
 window.ogma = ogma;
+
+const control = new Control(ogma);
 
 ogma.styles.addRule({
   nodeAttributes: {
