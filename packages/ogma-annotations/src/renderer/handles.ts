@@ -1,8 +1,9 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
 import { handleRadius } from "../constants";
+import { getAABB } from "../geom";
 import { Store } from "../store";
-import { Arrow, Box, Text, isArrow, isText } from "../types";
+import { Arrow, Box, Text, isArrow, isBox, isText } from "../types";
 import {
   getArrowEnd,
   getArrowStart,
@@ -51,6 +52,36 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.strokeStyle = "#0099ff";
 
     Object.values(features).forEach((baseFeature) => {
+      // debugging
+      // if (isText(baseFeature)) {
+      //   const pos = getBoxPosition(baseFeature);
+      //   const size = getBoxSize(baseFeature);
+      //   const angle = this.ogma.view.getAngle();
+      //   ctx.save();
+      //   ctx.translate(pos.x, pos.y);
+      //   ctx.rotate(angle);
+      //   ctx.moveTo(pos.x, pos.y);
+      //   ctx.rect(0, 0, size.width, size.height);
+      //   ctx.stroke();
+      //   ctx.restore();
+
+      //   const rect = getAABB(
+      //     pos.x,
+      //     pos.y,
+      //     size.width,
+      //     size.height,
+      //     Math.sin(angle),
+      //     Math.cos(angle),
+      //     pos.x,
+      //     pos.y,
+      //     [0, 0, 0, 0]
+      //   );
+
+      //   ctx.moveTo(rect[0], rect[1]);
+      //   ctx.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
+      //   ctx.stroke();
+      // }
+
       // Only render handles for selected features
       if (!state.isSelected(baseFeature.id)) return;
 
@@ -61,7 +92,7 @@ export class Handles extends Renderer<CanvasLayer> {
 
       if (isArrow(feature)) {
         this.renderArrowHandles(feature, ctx, r, state.hoveredHandle);
-      } else if (isText(feature)) {
+      } else if (isText(feature) || isBox(feature)) {
         this.renderBoxHandles(feature, ctx, r, state.hoveredHandle);
       }
     });

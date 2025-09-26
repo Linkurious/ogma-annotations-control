@@ -4,7 +4,7 @@ import { renderBox } from "./box";
 import { getTransformMatrix } from "./utils";
 import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/defaults";
 import { Box, Text } from "../../types";
-import { getTextSize } from "../../utils";
+import { getBbox, getBoxPosition, getTextSize } from "../../utils";
 
 export function renderText(
   root: SVGElement,
@@ -53,7 +53,8 @@ export function renderText(
   }
   rect.setAttribute("width", `${size.width}`);
   rect.setAttribute("height", `${size.height}`);
-  rect.setAttribute("x", "0");
+  const position = getBoxPosition(annotation);
+  rect.setAttribute("x", `0`);
   rect.setAttribute("y", `0`);
 
   drawContent(annotation, g);
@@ -150,4 +151,26 @@ function drawContent(annotation: Text, parent: SVGGElement) {
     });
   });
   parent.appendChild(text);
+}
+
+function getRotationTransformRounded(
+  radians: number,
+  ox: number,
+  oy: number,
+  precision = 6
+) {
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+
+  const a = cos;
+  const b = sin;
+  const c = -sin;
+  const d = cos;
+  const e = ox - ox * cos + oy * sin;
+  const f = oy - ox * sin - oy * cos;
+
+  // Round to specified precision
+  const round = (num) => parseFloat(num.toFixed(precision));
+
+  return `matrix(${round(a)},${round(b)},${round(c)},${round(d)},${round(e)},${round(f)})`;
 }

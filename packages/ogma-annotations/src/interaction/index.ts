@@ -55,6 +55,11 @@ export class InteractionController {
 
     if (hit.length === 0) return null;
 
+    console.log(
+      "broad phase hits:",
+      hit.map((h) => `${h.id} - ${h.properties.type}`)
+    );
+
     // narrow phase
     for (const item of hit) {
       if (isArrow(item)) {

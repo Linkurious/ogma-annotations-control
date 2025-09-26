@@ -1,4 +1,4 @@
-import { Ogma, geometry } from "@linkurious/ogma";
+import { geometry } from "@linkurious/ogma";
 import { Point, Bounds } from "./types";
 
 /**
@@ -198,7 +198,7 @@ export function boxToSegmentIntersection(
     br.y
   );
   if (intersects) return intersects;
-  intersects = Ogma.geometry.segmentIntersection(
+  intersects = geometry.segmentIntersection(
     point.x,
     point.y,
     center.x,
@@ -209,7 +209,7 @@ export function boxToSegmentIntersection(
     bl.y
   );
   if (intersects) return intersects;
-  intersects = Ogma.geometry.segmentIntersection(
+  intersects = geometry.segmentIntersection(
     point.x,
     point.y,
     center.x,
@@ -221,4 +221,116 @@ export function boxToSegmentIntersection(
   );
   if (intersects) return intersects;
   return null;
+}
+
+export function getAABB1(
+  x0: number,
+  y0: number,
+  w: number,
+  h: number,
+  angle = 0,
+  sin: number = Math.sin(angle),
+  cos: number = Math.cos(angle),
+  dest: Bounds = [0, 0, 0, 0]
+): Bounds {
+  const hw = w / 2;
+  const hh = h / 2;
+  const cx = x0;
+  const cy = y0;
+
+  // as is
+  if (angle === 0) {
+    dest[0] = x0;
+    dest[1] = y0;
+    dest[2] = x0 + w;
+    dest[3] = y0 + h;
+    return dest;
+  }
+
+  // const sin = Math.sin(angle),
+  //       cos = Math.cos(angle);
+  let xr, yr, x, y;
+  let minX, minY, maxX, maxY;
+
+  x = -hw;
+  y = -hh;
+  xr = cx + x * cos - y * sin;
+  yr = cy + x * sin + y * cos;
+  minX = maxX = xr;
+  minY = maxY = yr;
+
+  x = -hw;
+  y = hh;
+  xr = cx + x * cos - y * sin;
+  yr = cy + x * sin + y * cos;
+  if (xr < minX) {
+    minX = xr;
+  } else if (xr > maxX) {
+    maxX = xr;
+  }
+  if (yr < minY) {
+    minY = yr;
+  } else if (yr > maxY) {
+    maxY = yr;
+  }
+
+  x = hw;
+  y = hh;
+  xr = cx + x * cos - y * sin;
+  yr = cy + x * sin + y * cos;
+  if (xr < minX) minX = xr;
+  else if (xr > maxX) maxX = xr;
+
+  if (yr < minY) minY = yr;
+  else if (yr > maxY) maxY = yr;
+
+  x = hw;
+  y = -hh;
+  xr = cx + x * cos - y * sin;
+  yr = cy + x * sin + y * cos;
+  if (xr < minX) minX = xr;
+  else if (xr > maxX) maxX = xr;
+
+  if (yr < minY) minY = yr;
+  else if (yr > maxY) maxY = yr;
+
+  dest[0] = minX;
+  dest[1] = minY;
+  dest[2] = maxX;
+  dest[3] = maxY;
+
+  return dest;
+}
+
+export function getAABB(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  sin: number,
+  cos: number,
+  ox: number,
+  oy: number,
+  dest: Bounds
+): Bounds {
+  const dx = x - ox;
+  const dy = y - oy;
+
+  const x1 = ox + dx * cos - dy * sin;
+  const y1 = oy + dx * sin + dy * cos;
+
+  const x2 = ox + (dx + w) * cos - dy * sin;
+  const y2 = oy + (dx + w) * sin + dy * cos;
+
+  const x3 = ox + (dx + w) * cos - (dy + h) * sin;
+  const y3 = oy + (dx + w) * sin + (dy + h) * cos;
+
+  const x4 = ox + dx * cos - (dy + h) * sin;
+  const y4 = oy + dx * sin + (dy + h) * cos;
+
+  dest[0] = Math.min(x1, x2, x3, x4);
+  dest[1] = Math.min(y1, y2, y3, y4);
+  dest[2] = Math.max(x1, x2, x3, x4);
+  dest[3] = Math.max(y1, y2, y3, y4);
+  return dest;
 }
