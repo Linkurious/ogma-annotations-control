@@ -2,7 +2,15 @@ import Rtree, { BBox } from "rbush";
 import { getAABB } from "../geom";
 import { Store } from "../store";
 import { Annotation, Bounds, Text, isBox, isText } from "../types";
-import { getBbox, getBoxPosition, getBoxSize, updateBbox } from "../utils";
+import {
+  debounce,
+  debounceTail,
+  getBbox,
+  getBoxPosition,
+  getBoxSize,
+  throttle,
+  updateBbox
+} from "../utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
@@ -52,7 +60,12 @@ export class Index extends Rtree<Annotation> {
       },
       { equalityFn: (a, b) => a.isDragging === b.isDragging }
     );
-    this.store.subscribe((state) => state.rotation, this.onRotationChange);
+    this.store.subscribe(
+      (state) => state.rotation,
+      (angle) => {
+        this.onRotationChange(angle);
+      }
+    );
 
     this.polygons = [];
     this.rects = [];
@@ -77,7 +90,7 @@ export class Index extends Rtree<Annotation> {
       .getAllFeatures()
       .filter((feature) => isText(feature));
 
-    this.setAngle(-angle);
+    this.setAngle(angle);
 
     this.polygons = [];
     for (const text of texts) {
@@ -89,8 +102,8 @@ export class Index extends Rtree<Annotation> {
         y0,
         x1 - x0,
         y1 - y0,
-        Math.sin(angle),
-        Math.cos(angle),
+        this.sin,
+        this.cos,
         x0,
         y0,
         this.rotatedRect

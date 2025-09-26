@@ -274,6 +274,57 @@ export function getBrowserWindow() {
     : undefined;
 }
 
+export const throttle = <T extends unknown[]>(
+  callback: (...args: T) => void,
+  delay: number
+) => {
+  let isWaiting = false;
+
+  return (...args: T) => {
+    if (isWaiting) return;
+
+    callback(...args);
+    isWaiting = true;
+
+    setTimeout(() => {
+      isWaiting = false;
+    }, delay);
+  };
+};
+
+export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
+  func: F,
+  waitFor: number
+) => {
+  let timeout: ReturnType<typeof setTimeout>;
+
+  const debounced = (...args: Parameters<F>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), waitFor);
+  };
+
+  return debounced;
+};
+
+export function debounceTail<T, A extends unknown[]>(
+  fn: (this: T, ...args: A) => void,
+  delay: number
+): (this: T, ...args: A) => void {
+  let timer: ReturnType<typeof setTimeout>;
+
+  return function (this: T, ...args: A): void {
+    // Trailing edge.
+    // Postpone calling fn until the delay has elapsed since the last call.
+    // Each call clears any previously delayed call and resets the delay, so
+    // the postponed call will always be the last one.
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      // Call fn on the trailing edge.
+      fn.apply(this, args);
+    }, delay);
+  };
+}
+
 export {
   getBbox as getTextBbox,
   updateBbox as updateTextBbox,
