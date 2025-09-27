@@ -1,13 +1,11 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
 import { handleRadius } from "../constants";
-import { getAABB } from "../geom";
 import { Store } from "../store";
 import { Arrow, Box, Text, isArrow, isBox, isText } from "../types";
 import {
   getArrowEnd,
   getArrowStart,
-  getBbox,
   getBoxPosition,
   getBoxSize
 } from "../utils";
@@ -53,15 +51,6 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.strokeStyle = "#0099ff";
 
     Object.values(features).forEach((baseFeature) => {
-      // debugging
-      // if (isText(baseFeature)) {
-      //   const rect = state.getRotatedBBox(...getBbox(baseFeature));
-
-      //   ctx.moveTo(rect[0], rect[1]);
-      //   ctx.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
-      //   ctx.stroke();
-      // }
-
       // Only render handles for selected features
       if (!state.isSelected(baseFeature.id)) return;
 

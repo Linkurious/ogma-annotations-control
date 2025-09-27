@@ -8,7 +8,9 @@ import {
   Box,
   detectBox,
   Cursor,
-  isArrow
+  isArrow,
+  isBox,
+  isText
 } from "../types";
 import { clientToContainerPosition } from "../utils";
 
@@ -43,8 +45,10 @@ export class InteractionController {
     this.ogma.events.on("rotate", () => this.links.update());
   }
 
-  detect(x: number, y: number, angle: number): Annotation | null {
+  detect(x: number, y: number): Annotation | null {
     let result: Annotation | null = null;
+    const state = this.store.getState();
+    const angle = state.rotation;
     const threshold = this.threshold;
     this.query.minX = x - threshold;
     this.query.minY = y - threshold;
@@ -55,21 +59,23 @@ export class InteractionController {
 
     if (hit.length === 0) return null;
 
-    console.log(
-      "broad phase hits:",
-      hit.map((h) => `${h.id} - ${h.properties.type}`)
-    );
-
     // narrow phase
     for (const item of hit) {
-      if (isArrow(item)) {
-        if (detectArrow(item, { x, y }, threshold)) {
-          result = item;
+      // spatial index is not reliable in regards to real geometries
+      const feature = state.getFeature(item.id)!;
+      if (isArrow(feature)) {
+        if (detectArrow(feature, { x, y }, threshold)) {
+          result = feature;
           break;
         }
-      } else {
-        if (detectBox(item as Box, { x, y }, angle, threshold)) {
-          result = item;
+      } else if (isBox(feature)) {
+        if (detectBox(feature, { x, y }, 0, threshold)) {
+          result = feature;
+          break;
+        }
+      } else if (isText(feature)) {
+        if (detectBox(feature as unknown as Box, { x, y }, angle, threshold)) {
+          result = feature;
           break;
         }
       }
@@ -94,7 +100,7 @@ export class InteractionController {
     if (newHoveredId !== currentHoveredId)
       state.setHoveredFeature(newHoveredId);
 
-    this.setCursor(newHoveredId ? "pointer" : "default");
+    this.setCursor(newHoveredId === null ? "default" : "pointer");
   };
 
   private onMouseClick = (evt: MouseEvent) => {
@@ -106,7 +112,7 @@ export class InteractionController {
       this.ogma.getContainer()
     );
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
-    const annotation = this.detect(x, y, this.ogma.view.getAngle());
+    const annotation = this.detect(x, y);
 
     const state = this.store.getState();
     if (annotation) {
