@@ -26,13 +26,10 @@ export function getTransformMatrix<T extends Box | Text>(
   const position = getBoxPosition(box);
   const { x, y } = rotateRadians(position, -angle);
   // scale it around its center
-  const size = getBoxSize(box);
   const scale = 1;
 
-  const offsetX = x + (size.width / 2) * (1 - scale);
-  const offsetY = y + (size.height / 2) * (1 - scale);
-  if (!asString) return { x: offsetX, y: offsetY };
-  return `matrix(${scale}, 0, 0, ${scale}, ${offsetX}, ${offsetY})`;
+  if (!asString) return { x, y };
+  return `matrix(${scale}, 0, 0, ${scale}, ${x}, ${y})`;
 }
 
 export function getRotationMatrix(angle: number, cx: number, cy: number) {

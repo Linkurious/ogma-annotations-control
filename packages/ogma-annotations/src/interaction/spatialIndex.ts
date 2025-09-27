@@ -1,7 +1,7 @@
 import Rtree, { BBox } from "rbush";
 import { getAABB } from "../geom";
 import { Store } from "../store";
-import { Annotation, Bounds, Text, isBox, isText } from "../types";
+import { Annotation, Bounds, Text, isText } from "../types";
 import {
   debounce,
   debounceTail,

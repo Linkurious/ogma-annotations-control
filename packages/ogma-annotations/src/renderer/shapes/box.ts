@@ -1,6 +1,5 @@
-import { View } from "@linkurious/ogma";
-import { getRotationMatrix } from "./utils";
 import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
+import { AnnotationState } from "../../store";
 import { Box, Id, AnnotationType } from "../../types";
 import { createSVGElement, getBoxPosition, getBoxSize } from "../../utils";
 
@@ -24,8 +23,8 @@ function createDom(
 export function renderBox(
   root: SVGElement,
   annotation: Box,
-  view: View,
-  cachedElement: SVGGElement | undefined
+  cachedElement: SVGGElement | undefined,
+  state: AnnotationState
 ) {
   const id = annotation.id;
   const className = `class${id}`;
@@ -60,7 +59,7 @@ export function renderBox(
   rect.setAttribute("y", `${position.y}`);
   g.appendChild(rect);
 
-  g.setAttribute("transform", getRotationMatrix(-view.angle!, 0, 0));
+  g.setAttribute("transform", state.getRotationTransform(0, 0)); // getRotationMatrix(-view.angle!, 0, 0));
   g.classList.add(className);
   g.setAttribute("data-annotation", `${annotation.id}`);
   g.setAttribute("data-annotation-type", annotation.properties.type);

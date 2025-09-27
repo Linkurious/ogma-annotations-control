@@ -1,16 +1,15 @@
 import Textbox from "@borgar/textbox";
-import { View } from "@linkurious/ogma";
 import { renderBox } from "./box";
-import { getTransformMatrix } from "./utils";
 import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/defaults";
+import { AnnotationState } from "../../store";
 import { Box, Text } from "../../types";
-import { getBbox, getBoxPosition, getTextSize } from "../../utils";
+import { getBoxPosition, getTextSize } from "../../utils";
 
 export function renderText(
   root: SVGElement,
   annotation: Text,
-  view: View,
-  cachedElement: SVGGElement | undefined
+  cachedElement: SVGGElement | undefined,
+  state: AnnotationState
 ) {
   const size = getTextSize(annotation);
   //const position = getBoxPosition(annotation);
@@ -27,7 +26,7 @@ export function renderText(
     borderRadius
   } = annotation.properties.style || defaultTextStyle;
 
-  const g = renderBox(root, annotation as unknown as Box, view, cachedElement);
+  const g = renderBox(root, annotation as unknown as Box, cachedElement, state);
   g.setAttribute("data-annotation-type", annotation.properties.type);
   g.classList.add("annotation-text");
   g.setAttribute("fill", `${color}`);
@@ -59,7 +58,10 @@ export function renderText(
 
   drawContent(annotation, g);
 
-  g.setAttribute("transform", getTransformMatrix(annotation, view));
+  g.setAttribute(
+    "transform",
+    state.getScreenAlignedTransform(position.x, position.y)
+  );
 
   root.appendChild(g);
   return g;
@@ -151,26 +153,4 @@ function drawContent(annotation: Text, parent: SVGGElement) {
     });
   });
   parent.appendChild(text);
-}
-
-function getRotationTransformRounded(
-  radians: number,
-  ox: number,
-  oy: number,
-  precision = 6
-) {
-  const cos = Math.cos(radians);
-  const sin = Math.sin(radians);
-
-  const a = cos;
-  const b = sin;
-  const c = -sin;
-  const d = cos;
-  const e = ox - ox * cos + oy * sin;
-  const f = oy - ox * sin - oy * cos;
-
-  // Round to specified precision
-  const round = (num) => parseFloat(num.toFixed(precision));
-
-  return `matrix(${round(a)},${round(b)},${round(c)},${round(d)},${round(e)},${round(f)})`;
 }

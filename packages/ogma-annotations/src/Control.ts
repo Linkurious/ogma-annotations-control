@@ -36,12 +36,13 @@ export class Control extends EventEmitter<FeatureEvents> {
   private ogma: Ogma;
   private options: ControllerOptions;
   private store = store;
-  private index = new Index(this.store);
+
   private renderers = {} as RendererMap;
   private interactions: InteractionController;
   private editor: AnnotationEditor;
   // TODO: maybe links should be part of the store?
   private links: Links;
+  private index = new Index(this.store);
 
   constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();

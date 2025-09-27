@@ -2,9 +2,11 @@
 import { temporal } from "zundo";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
-import { Annotation, Id } from "../types";
+import { Annotation, Bounds, Id } from "../types";
 
-interface AnnotationState {
+const rotatedRect: Bounds = [0, 0, 0, 0];
+
+export interface AnnotationState {
   // Persistent state (with history)
   features: Record<Id, Annotation>;
 
@@ -16,7 +18,13 @@ interface AnnotationState {
   hoveredHandle: -1 | number;
   selectedFeatures: Set<Id>;
   lastChangedFeatures: Id[];
+
   rotation: number;
+  sin: number;
+  cos: number;
+  revRotation: number;
+  revSin: number;
+  revCos: number;
 
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
@@ -49,6 +57,8 @@ interface AnnotationState {
   isHovered: (id: Id) => boolean;
   isSelected: (id: Id) => boolean;
   setRotation: (rotation: number) => void;
+  getScreenAlignedTransform: (ox: number, oy: number) => string;
+  getRotationTransform: (ox: number, oy: number) => string;
 }
 
 export const store = create<AnnotationState>()(
@@ -64,6 +74,11 @@ export const store = create<AnnotationState>()(
         selectedFeatures: new Set(),
         lastChangedFeatures: [],
         rotation: 0,
+        sin: 0,
+        cos: 1,
+        revRotation: 0,
+        revSin: 0,
+        revCos: 1,
 
         removeFeature: (id) =>
           set((state) => {
@@ -225,8 +240,35 @@ export const store = create<AnnotationState>()(
         isSelected: (id) => get().selectedFeatures.has(id),
 
         setRotation: (rotation: number) => {
-          set({ rotation });
+          set({
+            rotation,
+            sin: Math.sin(rotation),
+            cos: Math.cos(rotation),
+            revRotation: -rotation,
+            revSin: Math.sin(-rotation),
+            revCos: Math.cos(-rotation)
+          });
           // Don't trigger history for camera changes
+        },
+
+        getScreenAlignedTransform(ox, oy) {
+          const sin = this.revSin;
+          const cos = this.revCos;
+          const x = ox * cos - oy * sin;
+          const y = ox * sin + oy * cos;
+
+          // scale it around its center
+          const scale = 1;
+
+          return `matrix(${scale}, 0, 0, ${scale}, ${x}, ${y})`;
+        },
+
+        getRotationTransform(ox, oy) {
+          const sin = this.revSin;
+          const cos = this.revCos;
+          const tx = ox * cos - oy * sin;
+          const ty = ox * sin + oy * cos;
+          return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${-tx}, ${-ty})`;
         }
       }),
       {

@@ -1,5 +1,5 @@
-import { View } from "@linkurious/ogma";
 import { defaultStyle } from "../../Editor_old/Arrows/defaults";
+import { AnnotationState } from "../../store";
 import { Arrow, Extremity, Id, Point } from "../../types";
 import { createSVGElement, getArrowEndPoints } from "../../utils";
 import {
@@ -76,10 +76,10 @@ function createDom(elt: SVGGElement | undefined, id: Id): SVGGElement {
 export function renderArrow(
   root: SVGGElement,
   arrow: Arrow,
-  view: View,
   minArrowHeight: number,
   maxArrowHeight: number,
-  chachedElement: SVGGElement | undefined
+  chachedElement: SVGGElement | undefined,
+  state: AnnotationState
 ) {
   const { start, end } = getArrowEndPoints(arrow);
   const {
@@ -113,13 +113,12 @@ export function renderArrow(
 
   addExtremity(endpointsGroup, start, color, tail, strokeWidth);
   addExtremity(endpointsGroup, end, color, head, strokeWidth);
-  applyTransform(lineGroup, view.angle);
+  lineGroup.setAttribute(
+    "transform",
+    `rotate(${-state.rotation * (180 / Math.PI)})`
+  );
   root.appendChild(lineGroup);
   return lineGroup;
-}
-
-export function applyTransform(element: SVGGElement, angle: number = 0): void {
-  element.setAttribute("transform", `rotate(${-angle * (180 / Math.PI)})`);
 }
 
 function addExtremity(

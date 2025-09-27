@@ -25,25 +25,18 @@ export class Shapes extends Renderer<SVGLayer> {
         features: state.features,
         liveUpdates: state.liveUpdates,
         hoveredFeature: state.hoveredFeature,
-        selectedFeatures: state.selectedFeatures
+        selectedFeatures: state.selectedFeatures,
+        rotation: state.rotation
       }),
-      () => {
-        this.layer.refresh();
-      },
+      () => this.layer.refresh(),
       { equalityFn: (a, b) => a === b }
     );
-    this.ogma.events.on("rotate", this._onRotate);
   }
-
-  private _onRotate = () => {
-    this.layer.refresh();
-  };
 
   render: SVGDrawingFunction = (root) => {
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
       this.store.getState();
     root.innerHTML = "";
-    const view = this.ogma.view.get();
 
     const arrowsRoot = createSVGElement<SVGGElement>("g");
     const annotationsRoot = createSVGElement<SVGGElement>("g");
@@ -53,6 +46,8 @@ export class Shapes extends Renderer<SVGLayer> {
     if (!this.arrowsRoot) this.arrowsRoot = createSVGElement<SVGGElement>("g");
     if (!this.annotationsRoot)
       this.annotationsRoot = createSVGElement<SVGGElement>("g");
+
+    const state = this.store.getState();
 
     // delete features that are no longer present
     const featureIds = new Set(Object.keys(features));
@@ -68,24 +63,24 @@ export class Shapes extends Renderer<SVGLayer> {
         existingElement = renderBox(
           annotationsRoot,
           feature,
-          view,
-          existingElement
+          existingElement,
+          state
         );
       else if (isText(feature))
         existingElement = renderText(
           annotationsRoot,
           feature,
-          view,
-          existingElement
+          existingElement,
+          state
         );
       else if (isArrow(feature))
         existingElement = renderArrow(
           arrowsRoot,
           feature,
-          view,
           this.minArrowHeight,
           this.maxArrowHeight,
-          existingElement
+          existingElement,
+          state
         );
       if (existingElement) {
         this.features.set(feature.id, existingElement);
@@ -141,7 +136,6 @@ export class Shapes extends Renderer<SVGLayer> {
 
   public destroy(): void {
     this.features.clear();
-    this.ogma.events.off(this._onRotate);
     this.layer.destroy();
     super.destroy();
   }
