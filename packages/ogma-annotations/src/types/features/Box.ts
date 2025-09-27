@@ -1,8 +1,7 @@
 import { Geometry, Polygon } from "geojson";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { StrokeOptions } from "./styles";
-import { getBbox, getBoxPosition, getBoxSize } from "../../utils";
-import { rotateRadians, subtract } from "../../vec";
+import { getBoxPosition, getBoxSize } from "../../utils";
 import { Point } from "../geometry";
 
 export interface BoxStyle extends StrokeOptions {
@@ -28,15 +27,19 @@ export const isBox = (
 export function detectBox(
   a: Box,
   p: Point,
-  angle: number,
-  threshold: number
+  revSin: number = 0,
+  revCos: number = 1,
+  threshold: number = 0
 ): boolean {
-  //const [x0, y0, x1, y1] = getBbox(a);
-  //return isPointInRotatedRectangle(p.x, p.y, x0, y0, x1, y1, angle, threshold);
   // check if the pointer is within the bounding box of the text
   const origin = getBoxPosition(a);
   const { width, height } = getBoxSize(a);
-  const { x: dx, y: dy } = rotateRadians(subtract(p, origin), -angle);
+  const tx = p.x - origin.x;
+  const ty = p.y - origin.y;
+  const sin = revSin;
+  const cos = revCos;
+  const dx = tx * cos - ty * sin;
+  const dy = tx * sin + ty * cos;
 
   return (
     dx > -threshold &&
@@ -44,42 +47,4 @@ export function detectBox(
     dy > -threshold &&
     dy < height + threshold
   );
-}
-
-function isPointInRotatedRectangle(
-  x: number,
-  y: number,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-  angle: number,
-  threshold: number = 0
-): boolean {
-  // Calculate rectangle center
-  const centerX = x0;
-  (x0 + x1) / 2;
-  const centerY = y0;
-  (y0 + y1) / 2;
-
-  // Calculate rectangle dimensions
-  const width = Math.abs(x1 - x0);
-  const height = Math.abs(y1 - y0);
-
-  // Translate point to rectangle's local coordinate system (center at origin)
-  const translatedX = x - centerX;
-  const translatedY = y - centerY;
-
-  // Rotate point by negative angle to align with axis-aligned rectangle
-  const cosAngle = Math.cos(-angle);
-  const sinAngle = Math.sin(-angle);
-
-  const rotatedX = translatedX * cosAngle - translatedY * sinAngle;
-  const rotatedY = translatedX * sinAngle + translatedY * cosAngle;
-
-  // Check if rotated point is within the axis-aligned rectangle bounds (with threshold)
-  const halfWidth = width / 2 + threshold;
-  const halfHeight = height / 2 + threshold;
-
-  return Math.abs(rotatedX) <= halfWidth && Math.abs(rotatedY) <= halfHeight;
 }

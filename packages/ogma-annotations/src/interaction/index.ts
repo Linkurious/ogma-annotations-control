@@ -48,7 +48,6 @@ export class InteractionController {
   detect(x: number, y: number): Annotation | null {
     let result: Annotation | null = null;
     const state = this.store.getState();
-    const angle = state.rotation;
     const threshold = this.threshold;
     this.query.minX = x - threshold;
     this.query.minY = y - threshold;
@@ -69,12 +68,21 @@ export class InteractionController {
           break;
         }
       } else if (isBox(feature)) {
-        if (detectBox(feature, { x, y }, 0, threshold)) {
+        if (detectBox(feature, { x, y }, 0, 1, threshold)) {
           result = feature;
           break;
         }
       } else if (isText(feature)) {
-        if (detectBox(feature as unknown as Box, { x, y }, angle, threshold)) {
+        // texts are screen aligned
+        if (
+          detectBox(
+            feature as unknown as Box,
+            { x, y },
+            state.revSin,
+            state.revCos,
+            threshold
+          )
+        ) {
           result = feature;
           break;
         }
@@ -92,7 +100,7 @@ export class InteractionController {
     const state = this.store.getState();
     if (state.isDragging) return;
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
-    const annotation = this.detect(x, y, this.ogma.view.getAngle());
+    const annotation = this.detect(x, y);
 
     // Update hover state
     const newHoveredId = annotation?.id ?? null;
