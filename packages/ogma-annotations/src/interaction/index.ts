@@ -51,7 +51,7 @@ export class InteractionController {
     this.query.maxX = x + threshold;
     this.query.maxY = y + threshold;
     // broad phase
-    const hit = this.index.search(this.query);
+    const hit = this.index.query(this.query);
 
     if (hit.length === 0) return null;
 

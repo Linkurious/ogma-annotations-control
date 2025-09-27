@@ -7,6 +7,7 @@ import { Arrow, Box, Text, isArrow, isBox, isText } from "../types";
 import {
   getArrowEnd,
   getArrowStart,
+  getBbox,
   getBoxPosition,
   getBoxSize
 } from "../utils";
@@ -54,28 +55,7 @@ export class Handles extends Renderer<CanvasLayer> {
     Object.values(features).forEach((baseFeature) => {
       // debugging
       // if (isText(baseFeature)) {
-      //   const pos = getBoxPosition(baseFeature);
-      //   const size = getBoxSize(baseFeature);
-      //   const angle = this.ogma.view.getAngle();
-      //   ctx.save();
-      //   ctx.translate(pos.x, pos.y);
-      //   ctx.rotate(angle);
-      //   ctx.moveTo(pos.x, pos.y);
-      //   ctx.rect(0, 0, size.width, size.height);
-      //   ctx.stroke();
-      //   ctx.restore();
-
-      //   const rect = getAABB(
-      //     pos.x,
-      //     pos.y,
-      //     size.width,
-      //     size.height,
-      //     Math.sin(angle),
-      //     Math.cos(angle),
-      //     pos.x,
-      //     pos.y,
-      //     [0, 0, 0, 0]
-      //   );
+      //   const rect = state.getRotatedBBox(...getBbox(baseFeature));
 
       //   ctx.moveTo(rect[0], rect[1]);
       //   ctx.rect(rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]);
