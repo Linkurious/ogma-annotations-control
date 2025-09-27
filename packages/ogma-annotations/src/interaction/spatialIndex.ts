@@ -1,25 +1,12 @@
 import Rtree, { BBox } from "rbush";
-import { getAABB } from "../geom";
 import { Store } from "../store";
-import { Annotation, Bounds, Text, isText } from "../types";
-import {
-  debounce,
-  debounceTail,
-  getBbox,
-  getBoxPosition,
-  getBoxSize,
-  throttle,
-  updateBbox
-} from "../utils";
+import { Annotation, Text, isText } from "../types";
+import { getBbox, updateBbox } from "../utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
 export class Index extends Rtree<Annotation> {
   private store: Store;
-  private angle: number = 0;
-  private sin: number = 0;
-  private cos: number = 1;
-  private rotatedRect: Bounds = [0, 0, 0, 0];
 
   constructor(store: Store) {
     super();
@@ -84,30 +71,16 @@ export class Index extends Rtree<Annotation> {
     });
   }
 
-  private onRotationChange = (angle: number) => {
-    const texts = this.store
-      .getState()
-      .getAllFeatures()
-      .filter((feature) => isText(feature));
-
-    this.setAngle(angle);
+  private onRotationChange = () => {
+    const state = this.store.getState();
+    const texts = state.getAllFeatures().filter((feature) => isText(feature));
 
     this.polygons = [];
     for (const text of texts) {
       this.remove(text, (a, b) => a.id === b.id);
       // counter rotate bbox around text corner
       const [x0, y0, x1, y1] = getBbox(text);
-      const raabb = getAABB(
-        x0,
-        y0,
-        x1 - x0,
-        y1 - y0,
-        this.sin,
-        this.cos,
-        x0,
-        y0,
-        this.rotatedRect
-      );
+      const raabb = state.getRotatedBBox(x0, y0, x1, y1);
 
       this.polygons.push([
         { x: raabb[0], y: raabb[1] },
@@ -120,11 +93,6 @@ export class Index extends Rtree<Annotation> {
         ...text,
         geometry: { ...text.geometry, bbox: raabb }
       } as Text);
-
-      if (text.id === "yHia09RukDxkVI5Jb50ze") {
-        console.warn("rotated text", text.id, raabb);
-        this.all().forEach((a) => console.log("a", a.id));
-      }
     }
   };
 
@@ -147,11 +115,5 @@ export class Index extends Rtree<Annotation> {
 
   query(bbox: BBox): Annotation[] {
     return super.search(bbox);
-  }
-
-  private setAngle(angle: number) {
-    this.angle = angle;
-    this.sin = Math.sin(angle);
-    this.cos = Math.cos(angle);
   }
 }

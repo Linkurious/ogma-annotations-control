@@ -2,6 +2,7 @@
 import { temporal } from "zundo";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { getAABB } from "../geom";
 import { Annotation, Bounds, Id } from "../types";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];
@@ -59,6 +60,8 @@ export interface AnnotationState {
   setRotation: (rotation: number) => void;
   getScreenAlignedTransform: (ox: number, oy: number) => string;
   getRotationTransform: (ox: number, oy: number) => string;
+
+  getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => Bounds;
 }
 
 export const store = create<AnnotationState>()(
@@ -269,6 +272,21 @@ export const store = create<AnnotationState>()(
           const tx = ox * cos - oy * sin;
           const ty = ox * sin + oy * cos;
           return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${-tx}, ${-ty})`;
+        },
+
+        getRotatedBBox(x0, y0, x1, y1) {
+          const rabb = getAABB(
+            x0,
+            y0,
+            x1 - x0,
+            y1 - y0,
+            this.sin,
+            this.cos,
+            x0,
+            y0,
+            rotatedRect
+          );
+          return rabb;
         }
       }),
       {
