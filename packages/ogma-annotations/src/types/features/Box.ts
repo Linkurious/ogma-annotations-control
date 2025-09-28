@@ -27,8 +27,8 @@ export const isBox = (
 export function detectBox(
   a: Box,
   p: Point,
-  revSin: number = 0,
-  revCos: number = 1,
+  sin: number = 0,
+  cos: number = 1,
   threshold: number = 0
 ): boolean {
   // check if the pointer is within the bounding box of the text
@@ -36,8 +36,6 @@ export function detectBox(
   const { width, height } = getBoxSize(a);
   const tx = p.x - origin.x;
   const ty = p.y - origin.y;
-  const sin = revSin;
-  const cos = revCos;
   const dx = tx * cos - ty * sin;
   const dy = tx * sin + ty * cos;
 

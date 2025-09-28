@@ -40,9 +40,9 @@ export class Handles extends Renderer<CanvasLayer> {
 
   render = (ctx: CanvasRenderingContext2D) => {
     const state = this.store.getState();
-    const features = state.features;
-    const liveUpdates = state.liveUpdates;
     const scale = 1 / this.ogma.view.getZoom();
+
+    const { hoveredHandle, rotation, liveUpdates, features } = state;
 
     ctx.beginPath();
     const r = handleRadius * scale;
@@ -60,9 +60,11 @@ export class Handles extends Renderer<CanvasLayer> {
         : baseFeature;
 
       if (isArrow(feature)) {
-        this.renderArrowHandles(feature, ctx, r, state.hoveredHandle);
-      } else if (isText(feature) || isBox(feature)) {
-        this.renderBoxHandles(feature, ctx, r, state.hoveredHandle);
+        this.renderArrowHandles(feature, ctx, r, hoveredHandle);
+      } else if (isText(feature)) {
+        this.renderBoxHandles(feature, ctx, r, hoveredHandle, rotation);
+      } else if (isBox(feature)) {
+        this.renderBoxHandles(feature, ctx, r, hoveredHandle, 0);
       }
     });
     ctx.fill();
@@ -95,36 +97,31 @@ export class Handles extends Renderer<CanvasLayer> {
     feature: Text | Box,
     ctx: CanvasRenderingContext2D,
     r: number,
-    hoveredHandle: -1 | number
+    hoveredHandle: -1 | number,
+    rotation: number
   ) {
     // a circle handle at each corner of the text box
-    const boxSize = getBoxSize(feature);
+    const { width, height } = getBoxSize(feature);
     const position = getBoxPosition(feature);
 
-    const view = this.ogma.view.get();
-    // text boxes are rotated back around their centers by -view.angle
-    // so we need to apply the inverse rotation to the handles
     ctx.save();
 
-    const centerX = position.x - boxSize.width / 2;
-    const centerY = position.y - boxSize.height / 2;
-
-    ctx.translate(centerX, centerY);
-    ctx.rotate(view.angle);
-    ctx.translate(-centerX, -centerY);
+    ctx.translate(position.x, position.y);
+    ctx.rotate(rotation);
+    // ctx.translate(-cx, -cy);
 
     // Draw corner handles
-
-    CORNER_OFFSETS.forEach(([xOffset, yOffset], index) => {
-      const x = position.x + boxSize.width * xOffset;
-      const y = position.y + boxSize.height * yOffset;
+    for (let i = 0; i < CORNER_OFFSETS.length; i++) {
+      const [dx, dy] = CORNER_OFFSETS[i];
+      const x = width * dx;
+      const y = height * dy;
 
       // Make hovered corner handles larger
-      const handleR = hoveredHandle === index ? r * handleMagnifier : r;
+      const handleR = hoveredHandle === i ? r * handleMagnifier : r;
 
       ctx.moveTo(x + handleR, y);
       ctx.arc(x, y, handleR, 0, 2 * Math.PI);
-    });
+    }
     ctx.restore();
   }
 
