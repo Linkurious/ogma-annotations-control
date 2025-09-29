@@ -1,6 +1,5 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
-import { handleRadius } from "../constants";
 import { Store } from "../store";
 import { Arrow, Box, Text, isArrow, isBox, isText } from "../types";
 import {
@@ -9,8 +8,6 @@ import {
   getBoxPosition,
   getBoxSize
 } from "../utils";
-
-const handleMagnifier = 1.5;
 
 // Corner offsets for text box handles: [x, y] multipliers
 const CORNER_OFFSETS = [
@@ -21,6 +18,13 @@ const CORNER_OFFSETS = [
 ] as const;
 
 export class Handles extends Renderer<CanvasLayer> {
+  // TODO: move it to settings and state
+  private handleFill = "#fff";
+  private handleStroke = "#0093ff";
+  private handleStrokeWidth = 2;
+  private handleRadius = 3;
+  private handleMagnifier = 1.5;
+
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
     this.layer = ogma.layers.addCanvasLayer(this.render);
@@ -45,10 +49,10 @@ export class Handles extends Renderer<CanvasLayer> {
     const { hoveredHandle, rotation, liveUpdates, features } = state;
 
     ctx.beginPath();
-    const r = handleRadius * scale;
-    ctx.fillStyle = "#fff";
-    ctx.lineWidth = 2 * scale;
-    ctx.strokeStyle = "#0099ff";
+    const r = this.handleRadius * scale;
+    ctx.fillStyle = this.handleFill;
+    ctx.lineWidth = this.handleStrokeWidth * scale;
+    ctx.strokeStyle = this.handleStroke;
 
     Object.values(features).forEach((baseFeature) => {
       // Only render handles for selected features
@@ -83,8 +87,8 @@ export class Handles extends Renderer<CanvasLayer> {
     const startHovered = +(hoveredHandle === 0);
     const endHovered = +(hoveredHandle === 1);
 
-    const startR = r * (1 + (handleMagnifier - 1) * startHovered);
-    const endR = r * (1 + (handleMagnifier - 1) * endHovered);
+    const startR = r * (1 + (this.handleMagnifier - 1) * startHovered);
+    const endR = r * (1 + (this.handleMagnifier - 1) * endHovered);
 
     ctx.moveTo(start.x + startR, start.y);
     ctx.arc(start.x, start.y, startR, 0, 2 * Math.PI);
@@ -108,7 +112,6 @@ export class Handles extends Renderer<CanvasLayer> {
 
     ctx.translate(position.x, position.y);
     ctx.rotate(rotation);
-    // ctx.translate(-cx, -cy);
 
     // Draw corner handles
     for (let i = 0; i < CORNER_OFFSETS.length; i++) {
@@ -117,7 +120,7 @@ export class Handles extends Renderer<CanvasLayer> {
       const y = height * dy;
 
       // Make hovered corner handles larger
-      const handleR = hoveredHandle === i ? r * handleMagnifier : r;
+      const handleR = hoveredHandle === i ? r * this.handleMagnifier : r;
 
       ctx.moveTo(x + handleR, y);
       ctx.arc(x, y, handleR, 0, 2 * Math.PI);

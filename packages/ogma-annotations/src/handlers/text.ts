@@ -2,9 +2,8 @@ import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { handleRadius } from "../constants";
 import { Links } from "../links";
-import { getTransformMatrix } from "../renderer/shapes/utils";
 import { Store } from "../store";
-import { ClientMouseEvent, Cursor, Text } from "../types";
+import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
@@ -86,26 +85,42 @@ export class TextHandler extends Handler<Text, Handle> {
   detectHandle(evt: MouseEvent, zoom: number) {
     const annotation = this.getAnnotation()!;
     const { x, y } = this.clientToCanvas(evt);
-    const size = getBoxSize(annotation);
-    const matrix = getTransformMatrix(annotation, { angle: 0 }, false);
-    const margin = 3;
+    const { width, height } = getBoxSize(annotation);
+    // TODO: detection threshold (state)
+    const margin = 3 / zoom;
+
+    const origin = getBoxPosition(annotation);
+    const state = this.store.getState();
+    let { revSin: sin, revCos: cos } = state;
+
+    if (isBox(annotation)) {
+      sin = 0;
+      cos = 1;
+    }
 
     this.hoveredHandle = undefined;
     this.store.setState({ hoveredHandle: -1 });
 
     const handleSize = handleRadius * (1 / zoom);
 
+    const dmx = x - origin.x;
+    const dmy = y - origin.y;
+
+    const mx = dmx * cos - dmy * sin;
+    const my = dmx * sin + dmy * cos;
+
     // Check corner handles first (higher priority)
     for (let i = 0; i < CORNER_HANDLES.length; i++) {
       const [xOffset, yOffset] = CORNER_HANDLES[i];
-      const cornerX = matrix.x + size.width * xOffset;
-      const cornerY = matrix.y + size.height * yOffset;
+
+      const cx = width * xOffset;
+      const cy = height * yOffset;
 
       if (
-        x >= cornerX - handleSize - margin &&
-        x <= cornerX + handleSize + margin &&
-        y >= cornerY - handleSize - margin &&
-        y <= cornerY + handleSize + margin
+        mx >= cx - handleSize - margin &&
+        mx <= cx + handleSize + margin &&
+        my >= cy - handleSize - margin &&
+        my <= cy + handleSize + margin
       ) {
         this.hoveredHandle = {
           type: HandleType.CORNER,
@@ -119,19 +134,19 @@ export class TextHandler extends Handler<Text, Handle> {
 
     // Check edge handles if no corner handle was found
     for (const [edge, norm, xStart, yStart, xEnd, yEnd] of EDGE_TEMPLATES) {
-      const minX = matrix.x + size.width * xStart;
-      const minY = matrix.y + size.height * yStart;
-      const maxX = matrix.x + size.width * xEnd;
-      const maxY = matrix.y + size.height * yEnd;
+      const minX = width * xStart;
+      const minY = height * yStart;
+      const maxX = width * xEnd;
+      const maxY = height * yEnd;
 
-      const dist = dot(norm, { x: x - minX, y: y - minY });
+      const dist = dot(norm, { x: mx - minX, y: my - minY });
 
       if (
         Math.abs(dist) < margin &&
-        x >= minX - margin &&
-        x <= maxX + margin &&
-        y >= minY - margin &&
-        y <= maxY + margin
+        mx >= minX - margin &&
+        mx <= maxX + margin &&
+        my >= minY - margin &&
+        my <= maxY + margin
       ) {
         this.hoveredHandle = { type: HandleType.EDGE, edge };
         this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
@@ -142,10 +157,10 @@ export class TextHandler extends Handler<Text, Handle> {
 
     // detect if we are inside the box (for moving)
     if (
-      x >= matrix.x - margin &&
-      x <= matrix.x + size.width + margin &&
-      y >= matrix.y - margin &&
-      y <= matrix.y + size.height + margin
+      mx >= margin &&
+      mx <= width + margin &&
+      my >= margin &&
+      my <= height + margin
     ) {
       this.store.setState({ hoveredHandle: 8 }); // 8 = body
       // Treat body as edge for dragging
