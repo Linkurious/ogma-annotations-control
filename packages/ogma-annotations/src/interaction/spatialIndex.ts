@@ -17,7 +17,10 @@ export class Index extends Rtree<Annotation> {
       (state) => state.features,
       (features) => {
         this.clear();
-        Object.values(features).forEach((feature) => this.insert(feature));
+        Object.values(features).forEach((feature) => {
+          if (isText(feature)) this.updateRotatedText(feature);
+          else this.insert(feature);
+        });
       }
     );
 
@@ -26,7 +29,8 @@ export class Index extends Rtree<Annotation> {
       (state) => ({
         features: state.features,
         isDragging: state.isDragging,
-        lastChangedFeatures: state.lastChangedFeatures
+        lastChangedFeatures: state.lastChangedFeatures,
+        rotation: state.rotation
       }),
       (current, previous) => {
         // Only update when dragging stops (live updates are committed)
@@ -36,10 +40,13 @@ export class Index extends Rtree<Annotation> {
             current.lastChangedFeatures.forEach((id) => {
               // Insert updated version
               const newFeature = current.features[id];
-              updateBbox(newFeature);
               if (newFeature) {
-                this.remove(newFeature);
-                this.insert(newFeature);
+                updateBbox(newFeature);
+                if (isText(newFeature)) this.updateRotatedText(newFeature);
+                else {
+                  this.remove(newFeature);
+                  this.insert(newFeature);
+                }
               }
             });
           }
@@ -51,22 +58,26 @@ export class Index extends Rtree<Annotation> {
   }
 
   private onRotationChange = () => {
-    const state = this.store.getState();
-    const texts = state.getAllFeatures().filter((feature) => isText(feature));
+    const texts = this.store
+      .getState()
+      .getAllFeatures()
+      .filter((feature) => isText(feature));
 
-    for (const text of texts) {
-      this.remove(text, (a, b) => a.id === b.id);
-      // counter rotate bbox around text corner
-      const [x0, y0, x1, y1] = getBbox(text);
-      const raabb = state.getRotatedBBox(x0, y0, x1, y1);
-
-      this.insert({
-        ...text,
-        // raabb is cached, we need to copy it
-        geometry: { ...text.geometry, bbox: raabb.slice() }
-      } as Text);
-    }
+    for (const text of texts) this.updateRotatedText(text as Text);
   };
+
+  private updateRotatedText(text: Text) {
+    const state = this.store.getState();
+    this.remove(text);
+    const [x0, y0, x1, y1] = getBbox(text);
+    const raabb = state.getRotatedBBox(x0, y0, x1, y1);
+
+    this.insert({
+      ...text,
+      // raabb is cached, we need to copy it
+      geometry: { ...text.geometry, bbox: raabb.slice() }
+    } as Text);
+  }
 
   compareMinX(a: Annotation, b: Annotation): number {
     return getBbox(a)[0] - getBbox(b)[0];
@@ -75,6 +86,11 @@ export class Index extends Rtree<Annotation> {
   compareMinY(a: Annotation, b: Annotation): number {
     return getBbox(a)[1] - getBbox(b)[1];
   }
+
+  // insert(item: Annotation) {
+  //   console.log(item.properties.type, "---", item.id, item.geometry.bbox);
+  //   return super.insert(item);
+  // }
 
   toBBox(item: Annotation): BBox {
     const bbox = getBbox(item);
