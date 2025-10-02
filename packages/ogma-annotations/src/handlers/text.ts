@@ -1,9 +1,9 @@
-import Ogma, { Point } from "@linkurious/ogma";
+import Ogma, { Overlay, Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
-import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
+import { ClientMouseEvent, Cursor, Text, TextStyle, isBox } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
@@ -37,6 +37,17 @@ const points = {
   right: [1, 2],
   bottom: [2, 3],
   left: [3, 0]
+};
+
+export const defaultStyle: TextStyle = {
+  font: "sans-serif",
+  fontSize: 18,
+  color: "#505050",
+  background: "#f5f5f5",
+  strokeWidth: 0,
+  borderRadius: 8,
+  padding: 16,
+  strokeType: "plain"
 };
 
 // Corner handle positions (clockwise from top-left): [x, y] multipliers
@@ -76,6 +87,7 @@ const cursors: Cursor[] = [
 
 export class TextHandler extends Handler<Text, Handle> {
   private links: Links;
+  private textEditor: Overlay | null = null;
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -334,9 +346,61 @@ export class TextHandler extends Handler<Text, Handle> {
     return true;
   }
 
+  private updateTextArea() {
+    const annotation = this.getAnnotation()!;
+
+    const {
+      font,
+      fontSize = defaultStyle.fontSize,
+      color,
+      background,
+      padding = 0
+    } = annotation.properties.style || defaultStyle;
+    const textArea = this.textEditor!.element.querySelector("textarea")!;
+    const zoom = this.ogma.view.getZoom();
+    const scaledFontSize = parseFloat(fontSize!.toString());
+    console.log("scaledFontSize", fontSize, zoom, scaledFontSize);
+    const textAreaStyle = textArea.style;
+
+    textAreaStyle.font = `${scaledFontSize} ${font}`;
+    textAreaStyle.fontFamily = font || "sans-serif";
+    textAreaStyle.fontSize = `${scaledFontSize}px`;
+    textAreaStyle.padding = `${padding}px`;
+    textAreaStyle.lineHeight = `${scaledFontSize}px`;
+
+    textAreaStyle.boxSizing = "border-box";
+    textAreaStyle.color = color || "black";
+    textAreaStyle.background = background || "transparent";
+
+    textArea.value = annotation.properties.content;
+  }
+
+  protected onClick(_evt: ClientMouseEvent) {
+    // show text editor
+    if (this.textEditor === null) {
+      const annotation = this.getAnnotation()!;
+      const size = getBoxSize(annotation);
+      const position = getBoxPosition(annotation);
+      this.textEditor = this.ogma.layers.addOverlay({
+        element: `<div class="ogma-annotation-text-editor">
+          <textarea wrap="on" spellcheck="false"></textarea>
+        </div>`,
+        position,
+        size
+      });
+      this.updateTextArea();
+    }
+  }
+
   protected onDragEnd(evt: ClientMouseEvent) {
     if (!super.onDragEnd(evt)) return false;
-    this.commitChange();
+    const currentPos = this.clientToCanvas(evt);
+    const dx = currentPos.x - (this.dragStartPoint?.x || 0);
+    const dy = currentPos.y - (this.dragStartPoint?.y || 0);
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+      this.clearDragState();
+      this.onClick(evt);
+    } else this.commitChange();
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;
     this.dragging = false;
@@ -360,5 +424,11 @@ export class TextHandler extends Handler<Text, Handle> {
       default:
         return "default";
     }
+  }
+
+  public stopEditing(): void {
+    super.stopEditing();
+    if (this.textEditor) this.textEditor.destroy();
+    this.textEditor = null;
   }
 }

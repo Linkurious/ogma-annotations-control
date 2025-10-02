@@ -169,14 +169,14 @@
         "content": "This is another one",
         "style": {
           "font": "IBM Plex Sans",
-          "fontSize": 32,
-          "color": "#e8346d",
+          "fontSize": 22,
+          "color": "#E31D5B",
           "background": "#FAEDF7",
           "strokeWidth": 0,
-          "borderRadius": 8,
-          "padding": 12,
+          "strokeColor": "#000",
           "strokeType": "plain",
-          "cornerRadius": 8
+          "padding": 12,
+          "borderRadius": 10
         }
       },
       "geometry": {
