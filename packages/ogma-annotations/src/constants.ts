@@ -17,3 +17,9 @@ export const DATA_ATTR = "data-annotation";
 
 export const handleDetectionThreshold = 10; // pixels
 export const handleRadius = 3; // pixels
+
+export const LAYERS = {
+  SHAPES: 1,
+  EDITOR: 2,
+  HANDLES: 3
+};

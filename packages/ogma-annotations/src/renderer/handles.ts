@@ -1,5 +1,6 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
+import { LAYERS } from "../constants";
 import { Store } from "../store";
 import { Arrow, Box, Text, isArrow, isBox, isText } from "../types";
 import {
@@ -27,7 +28,11 @@ export class Handles extends Renderer<CanvasLayer> {
 
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
-    this.layer = ogma.layers.addCanvasLayer(this.render);
+    this.layer = ogma.layers.addCanvasLayer(
+      this.render,
+      undefined,
+      LAYERS.HANDLES
+    );
     this.store.subscribe(
       (state) => ({
         selectedFeatures: state.selectedFeatures,

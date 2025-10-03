@@ -1,6 +1,6 @@
 import Ogma, { Overlay, Point } from "@linkurious/ogma";
 import { Handler } from "./base";
-import { handleRadius } from "../constants";
+import { LAYERS, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Cursor, Text, TextStyle, isBox } from "../types";
@@ -357,9 +357,7 @@ export class TextHandler extends Handler<Text, Handle> {
       padding = 0
     } = annotation.properties.style || defaultStyle;
     const textArea = this.textEditor!.element.querySelector("textarea")!;
-    const zoom = this.ogma.view.getZoom();
     const scaledFontSize = parseFloat(fontSize!.toString());
-    console.log("scaledFontSize", fontSize, zoom, scaledFontSize);
     const textAreaStyle = textArea.style;
 
     textAreaStyle.font = `${scaledFontSize} ${font}`;
@@ -381,13 +379,16 @@ export class TextHandler extends Handler<Text, Handle> {
       const annotation = this.getAnnotation()!;
       const size = getBoxSize(annotation);
       const position = getBoxPosition(annotation);
-      this.textEditor = this.ogma.layers.addOverlay({
-        element: `<div class="ogma-annotation-text-editor">
+      this.textEditor = this.ogma.layers.addOverlay(
+        {
+          element: `<div class="ogma-annotation-text-editor">
           <textarea wrap="on" spellcheck="false"></textarea>
         </div>`,
-        position,
-        size
-      });
+          position,
+          size
+        },
+        LAYERS.EDITOR
+      );
       this.updateTextArea();
     }
   }

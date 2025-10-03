@@ -2,6 +2,7 @@ import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderText } from "./text";
+import { LAYERS } from "../../constants";
 import { Store } from "../../store";
 import { Annotation, Id, isArrow, isBox, isText } from "../../types";
 import { createSVGElement } from "../../utils";
@@ -17,9 +18,12 @@ export class Shapes extends Renderer<SVGLayer> {
 
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
-    this.layer = this.ogma.layers.addSVGLayer({
-      draw: this.render
-    });
+    this.layer = this.ogma.layers.addSVGLayer(
+      {
+        draw: this.render
+      },
+      LAYERS.SHAPES
+    );
     this.store.subscribe(
       (state) => ({
         features: state.features,
