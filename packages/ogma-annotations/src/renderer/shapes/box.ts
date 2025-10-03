@@ -59,7 +59,7 @@ export function renderBox(
   rect.setAttribute("y", `${position.y}`);
   g.appendChild(rect);
 
-  g.setAttribute("transform", state.getRotationTransform(0, 0)); // getRotationMatrix(-view.angle!, 0, 0));
+  g.setAttribute("transform", state.getRotationTransform(0, 0));
   g.classList.add(className);
   g.setAttribute("data-annotation", `${annotation.id}`);
   g.setAttribute("data-annotation-type", annotation.properties.type);
