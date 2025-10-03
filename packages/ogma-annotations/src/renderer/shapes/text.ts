@@ -1,8 +1,7 @@
 import Textbox from "@borgar/textbox";
 import { renderBox } from "./box";
-import { defaultStyle as defaultTextStyle } from "../../Editor_old/Texts/defaults";
 import { AnnotationState } from "../../store";
-import { Box, Text } from "../../types";
+import { Box, Text, defaultTextStyle } from "../../types";
 import { getBoxPosition, getTextSize } from "../../utils";
 
 export function renderText(

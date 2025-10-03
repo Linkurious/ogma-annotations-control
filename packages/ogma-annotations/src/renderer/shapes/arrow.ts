@@ -1,6 +1,5 @@
-import { defaultStyle } from "../../Editor_old/Arrows/defaults";
 import { AnnotationState } from "../../store";
-import { Arrow, Extremity, Id, Point } from "../../types";
+import { Arrow, Extremity, Id, Point, defaultArrowStyle } from "../../types";
 import { createSVGElement, getArrowEndPoints } from "../../utils";
 import {
   subtract,
@@ -87,7 +86,7 @@ export function renderArrow(
     head,
     strokeColor,
     strokeWidth = 0
-  } = arrow.properties.style || defaultStyle;
+  } = arrow.properties.style || defaultArrowStyle;
   const vec = subtract(end, start);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
 

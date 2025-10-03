@@ -1,6 +1,5 @@
-import { defaultStyle as defaultBoxStyle } from "../../Editor_old/Box/defaults";
 import { AnnotationState } from "../../store";
-import { Box, Id, AnnotationType } from "../../types";
+import { Box, Id, AnnotationType, defaultBoxStyle } from "../../types";
 import { createSVGElement, getBoxPosition, getBoxSize } from "../../utils";
 
 function createDom(

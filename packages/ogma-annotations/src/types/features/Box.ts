@@ -1,4 +1,5 @@
 import { Geometry, Polygon } from "geojson";
+import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { StrokeOptions } from "./styles";
 import { getBoxPosition, getBoxSize } from "../../utils";
@@ -46,3 +47,60 @@ export function detectBox(
     dy < height + threshold
   );
 }
+
+export const defaultBoxStyle: BoxStyle = {
+  background: "#f5f5f5",
+  strokeWidth: 0,
+  borderRadius: 8,
+  padding: 16,
+  strokeType: "plain"
+};
+
+//used when adding a new Text
+export const defaultBoxOptions: Box = {
+  id: undefined as unknown as string, // will be set by the editor
+  type: "Feature",
+  properties: {
+    type: "box",
+    style: { ...defaultBoxStyle }
+  },
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      [
+        [0, 0],
+        [100, 0],
+        [100, 50],
+        [0, 50],
+        [0, 0]
+      ]
+    ]
+  }
+};
+
+export const createBox = (
+  x = 0,
+  y = 0,
+  width = 100,
+  height = 50,
+  styles: Partial<BoxStyle> = { ...defaultBoxStyle }
+): Box => ({
+  id: getId(),
+  type: "Feature",
+  properties: {
+    type: "box",
+    style: { ...defaultBoxStyle, ...styles }
+  },
+  geometry: {
+    type: "Polygon",
+    coordinates: [
+      [
+        [x, y],
+        [x + width, y],
+        [x + width, y + height],
+        [x, y + height],
+        [x, y]
+      ]
+    ]
+  }
+});

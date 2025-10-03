@@ -1,5 +1,6 @@
 import { Point } from "@linkurious/ogma";
 import { Geometry, LineString } from "geojson";
+import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { ExportedLink, Side } from "./Link";
 import { StrokeOptions } from "./styles";
@@ -47,3 +48,66 @@ export function detectArrow(
     Math.abs(cross(p, normalize(vec))) < width / 2 + threshold
   );
 }
+
+export const defaultArrowStyle: ArrowStyles = {
+  strokeType: "plain",
+  strokeColor: "#202020",
+  strokeWidth: 1,
+  head: "none",
+  tail: "none"
+};
+
+// used when adding a new Arrow
+export const defaultArrowOptions: Arrow = {
+  id: undefined as unknown as string, // will be set by the editor
+  type: "Feature",
+  properties: {
+    type: "arrow",
+    style: {
+      ...defaultArrowStyle
+    }
+  },
+  geometry: {
+    type: "LineString",
+    coordinates: [
+      [0, 0],
+      [100, 100]
+    ]
+  }
+
+  // type: 'arrow',
+  // stroke: {
+  //   type: 'plain',
+  //   color: 'black',
+  //   width: 1
+  // },
+  // head: 'none',
+  // tail: 'arrow-plain',
+  // start: { x: 0, y: 0 },
+  // end: { x: 100, y: 100 }
+};
+
+export const createArrow = (
+  x0 = 0,
+  y0 = 0,
+  x1 = 0,
+  y1 = 0,
+  styles = { ...defaultArrowStyle }
+): Arrow => ({
+  id: getId(),
+  type: "Feature",
+  properties: {
+    type: "arrow",
+    style: {
+      ...defaultArrowStyle,
+      ...styles
+    }
+  },
+  geometry: {
+    type: "LineString",
+    coordinates: [
+      [x0, y0],
+      [x1, y1]
+    ]
+  }
+});

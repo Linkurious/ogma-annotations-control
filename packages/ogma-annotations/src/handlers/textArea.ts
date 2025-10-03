@@ -1,8 +1,7 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS } from "../constants";
-import { defaultStyle } from "../Editor_old/Texts/defaults";
 import { Store } from "../store";
-import { Id, Text } from "../types";
+import { Id, Text, defaultTextStyle } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
 
 export class TextArea {
@@ -73,11 +72,11 @@ export class TextArea {
 
     const {
       font,
-      fontSize = defaultStyle.fontSize,
+      fontSize = defaultTextStyle.fontSize,
       color,
       background,
       padding = 0
-    } = annotation.properties.style || defaultStyle;
+    } = annotation.properties.style || defaultTextStyle;
     const textArea = this.textarea;
     const scaledFontSize = parseFloat(fontSize!.toString());
     const textAreaStyle = textArea.style;
