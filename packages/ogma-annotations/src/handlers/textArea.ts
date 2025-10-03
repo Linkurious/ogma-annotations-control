@@ -54,10 +54,6 @@ export class TextArea {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
-      console.assert(
-        state.liveUpdates[this.annotation],
-        "Annotation not found"
-      );
     }
     return state.liveUpdates[this.annotation] as Text;
   }

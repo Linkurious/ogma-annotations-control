@@ -130,6 +130,7 @@ control.on("cancelDrawing", () => {
 document.querySelector("#add-comment")!.addEventListener("click", () => {
   control.cancelDrawing();
   ogma.events.once("click", (evt) => {
+    // @ts-expect-error todo
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     //const commentPosition = control.getCommentPosition(x, y);
 

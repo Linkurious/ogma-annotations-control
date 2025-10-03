@@ -1,9 +1,10 @@
 import { Id } from "./Annotation";
+import { SIDE_START, SIDE_END } from "../../constants";
 import { Point } from "../geometry";
 
 export type TargetType = "text" | "node" | "box" | "comment";
 
-export type Side = "start" | "end";
+export type Side = typeof SIDE_START | typeof SIDE_END;
 
 export type Link = {
   /** arrow attached to the text or node */
@@ -27,7 +28,7 @@ export type Link = {
 
 export type ExportedLink = {
   id: Id;
-  side: "start" | "end";
+  side: Side;
   type: "node" | "text" | "box" | "comment";
   magnet?: Point;
 };

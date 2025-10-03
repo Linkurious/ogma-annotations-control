@@ -24,3 +24,6 @@ export const LAYERS = {
   EDITOR: 2,
   HANDLES: 3
 };
+
+export const SIDE_START = "start";
+export const SIDE_END = "end";

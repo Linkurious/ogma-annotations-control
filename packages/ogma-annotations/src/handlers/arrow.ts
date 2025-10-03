@@ -1,19 +1,20 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { Snap, Snapping } from "./snapping";
-import { handleDetectionThreshold } from "../constants";
+import { SIDE_END, SIDE_START, handleDetectionThreshold } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import {
   Arrow,
   ArrowProperties,
   ClientMouseEvent,
+  Side,
   detectArrow
 } from "../types";
 
 enum HandleType {
-  START = "start",
-  END = "end",
+  START = SIDE_START,
+  END = SIDE_END,
   BODY = "body"
 }
 
@@ -155,7 +156,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
   protected onDragEnd(evt: ClientMouseEvent) {
     if (!super.onDragEnd(evt)) return false;
-    this.commitChange();
 
     // Handle snapping if applicable
     if (this.snap && this.hoveredHandle) {
@@ -168,7 +168,20 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
           this.snap.type,
           this.snap.magnet
         );
+    } else if (this.snap === null && this.hoveredHandle) {
+      const annotation = this.getAnnotation()!;
+      const side = this.hoveredHandle.type as Side;
+      if (annotation.properties.link && annotation.properties.link[side]) {
+        this.links.remove(annotation, side);
+        this.store.getState().applyLiveUpdate(annotation.id, {
+          properties: {
+            ...annotation.properties,
+            link: { [side]: undefined }
+          }
+        });
+      }
     }
+    this.commitChange();
     this.clearDragState();
 
     this.snap = null;
