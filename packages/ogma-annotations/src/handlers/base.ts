@@ -22,7 +22,7 @@ export abstract class Handler<
     this.ogma = ogma;
     this.store.subscribe(
       (state) => state.features,
-      (curr, prev) => {
+      (curr) => {
         if (this.annotation && !curr[this.annotation]) this.stopEditing();
       }
     );
