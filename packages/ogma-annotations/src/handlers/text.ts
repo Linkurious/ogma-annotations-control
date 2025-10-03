@@ -1,9 +1,10 @@
-import Ogma, { Overlay, Point } from "@linkurious/ogma";
+import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
-import { LAYERS, handleRadius } from "../constants";
+import { TextArea } from "./textArea";
+import { handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
-import { ClientMouseEvent, Cursor, Text, TextStyle, isBox } from "../types";
+import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
@@ -37,17 +38,6 @@ const points = {
   right: [1, 2],
   bottom: [2, 3],
   left: [3, 0]
-};
-
-export const defaultStyle: TextStyle = {
-  font: "sans-serif",
-  fontSize: 18,
-  color: "#505050",
-  background: "#f5f5f5",
-  strokeWidth: 0,
-  borderRadius: 8,
-  padding: 16,
-  strokeType: "plain"
 };
 
 // Corner handle positions (clockwise from top-left): [x, y] multipliers
@@ -87,7 +77,7 @@ const cursors: Cursor[] = [
 
 export class TextHandler extends Handler<Text, Handle> {
   private links: Links;
-  private textEditor: Overlay | null = null;
+  private textEditor: TextArea | null = null;
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -230,6 +220,7 @@ export class TextHandler extends Handler<Text, Handle> {
         getBoxPosition(original)
       );
       this.links.updateLinkedArrowsDuringDrag(annotation.id, displacement);
+      if (this.textEditor) this.textEditor.update();
     }
 
     this.dispatchEvent(
@@ -346,50 +337,10 @@ export class TextHandler extends Handler<Text, Handle> {
     return true;
   }
 
-  private updateTextArea() {
-    const annotation = this.getAnnotation()!;
-
-    const {
-      font,
-      fontSize = defaultStyle.fontSize,
-      color,
-      background,
-      padding = 0
-    } = annotation.properties.style || defaultStyle;
-    const textArea = this.textEditor!.element.querySelector("textarea")!;
-    const scaledFontSize = parseFloat(fontSize!.toString());
-    const textAreaStyle = textArea.style;
-
-    textAreaStyle.font = `${scaledFontSize} ${font}`;
-    textAreaStyle.fontFamily = font || "sans-serif";
-    textAreaStyle.fontSize = `${scaledFontSize}px`;
-    textAreaStyle.padding = `${padding}px`;
-    textAreaStyle.lineHeight = `${scaledFontSize}px`;
-
-    textAreaStyle.boxSizing = "border-box";
-    textAreaStyle.color = color || "black";
-    textAreaStyle.background = background || "transparent";
-
-    textArea.value = annotation.properties.content;
-  }
-
   protected onClick(_evt: ClientMouseEvent) {
     // show text editor
     if (this.textEditor === null) {
-      const annotation = this.getAnnotation()!;
-      const size = getBoxSize(annotation);
-      const position = getBoxPosition(annotation);
-      this.textEditor = this.ogma.layers.addOverlay(
-        {
-          element: `<div class="ogma-annotation-text-editor">
-          <textarea wrap="on" spellcheck="false"></textarea>
-        </div>`,
-          position,
-          size
-        },
-        LAYERS.EDITOR
-      );
-      this.updateTextArea();
+      this.textEditor = new TextArea(this.ogma, this.store, this.annotation!);
     }
   }
 
@@ -430,6 +381,7 @@ export class TextHandler extends Handler<Text, Handle> {
   public stopEditing(): void {
     super.stopEditing();
     if (this.textEditor) this.textEditor.destroy();
+    this.commitChange();
     this.textEditor = null;
   }
 }

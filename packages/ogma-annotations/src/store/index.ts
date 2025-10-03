@@ -100,16 +100,16 @@ export const store = create<AnnotationState>()(
 
         // Start live update - snapshot current state
         startLiveUpdate: (ids) => {
-          set({
+          set((state) => ({
             liveUpdates: ids.reduce(
               (acc, id) => ({
                 ...acc,
-                [id]: {}
+                [id]: { ...state.features[id] }
               }),
               {}
             ),
             isDragging: true
-          });
+          }));
         },
 
         // Apply live updates - no history, super fast!
