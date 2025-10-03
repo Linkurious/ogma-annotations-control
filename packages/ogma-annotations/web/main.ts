@@ -157,6 +157,14 @@ document.getElementById("redo")!.addEventListener("click", () => {
 control.on("history", updateUndoRedoButtons);
 updateUndoRedoButtons();
 
+control.on("select", (selection) => {
+  const button = document.getElementById("delete")! as HTMLButtonElement;
+  button.disabled = selection.ids.length === 0;
+});
+document.getElementById("delete")!.addEventListener("click", () => {
+  control.remove(control.getSelectedAnnotations());
+});
+
 function updateUndoRedoButtons() {
   (document.getElementById("undo")! as HTMLButtonElement).disabled =
     !control.canUndo();

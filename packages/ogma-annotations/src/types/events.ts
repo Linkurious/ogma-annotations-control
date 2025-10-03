@@ -1,4 +1,4 @@
-import { Annotation, Arrow, Link } from "./features";
+import { Annotation, Arrow, Id, Link } from "./features";
 import {
   EVT_HOVER,
   EVT_UNHOVER,
@@ -33,22 +33,22 @@ export type FeatureEvents = {
    * Event trigerred when selecting an annotation
    * @param evt The annotation selected
    */
-  [EVT_SELECT]: (evt: Annotation) => void;
+  [EVT_SELECT]: (evt: { ids: Id[] }) => void;
   /**
    * Event trigerred when unselecting an annotation
    * @param evt The annotation unselected
    */
-  [EVT_UNSELECT]: (evt: Annotation) => void;
+  [EVT_UNSELECT]: (evt: { ids: Id[] }) => void;
   /**
    * Event trigerred when removing an annotation
    * @param evt The annotation removed
    */
-  [EVT_REMOVE]: (evt: Annotation) => void;
+  [EVT_REMOVE]: (evt: { id: Id }) => void;
   /**
    * Event trigerred when adding an annotation
    * @param evt The annotation added
    */
-  [EVT_ADD]: (evt: Annotation) => void;
+  [EVT_ADD]: (evt: { id: Id }) => void;
   [EVT_CANCEL_DRAWING]: () => void;
   /**
    * Event trigerred when updating an annotation

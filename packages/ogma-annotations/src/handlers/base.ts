@@ -20,6 +20,12 @@ export abstract class Handler<
     super();
     this.store = store;
     this.ogma = ogma;
+    this.store.subscribe(
+      (state) => state.features,
+      (curr, prev) => {
+        if (this.annotation && !curr[this.annotation]) this.stopEditing();
+      }
+    );
   }
 
   handleMouseMove = (evt: ClientMouseEvent): void => {
@@ -138,6 +144,7 @@ export abstract class Handler<
   }
 
   stopEditing() {
+    if (!this.isActive()) return;
     const container = this.ogma.getContainer()!;
     const win = getBrowserWindow() || container;
     win.removeEventListener("mousemove", this.handleMouseMove);
@@ -145,6 +152,7 @@ export abstract class Handler<
     container.removeEventListener("mousedown", this.handleMouseDown);
     this.setAnnotation(null);
     this.clearDragState();
+    this.annotation = null;
   }
 
   isActive() {

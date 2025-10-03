@@ -1,6 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import { EVT_HISTORY } from "./constants";
+import { EVT_HISTORY, EVT_SELECT } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
@@ -82,6 +82,10 @@ export class Control extends EventEmitter<FeatureEvents> {
         canRedo: state.futureStates.length > 0
       });
     });
+    this.store.subscribe(
+      (state) => state.selectedFeatures,
+      (selected) => this.emit(EVT_SELECT, { ids: Array.from(selected) })
+    );
   }
 
   private onRotate = () =>
@@ -169,6 +173,16 @@ export class Control extends EventEmitter<FeatureEvents> {
   public startBox(_x: number, _y: number, _box: Annotation) {}
   public startArrow(_x: number, _y: number, _arrow: Annotation) {}
   public startText(_x: number, _y: number, _text: Annotation) {}
+
+  public getSelectedAnnotations(): AnnotationCollection {
+    const state = this.store.getState();
+    return {
+      type: "FeatureCollection",
+      features: Array.from(state.selectedFeatures).map(
+        (id) => state.features[id]
+      )
+    };
+  }
 
   /**
    * Destroy the controller and its elements
