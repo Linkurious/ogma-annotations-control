@@ -8,6 +8,7 @@ import type {
   Polygon,
   Position
 } from "geojson";
+import { SIDE_START } from "./constants";
 import {
   Annotation,
   AnnotationCollection,
@@ -16,6 +17,7 @@ import {
   Box,
   ClientMouseEvent,
   isArrow,
+  Side,
   Text
 } from "./types";
 
@@ -98,8 +100,8 @@ export function getArrowStart(a: Arrow) {
   return { x, y };
 }
 
-export function getArrowSide(a: Arrow, side: "start" | "end") {
-  const [x, y] = a.geometry.coordinates[side === "start" ? 0 : 1];
+export function getArrowSide(a: Arrow, side: Side) {
+  const [x, y] = a.geometry.coordinates[side === SIDE_START ? 0 : 1];
   return { x, y };
 }
 
@@ -120,13 +122,8 @@ export function getArrowEndPoints(a: Arrow) {
   return { start: getArrowStart(a), end: getArrowEnd(a) };
 }
 
-export function setArrowEndPoint(
-  a: Arrow,
-  side: "start" | "end",
-  x: number,
-  y: number
-) {
-  if (side === "start") setArrowStart(a, x, y);
+export function setArrowEndPoint(a: Arrow, side: Side, x: number, y: number) {
+  if (side === SIDE_START) setArrowStart(a, x, y);
   else setArrowEnd(a, x, y);
 }
 

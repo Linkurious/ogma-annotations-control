@@ -1,7 +1,14 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { createArrow, defaultOptions, defaultStyle } from "./defaults";
 import drawArrow, { getArrowHeight } from "./render";
-import { EVT_DRAG, EVT_DRAG_END, EVT_DRAG_START, NONE } from "../../constants";
+import {
+  EVT_DRAG,
+  EVT_DRAG_END,
+  EVT_DRAG_START,
+  NONE,
+  SIDE_END,
+  SIDE_START
+} from "../../constants";
 import { SubCollection } from "../../storage";
 import { Arrow, ControllerOptions } from "../../types";
 import {
@@ -170,7 +177,7 @@ export class ArrowsEditor extends Editor<Arrow> {
     this.emit(
       EVT_DRAG,
       this.arrow,
-      isLine ? "line" : isStart ? "start" : "end"
+      isLine ? "line" : isStart ? SIDE_START : SIDE_END
     );
     this.refreshEditor();
     this.layer.refresh();

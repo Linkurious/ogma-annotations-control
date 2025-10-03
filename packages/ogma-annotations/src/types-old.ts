@@ -207,7 +207,7 @@ export type FeatureEvents = {
   /**
    * Event trigerred when dragging an arrow or a text
    */
-  [EVT_DRAG]: (evt: Annotation, key: "line" | "start" | "end" | "text") => void;
+  [EVT_DRAG]: (evt: Annotation, key: "line" | Side | "text") => void;
   /**
    * Event trigerred when stopped dragging an arrow or a text
    */

@@ -17,7 +17,9 @@ import {
   EVT_REMOVE,
   EVT_SELECT,
   EVT_UNSELECT,
-  EVT_UPDATE
+  EVT_UPDATE,
+  SIDE_END,
+  SIDE_START
 } from "./constants";
 import { ArrowsEditor, createArrow } from "./Editor_old/Arrows";
 import type { Editor } from "./Editor_old/base";
@@ -377,7 +379,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         const radius = targetNode!.getAttribute("radius") || 0;
         const otherSide = getArrowSide(
           arrow,
-          side === "start" ? "end" : "start"
+          side === SIDE_START ? SIDE_END : SIDE_START
         );
         const anchor = getAttachmentPointOnNode(otherSide, point, +radius);
         setArrowEndPoint(arrow, side, anchor.x, anchor.y);

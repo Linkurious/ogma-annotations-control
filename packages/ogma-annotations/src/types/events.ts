@@ -1,4 +1,4 @@
-import { Annotation, Arrow, Id, Link } from "./features";
+import { Annotation, Arrow, Id, Link, Side } from "./features";
 import {
   EVT_HOVER,
   EVT_UNHOVER,
@@ -21,7 +21,7 @@ export type Events<T> = {
   [EVT_SELECT]: (evt: T) => void;
   [EVT_UNSELECT]: (evt: T) => void;
   [EVT_DRAG_START]: (evt: T) => void;
-  [EVT_DRAG]: (evt: T, key: "line" | "start" | "end" | "text") => void;
+  [EVT_DRAG]: (evt: T, key: "line" | Side | "text") => void;
   [EVT_DRAG_END]: (evt: T) => void;
   [EVT_REMOVE]: (evt: T) => void;
   [EVT_ADD]: (evt: T) => void;
@@ -66,7 +66,7 @@ export type FeatureEvents = {
   /**
    * Event trigerred when dragging an arrow or a text
    */
-  [EVT_DRAG]: (evt: Annotation, key: "line" | "start" | "end" | "text") => void;
+  [EVT_DRAG]: (evt: Annotation, key: "line" | Side | "text") => void;
   /**
    * Event trigerred when stopped dragging an arrow or a text
    */

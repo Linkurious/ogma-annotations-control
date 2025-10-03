@@ -1,5 +1,6 @@
 import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
+import { SIDE_END, SIDE_START } from "./constants";
 import { boxToSegmentIntersection } from "./geom";
 import { Store } from "./store";
 import type {
@@ -71,8 +72,8 @@ export class Links {
         ...arrow.geometry,
         coordinates: arrow.geometry.coordinates.map((coord, idx) => {
           if (
-            (link.side === "start" && idx === 0) ||
-            (link.side === "end" && idx === 1)
+            (link.side === SIDE_START && idx === 0) ||
+            (link.side === SIDE_END && idx === 1)
           ) {
             return [newEndPoint.x, newEndPoint.y];
           }
@@ -205,8 +206,8 @@ export class Links {
         const arrowId = link.arrow;
         const arrow = this.store.getState().getFeature(arrowId) as Arrow;
         const coordinates = arrow.geometry.coordinates.slice();
-        const start = getArrowSide(arrow, "end");
-        const end = getArrowSide(arrow, "start");
+        const start = getArrowSide(arrow, SIDE_END);
+        const end = getArrowSide(arrow, SIDE_START);
 
         const positionAndRadius = xyr[i];
         // Update the arrow's position
@@ -215,7 +216,7 @@ export class Links {
           mul(subtract(end, start), -1),
           this._isLinkedToCenter(link)
         );
-        coordinates[link.side === "start" ? 0 : 1] = snapPoint;
+        coordinates[link.side === SIDE_START ? 0 : 1] = snapPoint;
         state.applyLiveUpdate(arrowId, {
           ...arrow,
           geometry: {
@@ -330,7 +331,7 @@ export class Links {
       if (arrow.properties.link?.start) {
         this.add(
           arrow,
-          "start",
+          SIDE_START,
           arrow.properties.link.start.id,
           arrow.properties.link.start.type,
           arrow.properties.link.start.magnet!
@@ -339,7 +340,7 @@ export class Links {
       if (arrow.properties.link?.end) {
         this.add(
           arrow,
-          "end",
+          SIDE_END,
           arrow.properties.link.end.id,
           arrow.properties.link.end.type,
           arrow.properties.link.end.magnet!
