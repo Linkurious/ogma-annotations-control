@@ -34,6 +34,7 @@ export class Links {
   private linksByArrowId: LinksByArrowId = new Map();
   private store: Store;
   private ogma: Ogma;
+  private updatedItems = new Set<Id>();
 
   constructor(ogma: Ogma, store: Store) {
     this.ogma = ogma;
@@ -82,6 +83,7 @@ export class Links {
       state.applyLiveUpdate(arrow.id, {
         geometry: updatedGeometry
       } as Partial<Arrow>);
+      this.updatedItems.add(arrow.id);
     }
   }
 
@@ -220,6 +222,7 @@ export class Links {
             coordinates
           }
         } as Arrow);
+        this.updatedItems.add(arrowId);
         link.magnet = {
           x: snapPoint[0] - positionAndRadius.x,
           y: snapPoint[1] - positionAndRadius.y
@@ -236,7 +239,10 @@ export class Links {
     return () => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        this.store.getState().commitLiveUpdates();
+        this.store.getState().batchUpdate(() => {
+          this.store.getState().commitLiveUpdates(this.updatedItems);
+        });
+        this.updatedItems.clear();
       }, COMMIT_DELAY);
     };
   })();
@@ -305,8 +311,9 @@ export class Links {
           coordinates: [startPoint, endPoint]
         }
       } as Partial<Arrow>);
+      this.updatedItems.add(arrow.id);
     });
-    state.commitLiveUpdates();
+    this.debouncedCommit();
   }
 
   private onAddArrow = (

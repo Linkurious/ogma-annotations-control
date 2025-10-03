@@ -51,6 +51,7 @@ graph.edges.forEach((edge) => {
 await ogma.setGraph(graph);
 await ogma.layouts.force({ locate: true });
 control.add(annotationsWithLinks);
+control.clearHistory();
 
 const addArrows = document.getElementById("add-arrow")! as HTMLButtonElement;
 addArrows.addEventListener("click", () => {

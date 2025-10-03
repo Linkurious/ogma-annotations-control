@@ -30,7 +30,8 @@ export class Shapes extends Renderer<SVGLayer> {
         liveUpdates: state.liveUpdates,
         hoveredFeature: state.hoveredFeature,
         selectedFeatures: state.selectedFeatures,
-        rotation: state.rotation
+        rotation: state.rotation,
+        zoom: state.zoom
       }),
       () => this.layer.refresh(),
       { equalityFn: (a, b) => a === b }

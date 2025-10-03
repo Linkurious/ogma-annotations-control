@@ -101,7 +101,6 @@ export class TextHandler extends Handler<Text, Handle> {
     }
 
     this.hoveredHandle = undefined;
-    this.store.setState({ hoveredHandle: -1 });
 
     const handleSize = handleRadius * (1 / zoom);
 
@@ -171,6 +170,7 @@ export class TextHandler extends Handler<Text, Handle> {
       return;
     }
 
+    this.store.setState({ hoveredHandle: -1 });
     this.setCursor("default");
   }
 

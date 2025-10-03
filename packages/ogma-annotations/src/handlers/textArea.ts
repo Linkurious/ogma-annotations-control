@@ -8,6 +8,7 @@ export class TextArea {
   private layer: Overlay;
   private textarea: HTMLTextAreaElement;
   public isFocused: boolean;
+  private unsubscribe: () => void;
 
   constructor(
     private ogma: Ogma,
@@ -38,13 +39,27 @@ export class TextArea {
     this.textarea.addEventListener("input", this.onInput);
     this.updateStyle();
     this.updatePosition();
+
+    this.unsubscribe = this.store.subscribe(
+      (state) => ({
+        rotation: state.rotation,
+        zoom: state.zoom
+      }),
+      () => this.update(),
+      { equalityFn: (a, b) => a.rotation === b.rotation && a.zoom === b.zoom }
+    );
   }
 
   private getAnnotation() {
     const state = this.store.getState();
-    const liveAnnotation = state.liveUpdates[this.annotation];
-    if (liveAnnotation) return liveAnnotation as Text;
-    else throw new Error("Annotation is not being edited");
+    if (!state.liveUpdates[this.annotation]) {
+      state.startLiveUpdate([this.annotation]);
+      console.assert(
+        state.liveUpdates[this.annotation],
+        "Annotation not found"
+      );
+    }
+    return state.liveUpdates[this.annotation] as Text;
   }
 
   private getPosition() {
@@ -68,7 +83,8 @@ export class TextArea {
   }
 
   private updateStyle() {
-    const annotation = this.getAnnotation()!;
+    const annotation = this.getAnnotation();
+    if (!annotation) return;
 
     const {
       font,
@@ -90,6 +106,9 @@ export class TextArea {
     textAreaStyle.boxSizing = "border-box";
     textAreaStyle.color = color || "black";
     textAreaStyle.background = background || "transparent";
+
+    textAreaStyle.transformOrigin = "top left";
+    textAreaStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
   }
 
   private updatePosition() {
@@ -126,9 +145,12 @@ export class TextArea {
   public update() {
     this.updateStyle();
     this.updatePosition();
+    this.layer.setSize(this.getSize());
   }
 
   destroy() {
+    this.store.getState().commitLiveUpdates(new Set([this.annotation]));
+    this.unsubscribe();
     this.layer.destroy();
   }
 }

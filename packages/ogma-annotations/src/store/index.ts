@@ -26,11 +26,13 @@ export interface AnnotationState {
   revRotation: number;
   revSin: number;
   revCos: number;
+  zoom: number;
+  invZoom: number;
 
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
   applyLiveUpdate: (id: Id, updates: Partial<Annotation>) => void;
-  commitLiveUpdates: () => void;
+  commitLiveUpdates: (ids?: Set<Id>) => void;
   cancelLiveUpdates: () => void;
 
   addFeature: (feature: Annotation) => void;
@@ -58,7 +60,12 @@ export interface AnnotationState {
   isHovered: (id: Id) => boolean;
   isSelected: (id: Id) => boolean;
   setRotation: (rotation: number) => void;
-  getScreenAlignedTransform: (ox: number, oy: number) => string;
+  setZoom: (zoom: number) => void;
+  getScreenAlignedTransform: (
+    ox: number,
+    oy: number,
+    scaled: boolean
+  ) => string;
   getRotationTransform: (ox: number, oy: number) => string;
 
   getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => Bounds;
@@ -82,6 +89,8 @@ export const store = create<AnnotationState>()(
         revRotation: 0,
         revSin: 0,
         revCos: 1,
+        zoom: 1,
+        invZoom: 1,
 
         removeFeature: (id) =>
           set((state) => {
@@ -126,13 +135,17 @@ export const store = create<AnnotationState>()(
         },
 
         // Commit all live updates - single history entry!
-        commitLiveUpdates: () => {
+        commitLiveUpdates: (ids?: Set<Id>) => {
           const { features, liveUpdates } = get();
           const updatedFeatures = { ...features };
           const changedFeatureIds: Id[] = [];
 
+          const keys = Object.keys(liveUpdates);
+          if (!ids) ids = new Set(keys);
+
           // Merge live updates into features and track changes
-          Object.entries(liveUpdates).forEach(([id, updates]) => {
+          keys.forEach((id) => {
+            const updates = liveUpdates[id];
             if (updatedFeatures[id] && Object.keys(updates).length > 0) {
               updatedFeatures[id] = {
                 ...updatedFeatures[id],
@@ -254,14 +267,21 @@ export const store = create<AnnotationState>()(
           // Don't trigger history for camera changes
         },
 
-        getScreenAlignedTransform(ox, oy) {
+        setZoom: (zoom: number) => {
+          set({
+            zoom,
+            invZoom: 1 / zoom
+          });
+        },
+
+        getScreenAlignedTransform(ox, oy, scaled = true) {
           const sin = this.revSin;
           const cos = this.revCos;
           const x = ox * cos - oy * sin;
           const y = ox * sin + oy * cos;
 
           // scale it around its center
-          const scale = 1;
+          const scale = scaled ? 1 : this.invZoom;
 
           return `matrix(${scale}, 0, 0, ${scale}, ${x}, ${y})`;
         },

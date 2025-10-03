@@ -12,6 +12,8 @@ export interface BoxStyle extends StrokeOptions {
   padding?: number;
   /** border radius */
   borderRadius?: number;
+  /** if true, the box scales with zoom. Default is true */
+  scaled?: boolean;
 }
 
 export interface BoxProperties extends AnnotationProps {

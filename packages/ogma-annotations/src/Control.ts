@@ -74,11 +74,14 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
-    this.ogma.events.on("rotate", this.onRotate);
+    this.ogma.events.on("rotate", this.onRotate).on("zoom", this.onZoom);
   }
 
   private onRotate = () =>
     this.store.getState().setRotation(this.ogma.view.getAngle());
+
+  private onZoom = () =>
+    this.store.getState().setZoom(this.ogma.view.getZoom());
 
   /**
    * Set the options for the controller
@@ -141,6 +144,10 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this.store.temporal.getState().futureStates.length > 0;
   }
 
+  public clearHistory() {
+    this.store.temporal.getState().clear();
+  }
+
   public getAnnotations(): AnnotationCollection {
     const features = this.store.getState().features;
     return {
@@ -154,12 +161,13 @@ export class Control extends EventEmitter<FeatureEvents> {
   public startComment(_x: number, _y: number, _text: Annotation) {}
   public startBox(_x: number, _y: number, _box: Annotation) {}
   public startArrow(_x: number, _y: number, _arrow: Annotation) {}
+  public startText(_x: number, _y: number, _text: Annotation) {}
 
   /**
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events.off(this.onRotate);
+    this.ogma.events.off(this.onRotate).off(this.onZoom);
     this.links.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();

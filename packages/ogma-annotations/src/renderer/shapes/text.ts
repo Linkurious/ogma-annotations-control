@@ -59,7 +59,7 @@ export function renderText(
 
   g.setAttribute(
     "transform",
-    state.getScreenAlignedTransform(position.x, position.y)
+    state.getScreenAlignedTransform(position.x, position.y, true)
   );
 
   root.appendChild(g);
