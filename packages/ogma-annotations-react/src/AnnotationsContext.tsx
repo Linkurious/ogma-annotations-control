@@ -171,18 +171,21 @@ export const AnnotationsContextProvider = ({
     setArrowWidthFactor(newArrowWidthFactor);
     setTextSizeFactor(newTextSizeFactor);
     newEditor
-      .on("select", (annotation) => {
+      .on("select", () => {
         // read back the current options from the selected annotation
-        if (isArrow(annotation)) {
-          setArrowStyle({
-            ...(annotation.properties.style || {})
-          });
-        } else if (isText(annotation)) {
-          setTextStyle({
-            ...(annotation.properties.style || {})
-          });
-        }
-        setCurrentAnnotation(annotation);
+        newEditor.getSelectedAnnotations().features.forEach((annotation) => {
+          if (!annotation) return;
+          if (isArrow(annotation)) {
+            setArrowStyle({
+              ...(annotation.properties.style || {})
+            });
+          } else if (isText(annotation)) {
+            setTextStyle({
+              ...(annotation.properties.style || {})
+            });
+          }
+          setCurrentAnnotation(annotation);
+        });
       })
       .on("unselect", () => {
         setCurrentAnnotation(null);
