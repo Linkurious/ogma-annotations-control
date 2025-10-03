@@ -1,5 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
+import { EVT_HISTORY } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
@@ -75,6 +76,12 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private setupEvents() {
     this.ogma.events.on("rotate", this.onRotate).on("zoom", this.onZoom);
+    this.store.temporal.subscribe((state) => {
+      this.emit(EVT_HISTORY, {
+        canUndo: state.pastStates.length > 0,
+        canRedo: state.futureStates.length > 0
+      });
+    });
   }
 
   private onRotate = () =>

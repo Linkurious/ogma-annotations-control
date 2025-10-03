@@ -153,6 +153,15 @@ document.getElementById("undo")!.addEventListener("click", () => {
 document.getElementById("redo")!.addEventListener("click", () => {
   control.redo();
 });
+control.on("history", updateUndoRedoButtons);
+updateUndoRedoButtons();
+
+function updateUndoRedoButtons() {
+  (document.getElementById("undo")! as HTMLButtonElement).disabled =
+    !control.canUndo();
+  (document.getElementById("redo")! as HTMLButtonElement).disabled =
+    !control.canRedo();
+}
 
 async function fit() {
   const bounds = ogma.view.getGraphBoundingBox();

@@ -158,3 +158,8 @@ body {
 [tooltip]:hover::before {
   opacity: 1;
 }
+
+#controls > button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}

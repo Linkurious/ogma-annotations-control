@@ -11,7 +11,8 @@ import {
   EVT_REMOVE,
   EVT_LINK,
   EVT_UPDATE,
-  EVT_CANCEL_DRAWING
+  EVT_CANCEL_DRAWING,
+  EVT_HISTORY
 } from "../constants";
 
 export type Events<T> = {
@@ -70,4 +71,7 @@ export type FeatureEvents = {
    * Event trigerred when stopped dragging an arrow or a text
    */
   [EVT_DRAG_END]: (evt: Annotation) => void;
+
+  /** History state change */
+  [EVT_HISTORY]: (evt: { canUndo: boolean; canRedo: boolean }) => void;
 };
