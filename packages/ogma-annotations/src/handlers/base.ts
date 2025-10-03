@@ -23,7 +23,7 @@ export abstract class Handler<
     this.store.subscribe(
       (state) => state.features,
       (curr) => {
-        if (this.annotation && !curr[this.annotation]) this.stopEditing();
+        if (this.isActive() && !curr[this.annotation!]) this.stopEditing();
       }
     );
   }
