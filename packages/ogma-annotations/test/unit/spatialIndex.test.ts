@@ -7,6 +7,7 @@ describe("Index (Spatial Index)", () => {
   let spatialIndex: Index;
   let mockStore: Store;
   let featuresCallback: (features: Record<string, Annotation>) => void;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let rotationCallback: (rotation: number) => void;
   let mockFeatures: Record<string, Annotation> = {};
 
@@ -21,17 +22,26 @@ describe("Index (Spatial Index)", () => {
         rotation: 0,
         sin: 0,
         cos: 1,
-        getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [x0, y0, x1, y1]
+        getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [
+          x0,
+          y0,
+          x1,
+          y1
+        ]
       })),
-      subscribe: vi.fn((selector, callback, options?) => {
+      subscribe: vi.fn((selector, callback) => {
         // Determine which subscription this is based on selector
         const selectorResult = selector(mockStore.getState());
 
         // If selector returns features, this is the features subscription
-        if (selectorResult && typeof selectorResult === 'object' && 'features' in selectorResult) {
+        if (
+          selectorResult &&
+          typeof selectorResult === "object" &&
+          "features" in selectorResult
+        ) {
           // This is the drag/live updates subscription - we don't need it for these tests
           return vi.fn();
-        } else if (typeof selectorResult === 'number') {
+        } else if (typeof selectorResult === "number") {
           // This is the rotation subscription
           rotationCallback = callback;
         } else {
