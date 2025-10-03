@@ -1,6 +1,6 @@
 import { View } from "@linkurious/ogma";
 import { Box, Text } from "../../types";
-import { getBoxPosition, getBoxSize } from "../../utils";
+import { getBoxPosition } from "../../utils";
 import { rotateRadians } from "../../vec";
 
 interface Point {
