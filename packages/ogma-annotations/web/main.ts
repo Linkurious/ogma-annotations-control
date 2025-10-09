@@ -199,6 +199,13 @@ document.getElementById("export")!.addEventListener("click", () => {
   console.log("Exported annotations:", annotations);
 });
 
+document.getElementById("rotate-cw")!.addEventListener("click", async () => {
+  await ogma.view.rotate(-Math.PI / 8, { duration: 200 });
+});
+document.getElementById("rotate-ccw")!.addEventListener("click", async () => {
+  await ogma.view.rotate(Math.PI / 8, { duration: 200 });
+});
+
 document.addEventListener("keyup", (event) => {
   switch (event.key) {
     case "1":

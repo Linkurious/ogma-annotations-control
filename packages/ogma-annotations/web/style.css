@@ -6,10 +6,6 @@
 #app {
   width: 100vw;
   height: 100vh;
-  /* width: 80vw;
-  margin-left: 20vw;
-  height: 80vh;
-  margin-top: 20vh; */
 }
 
 body {
@@ -19,18 +15,15 @@ body {
   font-family: var(--font-face);
 }
 
-#controls {
+.control-bar {
   position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
   background: #fff;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
   padding: 5px 10px;
   border-radius: 10px;
 }
 
-#controls > button {
+.control-bar > button {
   margin: 2px;
   padding: 5px;
   border: none;
@@ -41,7 +34,7 @@ body {
   color: #444;
 }
 
-#controls > .separator {
+.control-bar > .separator {
   border-left: 1px solid #ccc;
   margin: 0 5px;
   height: 20px;
@@ -49,9 +42,41 @@ body {
   vertical-align: middle;
 }
 
-#controls > button:hover {
+.control-bar > button:hover {
   background: #f0f0f0;
   color: #222;
+}
+
+.control-bar > button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+#controls {
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.control-bar.vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px;
+}
+
+.control-bar.vertical > .separator {
+  border-left: none;
+  border-top: 1px solid #ccc;
+  width: 20px;
+  height: 0;
+  margin: 5px 0;
+}
+
+#vis-controls {
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .body {
@@ -157,9 +182,4 @@ body {
 [tooltip]:hover::after,
 [tooltip]:hover::before {
   opacity: 1;
-}
-
-#controls > button:disabled {
-  color: #aaa;
-  cursor: not-allowed;
 }

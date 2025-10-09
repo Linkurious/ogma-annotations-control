@@ -1,5 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
+import { cursors } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import {
@@ -108,7 +109,7 @@ export class InteractionController {
     if (newHoveredId !== currentHoveredId)
       state.setHoveredFeature(newHoveredId);
 
-    this.setCursor(newHoveredId === null ? "default" : "pointer");
+    this.setCursor(newHoveredId === null ? cursors.default : cursors.pointer);
   };
 
   private onMouseClick = (evt: MouseEvent) => {
@@ -150,9 +151,9 @@ export class InteractionController {
         (this.ogma.getOptions().cursor?.default as Cursor) || "default"
       );
     } else if (mode === "add" || mode === "link") {
-      this.setCursor("crosshair");
+      this.setCursor(cursors.crosshair);
     } else if (mode === "rotate") {
-      this.setCursor("alias");
+      this.setCursor(cursors.alias);
     }
   }
 

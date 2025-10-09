@@ -1,7 +1,12 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { Snap, Snapping } from "./snapping";
-import { SIDE_END, SIDE_START, handleDetectionThreshold } from "../constants";
+import {
+  SIDE_END,
+  SIDE_START,
+  cursors,
+  handleDetectionThreshold
+} from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import {
@@ -64,11 +69,11 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         point: { x: endPoint[0], y: endPoint[1] }
       };
       this.store.setState({ hoveredHandle: 1 });
-      this.setCursor("move");
+      this.setCursor(cursors.move);
     } else {
       // on the line?
       if (detectArrow(annotation, mousePoint, margin)) {
-        this.setCursor("grab");
+        this.setCursor(cursors.grab);
         this.hoveredHandle = {
           type: HandleType.BODY,
           point: mousePoint

@@ -1,7 +1,7 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { TextArea } from "./textArea";
-import { handleRadius } from "../constants";
+import { cursors, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
@@ -65,14 +65,14 @@ const CORNER_HANDLES = [
 type Handle = {
   type: HandleType;
   edge?: EdgeType;
-  corner?: number; // 0=top-left, 1=top-right, 2=bottom-right, 3=bottom-left
+  corner: number; // 0=top-left, 1=top-right, 2=bottom-right, 3=bottom-left
 };
 
-const cursors: Cursor[] = [
-  "nw-resize", // top-left (0)
-  "ne-resize", // top-right (1)
-  "se-resize", // bottom-right (2)
-  "sw-resize" // bottom-left (3)
+const cornerCursors: Cursor[] = [
+  cursors.nwResize, // top-left (0)
+  cursors.neResize, // top-right (1)
+  cursors.seResize, // bottom-right (2)
+  cursors.swResize // bottom-left (3)
 ];
 
 export class TextHandler extends Handler<Text, Handle> {
@@ -149,7 +149,7 @@ export class TextHandler extends Handler<Text, Handle> {
         my >= minY - margin &&
         my <= maxY + margin
       ) {
-        this.hoveredHandle = { type: HandleType.EDGE, edge };
+        this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
         this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
         this.setCursor(this.getEdgeCursor(edge));
         return;
@@ -165,13 +165,13 @@ export class TextHandler extends Handler<Text, Handle> {
     ) {
       this.store.setState({ hoveredHandle: 8 }); // 8 = body
       // Treat body as edge for dragging
-      this.hoveredHandle = { type: HandleType.BODY };
-      this.setCursor("grab");
+      this.hoveredHandle = { type: HandleType.BODY, corner: -1 };
+      this.setCursor(cursors.grab);
       return;
     }
 
     this.store.setState({ hoveredHandle: -1 });
-    this.setCursor("default");
+    this.setCursor(cursors.default);
   }
 
   onDrag(evt: MouseEvent) {
@@ -197,7 +197,7 @@ export class TextHandler extends Handler<Text, Handle> {
       updatedGeometry = this.calculateCornerDrag(
         original,
         delta,
-        handle.corner!
+        handle.corner
       );
     } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
@@ -361,7 +361,7 @@ export class TextHandler extends Handler<Text, Handle> {
 
   private getCornerCursor(cornerIndex: number): Cursor {
     // Return resize cursors based on corner position
-    return cursors[cornerIndex];
+    return cornerCursors[cornerIndex];
   }
 
   private getEdgeCursor(edge: EdgeType): Cursor {

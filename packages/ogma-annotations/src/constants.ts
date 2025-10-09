@@ -1,3 +1,5 @@
+import { Cursor } from "./types";
+
 export const NONE = -1;
 
 export const EVT_DRAG = "dragging";
@@ -27,3 +29,16 @@ export const LAYERS = {
 
 export const SIDE_START = "start";
 export const SIDE_END = "end";
+
+export const cursors: Record<string, Cursor> = {
+  default: "default",
+  move: "move",
+  pointer: "pointer",
+  crosshair: "crosshair",
+  grab: "grab",
+  grabbing: "grabbing",
+  ewResize: "ew-resize",
+  nsResize: "ns-resize",
+  neswResize: "nesw-resize",
+  nwseResize: "nwse-resize"
+};
