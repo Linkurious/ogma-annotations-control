@@ -5,7 +5,7 @@ import { cursors, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
-import { getBoxPosition, getBoxSize } from "../utils";
+import { getBoxCenter, getBoxPosition, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
 // Constants for edge detection
@@ -27,10 +27,10 @@ enum EdgeType {
 
 // Edge template definitions: [edge, axis, norm, xStart, yStart, xEnd, yEnd]
 const EDGE_TEMPLATES = [
-  [EdgeType.TOP, AXIS_Y, 0, 0, 1, 0],
-  [EdgeType.RIGHT, AXIS_X, 1, 0, 1, 1],
-  [EdgeType.BOTTOM, AXIS_Y, 0, 1, 1, 1],
-  [EdgeType.LEFT, AXIS_X, 0, 0, 0, 1]
+  [EdgeType.TOP, AXIS_Y, -0.5, -0.5, 0.5, -0.5],
+  [EdgeType.RIGHT, AXIS_X, 0.5, -0.5, 0.5, 0.5],
+  [EdgeType.BOTTOM, AXIS_Y, -0.5, 0.5, 0.5, 0.5],
+  [EdgeType.LEFT, AXIS_X, -0.5, -0.5, -0.5, 0.5]
 ] as const;
 
 const points = {
@@ -56,10 +56,10 @@ const points = {
 // │   │   │  7: left edge
 // └───┴───┘
 const CORNER_HANDLES = [
-  [0, 0], // top-left (index 0)
-  [1, 0], // top-right (index 1)
-  [1, 1], // bottom-right (index 2)
-  [0, 1] // bottom-left (index 3)
+  [-0.5, -0.5], // top-left (index 0)
+  [0.5, -0.5], // top-right (index 1)
+  [0.5, 0.5], // bottom-right (index 2)
+  [-0.5, 0.5] // bottom-left (index 3)
 ] as const;
 
 type Handle = {
@@ -91,7 +91,7 @@ export class TextHandler extends Handler<Text, Handle> {
     // TODO: detection threshold (state)
     const margin = 3 / zoom;
 
-    const origin = getBoxPosition(annotation);
+    const origin = getBoxCenter(annotation);
     const state = this.store.getState();
     let { revSin: sin, revCos: cos } = state;
 
@@ -158,10 +158,10 @@ export class TextHandler extends Handler<Text, Handle> {
 
     // detect if we are inside the box (for moving)
     if (
-      mx >= margin &&
-      mx <= width + margin &&
-      my >= margin &&
-      my <= height + margin
+      mx >= -width / 2 - margin &&
+      mx <= width / 2 + margin &&
+      my >= -height / 2 - margin &&
+      my <= height / 2 + margin
     ) {
       this.store.setState({ hoveredHandle: 8 }); // 8 = body
       // Treat body as edge for dragging

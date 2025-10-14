@@ -1,4 +1,3 @@
-import { geometry } from "@linkurious/ogma";
 import { Point, Bounds } from "./types";
 
 /**
@@ -165,38 +164,83 @@ export function boxRayIntersection(
   sin: number,
   cos: number
 ) {
-  // Calculate center of the unrotated box
+  // Transform to rectangle's local coordinate space
   const cx = x + width / 2;
   const cy = y + height / 2;
-
-  // Rotate corners around the center
   const hw = width / 2;
   const hh = height / 2;
 
-  const tlX = cx + (-hw * cos - -hh * sin);
-  const tlY = cy + (-hw * sin + -hh * cos);
+  // Transform point to local space (inverse rotation around center)
+  const dx = px - cx;
+  const dy = py - cy;
+  const localPx = dx * cos + dy * sin;
+  const localPy = -dx * sin + dy * cos;
 
-  const trX = cx + (hw * cos - -hh * sin);
-  const trY = cy + (hw * sin + -hh * cos);
+  // Ray from local point to origin (center in local space is 0,0)
+  const dirX = -localPx;
+  const dirY = -localPy;
 
-  const brX = cx + (hw * cos - hh * sin);
-  const brY = cy + (hw * sin + hh * cos);
+  // Find intersection with axis-aligned box [-hw, -hh] to [hw, hh]
+  // Using parametric ray equation: P(t) = origin + t * direction
+  let t = Infinity;
+  let intersectX = 0;
+  let intersectY = 0;
 
-  const blX = cx + (-hw * cos - hh * sin);
-  const blY = cy + (-hw * sin + hh * cos);
+  // Test vertical edges (left and right) by solving for t where x = ±hw
+  if (dirX !== 0) {
+    // Left edge: x = -hw
+    const t1 = (-hw - localPx) / dirX;
+    const t2 = (hw - localPx) / dirX;
+    if (t1 > 0 && t1 < t) {
+      const iy = localPy + dirY * t1; // Project onto Y axis
+      if (iy >= -hh && iy <= hh) {
+        t = t1;
+        intersectX = -hw;
+        intersectY = iy;
+      }
+    }
+    // Right edge: x = hw
+    if (t2 > 0 && t2 < t) {
+      const iy = localPy + dirY * t2; // Project onto Y axis
+      if (iy >= -hh && iy <= hh) {
+        t = t2;
+        intersectX = hw;
+        intersectY = iy;
+      }
+    }
+  }
 
-  const segmentIntersection = geometry.segmentIntersection;
+  // Test horizontal edges (top and bottom) by solving for t where y = ±hh
+  if (dirY !== 0) {
+    // Top edge: y = -hh
+    const t1 = (-hh - localPy) / dirY;
+    const t2 = (hh - localPy) / dirY;
+    if (t1 > 0 && t1 < t) {
+      const ix = localPx + dirX * t1; // Project onto X axis
+      if (ix >= -hw && ix <= hw) {
+        t = t1;
+        intersectX = ix;
+        intersectY = -hh;
+      }
+    }
+    // Bottom edge: y = hh
+    if (t2 > 0 && t2 < t) {
+      const ix = localPx + dirX * t2; // Project onto X axis
+      if (ix >= -hw && ix <= hw) {
+        t = t2;
+        intersectX = ix;
+        intersectY = hh;
+      }
+    }
+  }
 
-  let intersects: Point | null = null;
-  intersects = segmentIntersection(px, py, cx, cy, tlX, tlY, trX, trY);
-  if (intersects) return intersects;
-  intersects = segmentIntersection(px, py, cx, cy, trX, trY, brX, brY);
-  if (intersects) return intersects;
-  intersects = segmentIntersection(px, py, cx, cy, brX, brY, blX, blY);
-  if (intersects) return intersects;
-  intersects = segmentIntersection(px, py, cx, cy, blX, blY, tlX, tlY);
-  if (intersects) return intersects;
-  return null;
+  if (t === Infinity) return null;
+
+  // Transform intersection back to world space
+  return {
+    x: cx + intersectX * cos - intersectY * sin,
+    y: cy + intersectX * sin + intersectY * cos
+  };
 }
 
 export function getAABB1(
