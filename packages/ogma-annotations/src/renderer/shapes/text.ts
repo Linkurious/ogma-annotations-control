@@ -10,7 +10,7 @@ export function renderText(
   cachedElement: SVGGElement | undefined,
   state: AnnotationState
 ) {
-  const size = getTextSize(annotation);
+  const { width, height } = getTextSize(annotation);
   //const position = getBoxPosition(annotation);
 
   // TODO: edited element is rendered in DOM
@@ -49,17 +49,22 @@ export function renderText(
   if (background && background.length) {
     rect.setAttribute("fill", background || "transparent");
   }
-  rect.setAttribute("width", `${size.width}`);
-  rect.setAttribute("height", `${size.height}`);
+  rect.setAttribute("width", `${width}`);
+  rect.setAttribute("height", `${height}`);
   const position = getBoxPosition(annotation);
-  rect.setAttribute("x", `0`);
-  rect.setAttribute("y", `0`);
+  rect.setAttribute("x", `${-width / 2}`);
+  rect.setAttribute("y", `${-height / 2}`);
 
   drawContent(annotation, g);
 
+  // get the SVG transform matrix to rotate the box around its center:
   g.setAttribute(
     "transform",
-    state.getScreenAlignedTransform(position.x, position.y, true)
+    state.getScreenAlignedTransform(
+      position.x + width / 2,
+      position.y + height / 2,
+      true
+    )
   );
 
   root.appendChild(g);
@@ -76,19 +81,19 @@ const getText = (e: Element) => e.children[0].innerHTML;
  */
 function drawContent(annotation: Text, parent: SVGGElement) {
   // make sure text does not overflow
-  const size = getTextSize(annotation);
+  const { width, height } = getTextSize(annotation);
   const {
     fontSize = defaultTextStyle.fontSize,
     font = defaultTextStyle.font,
     padding = 0
   } = annotation.properties.style || {};
 
-  if (size.width === size.height && size.width === 0) return;
+  if (width === height && width === 0) return;
 
   const box = new Textbox({
     font: `${fontSize}px/${fontSize}px ${font}`.replace(/(px)+/g, "px"),
-    width: size.width - padding * 2,
-    height: size.height - padding * 2,
+    width: width - padding * 2,
+    height: height - padding * 2,
     align: "left",
     valign: "top",
     x: 0,
@@ -102,7 +107,7 @@ function drawContent(annotation: Text, parent: SVGGElement) {
   if (content.length === 0) return;
 
   const lines = box.linebreak(content.replaceAll("\n", "<br>"));
-  const text = lines.render();
+  const text = lines.render() as SVGTextElement;
   const children = [...text.children];
   // remove extra blank lines
   let index = 0;
@@ -125,7 +130,6 @@ function drawContent(annotation: Text, parent: SVGGElement) {
   // replace spans with links:
   const matches = content.match(/(https?:\/\/.*)/gm);
   const links = matches ? matches.map((match) => match.split(" ")[0]) : [];
-  text.setAttribute("transform", `translate(${padding}, ${padding})`);
   links.forEach((l) => {
     let query = l;
     const toReplace: typeof children = [];
@@ -151,5 +155,11 @@ function drawContent(annotation: Text, parent: SVGGElement) {
       e.children[0].appendChild(link);
     });
   });
+
+  text.setAttribute(
+    "transform",
+    `translate(${-width / 2 + padding}, ${-height / 2 + padding})`
+  );
+
   parent.appendChild(text);
 }

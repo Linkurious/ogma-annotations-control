@@ -194,17 +194,13 @@ export class TextHandler extends Handler<Text, Handle> {
 
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
-      updatedGeometry = this.calculateCornerDrag(
-        original,
-        delta,
-        handle.corner
-      );
+      updatedGeometry = this.dragCorner(original, delta, handle.corner);
     } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
-      updatedGeometry = this.calculateEdgeDrag(original, delta, handle);
+      updatedGeometry = this.dragEdge(original, delta, handle);
     } else if (handle.type === HandleType.BODY) {
       // Body drag: move the entire box
-      updatedGeometry = this.calculateBodyDrag(original, delta);
+      updatedGeometry = this.dragBody(original, delta);
     }
 
     if (updatedGeometry) {
@@ -234,7 +230,7 @@ export class TextHandler extends Handler<Text, Handle> {
     );
   }
 
-  private calculateBodyDrag(original: Text, delta: Point) {
+  private dragBody(original: Text, delta: Point) {
     const { x, y } = getBoxPosition(original);
     const { width, height } = getBoxSize(original);
     return {
@@ -251,11 +247,7 @@ export class TextHandler extends Handler<Text, Handle> {
     };
   }
 
-  private calculateCornerDrag(
-    original: Text,
-    delta: Point,
-    cornerIndex: number
-  ) {
+  private dragCorner(original: Text, delta: Point, cornerIndex: number) {
     const isTop = cornerIndex === 0 || cornerIndex === 1;
     const isLeft = cornerIndex === 0 || cornerIndex === 3;
     const isRight = cornerIndex === 1 || cornerIndex === 2;
@@ -296,7 +288,7 @@ export class TextHandler extends Handler<Text, Handle> {
     };
   }
 
-  private calculateEdgeDrag(original: Text, delta: Point, handle: Handle) {
+  private dragEdge(original: Text, delta: Point, handle: Handle) {
     let { x, y } = getBoxPosition(original);
     let { width, height } = getBoxSize(original);
 

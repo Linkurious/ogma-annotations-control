@@ -60,6 +60,19 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.strokeStyle = this.handleStroke;
 
     Object.values(features).forEach((baseFeature) => {
+      if (isText(baseFeature)) {
+        const pos = getBoxPosition(baseFeature);
+        const size = getBoxSize(baseFeature);
+        ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
+        ctx.arc(
+          pos.x + size.width / 2,
+          pos.y + size.height / 2,
+          5,
+          0,
+          Math.PI * 2,
+          true
+        );
+      }
       // Only render handles for selected features
       if (!state.isSelected(baseFeature.id)) return;
 
