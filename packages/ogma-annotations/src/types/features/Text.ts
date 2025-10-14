@@ -2,6 +2,8 @@ import { Geometry, Polygon } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { BoxProperties, BoxStyle } from "./Box";
+import { getBoxPosition, getBoxSize } from "../../utils";
+import { Point } from "../geometry";
 
 export interface TextStyle extends BoxStyle {
   /** Helvetica, sans-serif...  */
@@ -96,3 +98,33 @@ export const createText = (
     ]
   }
 });
+
+export function detectText(
+  a: Text,
+  p: Point,
+  sin: number = 0,
+  cos: number = 1,
+  threshold: number = 0
+): boolean {
+  // check if the pointer is within the bounding box of the text
+  const { x, y } = getBoxPosition(a);
+  const { width, height } = getBoxSize(a);
+  const hw = width / 2;
+  const hh = height / 2;
+
+  // Rotate around center, not top-left corner
+  const cx = x + hw;
+  const cy = y + hh;
+
+  const tx = p.x - cx;
+  const ty = p.y - cy;
+  const dx = tx * cos - ty * sin;
+  const dy = tx * sin + ty * cos;
+
+  return (
+    dx > -hw - threshold &&
+    dx < hw + threshold &&
+    dy > -hh - threshold &&
+    dy < hh + threshold
+  );
+}

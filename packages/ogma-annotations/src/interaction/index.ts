@@ -6,8 +6,8 @@ import { Store } from "../store";
 import {
   Annotation,
   detectArrow,
-  Box,
   detectBox,
+  detectText,
   Cursor,
   isArrow,
   isBox,
@@ -76,13 +76,7 @@ export class InteractionController {
       } else if (isText(feature)) {
         // texts are screen aligned
         if (
-          detectBox(
-            feature as unknown as Box,
-            { x, y },
-            state.revSin,
-            state.revCos,
-            threshold
-          )
+          detectText(feature, { x, y }, state.revSin, state.revCos, threshold)
         ) {
           result = feature;
           break;

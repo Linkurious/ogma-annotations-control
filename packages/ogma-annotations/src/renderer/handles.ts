@@ -60,6 +60,7 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.strokeStyle = this.handleStroke;
 
     Object.values(features).forEach((baseFeature) => {
+      // debugging - draw center point
       if (isText(baseFeature)) {
         const pos = getBoxPosition(baseFeature);
         const size = getBoxSize(baseFeature);

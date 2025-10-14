@@ -302,8 +302,8 @@ export const store = create<AnnotationState>()(
             y1 - y0,
             this.sin,
             this.cos,
-            x0,
-            y0,
+            x0 + (x1 - x0) / 2,
+            y0 + (y1 - y0) / 2,
             rotatedRect
           );
           return rabb;
