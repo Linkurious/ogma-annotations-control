@@ -46,10 +46,10 @@ export class InteractionController {
     this.ogma.events.on("rotate", () => this.links.update());
   }
 
-  detect(x: number, y: number): Annotation | null {
+  detect(x: number, y: number, thresholdOverride?: number): Annotation | null {
     let result: Annotation | null = null;
     const state = this.store.getState();
-    const threshold = this.threshold;
+    const threshold = thresholdOverride ?? this.threshold;
     this.query.minX = x - threshold;
     this.query.minY = y - threshold;
     this.query.maxX = x + threshold;
