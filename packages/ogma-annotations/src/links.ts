@@ -261,7 +261,6 @@ export class Links {
       radius: number;
     }[];
 
-    const angle = this.ogma.view.getAngle();
     linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
       const start = this.links.get(links.start!);
@@ -293,7 +292,7 @@ export class Links {
           );
         } else {
           const box = state.getFeature(start.target) as Text;
-          startPoint = this._getBoxSnapPoint(box, endCenter, angle);
+          startPoint = this._getBoxSnapPoint(box, endCenter);
         }
       }
       if (end) {
@@ -305,7 +304,7 @@ export class Links {
           );
         } else {
           const box = state.getFeature(end.target) as Text;
-          endPoint = this._getBoxSnapPoint(box, startCenter, angle);
+          endPoint = this._getBoxSnapPoint(box, startCenter);
         }
       }
       state.applyLiveUpdate(arrow.id, {
