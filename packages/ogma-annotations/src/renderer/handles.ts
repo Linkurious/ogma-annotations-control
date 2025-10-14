@@ -12,10 +12,10 @@ import {
 
 // Corner offsets for text box handles: [x, y] multipliers
 const CORNER_OFFSETS = [
-  [0, 0], // top-left
-  [1, 0], // top-right
-  [1, 1], // bottom-left
-  [0, 1] // bottom-right
+  [-0.5, -0.5], // top-left
+  [0.5, -0.5], // top-right
+  [0.5, 0.5], // bottom-left
+  [-0.5, 0.5] // bottom-right
 ] as const;
 
 export class Handles extends Renderer<CanvasLayer> {
@@ -125,10 +125,15 @@ export class Handles extends Renderer<CanvasLayer> {
     // a circle handle at each corner of the text box
     const { width, height } = getBoxSize(feature);
     const position = getBoxPosition(feature);
+    const hw = width / 2;
+    const hh = height / 2;
+    // center of the box
+    const ox = position.x + hw;
+    const oy = position.y + hh;
 
     ctx.save();
 
-    ctx.translate(position.x, position.y);
+    ctx.translate(ox, oy);
     ctx.rotate(rotation);
 
     // Draw corner handles
