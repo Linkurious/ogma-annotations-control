@@ -1,7 +1,7 @@
 import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
 import { SIDE_END, SIDE_START } from "./constants";
-import { boxToSegmentIntersection } from "./geom";
+import { boxRayIntersection } from "./geom";
 import { Store } from "./store";
 import type {
   Arrow,
@@ -20,6 +20,7 @@ type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 const COMMIT_DELAY = 100; // ms
+
 /**
  * Class that implements linking between annotation arrows and different items.
  * An arrow can be connected to a text or to a node. It supports double indexing
@@ -282,7 +283,7 @@ export class Links {
           : getBoxCenter(state.getFeature(end.target) as Text)
         : { x: endPoint[0], y: endPoint[1] };
 
-      const vec = subtract(endCenter!, startCenter!);
+      const vec = subtract(endCenter, startCenter);
       if (start) {
         if (start.targetType === "node") {
           startPoint = this._getNodeSnapPoint(
@@ -353,16 +354,20 @@ export class Links {
     return link.magnet.x === 0 && link.magnet.y === 0;
   }
 
-  private _getBoxSnapPoint(box: Text, point: Point, angle = 0) {
+  private _getBoxSnapPoint(box: Text, point: Point) {
     const bb = getBbox(box);
-    const intersection = boxToSegmentIntersection(
-      { x: bb[0], y: bb[1], width: bb[2] - bb[0], height: bb[3] - bb[1] },
-      angle,
-      point
+    const { sin, cos } = this.store.getState();
+    const intersection = boxRayIntersection(
+      bb[0],
+      bb[1],
+      bb[2] - bb[0],
+      bb[3] - bb[1],
+      point.x,
+      point.y,
+      sin,
+      cos
     );
-    if (intersection) {
-      return [intersection.x, intersection.y];
-    }
+    if (intersection) return [intersection.x, intersection.y];
     return [bb[0], bb[1]];
   }
 

@@ -155,70 +155,46 @@ export function rotateBoxToFit(
   return null;
 }
 
-export function boxToSegmentIntersection(
-  box: { x: number; y: number; width: number; height: number },
-  angle: number,
-  point: Point
+export function boxRayIntersection(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  px: number,
+  py: number,
+  sin: number,
+  cos: number
 ) {
-  const cos = Math.cos(angle);
-  const sin = Math.sin(angle);
+  // Calculate center of the unrotated box
+  const cx = x + width / 2;
+  const cy = y + height / 2;
 
-  const tl = { x: box.x, y: box.y };
-  const br = {
-    x: box.x + box.width * cos - box.height * sin,
-    y: box.y + box.width * sin + box.height * cos
-  };
-  const tr = { x: br.x + box.height * sin, y: br.y - box.height * cos };
-  const bl = { x: tl.x - box.height * sin, y: tl.y + box.height * cos };
-  const center = {
-    x: (tl.x + br.x) / 2,
-    y: (tl.y + br.y) / 2
-  };
+  // Rotate corners around the center
+  const hw = width / 2;
+  const hh = height / 2;
+
+  const tlX = cx + (-hw * cos - -hh * sin);
+  const tlY = cy + (-hw * sin + -hh * cos);
+
+  const trX = cx + (hw * cos - -hh * sin);
+  const trY = cy + (hw * sin + -hh * cos);
+
+  const brX = cx + (hw * cos - hh * sin);
+  const brY = cy + (hw * sin + hh * cos);
+
+  const blX = cx + (-hw * cos - hh * sin);
+  const blY = cy + (-hw * sin + hh * cos);
+
+  const segmentIntersection = geometry.segmentIntersection;
 
   let intersects: Point | null = null;
-  intersects = geometry.segmentIntersection(
-    point.x,
-    point.y,
-    center.x,
-    center.y,
-    tl.x,
-    tl.y,
-    tr.x,
-    tr.y
-  );
+  intersects = segmentIntersection(px, py, cx, cy, tlX, tlY, trX, trY);
   if (intersects) return intersects;
-  intersects = geometry.segmentIntersection(
-    point.x,
-    point.y,
-    center.x,
-    center.y,
-    tr.x,
-    tr.y,
-    br.x,
-    br.y
-  );
+  intersects = segmentIntersection(px, py, cx, cy, trX, trY, brX, brY);
   if (intersects) return intersects;
-  intersects = geometry.segmentIntersection(
-    point.x,
-    point.y,
-    center.x,
-    center.y,
-    br.x,
-    br.y,
-    bl.x,
-    bl.y
-  );
+  intersects = segmentIntersection(px, py, cx, cy, brX, brY, blX, blY);
   if (intersects) return intersects;
-  intersects = geometry.segmentIntersection(
-    point.x,
-    point.y,
-    center.x,
-    center.y,
-    bl.x,
-    bl.y,
-    tl.x,
-    tl.y
-  );
+  intersects = segmentIntersection(px, py, cx, cy, blX, blY, tlX, tlY);
   if (intersects) return intersects;
   return null;
 }

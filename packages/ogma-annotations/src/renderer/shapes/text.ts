@@ -2,7 +2,7 @@ import Textbox from "@borgar/textbox";
 import { renderBox } from "./box";
 import { AnnotationState } from "../../store";
 import { Box, Text, defaultTextStyle } from "../../types";
-import { getBoxPosition, getTextSize } from "../../utils";
+import { getBoxCenter, getTextSize } from "../../utils";
 
 export function renderText(
   root: SVGElement,
@@ -11,7 +11,6 @@ export function renderText(
   state: AnnotationState
 ) {
   const { width, height } = getTextSize(annotation);
-  //const position = getBoxPosition(annotation);
 
   // TODO: edited element is rendered in DOM
   //if (id === this.selectedId) continue;
@@ -57,7 +56,7 @@ export function renderText(
 
   rect.setAttribute("width", `${width}`);
   rect.setAttribute("height", `${height}`);
-  const position = getBoxPosition(annotation);
+  const position = getBoxCenter(annotation);
   rect.setAttribute("x", `${x}`);
   rect.setAttribute("y", `${y}`);
 
@@ -66,11 +65,7 @@ export function renderText(
   // get the SVG transform matrix to rotate the box around its center:
   g.setAttribute(
     "transform",
-    state.getScreenAlignedTransform(
-      position.x + width / 2,
-      position.y + height / 2,
-      true
-    )
+    state.getScreenAlignedTransform(position.x, position.y, true)
   );
 
   root.appendChild(g);
