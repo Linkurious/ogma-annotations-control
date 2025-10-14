@@ -36,6 +36,10 @@ export function renderText(
   // rect is used for background and stroke
   const rect = g.firstChild as SVGRectElement;
 
+  // we use the center of the box as the rotation point
+  const x = -width / 2;
+  const y = -height / 2;
+
   if (borderRadius) {
     rect.setAttribute("rx", `${borderRadius}`);
     rect.setAttribute("ry", `${borderRadius}`);
@@ -46,16 +50,18 @@ export function renderText(
     rect.setAttribute("stroke-width", `${strokeWidth}`);
     if (strokeType === "dashed") rect.setAttribute("stroke-dasharray", `5,5`);
   }
+
   if (background && background.length) {
     rect.setAttribute("fill", background || "transparent");
   }
+
   rect.setAttribute("width", `${width}`);
   rect.setAttribute("height", `${height}`);
   const position = getBoxPosition(annotation);
-  rect.setAttribute("x", `${-width / 2}`);
-  rect.setAttribute("y", `${-height / 2}`);
+  rect.setAttribute("x", `${x}`);
+  rect.setAttribute("y", `${y}`);
 
-  drawContent(annotation, g);
+  drawContent(annotation, g, x, y);
 
   // get the SVG transform matrix to rotate the box around its center:
   g.setAttribute(
@@ -79,7 +85,12 @@ const getText = (e: Element) => e.children[0].innerHTML;
  * @param annotation the annotation to draw
  * @param g the group in which the text should be drawn
  */
-function drawContent(annotation: Text, parent: SVGGElement) {
+function drawContent(
+  annotation: Text,
+  parent: SVGGElement,
+  x: number = 0,
+  y: number = 0
+) {
   // make sure text does not overflow
   const { width, height } = getTextSize(annotation);
   const {
@@ -156,10 +167,7 @@ function drawContent(annotation: Text, parent: SVGGElement) {
     });
   });
 
-  text.setAttribute(
-    "transform",
-    `translate(${-width / 2 + padding}, ${-height / 2 + padding})`
-  );
+  text.setAttribute("transform", `translate(${x + padding}, ${y + padding})`);
 
   parent.appendChild(text);
 }
