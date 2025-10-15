@@ -12,6 +12,7 @@ import type {
   Text,
   Annotation
 } from "./types";
+import { isBox } from "./types";
 import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
 import { add, mul, subtract } from "./vec";
 
@@ -292,7 +293,7 @@ export class Links {
           );
         } else {
           const box = state.getFeature(start.target) as Text;
-          startPoint = this._getBoxSnapPoint(box, endCenter);
+          startPoint = this._getBoxSnapPoint(box, endCenter, start);
         }
       }
       if (end) {
@@ -304,7 +305,7 @@ export class Links {
           );
         } else {
           const box = state.getFeature(end.target) as Text;
-          endPoint = this._getBoxSnapPoint(box, startCenter);
+          endPoint = this._getBoxSnapPoint(box, startCenter, end);
         }
       }
       state.applyLiveUpdate(arrow.id, {
@@ -353,27 +354,30 @@ export class Links {
     return link.magnet.x === 0 && link.magnet.y === 0;
   }
 
-  private _getBoxSnapPoint(box: Text, point: Point) {
+  private _getBoxSnapPoint(box: Text, point: Point, link: Link) {
     const center = getBoxCenter(box);
     const { width, height } = getBoxSize(box);
-    const { sin, cos } = this.store.getState();
 
-    // boxRayIntersection expects top-left x, y, width, height
-    const x = center.x - width / 2;
-    const y = center.y - height / 2;
+    // Magnet is in center-relative coordinates
+    let offsetX = link.magnet.x * width;
+    let offsetY = link.magnet.y * height;
 
-    const intersection = boxRayIntersection(
-      x,
-      y,
-      width,
-      height,
-      point.x,
-      point.y,
-      sin,
-      cos
-    );
-    if (intersection) return [intersection.x, intersection.y];
-    return [x, y];
+    // Texts are counter-rotated, boxes are not
+    if (!isBox(box)) {
+      const { sin, cos } = this.store.getState();
+      // Rotate the offset by the current rotation
+      const rotatedX = offsetX * cos - offsetY * sin;
+      const rotatedY = offsetX * sin + offsetY * cos;
+      offsetX = rotatedX;
+      offsetY = rotatedY;
+    }
+
+    const endpoint = {
+      x: center.x + offsetX,
+      y: center.y + offsetY
+    };
+
+    return [endpoint.x, endpoint.y];
   }
 
   private _getNodeSnapPoint(

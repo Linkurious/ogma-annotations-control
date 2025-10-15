@@ -101,7 +101,7 @@ export abstract class Handler<
   protected abstract onDrag(evt: ClientMouseEvent): void;
 
   protected onDragStart(_evt: ClientMouseEvent) {
-    if (!this.isActive() || this.isDragging) return false;
+    if (!this.isActive()) return false;
     this.isDragging = true;
     this.draggingWasEnabled =
       this.ogma.getOptions().interactions?.drag?.enabled ?? true;
@@ -110,9 +110,9 @@ export abstract class Handler<
   }
 
   protected onDragEnd(_evt: ClientMouseEvent) {
-    if (!this.isActive() || !this.isDragging) return false;
+    if (!this.isActive()) return false;
     this.ogma.setOptions({
-      interactions: { drag: { enabled: this.draggingWasEnabled } }
+      interactions: { drag: { enabled: true } }
     });
     this.isDragging = false;
     return true;

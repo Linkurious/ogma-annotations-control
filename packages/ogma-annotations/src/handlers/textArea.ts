@@ -118,7 +118,7 @@ export class TextArea {
 
   private onBlur = () => {
     // apply changes
-    this.updateContent();
+    if (this.getAnnotation()) this.updateContent();
     this.isFocused = false;
   };
 

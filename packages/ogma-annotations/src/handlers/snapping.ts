@@ -6,14 +6,14 @@ import { getBoxPosition, getBoxSize, getTextBbox } from "../utils";
 import { subtract, add, multiply, length, mul, dot } from "../vec";
 
 const MAGNETS: Point[] = [
-  { x: 0, y: 0 },
+  { x: -0.5, y: -0.5 },
+  { x: 0, y: -0.5 },
+  { x: 0.5, y: -0.5 },
+  { x: -0.5, y: 0 },
   { x: 0.5, y: 0 },
-  { x: 1, y: 0 },
+  { x: -0.5, y: 0.5 },
   { x: 0, y: 0.5 },
-  { x: 1, y: 0.5 },
-  { x: 0, y: 1 },
-  { x: 0.5, y: 1 },
-  { x: 1, y: 1 }
+  { x: 0.5, y: 0.5 }
 ];
 const xs = { x: 1, y: 0 };
 const ys = { x: 0, y: 1 };
@@ -110,9 +110,9 @@ export class Snapping extends EventTarget {
       .search(snapWindow)
       .filter((a) => isText(a) || isBox(a)) as Text[];
     const snapToText = this._snapToText(point, texts);
-    if (snapToText) {
-      return snapToText;
-    }
+
+    if (snapToText) return snapToText;
+
     const nodes = this.ogma.view.getElementsInside(
       snapWindow.minX,
       snapWindow.minY,
@@ -127,12 +127,12 @@ export class Snapping extends EventTarget {
   private _snapToText(point: Point, texts: Text[]): TextSnap | null {
     for (const text of texts) {
       const bbox = getTextBbox(text);
-      const tl = { x: bbox[0], y: bbox[1] };
+      const center = { x: (bbox[0] + bbox[2]) / 2, y: (bbox[1] + bbox[3]) / 2 };
       const width = bbox[2] - bbox[0];
       const height = bbox[3] - bbox[1];
 
       for (const vec of MAGNETS) {
-        const magnet = add(tl, multiply(vec, { x: width, y: height }));
+        const magnet = add(center, multiply(vec, { x: width, y: height }));
         const dist = length(subtract(magnet, point));
         if (dist >= this.options.magnetRadius) continue;
         return {
@@ -228,7 +228,8 @@ export class Snapping extends EventTarget {
         x: snap.min.x + snap.axis.x * projection,
         y: snap.min.y + snap.axis.y * projection
       };
-      const magnet = multiply(subtract(snapPoint, position), {
+      const boxCenter = { x: position.x + size.width / 2, y: position.y + size.height / 2 };
+      const magnet = multiply(subtract(snapPoint, boxCenter), {
         x: 1 / size.width,
         y: 1 / size.height
       });
