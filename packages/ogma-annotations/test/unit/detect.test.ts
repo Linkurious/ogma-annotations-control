@@ -1,3 +1,4 @@
+import Ogma from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   Annotation,
@@ -7,7 +8,8 @@ import {
   isText,
   isBox,
   isArrow,
-  detectArrow
+  detectArrow,
+  Id
 } from "../../src";
 import { InteractionController as HitDetector } from "../../src/interaction/index";
 import { Index } from "../../src/interaction/spatialIndex";
@@ -17,7 +19,7 @@ import { Store } from "../../src/store";
 describe("HitDetector", () => {
   let hitDetector: HitDetector;
   let mockStore: Store;
-  let mockOgma: any;
+  let mockOgma: Ogma;
   let mockIndex: Index;
   let mockLinks: Links;
 
@@ -29,7 +31,7 @@ describe("HitDetector", () => {
       events: {
         on: vi.fn()
       }
-    };
+    } as unknown as Ogma;
 
     mockStore = {
       getState: vi.fn(() => ({
@@ -72,7 +74,7 @@ describe("HitDetector", () => {
         events: {
           on: vi.fn()
         }
-      };
+      } as unknown as Ogma;
       const testIndex = new Index(mockStore);
 
       new HitDetector(testOgma, mockStore, testIndex, mockLinks, 5);
@@ -358,11 +360,11 @@ describe("HitDetector", () => {
       });
 
       // Update mock store with new feature map
-      const featureById2 = new Map<string, Annotation>();
+      const featureById2 = new Map<Id, Annotation>();
       Object.values(features2).forEach((feature) => {
         featureById2.set(feature.id, feature);
       });
-      const getFeature = vi.fn((id: string) => featureById2.get(id));
+      const getFeature = vi.fn((id: Id) => featureById2.get(id));
       // @ts-expect-error Mocking Store
       store.getState = vi.fn(() => ({
         getFeature,
@@ -473,14 +475,14 @@ describe("HitDetector", () => {
 });
 
 function createAndFill(
-  mockOgma: any,
+  mockOgma: Ogma,
   mockStore: Store,
   mockLinks: Links,
   threshold: number,
-  mockFeatures: Record<string, Annotation> = {}
+  mockFeatures: Record<Id, Annotation> = {}
 ) {
   // Create a map from feature ID to feature for fast lookup
-  const featureById = new Map<string, Annotation>();
+  const featureById = new Map<Id, Annotation>();
   Object.values(mockFeatures).forEach((feature) => {
     featureById.set(feature.id, feature);
   });
