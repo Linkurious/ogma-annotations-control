@@ -1,7 +1,6 @@
 import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
 import { SIDE_END, SIDE_START } from "./constants";
-import { boxRayIntersection } from "./geom";
 import { Store } from "./store";
 import type {
   Arrow,
@@ -354,7 +353,7 @@ export class Links {
     return link.magnet.x === 0 && link.magnet.y === 0;
   }
 
-  private _getBoxSnapPoint(box: Text, point: Point, link: Link) {
+  private _getBoxSnapPoint(box: Text, _point: Point, link: Link) {
     const center = getBoxCenter(box);
     const { width, height } = getBoxSize(box);
 

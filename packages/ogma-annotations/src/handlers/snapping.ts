@@ -2,7 +2,7 @@ import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Index } from "../interaction/spatialIndex";
 import { Annotation, Id, Text, isArrow, isBox, isText } from "../types";
-import { getBoxPosition, getBoxSize, getTextBbox } from "../utils";
+import { getBoxCenter, getBoxPosition, getBoxSize } from "../utils";
 import { subtract, add, multiply, length, mul, dot } from "../vec";
 
 const MAGNETS: Point[] = [
@@ -126,10 +126,8 @@ export class Snapping extends EventTarget {
 
   private _snapToText(point: Point, texts: Text[]): TextSnap | null {
     for (const text of texts) {
-      const bbox = getTextBbox(text);
-      const center = { x: (bbox[0] + bbox[2]) / 2, y: (bbox[1] + bbox[3]) / 2 };
-      const width = bbox[2] - bbox[0];
-      const height = bbox[3] - bbox[1];
+      const center = getBoxCenter(text);
+      const { width, height } = getBoxSize(text);
 
       for (const vec of MAGNETS) {
         const magnet = add(center, multiply(vec, { x: width, y: height }));
@@ -143,12 +141,10 @@ export class Snapping extends EventTarget {
         };
       }
 
-      const size = getBoxSize(text);
       const position = getBoxPosition(text);
       const magnetRadius = this.options.magnetRadius;
       let snap:
         | {
-            edge: string;
             min: { x: number; y: number };
             max: { x: number; y: number };
             axis: { x: number; y: number };
@@ -158,7 +154,7 @@ export class Snapping extends EventTarget {
 
       // Check top edge
       let min = { x: position.x, y: position.y };
-      let max = { x: position.x + size.width, y: position.y };
+      let max = { x: position.x + width, y: position.y };
       let norm = ys;
       let dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
       if (
@@ -168,11 +164,11 @@ export class Snapping extends EventTarget {
         point.y >= min.y - magnetRadius &&
         point.y <= max.y + magnetRadius
       ) {
-        snap = { edge: "top", min, max, axis: xs, norm };
+        snap = { min, max, axis: xs, norm };
       } else {
         // Check right edge
-        min = { x: position.x + size.width, y: position.y };
-        max = { x: position.x + size.width, y: position.y + size.height };
+        min = { x: position.x + width, y: position.y };
+        max = { x: position.x + width, y: position.y + height };
         norm = xs;
         dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
         if (
@@ -182,11 +178,11 @@ export class Snapping extends EventTarget {
           point.y >= min.y - magnetRadius &&
           point.y <= max.y + magnetRadius
         ) {
-          snap = { edge: "right", min, max, axis: ys, norm };
+          snap = { min, max, axis: ys, norm };
         } else {
           // Check bottom edge
-          min = { x: position.x, y: position.y + size.height };
-          max = { x: position.x + size.width, y: position.y + size.height };
+          min = { x: position.x, y: position.y + height };
+          max = { x: position.x + width, y: position.y + height };
           norm = ys;
           dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
           if (
@@ -196,11 +192,11 @@ export class Snapping extends EventTarget {
             point.y >= min.y - magnetRadius &&
             point.y <= max.y + magnetRadius
           ) {
-            snap = { edge: "bottom", min, max, axis: xs, norm };
+            snap = { min, max, axis: xs, norm };
           } else {
             // Check left edge
             min = { x: position.x, y: position.y };
-            max = { x: position.x, y: position.y + size.height };
+            max = { x: position.x, y: position.y + height };
             norm = xs;
             dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
             if (
@@ -210,7 +206,7 @@ export class Snapping extends EventTarget {
               point.y >= min.y - magnetRadius &&
               point.y <= max.y + magnetRadius
             ) {
-              snap = { edge: "left", min, max, axis: ys, norm };
+              snap = { min, max, axis: ys, norm };
             }
           }
         }
@@ -228,10 +224,13 @@ export class Snapping extends EventTarget {
         x: snap.min.x + snap.axis.x * projection,
         y: snap.min.y + snap.axis.y * projection
       };
-      const boxCenter = { x: position.x + size.width / 2, y: position.y + size.height / 2 };
+      const boxCenter = {
+        x: position.x + width / 2,
+        y: position.y + height / 2
+      };
       const magnet = multiply(subtract(snapPoint, boxCenter), {
-        x: 1 / size.width,
-        y: 1 / size.height
+        x: 1 / width,
+        y: 1 / height
       });
       return {
         point: snapPoint,

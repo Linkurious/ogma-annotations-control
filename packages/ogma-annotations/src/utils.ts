@@ -362,10 +362,9 @@ export function migrateBoxOrTextIfNeeded<T extends Annotation>(
 ): T {
   // Only migrate Box or Text annotations with Polygon geometry
   if (
-    isBox(annotation) ||
-    (isText(annotation) &&
-      (annotation.geometry as unknown as Polygon | GeoJSONPoint).type ===
-        "Polygon")
+    (isBox(annotation) || isText(annotation)) &&
+    (annotation.geometry as unknown as Polygon | GeoJSONPoint).type ===
+      "Polygon"
   ) {
     const coords = (annotation.geometry as unknown as Polygon).coordinates[0];
     const x0 = coords[0][0];
