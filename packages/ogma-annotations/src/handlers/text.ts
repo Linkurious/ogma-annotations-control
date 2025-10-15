@@ -253,70 +253,127 @@ export class TextHandler extends Handler<Text, Handle> {
     const isRight = cornerIndex === 1 || cornerIndex === 2;
     const isBottom = cornerIndex === 2 || cornerIndex === 3;
 
-    let { x, y } = getBoxPosition(original);
-    let { width, height } = getBoxSize(original);
+    const { x, y } = getBoxPosition(original);
+    const { width, height } = getBoxSize(original);
 
-    // Resizing the box by dragging one of the corners
-    if (isLeft && isTop) {
-      x += delta.x;
-      y += delta.y;
-      width -= delta.x;
-      height -= delta.y;
-    } else if (isRight && isBottom) {
-      width += delta.x;
-      height += delta.y;
-    } else if (isLeft && isBottom) {
-      x += delta.x;
-      width -= delta.x;
-      height += delta.y;
-    } else if (isRight && isTop) {
-      y += delta.y;
-      width += delta.x;
-      height -= delta.y;
+    // Get rotation from store for counter-rotation
+    const state = this.store.getState();
+    const { revSin: sin, revCos: cos } = state;
+
+    // Transform delta to box's local (screen-aligned) coordinate system
+    // This accounts for the counter-rotation applied to keep text screen-aligned
+    const localDeltaX = delta.x * cos - delta.y * sin;
+    const localDeltaY = delta.x * sin + delta.y * cos;
+
+    // Current center position
+    const centerX = x + width / 2;
+    const centerY = y + height / 2;
+
+    // Calculate new dimensions in local space
+    // When dragging a corner, the box grows/shrinks in both directions from center
+    let desiredDeltaWidth = 0;
+    let desiredDeltaHeight = 0;
+
+    if (isLeft) {
+      desiredDeltaWidth = -localDeltaX; // Moving left corner left increases width
+    } else if (isRight) {
+      desiredDeltaWidth = localDeltaX; // Moving right corner right increases width
     }
+
+    if (isTop) {
+      desiredDeltaHeight = -localDeltaY; // Moving top corner up increases height
+    } else if (isBottom) {
+      desiredDeltaHeight = localDeltaY; // Moving bottom corner down increases height
+    }
+
+    // New dimensions with minimum size constraint
+    const newWidth = Math.max(0, width + desiredDeltaWidth);
+    const newHeight = Math.max(0, height + desiredDeltaHeight);
+
+    // ACTUAL size change after applying constraints
+    const actualDeltaWidth = newWidth - width;
+    const actualDeltaHeight = newHeight - height;
+
+    // Center translation to keep opposite corner pinned
+    // Center moves by half the ACTUAL size change
+    const centerDeltaX = isLeft ? -actualDeltaWidth / 2 : actualDeltaWidth / 2;
+    const centerDeltaY = isTop ? -actualDeltaHeight / 2 : actualDeltaHeight / 2;
+
+    const newCenterX = centerX + centerDeltaX;
+    const newCenterY = centerY + centerDeltaY;
+
+    // Calculate new top-left corner from center
+    const newX = newCenterX - newWidth / 2;
+    const newY = newCenterY - newHeight / 2;
+
+    const oppositeCornerX = isLeft ? x + width : x;
+    const oppositeCornerY = isTop ? y + height : y;
+
+    // rotate new corner back to original orientation
+    const rotatedCorner = {
+      x: oppositeCornerX * cos - oppositeCornerY * sin,
+      y: oppositeCornerX * sin + oppositeCornerY * cos
+    };
+    console.log(this.ogma.view.graphToScreenCoordinates(rotatedCorner));
+    // Sanity check: ensure corner being dragged does not cross opposite corner
+
     return {
       type: original.geometry.type,
       coordinates: [
         [
-          [x, y],
-          [x + width, y],
-          [x + width, y + height],
-          [x, y + height],
-          [x, y]
+          [newX, newY],
+          [newX + newWidth, newY],
+          [newX + newWidth, newY + newHeight],
+          [newX, newY + newHeight],
+          [newX, newY]
         ]
       ]
     };
   }
 
   private dragEdge(original: Text, delta: Point, handle: Handle) {
-    let { x, y } = getBoxPosition(original);
-    let { width, height } = getBoxSize(original);
+    const { x, y } = getBoxPosition(original);
+    const { width, height } = getBoxSize(original);
+
+    // Get rotation from store for counter-rotation
+    const state = this.store.getState();
+    const { revSin: sin, revCos: cos } = state;
+
+    // Transform delta to box's local (screen-aligned) coordinate system
+    const localDeltaX = delta.x * cos - delta.y * sin;
+    const localDeltaY = delta.x * sin + delta.y * cos;
+
+    let newX = x;
+    let newY = y;
+    let newWidth = width;
+    let newHeight = height;
 
     switch (handle.edge) {
       case EdgeType.TOP:
-        y += delta.y;
-        height = Math.max(0, height - delta.y);
+        newY = y + localDeltaY;
+        newHeight = Math.max(10, height - localDeltaY);
         break;
       case EdgeType.BOTTOM:
-        height = Math.max(0, height + delta.y);
+        newHeight = Math.max(10, height + localDeltaY);
         break;
       case EdgeType.LEFT:
-        x += delta.x;
-        width = Math.max(0, width - delta.x);
+        newX = x + localDeltaX;
+        newWidth = Math.max(10, width - localDeltaX);
         break;
       case EdgeType.RIGHT:
-        width = Math.max(0, width + delta.x);
+        newWidth = Math.max(10, width + localDeltaX);
         break;
     }
+
     return {
       type: original.geometry.type,
       coordinates: [
         [
-          [x, y],
-          [x + width, y],
-          [x + width, y + height],
-          [x, y + height],
-          [x, y]
+          [newX, newY],
+          [newX + newWidth, newY],
+          [newX + newWidth, newY + newHeight],
+          [newX, newY + newHeight],
+          [newX, newY]
         ]
       ]
     };
