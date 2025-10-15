@@ -66,10 +66,10 @@ addArrows.addEventListener("click", () => {
       head: "arrow"
     });
     control.startArrow(x, y, arrow);
-    control.once(EVT_DRAG_END, (a) => {
-      if (a.id !== arrow.id) return;
-      addArrows.disabled = false;
-    });
+    // control.once(EVT_DRAG_END, (a) => {
+    //   if (a.id !== arrow.id) return;
+    //   addArrows.disabled = false;
+    // });
   });
 });
 const addTexts = document.getElementById("add-text")! as HTMLButtonElement;

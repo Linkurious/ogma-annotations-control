@@ -18,14 +18,14 @@ const HALO_OPACITY = 0.5;
  * @param arrow The arrow to measure
  * @returns The height of the bounding box of the arrow
  */
-export function getArrowHeight(arrow: Arrow, min = 5, max = 30): number {
+export function getArrowHeight(arrow: Arrow, min = 2, max = 30): number {
   const { start, end } = getArrowEndPoints(arrow);
   const vec = subtract(end, start);
   const strokeW =
     arrow.properties.style && arrow.properties.style.strokeWidth
       ? arrow.properties.style?.strokeWidth
       : 0;
-  return Math.min(max, Math.max(3 * strokeW, length(vec) * 0.01, min));
+  return Math.min(max, Math.max(2 * strokeW, length(vec) * 0.01, min));
 }
 
 /**
@@ -43,8 +43,8 @@ function drawExt(
 ): string {
   const delta = mul(invert(normalize(vec)), height);
   if (!type || (type !== "arrow" && type !== "arrow-plain")) return "";
-  const p1 = add(point, rotateRadians(delta, Math.PI / 10));
-  const p2 = add(point, rotateRadians(delta, -Math.PI / 10));
+  const p1 = add(point, rotateRadians(delta, Math.PI / 6));
+  const p2 = add(point, rotateRadians(delta, -Math.PI / 6));
 
   const pt = `${point.x} ${point.y}`;
   return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${

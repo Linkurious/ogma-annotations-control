@@ -11,8 +11,10 @@ import { store } from "./store";
 import {
   Annotation,
   AnnotationCollection,
+  Arrow,
   ControllerOptions,
   FeatureEvents,
+  createArrow,
   isAnnotationCollection
 } from "./types";
 import { migrateBoxOrTextIfNeeded } from "./utils";
@@ -172,11 +174,57 @@ export class Control extends EventEmitter<FeatureEvents> {
     };
   }
 
+  public select(annotations: Id | Id[]): this {
+    const ids = Array.isArray(annotations) ? annotations : [annotations];
+    this.store.getState().setSelectedFeatures(ids);
+    return this;
+  }
+
+  public deselect(): this {
+    this.store.getState().setSelectedFeatures([]);
+    return this;
+  }
+
   public cancelDrawing() {}
 
   public startComment(_x: number, _y: number, _text: Annotation) {}
   public startBox(_x: number, _y: number, _box: Annotation) {}
-  public startArrow(_x: number, _y: number, _arrow: Annotation) {}
+  public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
+    // Add the arrow annotation
+
+    this.add(arrow);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(arrow.id);
+    // Select and start editing it
+    //this.editor.editFeature(arrow.id);
+
+    // Get the arrow handler
+    const handler = this.editor.getActiveHandler();
+    if (!handler) return;
+
+    // Set up the handler state to simulate dragging the end point
+    // @ts-expect-error - accessing private properties
+    handler.hoveredHandle = {
+      type: "start",
+      point: { x, y }
+    };
+    // @ts-expect-error - accessing private properties
+    handler.dragging = true;
+    // @ts-expect-error - accessing private properties
+    handler.dragStartPoint = { x, y };
+
+    // Start live update
+    this.store.getState().startLiveUpdate([arrow.id]);
+
+    // Disable ogma panning
+    // @ts-expect-error - accessing private properties
+    handler.ogmaPanningOption = Boolean(
+      this.ogma.getOptions().interactions?.pan?.enabled
+    );
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: false } }
+    });
+  }
   public startText(_x: number, _y: number, _text: Annotation) {}
 
   public getSelectedAnnotations(): AnnotationCollection {
