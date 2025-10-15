@@ -73,8 +73,7 @@ export function getBoxPosition<T extends Annotation>(t: T) {
 export function getBoxCenter<T extends Annotation>(t: T) {
   // For Point geometry (Box/Text), return coordinates directly
   if (t.geometry.type === "Point") {
-    const [x, y] = t.geometry.coordinates as [number, number];
-    return { x, y };
+    return { x: t.geometry.coordinates[0], y: t.geometry.coordinates[1] };
   }
   // Fallback for other types
   const bbox = getBbox(t);

@@ -211,8 +211,8 @@ export class TextHandler extends Handler<Text, Handle> {
       // Apply live update to store instead of direct mutation
       this.store.getState().applyLiveUpdate(annotation.id, update);
       const displacement = subtract(
-        getBoxPosition(update),
-        getBoxPosition(original)
+        getBoxCenter(update),
+        getBoxCenter(original)
       );
       this.links.updateLinkedArrowsDuringDrag(annotation.id, displacement);
       if (this.textEditor) this.textEditor.update();

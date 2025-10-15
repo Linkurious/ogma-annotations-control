@@ -103,7 +103,8 @@ export class TextArea {
     textAreaStyle.color = color || "black";
     textAreaStyle.background = background || "transparent";
 
-    textAreaStyle.transformOrigin = "top left";
+    // transform origin at center
+    textAreaStyle.transformOrigin = "center";
     textAreaStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
   }
 
