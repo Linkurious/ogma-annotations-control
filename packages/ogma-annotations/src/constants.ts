@@ -40,5 +40,13 @@ export const cursors: Record<string, Cursor> = {
   ewResize: "ew-resize",
   nsResize: "ns-resize",
   neswResize: "nesw-resize",
-  nwseResize: "nwse-resize"
+  nwseResize: "nwse-resize",
+  nwResize: "nw-resize",
+  neResize: "ne-resize",
+  swResize: "sw-resize",
+  seResize: "se-resize",
+  nResize: "n-resize",
+  eResize: "e-resize",
+  sResize: "s-resize",
+  wResize: "w-resize"
 };
