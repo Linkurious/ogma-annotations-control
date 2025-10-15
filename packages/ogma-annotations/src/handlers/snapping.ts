@@ -1,9 +1,10 @@
 import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Index } from "../interaction/spatialIndex";
+import { Store } from "../store";
 import { Annotation, Id, Text, isArrow, isBox, isText } from "../types";
-import { getBoxCenter, getBoxPosition, getBoxSize } from "../utils";
-import { subtract, add, multiply, length, mul, dot } from "../vec";
+import { getBoxCenter, getBoxSize } from "../utils";
+import { subtract, add, length, mul, dot } from "../vec";
 
 const MAGNETS: Point[] = [
   { x: -0.5, y: -0.5 },
@@ -15,8 +16,38 @@ const MAGNETS: Point[] = [
   { x: 0, y: 0.5 },
   { x: 0.5, y: 0.5 }
 ];
-const xs = { x: 1, y: 0 };
-const ys = { x: 0, y: 1 };
+
+// Edge definitions in normalized coordinates: [x1, y1, x2, y2]
+// Edges are: top, right, bottom, left
+const EDGE_DEFS = [
+  [-0.5, -0.5, 0.5, -0.5], // top
+  [0.5, -0.5, 0.5, 0.5], // right
+  [0.5, 0.5, -0.5, 0.5], // bottom
+  [-0.5, 0.5, -0.5, -0.5] // left
+] as const;
+
+// Transform local corner to world coordinates
+function toWorld(
+  lx: number,
+  ly: number,
+  centerX: number,
+  centerY: number,
+  width: number,
+  height: number,
+  cos: number,
+  sin: number,
+  isRotated: boolean
+): Point {
+  const x = lx * width;
+  const y = ly * height;
+  if (isRotated) {
+    return {
+      x: centerX + (x * cos - y * sin),
+      y: centerY + (x * sin + y * cos)
+    };
+  }
+  return { x: centerX + x, y: centerY + y };
+}
 
 export type TextSnap = {
   point: Point;
@@ -83,12 +114,19 @@ export class Snapping extends EventTarget {
   private options: SnappingOptions;
   private spatialIndex: Index;
   private hoveredNode: Node | null = null;
+  private store: Store;
 
-  constructor(ogma: Ogma, options: SnappingOptions, spatialIndex: Index) {
+  constructor(
+    ogma: Ogma,
+    options: SnappingOptions,
+    spatialIndex: Index,
+    store: Store
+  ) {
     super();
     this.ogma = ogma;
     this.options = options;
     this.spatialIndex = spatialIndex;
+    this.store = store;
   }
 
   public snap(annotation: Annotation, position: Point) {
@@ -136,13 +174,27 @@ export class Snapping extends EventTarget {
   private _snapToMagnetPoints(point: Point, text: Text): TextSnap | null {
     const center = getBoxCenter(text);
     const { width, height } = getBoxSize(text);
+    const { sin, cos } = this.store.getState();
 
     for (const vec of MAGNETS) {
-      const magnet = add(center, multiply(vec, { x: width, y: height }));
-      const dist = length(subtract(magnet, point));
+      // Calculate offset in local (box) coordinates
+      let offsetX = vec.x * width;
+      let offsetY = vec.y * height;
+
+      // For texts (counter-rotated), rotate the offset to world coordinates
+      if (!isBox(text)) {
+        // Rotate the offset by the current rotation
+        const rotatedX = offsetX * cos - offsetY * sin;
+        const rotatedY = offsetX * sin + offsetY * cos;
+        offsetX = rotatedX;
+        offsetY = rotatedY;
+      }
+
+      const magnetPoint = { x: center.x + offsetX, y: center.y + offsetY };
+      const dist = length(subtract(magnetPoint, point));
       if (dist >= this.options.magnetRadius) continue;
       return {
-        point: { x: magnet.x, y: magnet.y },
+        point: { x: magnetPoint.x, y: magnetPoint.y },
         type: "text" as const,
         magnet: vec,
         id: text.id
@@ -152,102 +204,50 @@ export class Snapping extends EventTarget {
   }
 
   private _snapToEdge(point: Point, text: Text): TextSnap | null {
-    const center = getBoxCenter(text);
+    const { x, y } = getBoxCenter(text);
     const { width, height } = getBoxSize(text);
-    const position = getBoxPosition(text);
     const magnetRadius = this.options.magnetRadius;
 
-    let snap:
-      | {
-          min: { x: number; y: number };
-          max: { x: number; y: number };
-          axis: { x: number; y: number };
-          norm: { x: number; y: number };
-        }
-      | undefined;
+    const { sin, cos } = this.store.getState();
+    const isRotated = !isBox(text);
 
-    // Check top edge
-    let min = { x: position.x, y: position.y };
-    let max = { x: position.x + width, y: position.y };
-    let norm = ys;
-    let dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
-    if (
-      Math.abs(dist) < magnetRadius &&
-      point.x >= min.x - magnetRadius &&
-      point.x <= max.x + magnetRadius &&
-      point.y >= min.y - magnetRadius &&
-      point.y <= max.y + magnetRadius
-    ) {
-      snap = { min, max, axis: xs, norm };
-    } else {
-      // Check right edge
-      min = { x: position.x + width, y: position.y };
-      max = { x: position.x + width, y: position.y + height };
-      norm = xs;
-      dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
-      if (
-        Math.abs(dist) < magnetRadius &&
-        point.x >= min.x - magnetRadius &&
-        point.x <= max.x + magnetRadius &&
-        point.y >= min.y - magnetRadius &&
-        point.y <= max.y + magnetRadius
-      ) {
-        snap = { min, max, axis: ys, norm };
-      } else {
-        // Check bottom edge
-        min = { x: position.x, y: position.y + height };
-        max = { x: position.x + width, y: position.y + height };
-        norm = ys;
-        dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
-        if (
-          Math.abs(dist) < magnetRadius &&
-          point.x >= min.x - magnetRadius &&
-          point.x <= max.x + magnetRadius &&
-          point.y >= min.y - magnetRadius &&
-          point.y <= max.y + magnetRadius
-        ) {
-          snap = { min, max, axis: xs, norm };
-        } else {
-          // Check left edge
-          min = { x: position.x, y: position.y };
-          max = { x: position.x, y: position.y + height };
-          norm = xs;
-          dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
-          if (
-            Math.abs(dist) < magnetRadius &&
-            point.x >= min.x - magnetRadius &&
-            point.x <= max.x + magnetRadius &&
-            point.y >= min.y - magnetRadius &&
-            point.y <= max.y + magnetRadius
-          ) {
-            snap = { min, max, axis: ys, norm };
-          }
+    for (let i = 0; i < 4; i++) {
+      const [lx1, ly1, lx2, ly2] = EDGE_DEFS[i];
+      const p1 = toWorld(lx1, ly1, x, y, width, height, cos, sin, isRotated);
+      const p2 = toWorld(lx2, ly2, x, y, width, height, cos, sin, isRotated);
+
+      const edgeVec = subtract(p2, p1);
+      const edgeLength = length(edgeVec);
+      const edgeDir = { x: edgeVec.x / edgeLength, y: edgeVec.y / edgeLength };
+      const edgeNorm = { x: -edgeDir.y, y: edgeDir.x };
+
+      const toPoint = subtract(point, p1);
+      const dist = dot(edgeNorm, toPoint);
+
+      if (Math.abs(dist) < magnetRadius) {
+        const projection = dot(edgeDir, toPoint);
+
+        if (projection >= 0 && projection <= edgeLength) {
+          // Interpolate local magnet position
+          const t = projection / edgeLength;
+
+          return {
+            point: {
+              x: p1.x + edgeDir.x * projection,
+              y: p1.y + edgeDir.y * projection
+            },
+            magnet: {
+              x: lx1 + (lx2 - lx1) * t,
+              y: ly1 + (ly2 - ly1) * t
+            },
+            type: "text" as const,
+            id: text.id
+          };
         }
       }
     }
 
-    if (!snap) return null;
-
-    const projection = dot(snap.axis, {
-      x: point.x - snap.min.x,
-      y: point.y - snap.min.y
-    });
-    if (projection < 0 || projection > length(subtract(snap.max, snap.min)))
-      return null;
-    const snapPoint = {
-      x: snap.min.x + snap.axis.x * projection,
-      y: snap.min.y + snap.axis.y * projection
-    };
-    const magnet = multiply(subtract(snapPoint, center), {
-      x: 1 / width,
-      y: 1 / height
-    });
-    return {
-      point: snapPoint,
-      magnet,
-      type: "text" as const,
-      id: text.id
-    };
+    return null;
   }
 
   private _snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {

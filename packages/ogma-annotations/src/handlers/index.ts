@@ -32,7 +32,8 @@ export class AnnotationEditor extends EventTarget {
     this.snapping = new Snapping(
       ogma,
       { detectMargin: 10, magnetRadius: 10 },
-      index
+      index,
+      store
     );
     this.handlers.set("box", new TextHandler(this.ogma, this.store, links));
     this.handlers.set("text", new TextHandler(this.ogma, this.store, links));
