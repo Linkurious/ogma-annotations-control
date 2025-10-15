@@ -15,6 +15,7 @@ export abstract class Handler<
   protected ogmaPanningOption: boolean = false;
   protected store: Store;
   protected draggingWasEnabled: boolean = true;
+  protected isDragging = false;
 
   constructor(ogma: Ogma, store: Store) {
     super();
@@ -100,7 +101,8 @@ export abstract class Handler<
   protected abstract onDrag(evt: ClientMouseEvent): void;
 
   protected onDragStart(_evt: ClientMouseEvent) {
-    if (!this.isActive()) return false;
+    if (!this.isActive() || this.isDragging) return false;
+    this.isDragging = true;
     this.draggingWasEnabled =
       this.ogma.getOptions().interactions?.drag?.enabled ?? true;
     this.ogma.setOptions({ interactions: { drag: { enabled: false } } });
@@ -108,10 +110,11 @@ export abstract class Handler<
   }
 
   protected onDragEnd(_evt: ClientMouseEvent) {
-    if (!this.isActive()) return false;
+    if (!this.isActive() || !this.isDragging) return false;
     this.ogma.setOptions({
       interactions: { drag: { enabled: this.draggingWasEnabled } }
     });
+    this.isDragging = false;
     return true;
   }
 

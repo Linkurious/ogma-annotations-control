@@ -5,7 +5,7 @@ import { cursors, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
-import { getBoxCenter, getBoxPosition, getBoxSize } from "../utils";
+import { getBoxCenter, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
 // Constants for edge detection
@@ -192,9 +192,6 @@ export class TextHandler extends Handler<Text, Handle> {
     // Create updated geometry based on handle type
     let updatedFeature: Text | null = null;
 
-    // const newWidth = original.properties.width;
-    // const newHeight = original.properties.height;
-
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
       updatedFeature = this.dragCorner(original, delta, handle.corner);
@@ -254,7 +251,13 @@ export class TextHandler extends Handler<Text, Handle> {
     const { width, height } = getBoxSize(original);
 
     const state = this.store.getState();
-    const { revSin: sin, revCos: cos } = state;
+    let { revSin: sin, revCos: cos } = state;
+
+    // box is rotated with the view
+    if (isBox(original)) {
+      sin = 0;
+      cos = 1;
+    }
 
     const localDeltaX = delta.x * cos - delta.y * sin;
     const localDeltaY = delta.x * sin + delta.y * cos;
@@ -298,7 +301,13 @@ export class TextHandler extends Handler<Text, Handle> {
 
     // Get rotation from store for counter-rotation
     const state = this.store.getState();
-    const { revSin: sin, revCos: cos } = state;
+    let { revSin: sin, revCos: cos } = state;
+
+    // box is rotated with the view
+    if (isBox(original)) {
+      sin = 0;
+      cos = 1;
+    }
 
     // Transform delta to box's local (screen-aligned) coordinate system
     const localDeltaX = delta.x * cos - delta.y * sin;
@@ -306,27 +315,31 @@ export class TextHandler extends Handler<Text, Handle> {
 
     let newWidth = width;
     let newHeight = height;
-    let centerOffsetX = 0;
-    let centerOffsetY = 0;
+    let localCenterOffsetX = 0;
+    let localCenterOffsetY = 0;
 
     switch (handle.edge) {
       case EdgeType.TOP:
-        newHeight = Math.max(10, height - localDeltaY);
-        centerOffsetY = -(newHeight - height) / 2;
+        newHeight = Math.max(0, height - localDeltaY);
+        localCenterOffsetY = localDeltaY / 2;
         break;
       case EdgeType.BOTTOM:
-        newHeight = Math.max(10, height + localDeltaY);
-        centerOffsetY = (newHeight - height) / 2;
+        newHeight = Math.max(0, height + localDeltaY);
+        localCenterOffsetY = localDeltaY / 2;
         break;
       case EdgeType.LEFT:
-        newWidth = Math.max(10, width - localDeltaX);
-        centerOffsetX = -(newWidth - width) / 2;
+        newWidth = Math.max(0, width - localDeltaX);
+        localCenterOffsetX = localDeltaX / 2;
         break;
       case EdgeType.RIGHT:
-        newWidth = Math.max(10, width + localDeltaX);
-        centerOffsetX = (newWidth - width) / 2;
+        newWidth = Math.max(0, width + localDeltaX);
+        localCenterOffsetX = localDeltaX / 2;
         break;
     }
+
+    // Transform local center offset back to global coordinates
+    const centerOffsetX = localCenterOffsetX * cos + localCenterOffsetY * sin;
+    const centerOffsetY = -localCenterOffsetX * sin + localCenterOffsetY * cos;
 
     return {
       type: original.type,

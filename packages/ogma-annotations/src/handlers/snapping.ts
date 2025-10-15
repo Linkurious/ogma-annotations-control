@@ -1,7 +1,7 @@
 import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Index } from "../interaction/spatialIndex";
-import { Annotation, Id, Text, isArrow, isText } from "../types";
+import { Annotation, Id, Text, isArrow, isBox, isText } from "../types";
 import { getBoxPosition, getBoxSize, getTextBbox } from "../utils";
 import { subtract, add, multiply, length, mul, dot } from "../vec";
 
@@ -99,13 +99,16 @@ export class Snapping extends EventTarget {
   }
 
   private _findMagnet(point: Point) {
+    const detectMargin = this.options.detectMargin;
     const snapWindow = {
-      minX: point.x - this.options.detectMargin,
-      minY: point.y - this.options.detectMargin,
-      maxX: point.x + this.options.detectMargin,
-      maxY: point.y + this.options.detectMargin
+      minX: point.x - detectMargin,
+      minY: point.y - detectMargin,
+      maxX: point.x + detectMargin,
+      maxY: point.y + detectMargin
     };
-    const texts = this.spatialIndex.search(snapWindow).filter(isText) as Text[];
+    const texts = this.spatialIndex
+      .search(snapWindow)
+      .filter((a) => isText(a) || isBox(a)) as Text[];
     const snapToText = this._snapToText(point, texts);
     if (snapToText) {
       return snapToText;
