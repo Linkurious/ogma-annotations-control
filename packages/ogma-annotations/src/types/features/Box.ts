@@ -1,4 +1,4 @@
-import { Geometry, Polygon } from "geojson";
+import { Geometry, Point as GeoJSONPoint } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { StrokeOptions } from "./styles";
@@ -18,10 +18,14 @@ export interface BoxStyle extends StrokeOptions {
 
 export interface BoxProperties extends AnnotationProps {
   type: "box";
+  /** Width of the box */
+  width: number;
+  /** Height of the box */
+  height: number;
   style?: BoxStyle;
 }
 
-export type Box = AnnotationFeature<Polygon, BoxProperties>;
+export type Box = AnnotationFeature<GeoJSONPoint, BoxProperties>;
 
 export const isBox = (
   a: AnnotationFeature<Geometry, AnnotationProps>
@@ -58,25 +62,20 @@ export const defaultBoxStyle: BoxStyle = {
   strokeType: "plain"
 };
 
-//used when adding a new Text
+//used when adding a new Box
 export const defaultBoxOptions: Box = {
   id: undefined as unknown as string, // will be set by the editor
   type: "Feature",
   properties: {
     type: "box",
+    width: 100,
+    height: 50,
     style: { ...defaultBoxStyle }
   },
   geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [0, 0],
-        [100, 0],
-        [100, 50],
-        [0, 50],
-        [0, 0]
-      ]
-    ]
+    type: "Point",
+    coordinates: [50, 25], // center of 100x50 box
+    bbox: [0, 0, 100, 50]
   }
 };
 
@@ -91,18 +90,13 @@ export const createBox = (
   type: "Feature",
   properties: {
     type: "box",
+    width,
+    height,
     style: { ...defaultBoxStyle, ...styles }
   },
   geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [x, y],
-        [x + width, y],
-        [x + width, y + height],
-        [x, y + height],
-        [x, y]
-      ]
-    ]
+    type: "Point",
+    coordinates: [x + width / 2, y + height / 2], // center
+    bbox: [x, y, x + width, y + height]
   }
 });

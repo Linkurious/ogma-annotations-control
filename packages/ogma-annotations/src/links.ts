@@ -12,7 +12,7 @@ import type {
   Text,
   Annotation
 } from "./types";
-import { getArrowSide, getBbox, getBoxCenter, updateBbox } from "./utils";
+import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
 import { add, mul, subtract } from "./vec";
 
 type XYR = { x: number; y: number; radius: number };
@@ -354,20 +354,26 @@ export class Links {
   }
 
   private _getBoxSnapPoint(box: Text, point: Point) {
-    const bb = getBbox(box);
+    const center = getBoxCenter(box);
+    const { width, height } = getBoxSize(box);
     const { sin, cos } = this.store.getState();
+
+    // boxRayIntersection expects top-left x, y, width, height
+    const x = center.x - width / 2;
+    const y = center.y - height / 2;
+
     const intersection = boxRayIntersection(
-      bb[0],
-      bb[1],
-      bb[2] - bb[0],
-      bb[3] - bb[1],
+      x,
+      y,
+      width,
+      height,
       point.x,
       point.y,
       sin,
       cos
     );
     if (intersection) return [intersection.x, intersection.y];
-    return [bb[0], bb[1]];
+    return [x, y];
   }
 
   private _getNodeSnapPoint(

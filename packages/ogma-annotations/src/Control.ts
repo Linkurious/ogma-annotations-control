@@ -15,6 +15,7 @@ import {
   FeatureEvents,
   isAnnotationCollection
 } from "./types";
+import { migrateBoxOrTextIfNeeded } from "./utils";
 
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
@@ -114,7 +115,11 @@ export class Control extends EventEmitter<FeatureEvents> {
   public add(annotation: Annotation | AnnotationCollection): this {
     if (isAnnotationCollection(annotation)) {
       for (const feature of annotation.features) this.add(feature);
-    } else this.store.getState().addFeature(annotation);
+    } else {
+      // Migrate old Polygon format to new Point format for Box/Text
+      const migrated = migrateBoxOrTextIfNeeded(annotation);
+      this.store.getState().addFeature(migrated);
+    }
     return this;
   }
   /**

@@ -6,7 +6,8 @@ import type {
   Geometry,
   LineString,
   Polygon,
-  Position
+  Position,
+  Point as GeoJSONPoint
 } from "geojson";
 import { SIDE_START } from "./constants";
 import {
@@ -17,6 +18,8 @@ import {
   Box,
   ClientMouseEvent,
   isArrow,
+  isBox,
+  isText,
   Side,
   Text
 } from "./types";
@@ -33,6 +36,14 @@ export function getBbox<T extends Annotation>(b: T) {
 }
 
 export function getBoxSize<T extends Annotation>(t: T) {
+  // For Box and Text, read from properties
+  if ("width" in t.properties && "height" in t.properties) {
+    return {
+      width: t.properties.width as number,
+      height: t.properties.height as number
+    };
+  }
+  // Fallback for other annotation types (arrows, etc)
   const bbox = getBbox(t);
   return {
     width: bbox[2] - bbox[0],
@@ -41,10 +52,31 @@ export function getBoxSize<T extends Annotation>(t: T) {
 }
 
 export function getBoxPosition<T extends Annotation>(t: T) {
+  // For Point geometry (Box/Text), calculate from center
+  if (
+    t.geometry.type === "Point" &&
+    "width" in t.properties &&
+    "height" in t.properties
+  ) {
+    const [cx, cy] = t.geometry.coordinates as [number, number];
+    const width = t.properties.width as number;
+    const height = t.properties.height as number;
+    return {
+      x: cx - width / 2,
+      y: cy - height / 2
+    };
+  }
+  // Fallback for other annotation types
   const bbox = getBbox(t);
   return { x: bbox[0], y: bbox[1] };
 }
 export function getBoxCenter<T extends Annotation>(t: T) {
+  // For Point geometry (Box/Text), return coordinates directly
+  if (t.geometry.type === "Point") {
+    const [x, y] = t.geometry.coordinates as [number, number];
+    return { x, y };
+  }
+  // Fallback for other types
   const bbox = getBbox(t);
   return { x: (bbox[0] + bbox[2]) / 2, y: (bbox[1] + bbox[3]) / 2 };
 }
@@ -60,19 +92,16 @@ export function updateBbox<T extends Annotation>(t: T) {
       Math.max(x0, x1),
       Math.max(y0, y1)
     ];
-  } else {
-    let minX = Infinity;
-    let minY = Infinity;
-    let maxX = -Infinity;
-    let maxY = -Infinity;
-    for (const coord of t.geometry.coordinates[0]) {
-      const [x, y] = coord;
-      minX = Math.min(minX, x);
-      minY = Math.min(minY, y);
-      maxX = Math.max(maxX, x);
-      maxY = Math.max(maxY, y);
-    }
-    t.geometry.bbox = [minX, minY, maxX, maxY];
+  } else if (
+    t.geometry.type === "Point" &&
+    "width" in t.properties &&
+    "height" in t.properties
+  ) {
+    // Point geometry for Box/Text - calculate bbox from center + dimensions
+    const [cx, cy] = t.geometry.coordinates as [number, number];
+    const hw = (t.properties.width as number) / 2;
+    const hh = (t.properties.height as number) / 2;
+    t.geometry.bbox = [cx - hw, cy - hh, cx + hw, cy + hh];
   }
 }
 
@@ -83,16 +112,11 @@ export function setBbox(
   width: number,
   height: number
 ) {
+  // Update Point geometry and properties
+  t.geometry.coordinates = [x + width / 2, y + height / 2] as [number, number];
   t.geometry.bbox = [x, y, x + width, y + height];
-  t.geometry.coordinates = [
-    [
-      [x, y],
-      [x + width, y],
-      [x + width, y + height],
-      [x, y + height],
-      [x, y]
-    ]
-  ];
+  t.properties.width = width;
+  t.properties.height = height;
 }
 
 export function getArrowStart(a: Arrow) {
@@ -329,3 +353,46 @@ export {
   getBoxSize as getTextSize,
   getBoxPosition as getTextPosition
 };
+
+/**
+ * Migrates old Polygon-based Box/Text to new Point-based format
+ * Called only when annotations are added/loaded
+ */
+export function migrateBoxOrTextIfNeeded<T extends Annotation>(
+  annotation: T
+): T {
+  // Only migrate Box or Text annotations with Polygon geometry
+  if (
+    isBox(annotation) ||
+    (isText(annotation) &&
+      (annotation.geometry as unknown as Polygon | GeoJSONPoint).type ===
+        "Polygon")
+  ) {
+    const coords = (annotation.geometry as unknown as Polygon).coordinates[0];
+    const x0 = coords[0][0];
+    const y0 = coords[0][1];
+    const x1 = coords[2][0];
+    const y1 = coords[2][1];
+
+    const width = x1 - x0;
+    const height = y1 - y0;
+    const centerX = x0 + width / 2;
+    const centerY = y0 + height / 2;
+
+    return {
+      ...annotation,
+      geometry: {
+        type: "Point",
+        coordinates: [centerX, centerY],
+        bbox: [x0, y0, x1, y1]
+      },
+      properties: {
+        ...annotation.properties,
+        width,
+        height
+      }
+    } as T;
+  }
+
+  return annotation;
+}

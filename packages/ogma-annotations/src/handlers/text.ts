@@ -191,13 +191,21 @@ export class TextHandler extends Handler<Text, Handle> {
 
     // Create updated geometry based on handle type
     let updatedGeometry: Text["geometry"] | null = null;
+    let newWidth = original.properties.width;
+    let newHeight = original.properties.height;
 
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
       updatedGeometry = this.dragCorner(original, delta, handle.corner);
+      const dims = this.calculateNewDimensions(original, delta, handle.corner);
+      newWidth = dims.width;
+      newHeight = dims.height;
     } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
       updatedGeometry = this.dragEdge(original, delta, handle);
+      const dims = this.calculateEdgeDimensions(original, delta, handle);
+      newWidth = dims.width;
+      newHeight = dims.height;
     } else if (handle.type === HandleType.BODY) {
       // Body drag: move the entire box
       updatedGeometry = this.dragBody(original, delta);
@@ -206,7 +214,11 @@ export class TextHandler extends Handler<Text, Handle> {
     if (updatedGeometry) {
       const update = {
         id: annotation.id,
-        properties: annotation.properties,
+        properties: {
+          ...annotation.properties,
+          width: newWidth,
+          height: newHeight
+        },
         geometry: updatedGeometry
       } as Text;
       // Apply live update to store instead of direct mutation
@@ -231,19 +243,10 @@ export class TextHandler extends Handler<Text, Handle> {
   }
 
   private dragBody(original: Text, delta: Point) {
-    const { x, y } = getBoxPosition(original);
-    const { width, height } = getBoxSize(original);
+    const center = getBoxCenter(original);
     return {
-      type: original.geometry.type,
-      coordinates: [
-        [
-          [x + delta.x, y + delta.y],
-          [x + delta.x + width, y + delta.y],
-          [x + delta.x + width, y + delta.y + height],
-          [x + delta.x, y + delta.y + height],
-          [x + delta.x, y + delta.y]
-        ]
-      ]
+      type: "Point" as const,
+      coordinates: [center.x + delta.x, center.y + delta.y] as [number, number]
     };
   }
 
@@ -253,87 +256,57 @@ export class TextHandler extends Handler<Text, Handle> {
     const isRight = cornerIndex === 1 || cornerIndex === 2;
     const isBottom = cornerIndex === 2 || cornerIndex === 3;
 
-    const { x, y } = getBoxPosition(original);
     const { width, height } = getBoxSize(original);
+    const center = getBoxCenter(original);
 
     // Get rotation from store for counter-rotation
     const state = this.store.getState();
     const { revSin: sin, revCos: cos } = state;
 
     // Transform delta to box's local (screen-aligned) coordinate system
-    // This accounts for the counter-rotation applied to keep text screen-aligned
     const localDeltaX = delta.x * cos - delta.y * sin;
     const localDeltaY = delta.x * sin + delta.y * cos;
 
-    // Current center position
-    const centerX = x + width / 2;
-    const centerY = y + height / 2;
-
-    // Calculate new dimensions in local space
-    // When dragging a corner, the box grows/shrinks in both directions from center
+    // Calculate new dimensions
     let desiredDeltaWidth = 0;
     let desiredDeltaHeight = 0;
 
     if (isLeft) {
-      desiredDeltaWidth = -localDeltaX; // Moving left corner left increases width
+      desiredDeltaWidth = -localDeltaX;
     } else if (isRight) {
-      desiredDeltaWidth = localDeltaX; // Moving right corner right increases width
+      desiredDeltaWidth = localDeltaX;
     }
 
     if (isTop) {
-      desiredDeltaHeight = -localDeltaY; // Moving top corner up increases height
+      desiredDeltaHeight = -localDeltaY;
     } else if (isBottom) {
-      desiredDeltaHeight = localDeltaY; // Moving bottom corner down increases height
+      desiredDeltaHeight = localDeltaY;
     }
 
     // New dimensions with minimum size constraint
-    const newWidth = Math.max(0, width + desiredDeltaWidth);
-    const newHeight = Math.max(0, height + desiredDeltaHeight);
+    const newWidth = Math.max(10, width + desiredDeltaWidth);
+    const newHeight = Math.max(10, height + desiredDeltaHeight);
 
     // ACTUAL size change after applying constraints
     const actualDeltaWidth = newWidth - width;
     const actualDeltaHeight = newHeight - height;
 
     // Center translation to keep opposite corner pinned
-    // Center moves by half the ACTUAL size change
     const centerDeltaX = isLeft ? -actualDeltaWidth / 2 : actualDeltaWidth / 2;
     const centerDeltaY = isTop ? -actualDeltaHeight / 2 : actualDeltaHeight / 2;
 
-    const newCenterX = centerX + centerDeltaX;
-    const newCenterY = centerY + centerDeltaY;
-
-    // Calculate new top-left corner from center
-    const newX = newCenterX - newWidth / 2;
-    const newY = newCenterY - newHeight / 2;
-
-    const oppositeCornerX = isLeft ? x + width : x;
-    const oppositeCornerY = isTop ? y + height : y;
-
-    // rotate new corner back to original orientation
-    const rotatedCorner = {
-      x: oppositeCornerX * cos - oppositeCornerY * sin,
-      y: oppositeCornerX * sin + oppositeCornerY * cos
-    };
-    console.log(this.ogma.view.graphToScreenCoordinates(rotatedCorner));
-    // Sanity check: ensure corner being dragged does not cross opposite corner
+    const newCenterX = center.x + centerDeltaX;
+    const newCenterY = center.y + centerDeltaY;
 
     return {
-      type: original.geometry.type,
-      coordinates: [
-        [
-          [newX, newY],
-          [newX + newWidth, newY],
-          [newX + newWidth, newY + newHeight],
-          [newX, newY + newHeight],
-          [newX, newY]
-        ]
-      ]
+      type: "Point" as const,
+      coordinates: [newCenterX, newCenterY] as [number, number]
     };
   }
 
   private dragEdge(original: Text, delta: Point, handle: Handle) {
-    const { x, y } = getBoxPosition(original);
     const { width, height } = getBoxSize(original);
+    const center = getBoxCenter(original);
 
     // Get rotation from store for counter-rotation
     const state = this.store.getState();
@@ -343,39 +316,33 @@ export class TextHandler extends Handler<Text, Handle> {
     const localDeltaX = delta.x * cos - delta.y * sin;
     const localDeltaY = delta.x * sin + delta.y * cos;
 
-    let newX = x;
-    let newY = y;
     let newWidth = width;
     let newHeight = height;
+    let centerOffsetX = 0;
+    let centerOffsetY = 0;
 
     switch (handle.edge) {
       case EdgeType.TOP:
-        newY = y + localDeltaY;
         newHeight = Math.max(10, height - localDeltaY);
+        centerOffsetY = -(newHeight - height) / 2;
         break;
       case EdgeType.BOTTOM:
         newHeight = Math.max(10, height + localDeltaY);
+        centerOffsetY = (newHeight - height) / 2;
         break;
       case EdgeType.LEFT:
-        newX = x + localDeltaX;
         newWidth = Math.max(10, width - localDeltaX);
+        centerOffsetX = -(newWidth - width) / 2;
         break;
       case EdgeType.RIGHT:
         newWidth = Math.max(10, width + localDeltaX);
+        centerOffsetX = (newWidth - width) / 2;
         break;
     }
 
     return {
-      type: original.geometry.type,
-      coordinates: [
-        [
-          [newX, newY],
-          [newX + newWidth, newY],
-          [newX + newWidth, newY + newHeight],
-          [newX, newY + newHeight],
-          [newX, newY]
-        ]
-      ]
+      type: "Point" as const,
+      coordinates: [center.x + centerOffsetX, center.y + centerOffsetY] as [number, number]
     };
   }
 
@@ -432,5 +399,58 @@ export class TextHandler extends Handler<Text, Handle> {
     if (this.textEditor) this.textEditor.destroy();
     this.commitChange();
     this.textEditor = null;
+  }
+
+  private calculateNewDimensions(original: Text, delta: Point, cornerIndex: number) {
+    const isTop = cornerIndex === 0 || cornerIndex === 1;
+    const isLeft = cornerIndex === 0 || cornerIndex === 3;
+    const isRight = cornerIndex === 1 || cornerIndex === 2;
+    const isBottom = cornerIndex === 2 || cornerIndex === 3;
+
+    const { width, height } = getBoxSize(original);
+    const state = this.store.getState();
+    const { revSin: sin, revCos: cos } = state;
+
+    const localDeltaX = delta.x * cos - delta.y * sin;
+    const localDeltaY = delta.x * sin + delta.y * cos;
+
+    let desiredDeltaWidth = 0;
+    let desiredDeltaHeight = 0;
+
+    if (isLeft) desiredDeltaWidth = -localDeltaX;
+    else if (isRight) desiredDeltaWidth = localDeltaX;
+
+    if (isTop) desiredDeltaHeight = -localDeltaY;
+    else if (isBottom) desiredDeltaHeight = localDeltaY;
+
+    return {
+      width: Math.max(10, width + desiredDeltaWidth),
+      height: Math.max(10, height + desiredDeltaHeight)
+    };
+  }
+
+  private calculateEdgeDimensions(original: Text, delta: Point, handle: Handle) {
+    const { width, height } = getBoxSize(original);
+    const state = this.store.getState();
+    const { revSin: sin, revCos: cos } = state;
+
+    const localDeltaX = delta.x * cos - delta.y * sin;
+    const localDeltaY = delta.x * sin + delta.y * cos;
+
+    let newWidth = width;
+    let newHeight = height;
+
+    switch (handle.edge) {
+      case EdgeType.TOP:
+      case EdgeType.BOTTOM:
+        newHeight = Math.max(10, height + (handle.edge === EdgeType.TOP ? -localDeltaY : localDeltaY));
+        break;
+      case EdgeType.LEFT:
+      case EdgeType.RIGHT:
+        newWidth = Math.max(10, width + (handle.edge === EdgeType.LEFT ? -localDeltaX : localDeltaX));
+        break;
+    }
+
+    return { width: newWidth, height: newHeight };
   }
 }

@@ -1,7 +1,7 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
 import { Annotation, Text, isText } from "../types";
-import { getBbox, updateBbox } from "../utils";
+import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
@@ -69,8 +69,20 @@ export class Index extends Rtree<Annotation> {
   private updateRotatedText(text: Text) {
     const state = this.store.getState();
     this.remove(text);
-    const [x0, y0, x1, y1] = getBbox(text);
-    const raabb = state.getRotatedBBox(x0, y0, x1, y1);
+
+    // Get bbox from center + dimensions (works with Point geometry)
+    const center = getBoxCenter(text);
+    const { width, height } = getBoxSize(text);
+    const hw = width / 2;
+    const hh = height / 2;
+
+    // Calculate rotated AABB
+    const raabb = state.getRotatedBBox(
+      center.x - hw,
+      center.y - hh,
+      center.x + hw,
+      center.y + hh
+    );
 
     this.insert({
       ...text,

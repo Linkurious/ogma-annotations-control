@@ -1,4 +1,4 @@
-import { Geometry, Polygon } from "geojson";
+import { Geometry, Point as GeoJSONPoint } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { BoxProperties, BoxStyle } from "./Box";
@@ -25,10 +25,14 @@ export interface TextProperties extends Omit<BoxProperties, "type"> {
 
   /**text to display*/
   content: string;
+  /** Width of the text box */
+  width: number;
+  /** Height of the text box */
+  height: number;
   style?: TextStyle;
 }
 
-export type Text = AnnotationFeature<Polygon, TextProperties>;
+export type Text = AnnotationFeature<GeoJSONPoint, TextProperties>;
 
 export const isText = (
   a: AnnotationFeature<Geometry, AnnotationProps>
@@ -52,22 +56,15 @@ export const defaultTextOptions: Text = {
   properties: {
     type: "text",
     content: "",
+    width: 100,
+    height: 50,
     style: { ...defaultTextStyle }
   },
   geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [0, 0],
-        [100, 0],
-        [100, 50],
-        [0, 50],
-        [0, 0]
-      ]
-    ]
+    type: "Point",
+    coordinates: [50, 25], // center of 100x50 box
+    bbox: [0, 0, 100, 50]
   }
-  // position: { x: 0, y: 0 },
-  // size: { width: 100, height: 50 }
 };
 
 export const createText = (
@@ -83,19 +80,14 @@ export const createText = (
   properties: {
     type: "text",
     content,
+    width,
+    height,
     style: { ...defaultTextStyle, ...styles }
   },
   geometry: {
-    type: "Polygon",
-    coordinates: [
-      [
-        [x, y],
-        [x + width, y],
-        [x + width, y + height],
-        [x, y + height],
-        [x, y]
-      ]
-    ]
+    type: "Point",
+    coordinates: [x + width / 2, y + height / 2], // center
+    bbox: [x, y, x + width, y + height]
   }
 });
 
