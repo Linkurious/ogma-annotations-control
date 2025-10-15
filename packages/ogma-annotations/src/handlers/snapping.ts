@@ -126,37 +126,65 @@ export class Snapping extends EventTarget {
 
   private _snapToText(point: Point, texts: Text[]): TextSnap | null {
     for (const text of texts) {
-      const center = getBoxCenter(text);
-      const { width, height } = getBoxSize(text);
+      const snap =
+        this._snapToMagnetPoints(point, text) || this._snapToEdge(point, text);
+      if (snap) return snap;
+    }
+    return null;
+  }
 
-      for (const vec of MAGNETS) {
-        const magnet = add(center, multiply(vec, { x: width, y: height }));
-        const dist = length(subtract(magnet, point));
-        if (dist >= this.options.magnetRadius) continue;
-        return {
-          point: { x: magnet.x, y: magnet.y },
-          type: "text" as const,
-          magnet: vec,
-          id: text.id
-        };
-      }
+  private _snapToMagnetPoints(point: Point, text: Text): TextSnap | null {
+    const center = getBoxCenter(text);
+    const { width, height } = getBoxSize(text);
 
-      const position = getBoxPosition(text);
-      const magnetRadius = this.options.magnetRadius;
-      let snap:
-        | {
-            min: { x: number; y: number };
-            max: { x: number; y: number };
-            axis: { x: number; y: number };
-            norm: { x: number; y: number };
-          }
-        | undefined;
+    for (const vec of MAGNETS) {
+      const magnet = add(center, multiply(vec, { x: width, y: height }));
+      const dist = length(subtract(magnet, point));
+      if (dist >= this.options.magnetRadius) continue;
+      return {
+        point: { x: magnet.x, y: magnet.y },
+        type: "text" as const,
+        magnet: vec,
+        id: text.id
+      };
+    }
+    return null;
+  }
 
-      // Check top edge
-      let min = { x: position.x, y: position.y };
-      let max = { x: position.x + width, y: position.y };
-      let norm = ys;
-      let dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
+  private _snapToEdge(point: Point, text: Text): TextSnap | null {
+    const center = getBoxCenter(text);
+    const { width, height } = getBoxSize(text);
+    const position = getBoxPosition(text);
+    const magnetRadius = this.options.magnetRadius;
+
+    let snap:
+      | {
+          min: { x: number; y: number };
+          max: { x: number; y: number };
+          axis: { x: number; y: number };
+          norm: { x: number; y: number };
+        }
+      | undefined;
+
+    // Check top edge
+    let min = { x: position.x, y: position.y };
+    let max = { x: position.x + width, y: position.y };
+    let norm = ys;
+    let dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
+    if (
+      Math.abs(dist) < magnetRadius &&
+      point.x >= min.x - magnetRadius &&
+      point.x <= max.x + magnetRadius &&
+      point.y >= min.y - magnetRadius &&
+      point.y <= max.y + magnetRadius
+    ) {
+      snap = { min, max, axis: xs, norm };
+    } else {
+      // Check right edge
+      min = { x: position.x + width, y: position.y };
+      max = { x: position.x + width, y: position.y + height };
+      norm = xs;
+      dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
       if (
         Math.abs(dist) < magnetRadius &&
         point.x >= min.x - magnetRadius &&
@@ -164,12 +192,12 @@ export class Snapping extends EventTarget {
         point.y >= min.y - magnetRadius &&
         point.y <= max.y + magnetRadius
       ) {
-        snap = { min, max, axis: xs, norm };
+        snap = { min, max, axis: ys, norm };
       } else {
-        // Check right edge
-        min = { x: position.x + width, y: position.y };
+        // Check bottom edge
+        min = { x: position.x, y: position.y + height };
         max = { x: position.x + width, y: position.y + height };
-        norm = xs;
+        norm = ys;
         dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
         if (
           Math.abs(dist) < magnetRadius &&
@@ -178,12 +206,12 @@ export class Snapping extends EventTarget {
           point.y >= min.y - magnetRadius &&
           point.y <= max.y + magnetRadius
         ) {
-          snap = { min, max, axis: ys, norm };
+          snap = { min, max, axis: xs, norm };
         } else {
-          // Check bottom edge
-          min = { x: position.x, y: position.y + height };
-          max = { x: position.x + width, y: position.y + height };
-          norm = ys;
+          // Check left edge
+          min = { x: position.x, y: position.y };
+          max = { x: position.x, y: position.y + height };
+          norm = xs;
           dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
           if (
             Math.abs(dist) < magnetRadius &&
@@ -192,55 +220,34 @@ export class Snapping extends EventTarget {
             point.y >= min.y - magnetRadius &&
             point.y <= max.y + magnetRadius
           ) {
-            snap = { min, max, axis: xs, norm };
-          } else {
-            // Check left edge
-            min = { x: position.x, y: position.y };
-            max = { x: position.x, y: position.y + height };
-            norm = xs;
-            dist = dot(norm, { x: point.x - min.x, y: point.y - min.y });
-            if (
-              Math.abs(dist) < magnetRadius &&
-              point.x >= min.x - magnetRadius &&
-              point.x <= max.x + magnetRadius &&
-              point.y >= min.y - magnetRadius &&
-              point.y <= max.y + magnetRadius
-            ) {
-              snap = { min, max, axis: ys, norm };
-            }
+            snap = { min, max, axis: ys, norm };
           }
         }
       }
-
-      if (!snap) continue;
-
-      const projection = dot(snap.axis, {
-        x: point.x - snap.min.x,
-        y: point.y - snap.min.y
-      });
-      if (projection < 0 || projection > length(subtract(snap.max, snap.min)))
-        continue;
-      const snapPoint = {
-        x: snap.min.x + snap.axis.x * projection,
-        y: snap.min.y + snap.axis.y * projection
-      };
-      const boxCenter = {
-        x: position.x + width / 2,
-        y: position.y + height / 2
-      };
-      const magnet = multiply(subtract(snapPoint, boxCenter), {
-        x: 1 / width,
-        y: 1 / height
-      });
-      return {
-        point: snapPoint,
-        magnet,
-        type: "text" as const,
-        id: text.id
-      };
     }
 
-    return null;
+    if (!snap) return null;
+
+    const projection = dot(snap.axis, {
+      x: point.x - snap.min.x,
+      y: point.y - snap.min.y
+    });
+    if (projection < 0 || projection > length(subtract(snap.max, snap.min)))
+      return null;
+    const snapPoint = {
+      x: snap.min.x + snap.axis.x * projection,
+      y: snap.min.y + snap.axis.y * projection
+    };
+    const magnet = multiply(subtract(snapPoint, center), {
+      x: 1 / width,
+      y: 1 / height
+    });
+    return {
+      point: snapPoint,
+      magnet,
+      type: "text" as const,
+      id: text.id
+    };
   }
 
   private _snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {

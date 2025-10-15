@@ -75,9 +75,9 @@ export class Links {
           if (
             (link.side === SIDE_START && idx === 0) ||
             (link.side === SIDE_END && idx === 1)
-          ) {
+          )
             return [newEndPoint.x, newEndPoint.y];
-          }
+
           return [...coord];
         })
       };
