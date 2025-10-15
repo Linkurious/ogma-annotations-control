@@ -60,7 +60,7 @@ export abstract class Handler<
     if (!this.isActive() || !this.dragging) return;
     this.dragging = false;
     this.ogma.setOptions({
-      interactions: { pan: { enabled: this.ogmaPanningOption } }
+      interactions: { pan: { enabled: true } }
     });
     this.onDragEnd(evt);
     this.dispatchEvent(new Event("dragend"));
@@ -80,7 +80,7 @@ export abstract class Handler<
     this.dragStartPoint = undefined;
     this.hoveredHandle = undefined;
     this.ogma.setOptions({
-      interactions: { pan: { enabled: this.ogmaPanningOption } }
+      interactions: { pan: { enabled: true } }
     });
   }
 
