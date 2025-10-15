@@ -190,37 +190,24 @@ export class TextHandler extends Handler<Text, Handle> {
     const original = this.getAnnotation()!;
 
     // Create updated geometry based on handle type
-    let updatedGeometry: Text["geometry"] | null = null;
-    let newWidth = original.properties.width;
-    let newHeight = original.properties.height;
+    let updatedFeature: Text | null = null;
+
+    // const newWidth = original.properties.width;
+    // const newHeight = original.properties.height;
 
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
-      updatedGeometry = this.dragCorner(original, delta, handle.corner);
-      const dims = this.calculateNewDimensions(original, delta, handle.corner);
-      newWidth = dims.width;
-      newHeight = dims.height;
+      updatedFeature = this.dragCorner(original, delta, handle.corner);
     } else if (handle.type === HandleType.EDGE && handle.edge) {
       // Edge handle: move the edge
-      updatedGeometry = this.dragEdge(original, delta, handle);
-      const dims = this.calculateEdgeDimensions(original, delta, handle);
-      newWidth = dims.width;
-      newHeight = dims.height;
+      updatedFeature = this.dragEdge(original, delta, handle);
     } else if (handle.type === HandleType.BODY) {
       // Body drag: move the entire box
-      updatedGeometry = this.dragBody(original, delta);
+      updatedFeature = this.dragBody(original, delta);
     }
 
-    if (updatedGeometry) {
-      const update = {
-        id: annotation.id,
-        properties: {
-          ...annotation.properties,
-          width: newWidth,
-          height: newHeight
-        },
-        geometry: updatedGeometry
-      } as Text;
+    if (updatedFeature) {
+      const update = updatedFeature as Text;
       // Apply live update to store instead of direct mutation
       this.store.getState().applyLiveUpdate(annotation.id, update);
       const displacement = subtract(
@@ -245,8 +232,16 @@ export class TextHandler extends Handler<Text, Handle> {
   private dragBody(original: Text, delta: Point) {
     const center = getBoxCenter(original);
     return {
-      type: "Point" as const,
-      coordinates: [center.x + delta.x, center.y + delta.y] as [number, number]
+      type: original.type,
+      id: original.id,
+      properties: original.properties,
+      geometry: {
+        type: original.geometry.type,
+        coordinates: [center.x + delta.x, center.y + delta.y] as [
+          number,
+          number
+        ]
+      }
     };
   }
 
@@ -257,50 +252,43 @@ export class TextHandler extends Handler<Text, Handle> {
     const isBottom = cornerIndex === 2 || cornerIndex === 3;
 
     const { width, height } = getBoxSize(original);
-    const center = getBoxCenter(original);
 
-    // Get rotation from store for counter-rotation
     const state = this.store.getState();
     const { revSin: sin, revCos: cos } = state;
 
-    // Transform delta to box's local (screen-aligned) coordinate system
     const localDeltaX = delta.x * cos - delta.y * sin;
     const localDeltaY = delta.x * sin + delta.y * cos;
 
-    // Calculate new dimensions
     let desiredDeltaWidth = 0;
     let desiredDeltaHeight = 0;
 
-    if (isLeft) {
-      desiredDeltaWidth = -localDeltaX;
-    } else if (isRight) {
-      desiredDeltaWidth = localDeltaX;
-    }
+    if (isLeft) desiredDeltaWidth = -localDeltaX;
+    else if (isRight) desiredDeltaWidth = localDeltaX;
 
-    if (isTop) {
-      desiredDeltaHeight = -localDeltaY;
-    } else if (isBottom) {
-      desiredDeltaHeight = localDeltaY;
-    }
+    if (isTop) desiredDeltaHeight = -localDeltaY;
+    else if (isBottom) desiredDeltaHeight = localDeltaY;
 
-    // New dimensions with minimum size constraint
-    const newWidth = Math.max(10, width + desiredDeltaWidth);
-    const newHeight = Math.max(10, height + desiredDeltaHeight);
+    const newWidth = Math.max(0, width + desiredDeltaWidth);
+    const newHeight = Math.max(0, height + desiredDeltaHeight);
 
-    // ACTUAL size change after applying constraints
-    const actualDeltaWidth = newWidth - width;
-    const actualDeltaHeight = newHeight - height;
+    const center = getBoxCenter(original);
 
-    // Center translation to keep opposite corner pinned
-    const centerDeltaX = isLeft ? -actualDeltaWidth / 2 : actualDeltaWidth / 2;
-    const centerDeltaY = isTop ? -actualDeltaHeight / 2 : actualDeltaHeight / 2;
-
-    const newCenterX = center.x + centerDeltaX;
-    const newCenterY = center.y + centerDeltaY;
+    // update the center in such a way that only the bottom left corner would move
+    const newCenterX = center.x + delta.x / 2;
+    const newCenterY = center.y + delta.y / 2;
 
     return {
-      type: "Point" as const,
-      coordinates: [newCenterX, newCenterY] as [number, number]
+      type: original.type,
+      id: original.id,
+      properties: {
+        ...original.properties,
+        width: newWidth,
+        height: newHeight
+      },
+      geometry: {
+        type: original.geometry.type,
+        coordinates: [newCenterX, newCenterY]
+      }
     };
   }
 
@@ -341,8 +329,20 @@ export class TextHandler extends Handler<Text, Handle> {
     }
 
     return {
-      type: "Point" as const,
-      coordinates: [center.x + centerOffsetX, center.y + centerOffsetY] as [number, number]
+      type: original.type,
+      id: original.id,
+      properties: {
+        ...original.properties,
+        width: newWidth,
+        height: newHeight
+      },
+      geometry: {
+        type: original.geometry.type,
+        coordinates: [center.x + centerOffsetX, center.y + centerOffsetY] as [
+          number,
+          number
+        ]
+      }
     };
   }
 
@@ -385,12 +385,12 @@ export class TextHandler extends Handler<Text, Handle> {
     switch (edge) {
       case EdgeType.TOP:
       case EdgeType.BOTTOM:
-        return "ns-resize"; // vertical resize
+        return cursors.nsResize; // vertical resize
       case EdgeType.LEFT:
       case EdgeType.RIGHT:
-        return "ew-resize"; // horizontal resize
+        return cursors.ewResize; // horizontal resize
       default:
-        return "default";
+        return cursors.default;
     }
   }
 
@@ -399,58 +399,5 @@ export class TextHandler extends Handler<Text, Handle> {
     if (this.textEditor) this.textEditor.destroy();
     this.commitChange();
     this.textEditor = null;
-  }
-
-  private calculateNewDimensions(original: Text, delta: Point, cornerIndex: number) {
-    const isTop = cornerIndex === 0 || cornerIndex === 1;
-    const isLeft = cornerIndex === 0 || cornerIndex === 3;
-    const isRight = cornerIndex === 1 || cornerIndex === 2;
-    const isBottom = cornerIndex === 2 || cornerIndex === 3;
-
-    const { width, height } = getBoxSize(original);
-    const state = this.store.getState();
-    const { revSin: sin, revCos: cos } = state;
-
-    const localDeltaX = delta.x * cos - delta.y * sin;
-    const localDeltaY = delta.x * sin + delta.y * cos;
-
-    let desiredDeltaWidth = 0;
-    let desiredDeltaHeight = 0;
-
-    if (isLeft) desiredDeltaWidth = -localDeltaX;
-    else if (isRight) desiredDeltaWidth = localDeltaX;
-
-    if (isTop) desiredDeltaHeight = -localDeltaY;
-    else if (isBottom) desiredDeltaHeight = localDeltaY;
-
-    return {
-      width: Math.max(10, width + desiredDeltaWidth),
-      height: Math.max(10, height + desiredDeltaHeight)
-    };
-  }
-
-  private calculateEdgeDimensions(original: Text, delta: Point, handle: Handle) {
-    const { width, height } = getBoxSize(original);
-    const state = this.store.getState();
-    const { revSin: sin, revCos: cos } = state;
-
-    const localDeltaX = delta.x * cos - delta.y * sin;
-    const localDeltaY = delta.x * sin + delta.y * cos;
-
-    let newWidth = width;
-    let newHeight = height;
-
-    switch (handle.edge) {
-      case EdgeType.TOP:
-      case EdgeType.BOTTOM:
-        newHeight = Math.max(10, height + (handle.edge === EdgeType.TOP ? -localDeltaY : localDeltaY));
-        break;
-      case EdgeType.LEFT:
-      case EdgeType.RIGHT:
-        newWidth = Math.max(10, width + (handle.edge === EdgeType.LEFT ? -localDeltaX : localDeltaX));
-        break;
-    }
-
-    return { width: newWidth, height: newHeight };
   }
 }
