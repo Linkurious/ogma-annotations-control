@@ -1,4 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
+import { EVT_DRAG_END, EVT_DRAG, EVT_DRAG_START, cursors } from "../constants";
 import { Store } from "../store";
 import { Annotation, ClientMouseEvent, Cursor, Id } from "../types";
 import { clientToContainerPosition, getBrowserWindow } from "../utils";
@@ -45,7 +46,7 @@ export abstract class Handler<
 
     this.dragStartPoint = this.clientToCanvas(evt);
     this.onDragStart(evt);
-    this.dispatchEvent(new Event("dragstart"));
+    this.dispatchEvent(new Event(EVT_DRAG_START));
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
     );
@@ -60,7 +61,7 @@ export abstract class Handler<
       interactions: { pan: { enabled: true } }
     });
     this.onDragEnd(evt);
-    this.dispatchEvent(new Event("dragend"));
+    this.dispatchEvent(new Event(EVT_DRAG_END));
   };
 
   cancelEdit() {
@@ -95,7 +96,9 @@ export abstract class Handler<
    * Handles the dragging of the selected handle.
    * @param evt Mouse event
    */
-  protected abstract onDrag(evt: ClientMouseEvent): void;
+  protected onDrag(_evt: ClientMouseEvent): void {
+    this.dispatchEvent(new Event(EVT_DRAG));
+  }
 
   protected onDragStart(_evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
@@ -154,6 +157,14 @@ export abstract class Handler<
     this.setAnnotation(null);
     this.clearDragState();
     this.annotation = null;
+    this.setCursor(cursors.default);
+  }
+
+  cancelDrawing() {
+    if (!this.isActive()) return;
+    // delete the edited annotation
+    this.store.getState().removeFeature(this.annotation!);
+    this.stopEditing();
   }
 
   isActive() {

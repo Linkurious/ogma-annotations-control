@@ -186,7 +186,9 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this;
   }
 
-  public cancelDrawing() {}
+  public cancelDrawing() {
+    this.editor.getActiveHandler()?.cancelDrawing();
+  }
 
   public startComment(_x: number, _y: number, _text: Annotation) {}
   public startBox(_x: number, _y: number, _box: Annotation) {}

@@ -2,6 +2,7 @@ import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { Snap, Snapping } from "./snapping";
 import {
+  EVT_DRAG,
   SIDE_END,
   SIDE_START,
   cursors,
@@ -141,7 +142,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     });
 
     this.dispatchEvent(
-      new CustomEvent("dragging", {
+      new CustomEvent(EVT_DRAG, {
         detail: {
           point,
           annotation: this.annotation,

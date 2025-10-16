@@ -1,7 +1,7 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { TextArea } from "./textArea";
-import { cursors, handleRadius } from "../constants";
+import { EVT_DRAG, cursors, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
@@ -216,7 +216,7 @@ export class TextHandler extends Handler<Text, Handle> {
     }
 
     this.dispatchEvent(
-      new CustomEvent("dragging", {
+      new CustomEvent(EVT_DRAG, {
         detail: {
           point: mousePoint,
           annotation: this.annotation,
