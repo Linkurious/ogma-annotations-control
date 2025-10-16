@@ -193,13 +193,13 @@ export class Control extends EventEmitter<FeatureEvents> {
   public startComment(_x: number, _y: number, _text: Annotation) {}
   public startBox(_x: number, _y: number, _box: Annotation) {}
   public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
-    // Add the arrow annotation
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: arrow.id });
 
+    // Add the arrow annotation
     this.add(arrow);
     this.interactions.suppressClicksTemporarily(200);
     this.select(arrow.id);
-    // Select and start editing it
-    //this.editor.editFeature(arrow.id);
 
     // Get the arrow handler
     const handler = this.editor.getActiveHandler()!;

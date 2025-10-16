@@ -188,6 +188,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.commitChange();
     this.clearDragState();
 
+    // Clear drawing flag if this was the feature being drawn
+    const state = this.store.getState();
+    if (state.drawingFeature === this.annotation) {
+      this.store.setState({ drawingFeature: null });
+    }
+
     this.snap = null;
     return true;
   }

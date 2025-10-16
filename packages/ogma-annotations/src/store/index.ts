@@ -19,6 +19,7 @@ export interface AnnotationState {
   hoveredHandle: -1 | number;
   selectedFeatures: Set<Id>;
   lastChangedFeatures: Id[];
+  drawingFeature: Id | null;
 
   rotation: number;
   sin: number;
@@ -83,6 +84,7 @@ export const store = create<AnnotationState>()(
         hoveredFeature: null,
         selectedFeatures: new Set(),
         lastChangedFeatures: [],
+        drawingFeature: null,
         rotation: 0,
         sin: 0,
         cos: 1,
