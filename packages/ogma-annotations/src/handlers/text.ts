@@ -4,7 +4,7 @@ import { TextArea } from "./textArea";
 import { EVT_DRAG, cursors, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
-import { ClientMouseEvent, Cursor, Text, isBox } from "../types";
+import { ClientMouseEvent, Cursor, Id, Text, isBox } from "../types";
 import { getBoxCenter, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
@@ -382,6 +382,13 @@ export class TextHandler extends Handler<Text, Handle> {
       this.clearDragState();
       this.onClick(evt);
     } else this.commitChange();
+
+    // Clear drawing flag if this was the feature being drawn
+    const state = this.store.getState();
+    if (state.drawingFeature === this.annotation) {
+      this.store.setState({ drawingFeature: null });
+    }
+
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;
     this.dragging = false;
@@ -412,5 +419,23 @@ export class TextHandler extends Handler<Text, Handle> {
     if (this.textEditor) this.textEditor.destroy();
     this.commitChange();
     this.textEditor = null;
+  }
+
+  public startDrawing(id: Id, x: number, y: number) {
+    this.annotation = id;
+    // Set up to drag the bottom-right corner (corner index 2)
+    this.hoveredHandle = {
+      type: HandleType.CORNER,
+      corner: 2
+    };
+    this.store.setState({ hoveredHandle: 2 });
+    this.dragging = true;
+    const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
+    this.dragStartPoint = pos;
+    // Disable ogma panning
+    this.disablePanning();
+
+    // Start live update
+    this.onDragStart({ clientX: pos.x, clientY: pos.y } as MouseEvent);
   }
 }

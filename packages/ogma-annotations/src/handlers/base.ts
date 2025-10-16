@@ -47,6 +47,10 @@ export abstract class Handler<
     this.dragStartPoint = this.clientToCanvas(evt);
     this.onDragStart(evt);
     this.dispatchEvent(new Event(EVT_DRAG_START));
+    this.disablePanning();
+  };
+
+  protected disablePanning = () => {
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
     );
@@ -55,11 +59,15 @@ export abstract class Handler<
     });
   };
 
-  handleMouseUp = (evt: MouseEvent): void => {
-    if (!this.isActive() || !this.dragging) return;
+  protected restorePanning = () => {
     this.ogma.setOptions({
       interactions: { pan: { enabled: true } }
     });
+  };
+
+  handleMouseUp = (evt: MouseEvent): void => {
+    if (!this.isActive() || !this.dragging) return;
+    this.restorePanning();
     this.onDragEnd(evt);
     this.dispatchEvent(new Event(EVT_DRAG_END));
   };
@@ -77,9 +85,8 @@ export abstract class Handler<
     this.dragging = false;
     this.dragStartPoint = undefined;
     this.hoveredHandle = undefined;
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: true } }
-    });
+    this.restorePanning();
+    this.setCursor(cursors.default);
   }
 
   protected commitChange() {
@@ -100,21 +107,17 @@ export abstract class Handler<
     this.dispatchEvent(new Event(EVT_DRAG));
   }
 
-  protected onDragStart(_evt: ClientMouseEvent) {
+  protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
-    this.dragStartPoint = this.clientToCanvas(_evt);
+    this.dragStartPoint = this.clientToCanvas(evt);
     this.dragging = true;
-    this.draggingWasEnabled =
-      this.ogma.getOptions().interactions?.drag?.enabled ?? true;
-    this.ogma.setOptions({ interactions: { drag: { enabled: false } } });
+    this.disablePanning();
     return true;
   }
 
   protected onDragEnd(_evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
-    this.ogma.setOptions({
-      interactions: { drag: { enabled: true } }
-    });
+    this.restorePanning();
     this.dragging = false;
     return true;
   }

@@ -12,7 +12,8 @@ import {
   EVT_LINK,
   EVT_UPDATE,
   EVT_CANCEL_DRAWING,
-  EVT_HISTORY
+  EVT_HISTORY,
+  EVT_COMPLETE_DRAWING
 } from "../constants";
 
 export type Events<T> = {
@@ -50,6 +51,7 @@ export type FeatureEvents = {
    */
   [EVT_ADD]: (evt: { id: Id }) => void;
   [EVT_CANCEL_DRAWING]: () => void;
+  [EVT_COMPLETE_DRAWING]: (evt: { id: Id }) => void;
   /**
    * Event trigerred when updating an annotation
    * @returns The annotation updated

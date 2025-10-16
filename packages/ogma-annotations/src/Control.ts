@@ -1,8 +1,14 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import { EVT_CANCEL_DRAWING, EVT_HISTORY, EVT_SELECT } from "./constants";
+import {
+  EVT_CANCEL_DRAWING,
+  EVT_COMPLETE_DRAWING,
+  EVT_HISTORY,
+  EVT_SELECT
+} from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
+import { TextHandler } from "./handlers/text";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
@@ -13,9 +19,13 @@ import {
   Annotation,
   AnnotationCollection,
   Arrow,
+  Box,
   ControllerOptions,
   FeatureEvents,
+  Text,
   createArrow,
+  createBox,
+  createText,
   isAnnotationCollection
 } from "./types";
 import { migrateBoxOrTextIfNeeded } from "./utils";
@@ -89,6 +99,15 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store.subscribe(
       (state) => state.selectedFeatures,
       (selected) => this.emit(EVT_SELECT, { ids: Array.from(selected) })
+    );
+
+    this.store.subscribe(
+      (state) => state.drawingFeature,
+      (curr, prev) => {
+        if (curr === null && prev !== null) {
+          this.emit(EVT_COMPLETE_DRAWING, { id: prev });
+        }
+      }
     );
   }
 
@@ -193,7 +212,21 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   public startComment(_x: number, _y: number, _text: Annotation) {}
-  public startBox(_x: number, _y: number, _box: Annotation) {}
+
+  public startBox(x: number, y: number, box: Box = createBox(x, y)) {
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: box.id });
+
+    // Add the box annotation
+    this.add(box);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(box.id);
+
+    // // Get the text handler (box uses the same handler as text)
+    const handler = this.editor.getActiveHandler()!;
+    return (handler as TextHandler).startDrawing(box.id, x, y);
+  }
+
   public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
     // Mark this feature as being drawn
     this.store.setState({ drawingFeature: arrow.id });
@@ -207,7 +240,20 @@ export class Control extends EventEmitter<FeatureEvents> {
     const handler = this.editor.getActiveHandler()!;
     return (handler as ArrowHandler).startDrawing(arrow.id, x, y);
   }
-  public startText(_x: number, _y: number, _text: Annotation) {}
+
+  public startText(x: number, y: number, text: Text = createText(x, y)) {
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: text.id });
+
+    // Add the text annotation
+    this.add(text);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(text.id);
+
+    // Get the text handler
+    const handler = this.editor.getActiveHandler()!;
+    return (handler as TextHandler).startDrawing(text.id, x, y);
+  }
 
   public getSelectedAnnotations(): AnnotationCollection {
     const state = this.store.getState();

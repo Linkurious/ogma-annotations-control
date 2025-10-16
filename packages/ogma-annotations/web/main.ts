@@ -66,10 +66,9 @@ addArrows.addEventListener("click", () => {
       head: "arrow"
     });
     control.startArrow(x, y, arrow);
-    // control.once(EVT_DRAG_END, (a) => {
-    //   if (a.id !== arrow.id) return;
-    //   addArrows.disabled = false;
-    // });
+    control.once("completeDrawing", (a) => {
+      if (a.id === arrow.id) addArrows.disabled = false;
+    });
   });
 });
 const addTexts = document.getElementById("add-text")! as HTMLButtonElement;
@@ -90,16 +89,16 @@ addTexts.addEventListener("click", () => {
       padding: 12
     });
     control.startText(x, y, text);
-    control.once(EVT_DRAG_END, (a) => {
-      if (a.id !== text.id) return;
-      addTexts.disabled = false;
+    control.once("completeDrawing", (a) => {
+      if (a.id === text.id) addTexts.disabled = false;
     });
   });
 });
 
-document.getElementById("add-box")!.addEventListener("click", () => {
-  if (addTexts.disabled) return;
-  addTexts.disabled = true;
+const addBox = document.getElementById("add-box")! as HTMLButtonElement;
+addBox.addEventListener("click", () => {
+  if (addBox.disabled) return;
+  addBox.disabled = true;
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     const box = createBox(x, y, 0, 0, {
@@ -110,9 +109,8 @@ document.getElementById("add-box")!.addEventListener("click", () => {
       padding: 12
     });
     control.startBox(x, y, box);
-    control.once(EVT_DRAG_END, (a) => {
-      if (a.id !== box.id) return;
-      addTexts.disabled = false;
+    control.once("completeDrawing", (a) => {
+      if (a.id === box.id) addBox.disabled = false;
     });
   });
 });

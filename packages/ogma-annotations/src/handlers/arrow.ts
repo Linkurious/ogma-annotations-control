@@ -206,13 +206,5 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     // Start live update
     this.onDragStart({ clientX, clientY } as MouseEvent);
-
-    // Disable ogma panning
-    this.ogmaPanningOption = Boolean(
-      this.ogma.getOptions().interactions?.pan?.enabled
-    );
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: false } }
-    });
   }
 }

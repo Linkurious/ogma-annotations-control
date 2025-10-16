@@ -96,7 +96,6 @@ export const createBox = (
   },
   geometry: {
     type: "Point",
-    coordinates: [x + width / 2, y + height / 2], // center
-    bbox: [x, y, x + width, y + height]
+    coordinates: [x + width / 2, y + height / 2] // center
   }
 });
