@@ -2,6 +2,7 @@ import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { EVT_HISTORY, EVT_SELECT } from "./constants";
 import { AnnotationEditor } from "./handlers";
+import { ArrowHandler } from "./handlers/arrow";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
@@ -199,31 +200,8 @@ export class Control extends EventEmitter<FeatureEvents> {
     //this.editor.editFeature(arrow.id);
 
     // Get the arrow handler
-    const handler = this.editor.getActiveHandler();
-    if (!handler) return;
-
-    // Set up the handler state to simulate dragging the end point
-    // @ts-expect-error - accessing private properties
-    handler.hoveredHandle = {
-      type: "start",
-      point: { x, y }
-    };
-    // @ts-expect-error - accessing private properties
-    handler.dragging = true;
-    // @ts-expect-error - accessing private properties
-    handler.dragStartPoint = { x, y };
-
-    // Start live update
-    this.store.getState().startLiveUpdate([arrow.id]);
-
-    // Disable ogma panning
-    // @ts-expect-error - accessing private properties
-    handler.ogmaPanningOption = Boolean(
-      this.ogma.getOptions().interactions?.pan?.enabled
-    );
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: false } }
-    });
+    const handler = this.editor.getActiveHandler()!;
+    return (handler as ArrowHandler).startDrawing(arrow.id, x, y);
   }
   public startText(_x: number, _y: number, _text: Annotation) {}
 

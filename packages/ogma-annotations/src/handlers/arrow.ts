@@ -13,6 +13,7 @@ import {
   Arrow,
   ArrowProperties,
   ClientMouseEvent,
+  Id,
   Side,
   detectArrow
 } from "../types";
@@ -57,20 +58,11 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         Math.pow(mousePoint.y - endPoint[1], 2)
     );
 
-    if (startDistance < margin) {
-      this.hoveredHandle = {
-        type: HandleType.START,
-        point: { x: startPoint[0], y: startPoint[1] }
-      };
-      this.store.setState({ hoveredHandle: 0 });
-    } else if (endDistance < margin) {
-      this.hoveredHandle = {
-        type: HandleType.END,
-        point: { x: endPoint[0], y: endPoint[1] }
-      };
-      this.store.setState({ hoveredHandle: 1 });
-      this.setCursor(cursors.move);
-    } else {
+    if (startDistance < margin)
+      this.grabHandle(HandleType.START, startPoint[0], startPoint[1]);
+    else if (endDistance < margin)
+      this.grabHandle(HandleType.END, endPoint[0], endPoint[1]);
+    else {
       // on the line?
       if (detectArrow(annotation, mousePoint, margin)) {
         this.setCursor(cursors.grab);
@@ -84,6 +76,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         this.hoveredHandle = undefined;
       }
     }
+  }
+
+  private grabHandle(type: HandleType, x: number, y: number) {
+    this.hoveredHandle = { type, point: { x, y } };
+    this.store.setState({ hoveredHandle: type === HandleType.START ? 0 : 1 });
+    this.setCursor(cursors.move);
   }
 
   protected onDrag(evt: MouseEvent) {
@@ -191,5 +189,23 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     this.snap = null;
     return true;
+  }
+
+  public startDrawing(id: Id, clientX: number, clientY: number) {
+    const { x, y } = this.clientToCanvas({ clientX, clientY } as MouseEvent);
+    this.grabHandle(HandleType.END, x, y);
+    this.dragging = true;
+    this.dragStartPoint = { x, y };
+
+    // Start live update
+    this.onDragStart({ clientX, clientY } as MouseEvent);
+
+    // Disable ogma panning
+    this.ogmaPanningOption = Boolean(
+      this.ogma.getOptions().interactions?.pan?.enabled
+    );
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: false } }
+    });
   }
 }

@@ -15,7 +15,6 @@ export abstract class Handler<
   protected ogmaPanningOption: boolean = false;
   protected store: Store;
   protected draggingWasEnabled: boolean = true;
-  protected isDragging = false;
 
   constructor(ogma: Ogma, store: Store) {
     super();
@@ -32,7 +31,6 @@ export abstract class Handler<
   handleMouseMove = (evt: ClientMouseEvent): void => {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
-    //const wasHovered = Boolean(this.hoveredHandle);
     if (!this.dragging) this.detectHandle(evt, this.ogma.view.getZoom());
     else if (this.dragStartPoint) this.onDrag(evt);
   };
@@ -44,7 +42,7 @@ export abstract class Handler<
     evt.stopPropagation();
 
     // start resizing
-    this.dragging = true;
+
     this.dragStartPoint = this.clientToCanvas(evt);
     this.onDragStart(evt);
     this.dispatchEvent(new Event("dragstart"));
@@ -58,7 +56,6 @@ export abstract class Handler<
 
   handleMouseUp = (evt: MouseEvent): void => {
     if (!this.isActive() || !this.dragging) return;
-    this.dragging = false;
     this.ogma.setOptions({
       interactions: { pan: { enabled: true } }
     });
@@ -102,7 +99,8 @@ export abstract class Handler<
 
   protected onDragStart(_evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
-    this.isDragging = true;
+    this.dragStartPoint = this.clientToCanvas(_evt);
+    this.dragging = true;
     this.draggingWasEnabled =
       this.ogma.getOptions().interactions?.drag?.enabled ?? true;
     this.ogma.setOptions({ interactions: { drag: { enabled: false } } });
@@ -114,7 +112,7 @@ export abstract class Handler<
     this.ogma.setOptions({
       interactions: { drag: { enabled: true } }
     });
-    this.isDragging = false;
+    this.dragging = false;
     return true;
   }
 

@@ -360,7 +360,7 @@ export class TextHandler extends Handler<Text, Handle> {
   }
 
   protected onDragStart(evt: ClientMouseEvent) {
-    if (!super.onDragEnd(evt)) return false;
+    if (!super.onDragStart(evt)) return false;
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
     return true;
