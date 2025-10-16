@@ -1,6 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import { EVT_HISTORY, EVT_SELECT } from "./constants";
+import { EVT_CANCEL_DRAWING, EVT_HISTORY, EVT_SELECT } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
 import { InteractionController } from "./interaction";
@@ -188,6 +188,8 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   public cancelDrawing() {
     this.editor.getActiveHandler()?.cancelDrawing();
+    this.emit(EVT_CANCEL_DRAWING);
+    return this;
   }
 
   public startComment(_x: number, _y: number, _text: Annotation) {}
