@@ -96,6 +96,10 @@ export class AnnotationEditor extends EventTarget {
     handler.setAnnotation(feature as Text);
   }
 
+  getSnapping() {
+    return this.snapping;
+  }
+
   getCurrentTool(): string {
     return this.currentTool;
   }

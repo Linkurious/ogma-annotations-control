@@ -55,13 +55,13 @@ export abstract class Handler<
       this.ogma.getOptions().interactions?.pan?.enabled
     );
     this.ogma.setOptions({
-      interactions: { pan: { enabled: false } }
+      interactions: { pan: { enabled: false }, drag: { enabled: false } }
     });
   };
 
   protected restorePanning = () => {
     this.ogma.setOptions({
-      interactions: { pan: { enabled: true } }
+      interactions: { pan: { enabled: true }, drag: { enabled: true } }
     });
   };
 

@@ -200,6 +200,32 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
   public startDrawing(id: Id, clientX: number, clientY: number) {
     this.annotation = id;
+    const annotation = this.getAnnotation()!;
+    // ensure linking
+    const snap = this.snapping.snap(this.getAnnotation()!, {
+      x: clientX,
+      y: clientY
+    });
+    if (snap) {
+      annotation.geometry.coordinates[0] = [snap.point.x, snap.point.y];
+      annotation.properties.link = {
+        start: {
+          side: SIDE_START,
+          id: snap.id,
+          type: snap.type,
+          magnet: snap.magnet
+        }
+      };
+      this.links.add(
+        annotation,
+        HandleType.START,
+        snap.id,
+        snap.type,
+        snap.magnet
+      );
+      // no need to update live as we set the initial point directly
+      // no need to change clientX/Y as we already have the snapped point
+    }
     const { x, y } = this.clientToCanvas({ clientX, clientY } as MouseEvent);
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;
