@@ -10,7 +10,6 @@ import {
   createBox,
   getAnnotationsBounds
 } from "../src";
-import { EVT_DRAG_END } from "../src/constants";
 
 const ogma = new Ogma({
   container: "app"

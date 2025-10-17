@@ -199,6 +199,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   }
 
   public startDrawing(id: Id, clientX: number, clientY: number) {
+    this.annotation = id;
     const { x, y } = this.clientToCanvas({ clientX, clientY } as MouseEvent);
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;

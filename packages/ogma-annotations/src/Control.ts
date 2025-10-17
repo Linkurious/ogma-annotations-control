@@ -22,6 +22,7 @@ import {
   Box,
   ControllerOptions,
   FeatureEvents,
+  Id,
   Text,
   createArrow,
   createBox,
