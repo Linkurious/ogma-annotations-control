@@ -13,6 +13,7 @@ import { SIDE_START } from "./constants";
 import {
   Annotation,
   AnnotationCollection,
+  AnnotationFeature,
   Arrow,
   Bounds,
   Box,
@@ -204,32 +205,41 @@ export function scaleGeometry(
 }
 
 export function getCoordinates(
-  gj: Feature | FeatureCollection | Geometry
+  geojson: Feature | FeatureCollection | Geometry
 ): Position[] {
   let coords: Position[] = [];
-  if (gj.type == "Point") {
-    coords = [gj.coordinates];
-  } else if (gj.type == "LineString" || gj.type == "MultiPoint") {
-    coords = gj.coordinates;
-  } else if (gj.type == "Polygon" || gj.type == "MultiLineString") {
-    coords = gj.coordinates.reduce(function (dump, part) {
+  if (geojson.type == "Point") {
+    coords = [geojson.coordinates];
+  } else if (geojson.type == "LineString" || geojson.type == "MultiPoint") {
+    coords = geojson.coordinates;
+  } else if (geojson.type == "Polygon" || geojson.type == "MultiLineString") {
+    coords = geojson.coordinates.reduce(function (dump, part) {
       return dump.concat(part);
     }, []);
-  } else if (gj.type == "MultiPolygon") {
-    coords = gj.coordinates.reduce<Position[]>(
+  } else if (geojson.type == "MultiPolygon") {
+    coords = geojson.coordinates.reduce<Position[]>(
       (dump, poly) =>
         dump.concat(poly.reduce((points, part) => points.concat(part), [])),
       []
     );
-  } else if (gj.type == "Feature") {
-    coords = getCoordinates(gj.geometry);
-  } else if (gj.type == "GeometryCollection") {
-    coords = gj.geometries.reduce<Position[]>(
+  } else if (geojson.type == "Feature") {
+    if (
+      isText(geojson as AnnotationFeature) ||
+      isBox(geojson as AnnotationFeature)
+    ) {
+      const bbox = getBbox(geojson as Box | Text);
+      coords = [
+        [bbox[0], bbox[1]],
+        [bbox[2], bbox[3]]
+      ];
+    } else coords = getCoordinates(geojson.geometry);
+  } else if (geojson.type == "GeometryCollection") {
+    coords = geojson.geometries.reduce<Position[]>(
       (dump, g) => dump.concat(getCoordinates(g)),
       []
     );
-  } else if (gj.type == "FeatureCollection") {
-    coords = gj.features.reduce<Position[]>(
+  } else if (geojson.type == "FeatureCollection") {
+    coords = geojson.features.reduce<Position[]>(
       (dump, f) => dump.concat(getCoordinates(f)),
       []
     );
