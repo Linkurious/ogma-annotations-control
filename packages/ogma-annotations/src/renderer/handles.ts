@@ -71,14 +71,15 @@ export class Handles extends Renderer<CanvasLayer> {
       if (isArrow(feature)) {
         this.renderArrowHandles(feature, ctx, r, hoveredHandle);
       } else if (isBox(feature) || isText(feature)) {
-        this.renderOutline(feature, ctx, rotation, hoveredHandle, state.zoom);
-        this.renderBoxHandles(
+        const counterRotation = isText(feature) ? rotation : 0;
+        this.renderOutline(
           feature,
           ctx,
-          r,
+          counterRotation,
           hoveredHandle,
-          isText(feature) ? rotation : 0
+          state.zoom
         );
+        this.renderBoxHandles(feature, ctx, r, hoveredHandle, counterRotation);
       }
     });
     ctx.fill();
