@@ -60,24 +60,6 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.strokeStyle = this.handleStroke;
 
     Object.values(features).forEach((baseFeature) => {
-      // debugging - draw center point
-      // if (isText(baseFeature)) {
-      //   const pos = getBoxPosition(
-      //     baseFeature,
-      //     baseFeature.properties.style?.fixedSize,
-      //     state.zoom
-      //   );
-      //   const size = getBoxSize(baseFeature);
-      //   ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
-      //   ctx.arc(
-      //     pos.x + size.width / 2,
-      //     pos.y + size.height / 2,
-      //     5,
-      //     0,
-      //     Math.PI * 2,
-      //     true
-      //   );
-      // }
       // Only render handles for selected features
       if (!state.isSelected(baseFeature.id)) return;
 
@@ -222,12 +204,40 @@ export class Handles extends Renderer<CanvasLayer> {
       // Make hovered corner handles larger
       const handleR = hoveredHandle === i ? r * this.handleMagnifier : r;
 
+      // square handles
       ctx.rect(x - handleR, y - handleR, handleR * 2, handleR * 2);
 
+      // circle handles
       // ctx.moveTo(x + handleR, y);
       // ctx.arc(x, y, handleR, 0, 2 * Math.PI);
     }
     ctx.restore();
+  }
+
+  // @ts-expect-error debug method
+  private renderCenterPoint(
+    feature: Text | Box,
+    ctx: CanvasRenderingContext2D
+  ) {
+    const state = this.store.getState();
+    // debugging - draw center point
+    if (isText(feature)) {
+      const pos = getBoxPosition(
+        feature,
+        feature.properties.style?.fixedSize,
+        state.zoom
+      );
+      const size = getBoxSize(feature);
+      ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
+      ctx.arc(
+        pos.x + size.width / 2,
+        pos.y + size.height / 2,
+        5,
+        0,
+        Math.PI * 2,
+        true
+      );
+    }
   }
 
   public destroy(): void {
