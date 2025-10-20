@@ -21,8 +21,8 @@ const CORNER_OFFSETS = [
 export class Handles extends Renderer<CanvasLayer> {
   // TODO: move it to settings and state
   private handleFill = "#fff";
-  private handleStroke = "#0093ff";
-  private handleStrokeWidth = 2;
+  private handleStroke = "#1A70E5";
+  private handleStrokeWidth = 1.5;
   private handleRadius = 3;
   private handleMagnifier = 1.5;
 
@@ -61,23 +61,23 @@ export class Handles extends Renderer<CanvasLayer> {
 
     Object.values(features).forEach((baseFeature) => {
       // debugging - draw center point
-      if (isText(baseFeature)) {
-        const pos = getBoxPosition(
-          baseFeature,
-          baseFeature.properties.style?.fixedSize,
-          state.zoom
-        );
-        const size = getBoxSize(baseFeature);
-        ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
-        ctx.arc(
-          pos.x + size.width / 2,
-          pos.y + size.height / 2,
-          5,
-          0,
-          Math.PI * 2,
-          true
-        );
-      }
+      // if (isText(baseFeature)) {
+      //   const pos = getBoxPosition(
+      //     baseFeature,
+      //     baseFeature.properties.style?.fixedSize,
+      //     state.zoom
+      //   );
+      //   const size = getBoxSize(baseFeature);
+      //   ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
+      //   ctx.arc(
+      //     pos.x + size.width / 2,
+      //     pos.y + size.height / 2,
+      //     5,
+      //     0,
+      //     Math.PI * 2,
+      //     true
+      //   );
+      // }
       // Only render handles for selected features
       if (!state.isSelected(baseFeature.id)) return;
 
@@ -88,15 +88,86 @@ export class Handles extends Renderer<CanvasLayer> {
 
       if (isArrow(feature)) {
         this.renderArrowHandles(feature, ctx, r, hoveredHandle);
-      } else if (isText(feature)) {
-        this.renderBoxHandles(feature, ctx, r, hoveredHandle, rotation);
-      } else if (isBox(feature)) {
-        this.renderBoxHandles(feature, ctx, r, hoveredHandle, 0);
+      } else if (isBox(feature) || isText(feature)) {
+        this.renderOutline(feature, ctx, rotation, hoveredHandle, state.zoom);
+        this.renderBoxHandles(
+          feature,
+          ctx,
+          r,
+          hoveredHandle,
+          isText(feature) ? rotation : 0
+        );
       }
     });
     ctx.fill();
     ctx.stroke();
   };
+
+  private renderOutline(
+    feature: Text | Box,
+    ctx: CanvasRenderingContext2D,
+    rotation: number,
+    hoveredHandle: -1 | number,
+    zoom: number
+  ) {
+    if (isText(feature) && feature.properties.style?.fixedSize) return;
+    // outline of the box
+    const { width, height } = getBoxSize(feature);
+    const position = getBoxPosition(feature);
+    const hw = width / 2;
+    const hh = height / 2;
+    // center of the box
+    const ox = position.x + hw;
+    const oy = position.y + hh;
+
+    ctx.save();
+
+    ctx.translate(ox, oy);
+    ctx.rotate(rotation);
+
+    // Draw box outline
+    ctx.strokeRect(-hw, -hh, width, height);
+    // if there's a hovered edge handle, draw thicker line on that edge
+    if (hoveredHandle >= 4 && hoveredHandle < 8) {
+      let x0: number, y0: number, x1: number, y1: number;
+      const r = this.handleRadius / zoom;
+      switch (hoveredHandle) {
+        case 4: // top edge
+          x0 = -hw + r;
+          y0 = -hh;
+          x1 = hw - r;
+          y1 = -hh;
+          break;
+        case 5: // right edge
+          x0 = hw;
+          y0 = -hh + r;
+          x1 = hw;
+          y1 = hh - r;
+          break;
+        case 6: // bottom edge
+          x0 = hw - r;
+          y0 = hh;
+          x1 = -hw + r;
+          y1 = hh;
+          break;
+        case 7: // left edge
+          x0 = -hw;
+          y0 = hh - r;
+          x1 = -hw;
+          y1 = -hh + r;
+          break;
+      }
+
+      ctx.lineWidth = (this.handleStrokeWidth * this.handleMagnifier) / zoom;
+      ctx.beginPath();
+      ctx.moveTo(x0!, y0!);
+      ctx.lineTo(x1!, y1!);
+      ctx.stroke();
+      ctx.lineWidth = this.handleStrokeWidth;
+    }
+
+    ctx.restore();
+  }
 
   private renderArrowHandles(
     feature: Arrow,
@@ -151,10 +222,10 @@ export class Handles extends Renderer<CanvasLayer> {
       // Make hovered corner handles larger
       const handleR = hoveredHandle === i ? r * this.handleMagnifier : r;
 
-      //ctx.rect(x - handleR, y - handleR, handleR * 2, handleR * 2);
+      ctx.rect(x - handleR, y - handleR, handleR * 2, handleR * 2);
 
-      ctx.moveTo(x + handleR, y);
-      ctx.arc(x, y, handleR, 0, 2 * Math.PI);
+      // ctx.moveTo(x + handleR, y);
+      // ctx.arc(x, y, handleR, 0, 2 * Math.PI);
     }
     ctx.restore();
   }

@@ -55,6 +55,12 @@ const points = {
 // ├─7─┼─6─┤  6: bottom edge
 // │   │   │  7: left edge
 // └───┴───┘
+//
+// Body (8):
+// ┌─────┐  8: body
+// │     │
+// │     │
+// └─────┘
 const CORNER_HANDLES = [
   [-0.5, -0.5], // top-left (index 0)
   [0.5, -0.5], // top-right (index 1)
