@@ -76,7 +76,14 @@ export class InteractionController {
       } else if (isText(feature)) {
         // texts are screen aligned
         if (
-          detectText(feature, { x, y }, state.revSin, state.revCos, threshold)
+          detectText(
+            feature,
+            { x, y },
+            threshold,
+            state.revSin,
+            state.revCos,
+            state.zoom
+          )
         ) {
           result = feature;
           break;

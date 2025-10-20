@@ -123,6 +123,7 @@ export class Handles extends Renderer<CanvasLayer> {
     hoveredHandle: -1 | number,
     rotation: number
   ) {
+    if (isText(feature) && feature.properties.style?.fixedSize) return;
     // a circle handle at each corner of the text box
     const { width, height } = getBoxSize(feature);
     const position = getBoxPosition(feature);

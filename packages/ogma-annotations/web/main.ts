@@ -169,12 +169,12 @@ function updateUndoRedoButtons() {
     !control.canRedo();
 }
 
-async function fit() {
+async function fit(duration = 200) {
   const bounds = ogma.view.getGraphBoundingBox();
 
   await ogma.view.moveToBounds(
     bounds.extend(getAnnotationsBounds(control.getAnnotations())),
-    { duration: 200 }
+    { duration }
   );
 }
 

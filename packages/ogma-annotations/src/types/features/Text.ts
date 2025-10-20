@@ -18,6 +18,8 @@ export interface TextStyle extends BoxStyle {
   padding?: number;
   /** Text box border radius */
   borderRadius?: number;
+  /** When true, text maintains constant size regardless of zoom level */
+  fixedSize?: boolean;
 }
 
 export interface TextProperties extends Omit<BoxProperties, "type"> {
@@ -46,7 +48,8 @@ export const defaultTextStyle: TextStyle = {
   strokeWidth: 0,
   borderRadius: 8,
   padding: 16,
-  strokeType: "plain"
+  strokeType: "plain",
+  fixedSize: false
 };
 
 //used when adding a new Text
@@ -94,19 +97,23 @@ export const createText = (
 export function detectText(
   a: Text,
   p: Point,
+  threshold: number = 0,
   sin: number = 0,
   cos: number = 1,
-  threshold: number = 0
+  zoom: number = 1
 ): boolean {
-  // check if the pointer is within the bounding box of the text
-  const { x, y } = getBoxPosition(a);
-  const { width, height } = getBoxSize(a);
+  // Get center directly from Point geometry coordinates
+  const [cx, cy] = a.geometry.coordinates as [number, number];
+  let { width, height } = getBoxSize(a);
+
+  // For fixed-size text, scale world-space dimensions by invZoom
+  if (a.properties.style?.fixedSize) {
+    width /= zoom;
+    height /= zoom;
+  }
+
   const hw = width / 2;
   const hh = height / 2;
-
-  // Rotate around center, not top-left corner
-  const cx = x + hw;
-  const cy = y + hh;
 
   const tx = p.x - cx;
   const ty = p.y - cy;

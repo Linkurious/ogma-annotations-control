@@ -5,6 +5,8 @@ import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
+const compareId = (a: Annotation, b: Annotation) => a.id === b.id;
+
 export class Index extends Rtree<Annotation> {
   private store: Store;
 
@@ -44,7 +46,7 @@ export class Index extends Rtree<Annotation> {
                 updateBbox(newFeature);
                 if (isText(newFeature)) this.updateRotatedText(newFeature);
                 else {
-                  this.remove(newFeature);
+                  this.remove(newFeature, compareId);
                   this.insert(newFeature);
                 }
               }
@@ -55,6 +57,7 @@ export class Index extends Rtree<Annotation> {
       { equalityFn: (a, b) => a.isDragging === b.isDragging }
     );
     this.store.subscribe((state) => state.rotation, this.onRotationChange);
+    this.store.subscribe((state) => state.zoom, this.onZoomChange);
   }
 
   private onRotationChange = () => {
@@ -66,13 +69,33 @@ export class Index extends Rtree<Annotation> {
     for (const text of texts) this.updateRotatedText(text as Text);
   };
 
+  private onZoomChange = () => {
+    const fixedSizeTexts = this.store
+      .getState()
+      .getAllFeatures()
+      .filter(
+        (feature) => isText(feature) && feature.properties.style?.fixedSize
+      );
+
+    for (const text of fixedSizeTexts) this.updateRotatedText(text as Text);
+  };
+
   private updateRotatedText(text: Text) {
     const state = this.store.getState();
-    this.remove(text);
+    this.remove(text, compareId);
 
     // Get bbox from center + dimensions (works with Point geometry)
     const center = getBoxCenter(text);
-    const { width, height } = getBoxSize(text);
+    let { width, height } = getBoxSize(text);
+
+    // For fixed-size text, the world-space dimensions change with zoom
+    const isFixedSize = text.properties.style?.fixedSize === true;
+    if (isFixedSize) {
+      const invZoom = state.invZoom;
+      width *= invZoom;
+      height *= invZoom;
+    }
+
     const hw = width / 2;
     const hh = height / 2;
 

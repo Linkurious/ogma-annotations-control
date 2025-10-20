@@ -87,7 +87,7 @@ export class TextHandler extends Handler<Text, Handle> {
   detectHandle(evt: MouseEvent, zoom: number) {
     const annotation = this.getAnnotation()!;
     const { x, y } = this.clientToCanvas(evt);
-    const { width, height } = getBoxSize(annotation);
+    let { width, height } = getBoxSize(annotation);
     // TODO: detection threshold (state)
     const margin = 3 / zoom;
 
@@ -110,49 +110,60 @@ export class TextHandler extends Handler<Text, Handle> {
     const mx = dmx * cos - dmy * sin;
     const my = dmx * sin + dmy * cos;
 
-    // Check corner handles first (higher priority)
-    for (let i = 0; i < CORNER_HANDLES.length; i++) {
-      const [xOffset, yOffset] = CORNER_HANDLES[i];
+    // Check if this is a fixed-size text box
+    const isFixedSize = annotation.properties.style?.fixedSize === true;
 
-      const cx = width * xOffset;
-      const cy = height * yOffset;
-
-      if (
-        mx >= cx - handleSize - margin &&
-        mx <= cx + handleSize + margin &&
-        my >= cy - handleSize - margin &&
-        my <= cy + handleSize + margin
-      ) {
-        this.hoveredHandle = {
-          type: HandleType.CORNER,
-          corner: i
-        };
-        this.store.setState({ hoveredHandle: i });
-        this.setCursor(this.getCornerCursor(i));
-        return; // Exit early if corner handle found
-      }
+    if (isFixedSize) {
+      width /= zoom;
+      height /= zoom;
     }
 
-    // Check edge handles if no corner handle was found
-    for (const [edge, norm, xStart, yStart, xEnd, yEnd] of EDGE_TEMPLATES) {
-      const minX = width * xStart;
-      const minY = height * yStart;
-      const maxX = width * xEnd;
-      const maxY = height * yEnd;
+    // Skip resize handles for fixed-size text boxes
+    if (!isFixedSize) {
+      // Check corner handles first (higher priority)
+      for (let i = 0; i < CORNER_HANDLES.length; i++) {
+        const [xOffset, yOffset] = CORNER_HANDLES[i];
 
-      const dist = dot(norm, { x: mx - minX, y: my - minY });
+        const cx = width * xOffset;
+        const cy = height * yOffset;
 
-      if (
-        Math.abs(dist) < margin &&
-        mx >= minX - margin &&
-        mx <= maxX + margin &&
-        my >= minY - margin &&
-        my <= maxY + margin
-      ) {
-        this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
-        this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
-        this.setCursor(this.getEdgeCursor(edge));
-        return;
+        if (
+          mx >= cx - handleSize - margin &&
+          mx <= cx + handleSize + margin &&
+          my >= cy - handleSize - margin &&
+          my <= cy + handleSize + margin
+        ) {
+          this.hoveredHandle = {
+            type: HandleType.CORNER,
+            corner: i
+          };
+          this.store.setState({ hoveredHandle: i });
+          this.setCursor(this.getCornerCursor(i));
+          return; // Exit early if corner handle found
+        }
+
+        // Check edge handles if no corner handle was found
+        for (const [edge, norm, xStart, yStart, xEnd, yEnd] of EDGE_TEMPLATES) {
+          const minX = width * xStart;
+          const minY = height * yStart;
+          const maxX = width * xEnd;
+          const maxY = height * yEnd;
+
+          const dist = dot(norm, { x: mx - minX, y: my - minY });
+
+          if (
+            Math.abs(dist) < margin &&
+            mx >= minX - margin &&
+            mx <= maxX + margin &&
+            my >= minY - margin &&
+            my <= maxY + margin
+          ) {
+            this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
+            this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
+            this.setCursor(this.getEdgeCursor(edge));
+            return;
+          }
+        }
       }
     }
 

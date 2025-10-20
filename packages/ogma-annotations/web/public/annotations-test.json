@@ -162,6 +162,7 @@
         "type": "text",
         "content": "This is another one",
         "style": {
+          "fixedSize": true,
           "font": "IBM Plex Sans",
           "fontSize": 22,
           "color": "#E31D5B",

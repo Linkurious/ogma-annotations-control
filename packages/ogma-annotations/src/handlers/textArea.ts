@@ -72,9 +72,15 @@ export class TextArea {
     const annotation = this.getAnnotation();
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation);
+    const fixedSize = annotation.properties.style?.fixedSize || false;
+    const zoom = this.store.getState().zoom;
+
+    // Scale size inversely with zoom for fixed-size text
+    const effectiveScale = fixedSize ? 1 / zoom : 1;
+
     return {
-      width: size.width - borderWidth * 2,
-      height: size.height - borderWidth * 2
+      width: (size.width - borderWidth * 2) * effectiveScale,
+      height: (size.height - borderWidth * 2) * effectiveScale
     };
   }
 
@@ -87,16 +93,23 @@ export class TextArea {
       fontSize = defaultTextStyle.fontSize,
       color,
       background,
-      padding = 0
+      padding = 0,
+      fixedSize = defaultTextStyle.fixedSize
     } = annotation.properties.style || defaultTextStyle;
     const textArea = this.textarea;
-    const scaledFontSize = parseFloat(fontSize!.toString());
+    const zoom = this.store.getState().zoom;
+
+    // Scale font size inversely with zoom for fixed-size text
+    const effectiveScale = fixedSize ? 1 / zoom : 1;
+    const scaledFontSize = parseFloat(fontSize!.toString()) * effectiveScale;
+    const scaledPadding = padding * effectiveScale;
+
     const textAreaStyle = textArea.style;
 
     textAreaStyle.font = `${scaledFontSize} ${font}`;
     textAreaStyle.fontFamily = font || "sans-serif";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
-    textAreaStyle.padding = `${padding}px`;
+    textAreaStyle.padding = `${scaledPadding}px`;
     textAreaStyle.lineHeight = `${scaledFontSize}px`;
 
     textAreaStyle.boxSizing = "border-box";

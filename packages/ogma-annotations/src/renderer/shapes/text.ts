@@ -21,7 +21,8 @@ export function renderText(
     strokeWidth = defaultTextStyle.strokeWidth,
     strokeType = defaultTextStyle.strokeType,
     background,
-    borderRadius
+    borderRadius,
+    fixedSize = defaultTextStyle.fixedSize
   } = annotation.properties.style || defaultTextStyle;
 
   const g = renderBox(root, annotation as unknown as Box, cachedElement, state);
@@ -63,9 +64,10 @@ export function renderText(
   drawContent(annotation, g, x, y);
 
   // get the SVG transform matrix to rotate the box around its center:
+  // When fixedSize is true, apply invZoom to maintain constant screen size
   g.setAttribute(
     "transform",
-    state.getScreenAlignedTransform(position.x, position.y, true)
+    state.getScreenAlignedTransform(position.x, position.y, !fixedSize)
   );
 
   root.appendChild(g);
