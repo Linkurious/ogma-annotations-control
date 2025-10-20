@@ -22,6 +22,8 @@ describe("Index (Spatial Index)", () => {
         rotation: 0,
         sin: 0,
         cos: 1,
+        zoom: 1,
+        invZoom: 1,
         getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [
           x0,
           y0,
