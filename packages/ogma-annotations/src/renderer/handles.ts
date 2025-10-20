@@ -92,10 +92,14 @@ export class Handles extends Renderer<CanvasLayer> {
     hoveredHandle: -1 | number,
     zoom: number
   ) {
-    if (isText(feature) && feature.properties.style?.fixedSize) return;
+    const isFixedSize = isText(feature) && feature.properties.style?.fixedSize;
     // outline of the box
-    const { width, height } = getBoxSize(feature);
-    const position = getBoxPosition(feature);
+    let { width, height } = getBoxSize(feature);
+    if (isFixedSize) {
+      width /= zoom;
+      height /= zoom;
+    }
+    const position = getBoxPosition(feature, isFixedSize, zoom);
     const hw = width / 2;
     const hh = height / 2;
     // center of the box
