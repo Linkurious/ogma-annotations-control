@@ -52,7 +52,11 @@ export function getBoxSize<T extends Annotation>(t: T) {
   };
 }
 
-export function getBoxPosition<T extends Annotation>(t: T) {
+export function getBoxPosition<T extends Annotation>(
+  t: T,
+  fixedSize: boolean = false,
+  zoom: number = 1
+) {
   // For Point geometry (Box/Text), calculate from center
   if (
     t.geometry.type === "Point" &&
@@ -60,8 +64,13 @@ export function getBoxPosition<T extends Annotation>(t: T) {
     "height" in t.properties
   ) {
     const [cx, cy] = t.geometry.coordinates as [number, number];
-    const width = t.properties.width as number;
-    const height = t.properties.height as number;
+    let width = t.properties.width as number;
+    let height = t.properties.height as number;
+    if (fixedSize) {
+      width /= zoom;
+      height /= zoom;
+    }
+
     return {
       x: cx - width / 2,
       y: cy - height / 2

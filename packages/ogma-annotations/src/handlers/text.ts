@@ -89,7 +89,7 @@ export class TextHandler extends Handler<Text, Handle> {
     const { x, y } = this.clientToCanvas(evt);
     let { width, height } = getBoxSize(annotation);
     // TODO: detection threshold (state)
-    const margin = 3 / zoom;
+    const margin = 5 / zoom;
 
     const origin = getBoxCenter(annotation);
     const state = this.store.getState();
@@ -141,28 +141,28 @@ export class TextHandler extends Handler<Text, Handle> {
           this.setCursor(this.getCornerCursor(i));
           return; // Exit early if corner handle found
         }
+      }
 
-        // Check edge handles if no corner handle was found
-        for (const [edge, norm, xStart, yStart, xEnd, yEnd] of EDGE_TEMPLATES) {
-          const minX = width * xStart;
-          const minY = height * yStart;
-          const maxX = width * xEnd;
-          const maxY = height * yEnd;
+      // Check edge handles if no corner handle was found
+      for (const [edge, norm, xStart, yStart, xEnd, yEnd] of EDGE_TEMPLATES) {
+        const minX = width * xStart;
+        const minY = height * yStart;
+        const maxX = width * xEnd;
+        const maxY = height * yEnd;
 
-          const dist = dot(norm, { x: mx - minX, y: my - minY });
+        const dist = dot(norm, { x: mx - minX, y: my - minY });
 
-          if (
-            Math.abs(dist) < margin &&
-            mx >= minX - margin &&
-            mx <= maxX + margin &&
-            my >= minY - margin &&
-            my <= maxY + margin
-          ) {
-            this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
-            this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
-            this.setCursor(this.getEdgeCursor(edge));
-            return;
-          }
+        if (
+          Math.abs(dist) < margin &&
+          mx >= minX - margin &&
+          mx <= maxX + margin &&
+          my >= minY - margin &&
+          my <= maxY + margin
+        ) {
+          this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
+          this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
+          this.setCursor(this.getEdgeCursor(edge));
+          return;
         }
       }
     }

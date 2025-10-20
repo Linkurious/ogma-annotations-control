@@ -62,7 +62,11 @@ export class Handles extends Renderer<CanvasLayer> {
     Object.values(features).forEach((baseFeature) => {
       // debugging - draw center point
       if (isText(baseFeature)) {
-        const pos = getBoxPosition(baseFeature);
+        const pos = getBoxPosition(
+          baseFeature,
+          baseFeature.properties.style?.fixedSize,
+          state.zoom
+        );
         const size = getBoxSize(baseFeature);
         ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
         ctx.arc(
@@ -146,6 +150,8 @@ export class Handles extends Renderer<CanvasLayer> {
 
       // Make hovered corner handles larger
       const handleR = hoveredHandle === i ? r * this.handleMagnifier : r;
+
+      //ctx.rect(x - handleR, y - handleR, handleR * 2, handleR * 2);
 
       ctx.moveTo(x + handleR, y);
       ctx.arc(x, y, handleR, 0, 2 * Math.PI);

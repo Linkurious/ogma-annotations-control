@@ -2,7 +2,7 @@ import { Geometry, Point as GeoJSONPoint } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { BoxProperties, BoxStyle } from "./Box";
-import { getBoxPosition, getBoxSize } from "../../utils";
+import { getBoxSize } from "../../utils";
 import { Point } from "../geometry";
 
 export interface TextStyle extends BoxStyle {

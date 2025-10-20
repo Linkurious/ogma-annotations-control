@@ -60,7 +60,11 @@ export class TextArea {
 
   private getPosition() {
     const annotation = this.getAnnotation();
-    const corner = getBoxPosition(annotation);
+    const corner = getBoxPosition(
+      annotation,
+      annotation.properties.style?.fixedSize,
+      this.store.getState().zoom
+    );
     const borderWidth = getBorderWidth(annotation);
     return {
       x: corner.x + borderWidth,
@@ -91,6 +95,7 @@ export class TextArea {
     const {
       font,
       fontSize = defaultTextStyle.fontSize,
+      borderRadius,
       color,
       background,
       padding = 0,
@@ -115,6 +120,7 @@ export class TextArea {
     textAreaStyle.boxSizing = "border-box";
     textAreaStyle.color = color || "black";
     textAreaStyle.background = background || "transparent";
+    textAreaStyle.borderRadius = `${borderRadius}px`;
 
     // transform origin at center
     textAreaStyle.transformOrigin = "center";
