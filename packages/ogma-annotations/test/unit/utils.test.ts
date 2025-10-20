@@ -87,19 +87,15 @@ describe("Utils", () => {
           type: "Feature",
           id: 2,
           properties: {
-            type: "text"
+            type: "text",
+            width: 50,
+            height: 50,
+            content: ""
           },
           geometry: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [0, 0],
-                [50, 0],
-                [50, 50],
-                [0, 50],
-                [0, 0]
-              ]
-            ]
+            type: "Point",
+            coordinates: [25, 25],
+            bbox: [0, 0, 50, 50]
           }
         }
       ]
@@ -116,38 +112,30 @@ describe("Utils", () => {
           type: "Feature",
           id: 2,
           properties: {
-            type: "text"
+            type: "text",
+            width: 50,
+            height: 50,
+            content: ""
           },
           geometry: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [0, 0],
-                [50, 0],
-                [50, 50],
-                [0, 50],
-                [0, 0]
-              ]
-            ]
+            type: "Point",
+            coordinates: [25, 25],
+            bbox: [0, 0, 50, 50]
           }
         },
         {
           type: "Feature",
           id: 3,
           properties: {
-            type: "text"
+            type: "text",
+            width: 90,
+            height: 90,
+            content: ""
           },
           geometry: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [10, 10],
-                [100, 10],
-                [100, 100],
-                [10, 100],
-                [10, 10]
-              ]
-            ]
+            type: "Point",
+            coordinates: [55, 55],
+            bbox: [10, 10, 100, 100]
           }
         }
       ]
@@ -164,19 +152,15 @@ describe("Utils", () => {
           type: "Feature",
           id: 2,
           properties: {
-            type: "text"
+            type: "text",
+            width: 50,
+            height: 50,
+            content: ""
           },
           geometry: {
-            type: "Polygon",
-            coordinates: [
-              [
-                [0, 0],
-                [50, 0],
-                [50, 50],
-                [0, 50],
-                [0, 0]
-              ]
-            ]
+            type: "Point",
+            coordinates: [25, 25],
+            bbox: [0, 0, 50, 50]
           }
         },
         {
