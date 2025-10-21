@@ -149,12 +149,8 @@ export abstract class Handler<
   }
 
   protected setCursor(cursor: Cursor) {
-    try {
-      const container = this.ogma.getContainer()?.firstChild;
-      if (container) (container as HTMLElement).style.cursor = cursor;
-    } catch (e) {
-      // Ignore - headless mode
-    }
+    const container = this.ogma.getContainer()?.firstChild;
+    if (container) (container as HTMLElement).style.cursor = cursor;
   }
 
   stopEditing() {

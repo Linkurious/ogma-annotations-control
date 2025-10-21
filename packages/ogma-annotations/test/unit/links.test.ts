@@ -16,7 +16,11 @@ describe("Links", () => {
 
   beforeEach(() => {
     mockStore = {
-      subscribe: vi.fn(() => vi.fn())
+      subscribe: vi.fn(() => vi.fn()),
+      getState: vi.fn(() => ({
+        features: {},
+        getFeature: (id: string) => undefined
+      }))
     } as unknown as Store;
   });
 
@@ -176,8 +180,15 @@ describe("Links", () => {
     });
     ogma.addNode({ id: "n0" });
     const control = new Control(ogma);
-    control.add(LoadLinksData as AnnotationCollection);
-    
+
+    // Add text first, then arrow so links can be created
+    const data = LoadLinksData as AnnotationCollection;
+    const textFeature = data.features.find(f => f.properties.type === "text");
+    const arrowFeature = data.features.find(f => f.properties.type === "arrow");
+
+    if (textFeature) control.add(textFeature);
+    if (arrowFeature) control.add(arrowFeature);
+
     // @ts-expect-error - links is private
     const linksArray = Array.from(control.links.links.values());
 

@@ -109,9 +109,7 @@ export class Links {
     };
     if (targetType === "node") {
       const node = this.ogma.getNode(targetId);
-      if (!node) {
-        return;
-      }
+      if (!node) return;
     }
     // cleanup existing link on that side
     this.remove(arrow, side);
@@ -329,22 +327,58 @@ export class Links {
       if (!feature || feature.properties.type !== "arrow") return;
       const arrow = feature as Arrow;
       if (arrow.properties.link?.start) {
-        this.add(
-          arrow,
-          SIDE_START,
-          arrow.properties.link.start.id,
-          arrow.properties.link.start.type,
-          arrow.properties.link.start.magnet!
-        );
+        const linkData = arrow.properties.link.start;
+        // Only add link if target exists
+        if (linkData.type === "node") {
+          // Node existence will be checked in add()
+          this.add(
+            arrow,
+            SIDE_START,
+            linkData.id,
+            linkData.type,
+            linkData.magnet!
+          );
+        } else {
+          // Check if annotation target exists (in current or new features)
+          const targetExists =
+            newFeatures[linkData.id] || state.getFeature(linkData.id);
+          if (targetExists) {
+            this.add(
+              arrow,
+              SIDE_START,
+              linkData.id,
+              linkData.type,
+              linkData.magnet!
+            );
+          }
+        }
       }
       if (arrow.properties.link?.end) {
-        this.add(
-          arrow,
-          SIDE_END,
-          arrow.properties.link.end.id,
-          arrow.properties.link.end.type,
-          arrow.properties.link.end.magnet!
-        );
+        const linkData = arrow.properties.link.end;
+        // Only add link if target exists
+        if (linkData.type === "node") {
+          // Node existence will be checked in add()
+          this.add(
+            arrow,
+            SIDE_END,
+            linkData.id,
+            linkData.type,
+            linkData.magnet!
+          );
+        } else {
+          // Check if annotation target exists (in current or new features)
+          const targetExists =
+            newFeatures[linkData.id] || state.getFeature(linkData.id);
+          if (targetExists) {
+            this.add(
+              arrow,
+              SIDE_END,
+              linkData.id,
+              linkData.type,
+              linkData.magnet!
+            );
+          }
+        }
       }
     });
   };
