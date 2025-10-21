@@ -1,7 +1,8 @@
 import Ogma from "@linkurious/ogma";
 
-export const createOgma = () => new Ogma({
-  options: {
-    renderer: null
-  }
-});
+export const createOgma = () =>
+  new Ogma({
+    options: {
+      renderer: null
+    }
+  });

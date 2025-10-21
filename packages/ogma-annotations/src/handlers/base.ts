@@ -131,11 +131,14 @@ export abstract class Handler<
   setAnnotation(annotation: T | null): void {
     this.annotation = annotation ? annotation.id : null;
     if (this.annotation !== null) {
-      const container = this.ogma.getContainer()!;
-      const win = getBrowserWindow() || container;
-      win.addEventListener("mousemove", this.handleMouseMove);
-      win.addEventListener("mouseup", this.handleMouseUp, true);
-      container.addEventListener("mousedown", this.handleMouseDown, true);
+      // Guard against null container (e.g., in headless tests)
+      const container: HTMLElement | null = this.ogma.getContainer();
+      if (container) {
+        const win = getBrowserWindow() || container;
+        win.addEventListener("mousemove", this.handleMouseMove);
+        win.addEventListener("mouseup", this.handleMouseUp, true);
+        container.addEventListener("mousedown", this.handleMouseDown, true);
+      }
       const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
       this.handleMouseMove({ clientX, clientY });
     }
@@ -146,17 +149,24 @@ export abstract class Handler<
   }
 
   protected setCursor(cursor: Cursor) {
-    const container = this.ogma.getContainer()?.firstChild;
-    if (container) (container as HTMLElement).style.cursor = cursor;
+    try {
+      const container = this.ogma.getContainer()?.firstChild;
+      if (container) (container as HTMLElement).style.cursor = cursor;
+    } catch (e) {
+      // Ignore - headless mode
+    }
   }
 
   stopEditing() {
     if (!this.isActive()) return;
-    const container = this.ogma.getContainer()!;
-    const win = getBrowserWindow() || container;
-    win.removeEventListener("mousemove", this.handleMouseMove);
-    win.removeEventListener("mouseup", this.handleMouseUp);
-    container.removeEventListener("mousedown", this.handleMouseDown);
+    // Guard against null container (e.g., in headless tests)
+    const container: HTMLElement | null = this.ogma.getContainer();
+    if (container) {
+      const win = getBrowserWindow() || container;
+      win.removeEventListener("mousemove", this.handleMouseMove);
+      win.removeEventListener("mouseup", this.handleMouseUp);
+      container.removeEventListener("mousedown", this.handleMouseDown);
+    }
     this.setAnnotation(null);
     this.clearDragState();
     this.annotation = null;

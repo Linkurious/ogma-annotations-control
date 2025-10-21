@@ -72,261 +72,266 @@ export interface AnnotationState {
   getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => Bounds;
 }
 
-export const store = create<AnnotationState>()(
-  subscribeWithSelector(
-    temporal(
-      (set, get) => ({
-        features: {},
-        liveUpdates: {},
-        isDragging: false,
-        hoveringHandle: false,
-        hoveredHandle: -1,
-        hoveredFeature: null,
-        selectedFeatures: new Set(),
-        lastChangedFeatures: [],
-        drawingFeature: null,
-        rotation: 0,
-        sin: 0,
-        cos: 1,
-        revRotation: 0,
-        revSin: 0,
-        revCos: 1,
-        zoom: 1,
-        invZoom: 1,
+export const createStore = () => {
+  const store = create<AnnotationState>()(
+    subscribeWithSelector(
+      temporal(
+        (set, get) => ({
+          features: {},
+          liveUpdates: {},
+          isDragging: false,
+          hoveringHandle: false,
+          hoveredHandle: -1,
+          hoveredFeature: null,
+          selectedFeatures: new Set(),
+          lastChangedFeatures: [],
+          drawingFeature: null,
+          rotation: 0,
+          sin: 0,
+          cos: 1,
+          revRotation: 0,
+          revSin: 0,
+          revCos: 1,
+          zoom: 1,
+          invZoom: 1,
 
-        removeFeature: (id) =>
-          set((state) => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const { [id]: _, ...rest } = state.features;
-            return { features: rest };
-          }),
+          removeFeature: (id) =>
+            set((state) => {
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              const { [id]: _, ...rest } = state.features;
+              return { features: rest };
+            }),
 
-        addFeature: (feature) =>
-          set((state) => ({
-            features: {
-              ...state.features,
-              [feature.id]: feature as Annotation
-            }
-          })),
+          addFeature: (feature) =>
+            set((state) => ({
+              features: {
+                ...state.features,
+                [feature.id]: feature as Annotation
+              }
+            })),
 
-        // Start live update - snapshot current state
-        startLiveUpdate: (ids) => {
-          set((state) => ({
-            liveUpdates: ids.reduce(
-              (acc, id) => ({
-                ...acc,
-                [id]: { ...state.features[id] }
-              }),
-              {}
-            ),
-            isDragging: true
-          }));
-        },
+          // Start live update - snapshot current state
+          startLiveUpdate: (ids) => {
+            set((state) => ({
+              liveUpdates: ids.reduce(
+                (acc, id) => ({
+                  ...acc,
+                  [id]: { ...state.features[id] }
+                }),
+                {}
+              ),
+              isDragging: true
+            }));
+          },
 
-        // Apply live updates - no history, super fast!
-        applyLiveUpdate: (id, updates) => {
-          set((state) => ({
-            liveUpdates: {
-              ...state.liveUpdates,
-              [id]: {
-                ...state.liveUpdates[id],
-                ...updates
-              } as Annotation
-            }
-          }));
-        },
+          // Apply live updates - no history, super fast!
+          applyLiveUpdate: (id, updates) => {
+            set((state) => ({
+              liveUpdates: {
+                ...state.liveUpdates,
+                [id]: {
+                  ...state.liveUpdates[id],
+                  ...updates
+                } as Annotation
+              }
+            }));
+          },
 
-        // Commit all live updates - single history entry!
-        commitLiveUpdates: (ids?: Set<Id>) => {
-          const { features, liveUpdates } = get();
-          const updatedFeatures = { ...features };
-          const changedFeatureIds: Id[] = [];
+          // Commit all live updates - single history entry!
+          commitLiveUpdates: (ids?: Set<Id>) => {
+            const { features, liveUpdates } = get();
+            const updatedFeatures = { ...features };
+            const changedFeatureIds: Id[] = [];
 
-          const keys = Object.keys(liveUpdates);
-          if (!ids) ids = new Set(keys);
+            const keys = Object.keys(liveUpdates);
+            if (!ids) ids = new Set(keys);
 
-          // Merge live updates into features and track changes
-          keys.forEach((id) => {
-            const updates = liveUpdates[id];
-            if (updatedFeatures[id] && Object.keys(updates).length > 0) {
-              updatedFeatures[id] = {
-                ...updatedFeatures[id],
-                ...updates
-              } as Annotation;
-              changedFeatureIds.push(id);
-            }
-          });
-
-          set({
-            features: updatedFeatures,
-            liveUpdates: {},
-            isDragging: false,
-            lastChangedFeatures: changedFeatureIds // Track which features changed
-          });
-        },
-
-        cancelLiveUpdates: () =>
-          set({
-            liveUpdates: {},
-            isDragging: false
-          }),
-
-        // Regular update - creates history entry
-        updateFeature: (id, updates) =>
-          set((state) => ({
-            features: {
-              ...state.features,
-              [id]: { ...state.features[id], ...updates } as Annotation
-            }
-          })),
-
-        // Batch update multiple features - single history entry
-        updateFeatures: (updates) =>
-          set((state) => {
-            const newFeatures = { ...state.features };
-            Object.entries(updates).forEach(([id, update]) => {
-              if (newFeatures[id]) {
-                newFeatures[id] = {
-                  ...newFeatures[id],
-                  ...update
+            // Merge live updates into features and track changes
+            keys.forEach((id) => {
+              const updates = liveUpdates[id];
+              if (updatedFeatures[id] && Object.keys(updates).length > 0) {
+                updatedFeatures[id] = {
+                  ...updatedFeatures[id],
+                  ...updates
                 } as Annotation;
+                changedFeatureIds.push(id);
               }
             });
-            return { features: newFeatures };
-          }),
 
-        // Batch wrapper - pauses history
-        batchUpdate: (fn) => {
-          const temporal = store.temporal.getState();
-          temporal.pause();
-          fn();
-          temporal.resume();
-        },
+            set({
+              features: updatedFeatures,
+              liveUpdates: {},
+              isDragging: false,
+              lastChangedFeatures: changedFeatureIds // Track which features changed
+            });
+          },
 
-        // Getters
-        getFeature: (id) => get().features[id],
+          cancelLiveUpdates: () =>
+            set({
+              liveUpdates: {},
+              isDragging: false
+            }),
 
-        getMergedFeature: (id) => {
-          const feature = get().features[id];
-          const liveUpdate = get().liveUpdates[id];
-          if (!feature) return undefined;
-          return (
-            liveUpdate ? { ...feature, ...liveUpdate } : feature
-          ) as Annotation;
-        },
+          // Regular update - creates history entry
+          updateFeature: (id, updates) =>
+            set((state) => ({
+              features: {
+                ...state.features,
+                [id]: { ...state.features[id], ...updates } as Annotation
+              }
+            })),
 
-        getAllFeatures: () => {
-          const { features, liveUpdates } = get();
-          return Object.entries(features).map(([id, feature]) => {
-            const update = liveUpdates[id];
-            return (update ? { ...feature, ...update } : feature) as Annotation;
-          });
-        },
+          // Batch update multiple features - single history entry
+          updateFeatures: (updates) =>
+            set((state) => {
+              const newFeatures = { ...state.features };
+              Object.entries(updates).forEach(([id, update]) => {
+                if (newFeatures[id]) {
+                  newFeatures[id] = {
+                    ...newFeatures[id],
+                    ...update
+                  } as Annotation;
+                }
+              });
+              return { features: newFeatures };
+            }),
 
-        // State management actions
-        setHoveredFeature: (id) => set({ hoveredFeature: id }),
+          // Batch wrapper - pauses history
+          batchUpdate: (fn) => {
+            const temporal = store.temporal.getState();
+            temporal.pause();
+            fn();
+            temporal.resume();
+          },
 
-        setSelectedFeatures: (ids) => set({ selectedFeatures: new Set(ids) }),
+          // Getters
+          getFeature: (id) => get().features[id],
 
-        addToSelection: (id) => {
-          const { selectedFeatures } = get();
-          const newSelection = new Set(selectedFeatures);
-          newSelection.add(id);
-          set({ selectedFeatures: newSelection });
-        },
+          getMergedFeature: (id) => {
+            const feature = get().features[id];
+            const liveUpdate = get().liveUpdates[id];
+            if (!feature) return undefined;
+            return (
+              liveUpdate ? { ...feature, ...liveUpdate } : feature
+            ) as Annotation;
+          },
 
-        removeFromSelection: (id) => {
-          const { selectedFeatures } = get();
-          const newSelection = new Set(selectedFeatures);
-          newSelection.delete(id);
-          set({ selectedFeatures: newSelection });
-        },
+          getAllFeatures: () => {
+            const { features, liveUpdates } = get();
+            return Object.entries(features).map(([id, feature]) => {
+              const update = liveUpdates[id];
+              return (
+                update ? { ...feature, ...update } : feature
+              ) as Annotation;
+            });
+          },
 
-        toggleSelection: (id) => {
-          const { selectedFeatures } = get();
-          const newSelection = new Set(selectedFeatures);
-          if (newSelection.has(id)) newSelection.delete(id);
-          else newSelection.add(id);
-          set({ selectedFeatures: newSelection });
-        },
+          // State management actions
+          setHoveredFeature: (id) => set({ hoveredFeature: id }),
 
-        clearSelection: () => set({ selectedFeatures: new Set() }),
+          setSelectedFeatures: (ids) => set({ selectedFeatures: new Set(ids) }),
 
-        // State getters
-        isHovered: (id) => get().hoveredFeature === id,
+          addToSelection: (id) => {
+            const { selectedFeatures } = get();
+            const newSelection = new Set(selectedFeatures);
+            newSelection.add(id);
+            set({ selectedFeatures: newSelection });
+          },
 
-        isSelected: (id) => get().selectedFeatures.has(id),
+          removeFromSelection: (id) => {
+            const { selectedFeatures } = get();
+            const newSelection = new Set(selectedFeatures);
+            newSelection.delete(id);
+            set({ selectedFeatures: newSelection });
+          },
 
-        setRotation: (rotation: number) => {
-          set({
-            rotation,
-            sin: Math.sin(rotation),
-            cos: Math.cos(rotation),
-            revRotation: -rotation,
-            revSin: Math.sin(-rotation),
-            revCos: Math.cos(-rotation)
-          });
-          // Don't trigger history for camera changes
-        },
+          toggleSelection: (id) => {
+            const { selectedFeatures } = get();
+            const newSelection = new Set(selectedFeatures);
+            if (newSelection.has(id)) newSelection.delete(id);
+            else newSelection.add(id);
+            set({ selectedFeatures: newSelection });
+          },
 
-        setZoom: (zoom: number) => {
-          set({
-            zoom,
-            invZoom: 1 / zoom
-          });
-        },
+          clearSelection: () => set({ selectedFeatures: new Set() }),
 
-        getScreenAlignedTransform(ox, oy, scaled = true) {
-          const sin = this.revSin;
-          const cos = this.revCos;
-          const x = ox * cos - oy * sin;
-          const y = ox * sin + oy * cos;
+          // State getters
+          isHovered: (id) => get().hoveredFeature === id,
 
-          // scale it around its center
-          const scale = scaled ? 1 : this.invZoom;
+          isSelected: (id) => get().selectedFeatures.has(id),
 
-          return `matrix(${scale}, 0, 0, ${scale}, ${x}, ${y})`;
-        },
+          setRotation: (rotation: number) => {
+            set({
+              rotation,
+              sin: Math.sin(rotation),
+              cos: Math.cos(rotation),
+              revRotation: -rotation,
+              revSin: Math.sin(-rotation),
+              revCos: Math.cos(-rotation)
+            });
+            // Don't trigger history for camera changes
+          },
 
-        getRotationTransform(ox, oy) {
-          const sin = this.revSin;
-          const cos = this.revCos;
-          const tx = ox * cos - oy * sin;
-          const ty = ox * sin + oy * cos;
-          return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${-tx}, ${-ty})`;
-        },
+          setZoom: (zoom: number) => {
+            set({
+              zoom,
+              invZoom: 1 / zoom
+            });
+          },
 
-        getRotatedBBox(x0, y0, x1, y1) {
-          const rabb = getAABB(
-            x0,
-            y0,
-            x1 - x0,
-            y1 - y0,
-            this.sin,
-            this.cos,
-            x0 + (x1 - x0) / 2,
-            y0 + (y1 - y0) / 2,
-            rotatedRect
-          );
-          return rabb;
-        }
-      }),
-      {
-        limit: 50,
-        partialize: (state) => ({
-          features: state.features // Only track features, not liveUpdates!
+          getScreenAlignedTransform(ox, oy, scaled = true) {
+            const sin = this.revSin;
+            const cos = this.revCos;
+            const x = ox * cos - oy * sin;
+            const y = ox * sin + oy * cos;
+
+            // scale it around its center
+            const scale = scaled ? 1 : this.invZoom;
+
+            return `matrix(${scale}, 0, 0, ${scale}, ${x}, ${y})`;
+          },
+
+          getRotationTransform(ox, oy) {
+            const sin = this.revSin;
+            const cos = this.revCos;
+            const tx = ox * cos - oy * sin;
+            const ty = ox * sin + oy * cos;
+            return `matrix(${cos}, ${sin}, ${-sin}, ${cos}, ${-tx}, ${-ty})`;
+          },
+
+          getRotatedBBox(x0, y0, x1, y1) {
+            const rabb = getAABB(
+              x0,
+              y0,
+              x1 - x0,
+              y1 - y0,
+              this.sin,
+              this.cos,
+              x0 + (x1 - x0) / 2,
+              y0 + (y1 - y0) / 2,
+              rotatedRect
+            );
+            return rabb;
+          }
         }),
-        equality: (a, b) => JSON.stringify(a) === JSON.stringify(b),
-        handleSet: (handleSet) => (state) => {
-          // Skip history during drag
-          if ((state as AnnotationState).isDragging) return;
-          handleSet(state);
+        {
+          limit: 50,
+          partialize: (state) => ({
+            features: state.features // Only track features, not liveUpdates!
+          }),
+          equality: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+          handleSet: (handleSet) => (state) => {
+            // Skip history during drag
+            if ((state as AnnotationState).isDragging) return;
+            handleSet(state);
+          }
         }
-      }
+      )
     )
-  )
-);
+  );
+  return store;
+};
 
-export const { undo, redo, clear: clearHistory } = store.temporal.getState();
+//export const { undo, redo, clear: clearHistory } = store.temporal.getState();
 
-export type Store = typeof store;
+export type Store = ReturnType<typeof createStore>;

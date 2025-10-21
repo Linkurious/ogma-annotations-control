@@ -49,7 +49,8 @@ export class Handles extends Renderer<CanvasLayer> {
 
   render = (ctx: CanvasRenderingContext2D) => {
     const state = this.store.getState();
-    const scale = 1 / this.ogma.view.getZoom();
+    // Guard against null renderer (e.g., in tests)
+    const scale = 1 / state.zoom;
 
     const { hoveredHandle, rotation, liveUpdates, features } = state;
 

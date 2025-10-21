@@ -4,7 +4,8 @@ import {
   EVT_CANCEL_DRAWING,
   EVT_COMPLETE_DRAWING,
   EVT_HISTORY,
-  EVT_SELECT
+  EVT_SELECT,
+  EVT_UNSELECT
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
@@ -14,7 +15,7 @@ import { Index } from "./interaction/spatialIndex";
 import { Links } from "./links";
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
-import { store } from "./store";
+import { createStore } from "./store";
 import {
   Annotation,
   AnnotationCollection,
@@ -51,7 +52,7 @@ interface RendererMap {
 export class Control extends EventEmitter<FeatureEvents> {
   private ogma: Ogma;
   private options: ControllerOptions;
-  private store = store;
+  private store = createStore();
 
   private renderers = {} as RendererMap;
   private interactions: InteractionController;
@@ -99,7 +100,20 @@ export class Control extends EventEmitter<FeatureEvents> {
     });
     this.store.subscribe(
       (state) => state.selectedFeatures,
-      (selected) => this.emit(EVT_SELECT, { ids: Array.from(selected) })
+      (selected, prev) => {
+        const newlySelected = Array.from(selected).filter(
+          (id) => !prev?.has(id)
+        );
+        if (newlySelected.length > 0)
+          this.emit(EVT_SELECT, { ids: newlySelected });
+
+        // we need to fire unselect events for features that were unselected
+        if (prev) {
+          const unselected = Array.from(prev).filter((id) => !selected.has(id));
+          if (unselected.length > 0)
+            this.emit(EVT_UNSELECT, { ids: unselected });
+        }
+      }
     );
 
     this.store.subscribe(
@@ -201,8 +215,17 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this;
   }
 
-  public deselect(): this {
-    this.store.getState().setSelectedFeatures([]);
+  public unselect(annotations?: Id | Id[]): this {
+    const ids = Array.isArray(annotations) ? annotations : [annotations];
+    if (annotations === undefined)
+      this.store.getState().setSelectedFeatures([]);
+    else {
+      const filter = new Set(ids);
+      const toSelect = Array.from(
+        this.store.getState().selectedFeatures
+      ).filter((id) => !filter.has(id));
+      this.store.getState().setSelectedFeatures(toSelect);
+    }
     return this;
   }
 
