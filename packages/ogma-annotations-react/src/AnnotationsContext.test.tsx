@@ -40,7 +40,16 @@ describe("AnnotationsContextProvider", () => {
     mockEditor = {
       on: vi.fn().mockReturnThis(),
       destroy: vi.fn(),
-      updateStyle: vi.fn()
+      updateStyle: vi.fn(),
+      add: vi.fn(),
+      getSelectedAnnotations: vi.fn().mockReturnValue({
+        type: "FeatureCollection",
+        features: []
+      }),
+      getAnnotations: vi.fn().mockReturnValue({
+        type: "FeatureCollection",
+        features: []
+      })
     } as unknown as Annotations.Control;
     (useOgma as Mock).mockReturnValue(mockOgma);
     (Annotations.Control as unknown as Mock).mockImplementation(
@@ -78,11 +87,17 @@ describe("AnnotationsContextProvider", () => {
       }
     } as unknown as Annotations.Arrow;
 
+    // Mock getSelectedAnnotations to return the selected arrow
+    (mockEditor.getSelectedAnnotations as Mock).mockReturnValue({
+      type: "FeatureCollection",
+      features: [arrowAnnotation]
+    });
+
     act(() => {
       const selectCallback = (mockEditor.on as MockedEditorOn).mock.calls.find(
         (call) => call[0] === "select"
       )![1];
-      selectCallback(arrowAnnotation);
+      selectCallback({ ids: ["1"] });
     });
 
     rerender(
@@ -112,11 +127,17 @@ describe("AnnotationsContextProvider", () => {
       }
     } as unknown as Annotations.Text;
 
+    // Mock getSelectedAnnotations to return the selected text
+    (mockEditor.getSelectedAnnotations as Mock).mockReturnValue({
+      type: "FeatureCollection",
+      features: [textAnnotation]
+    });
+
     act(() => {
       const selectCallback = (mockEditor.on as MockedEditorOn).mock.calls.find(
         (call) => call[0] === "select"
       )![1];
-      selectCallback(textAnnotation);
+      selectCallback({ ids: ["2"] });
     });
 
     rerender(
@@ -137,11 +158,17 @@ describe("AnnotationsContextProvider", () => {
       </AnnotationsContextProvider>
     );
 
+    // Mock empty selection
+    (mockEditor.getSelectedAnnotations as Mock).mockReturnValue({
+      type: "FeatureCollection",
+      features: []
+    });
+
     act(() => {
-      const unselectCallback = (
-        mockEditor.on as MockedEditorOn
-      ).mock.calls.find((call) => call[0] === "unselect")![1];
-      unselectCallback();
+      const selectCallback = (mockEditor.on as MockedEditorOn).mock.calls.find(
+        (call) => call[0] === "select"
+      )![1];
+      selectCallback({ ids: [] });
     });
 
     rerender(
@@ -174,10 +201,6 @@ describe("AnnotationsContextProvider", () => {
   });
 
   it("should add initial annotations if provided", () => {
-    const addMock = vi.fn();
-    // Patch the mockEditor to include add
-    mockEditor.add = addMock;
-
     const initialAnnotations: AnnotationCollection = {
       type: "FeatureCollection",
       features: [
@@ -202,6 +225,6 @@ describe("AnnotationsContextProvider", () => {
       </AnnotationsContextProvider>
     );
 
-    expect(addMock).toHaveBeenCalledWith(initialAnnotations);
+    expect(mockEditor.add).toHaveBeenCalledWith(initialAnnotations);
   });
 });
