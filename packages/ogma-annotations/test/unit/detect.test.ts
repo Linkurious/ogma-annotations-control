@@ -343,15 +343,14 @@ describe("HitDetector", () => {
 
       // Set bbox and insert into index
       Object.values(features2).forEach((feature) => {
-        const coords = feature.geometry.coordinates[0];
-        const xs = coords.map((c) => c[0]);
-        const ys = coords.map((c) => c[1]);
-        feature.geometry.bbox = [
-          Math.min(...xs),
-          Math.min(...ys),
-          Math.max(...xs),
-          Math.max(...ys)
-        ];
+        if (isText(feature) || isBox(feature)) {
+          const [cx, cy] = feature.geometry.coordinates as [number, number];
+          const width = feature.properties.width as number;
+          const height = feature.properties.height as number;
+          const hw = width / 2;
+          const hh = height / 2;
+          feature.geometry.bbox = [cx - hw, cy - hh, cx + hw, cy + hh];
+        }
       });
 
       index.clear();
@@ -472,6 +471,196 @@ describe("HitDetector", () => {
       expect(result).not.toBeNull();
     });
   });
+
+  describe("Rotation Detection", () => {
+    it("should detect text when camera is rotated", () => {
+      // Create text at (50, 50) with size 100x50
+      // Center is at (100, 75)
+      const text = createText(50, 50, 100, 50, "Rotated Text");
+      const mockFeatures = { text };
+
+      // Rotate camera by 45 degrees (PI/4)
+      const rotation = Math.PI / 4;
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        rotation
+      );
+
+      // Text should still be detectable at its center in world coordinates
+      const result = detector.detect(100, 75, 0);
+      expect(result).not.toBeNull();
+      expect(result?.properties.type).toBe("text");
+    });
+
+    it("should detect text at edges when rotated", () => {
+      // Text at (0, 0) with size 100x50
+      const text = createText(0, 0, 100, 50, "Edge Text");
+      const mockFeatures = { text };
+
+      // Rotate by 90 degrees
+      const rotation = Math.PI / 2;
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        rotation
+      );
+
+      // Should detect at center (50, 25)
+      const result = detector.detect(50, 25, 0);
+      expect(result).not.toBeNull();
+    });
+
+    it("should use counter-rotation for text detection", () => {
+      // Create text box
+      const text = createText(0, 0, 100, 60, "Test");
+      const mockFeatures = { text };
+
+      // Rotate camera by -30 degrees
+      const rotation = -Math.PI / 6;
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        rotation
+      );
+
+      // Text stays screen-aligned, should detect at center
+      const result = detector.detect(50, 30, 0);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(text.id);
+    });
+  });
+
+  describe("Fixed-Size Text Detection", () => {
+    it("should detect fixed-size text at normal zoom", () => {
+      const text = createText(0, 0, 100, 50, "Fixed Text", {
+        fixedSize: true
+      });
+      const mockFeatures = { text };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        0,
+        1 // zoom = 1
+      );
+
+      // Should detect at center
+      const result = detector.detect(50, 25, 0);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(text.id);
+    });
+
+    it("should detect fixed-size text when zoomed in", () => {
+      const text = createText(0, 0, 100, 50, "Fixed Text", {
+        fixedSize: true
+      });
+      const mockFeatures = { text };
+
+      // Zoom in 2x
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        0,
+        2
+      );
+
+      // At zoom 2x, the text takes half the world space
+      // World-space dimensions: 50x25
+      // Center still at (50, 25)
+      const result = detector.detect(50, 25, 0);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(text.id);
+    });
+
+    it("should detect fixed-size text when zoomed out", () => {
+      const text = createText(0, 0, 100, 50, "Fixed Text", {
+        fixedSize: true
+      });
+      const mockFeatures = { text };
+
+      // Zoom out 0.5x
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        0,
+        0.5
+      );
+
+      // At zoom 0.5x, the text takes double the world space
+      // World-space dimensions: 200x100
+      // Center still at (50, 25)
+      const result = detector.detect(50, 25, 0);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(text.id);
+    });
+
+    it("should not detect fixed-size text outside its scaled bounds", () => {
+      const text = createText(0, 0, 100, 50, "Fixed Text", {
+        fixedSize: true
+      });
+      const mockFeatures = { text };
+
+      // Zoom in 2x - world dimensions become 50x25
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        0,
+        2
+      );
+
+      // Try to detect at (75, 25) - should be outside bounds
+      // At zoom 2x, bbox is (25, 12.5) to (75, 37.5)
+      // Point (90, 25) is outside
+      const result = detector.detect(90, 25, 0);
+      expect(result).toBeNull();
+    });
+
+    it("should handle fixed-size text with rotation and zoom", () => {
+      const text = createText(0, 0, 100, 50, "Fixed Rotated Text", {
+        fixedSize: true
+      });
+      const mockFeatures = { text };
+
+      // Rotate 45 degrees and zoom 2x
+      const rotation = Math.PI / 4;
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        rotation,
+        2
+      );
+
+      // Should still detect at center
+      const result = detector.detect(50, 25, 0);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(text.id);
+    });
+  });
 });
 
 function createAndFill(
@@ -479,7 +668,9 @@ function createAndFill(
   mockStore: Store,
   mockLinks: Links,
   threshold: number,
-  mockFeatures: Record<Id, Annotation> = {}
+  mockFeatures: Record<Id, Annotation> = {},
+  rotation: number = 0,
+  zoom: number = 1
 ) {
   // Create a map from feature ID to feature for fast lookup
   const featureById = new Map<Id, Annotation>();
@@ -489,11 +680,30 @@ function createAndFill(
 
   // Create a new mock store with subscribe
   const getFeature = vi.fn((id: string) => featureById.get(id));
+  const sin = Math.sin(rotation);
+  const cos = Math.cos(rotation);
+  const revSin = Math.sin(-rotation);
+  const revCos = Math.cos(-rotation);
+  const invZoom = 1 / zoom;
+
   const testStore = {
     getState: vi.fn(() => ({
       getFeature,
-      revSin: 0,
-      revCos: 1
+      getAllFeatures: () => Object.values(mockFeatures),
+      features: mockFeatures,
+      rotation,
+      sin,
+      cos,
+      revSin,
+      revCos,
+      zoom,
+      invZoom,
+      getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [
+        x0,
+        y0,
+        x1,
+        y1
+      ]
     })),
     subscribe: vi.fn()
   } as unknown as Store;
@@ -512,15 +722,13 @@ function createAndFill(
   Object.values(mockFeatures).forEach((feature) => {
     // Calculate and set bbox on feature
     if (isText(feature) || isBox(feature)) {
-      const coords = feature.geometry.coordinates[0];
-      const xs = coords.map((c) => c[0]);
-      const ys = coords.map((c) => c[1]);
-      feature.geometry.bbox = [
-        Math.min(...xs),
-        Math.min(...ys),
-        Math.max(...xs),
-        Math.max(...ys)
-      ];
+      // For Point geometry (new format)
+      const [cx, cy] = feature.geometry.coordinates as [number, number];
+      const width = feature.properties.width as number;
+      const height = feature.properties.height as number;
+      const hw = width / 2;
+      const hh = height / 2;
+      feature.geometry.bbox = [cx - hw, cy - hh, cx + hw, cy + hh];
     } else if (isArrow(feature)) {
       const coords = feature.geometry.coordinates;
       const xs = coords.map((c) => c[0]);
