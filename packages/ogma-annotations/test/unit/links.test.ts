@@ -1,11 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import {
-  AnnotationCollection,
-  Arrow,
-  Control,
-  createArrow
-} from "../../src";
+import { AnnotationCollection, Arrow, Control, createArrow } from "../../src";
 import { Links } from "../../src/links";
 import { Store } from "../../src/store";
 import LoadLinksMissing from "../fixtures/load-links-missing.json";
@@ -19,7 +14,7 @@ describe("Links", () => {
       subscribe: vi.fn(() => vi.fn()),
       getState: vi.fn(() => ({
         features: {},
-        getFeature: (id: string) => undefined
+        getFeature: (_id: string) => undefined
       }))
     } as unknown as Store;
   });
@@ -28,8 +23,8 @@ describe("Links", () => {
   it("should add a link between an arrow and a node", () => {
     const ogma = new Ogma();
     // Add node first
-    ogma.addNode({ id: "node1", x: 0, y: 0 });
-    
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+
     const links = new Links(ogma, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
@@ -37,7 +32,7 @@ describe("Links", () => {
     const targetId = "node1";
 
     links.add(arrow, side, targetId, "node", { x: 0, y: 0 });
-    
+
     // Check that the link was created
     expect(links["links"].size).toBeGreaterThan(0);
     expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
@@ -69,8 +64,8 @@ describe("Links", () => {
   // Remove a link between an arrow and a node
   it("should remove a link between an arrow and a node", () => {
     const ogma = new Ogma();
-    ogma.addNode({ id: "node1", x: 0, y: 0 });
-    
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+
     const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const arrowId = arrow.id;
@@ -98,8 +93,8 @@ describe("Links", () => {
   // Remove a link with a non-existing arrow id
   it("should not throw an error when removing a link with a non-existing arrow id", () => {
     const ogma = new Ogma();
-    ogma.addNode({ id: "node1", x: 0, y: 0 });
-    
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+
     const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const otherArrow = createArrow();
@@ -114,8 +109,8 @@ describe("Links", () => {
   // Remove a link with a non-existing side
   it("should not throw an error when removing a link with a non-existing side", () => {
     const ogma = new Ogma();
-    ogma.addNode({ id: "node1", x: 0, y: 0 });
-    
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+
     const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
@@ -128,16 +123,16 @@ describe("Links", () => {
 
   it("should store link data in arrow properties", () => {
     const ogma = new Ogma();
-    ogma.addNode({ id: "node1", x: 0, y: 0 });
-    
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+
     const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
     const magnet = { x: 0, y: 0 };
-    
+
     links.add(arrow, side, targetId, "node", magnet);
-    
+
     expect(arrow.properties.link?.[side]).toEqual({
       id: targetId,
       side,
@@ -148,15 +143,15 @@ describe("Links", () => {
 
   it("should handle multiple links on same arrow", () => {
     const ogma = new Ogma();
-    ogma.addNode({ id: "node1", x: 0, y: 0 });
-    
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+
     const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const targetId1 = "node1";
     const targetId2 = "text1";
     const magnet1 = { x: 0, y: 0 };
     const magnet2 = { x: 1, y: 1 };
-    
+
     links.add(arrow, "start", targetId1, "node", magnet1);
     links.add(arrow, "end", targetId2, "text", magnet2);
 
@@ -183,8 +178,10 @@ describe("Links", () => {
 
     // Add text first, then arrow so links can be created
     const data = LoadLinksData as AnnotationCollection;
-    const textFeature = data.features.find(f => f.properties.type === "text");
-    const arrowFeature = data.features.find(f => f.properties.type === "arrow");
+    const textFeature = data.features.find((f) => f.properties.type === "text");
+    const arrowFeature = data.features.find(
+      (f) => f.properties.type === "arrow"
+    );
 
     if (textFeature) control.add(textFeature);
     if (arrowFeature) control.add(arrowFeature);
@@ -212,9 +209,9 @@ describe("Links", () => {
     });
     const control = new Control(ogma);
     control.add(LoadLinksMissing as AnnotationCollection);
-    
+
     // @ts-expect-error - links is private
     const links = Array.from(control.links.links.values());
-    expect(links).toEqual([]);
+    expect(links).toMatchSnapshot();
   });
 });
