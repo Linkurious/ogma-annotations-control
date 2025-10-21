@@ -1,5 +1,5 @@
-import Ogma from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createOgma } from "./utils";
 import { AnnotationCollection, Arrow, Control, createArrow } from "../../src";
 import { Links } from "../../src/links";
 import { Store } from "../../src/store";
@@ -21,7 +21,7 @@ describe("Links", () => {
 
   // Add a link between an arrow and a node
   it("should add a link between an arrow and a node", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     // Add node first
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
@@ -40,7 +40,7 @@ describe("Links", () => {
 
   // Add a link between an arrow and a text
   it("should add a link between an arrow and a text", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     const links = new Links(ogma, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
@@ -63,7 +63,7 @@ describe("Links", () => {
 
   // Remove a link between an arrow and a node
   it("should remove a link between an arrow and a node", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
     const links = new Links(ogma, mockStore);
@@ -82,7 +82,7 @@ describe("Links", () => {
 
   // Remove a non-existing link
   it("should not throw an error when removing a non-existing link", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
@@ -92,7 +92,7 @@ describe("Links", () => {
 
   // Remove a link with a non-existing arrow id
   it("should not throw an error when removing a link with a non-existing arrow id", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
     const links = new Links(ogma, mockStore);
@@ -108,7 +108,7 @@ describe("Links", () => {
 
   // Remove a link with a non-existing side
   it("should not throw an error when removing a link with a non-existing side", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
     const links = new Links(ogma, mockStore);
@@ -122,7 +122,7 @@ describe("Links", () => {
   });
 
   it("should store link data in arrow properties", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
     const links = new Links(ogma, mockStore);
@@ -142,7 +142,7 @@ describe("Links", () => {
   });
 
   it("should handle multiple links on same arrow", () => {
-    const ogma = new Ogma();
+    const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
     const links = new Links(ogma, mockStore);
@@ -170,9 +170,7 @@ describe("Links", () => {
   });
 
   it("should load links from data", () => {
-    const ogma = new Ogma({
-      options: { renderer: null }
-    });
+    const ogma = createOgma();
     ogma.addNode({ id: "n0" });
     const control = new Control(ogma);
 
@@ -204,15 +202,12 @@ describe("Links", () => {
   });
 
   it("should not load links if target does not exist", () => {
-    const ogma = new Ogma({
-      options: { renderer: null }
-    });
+    const ogma = createOgma();
     const control = new Control(ogma);
     control.add(LoadLinksMissing as AnnotationCollection);
 
     // @ts-expect-error - links is private
     const links = Array.from(control.links.links.values());
-    console.log("Loaded links:", links);
     expect(
       links.map((l) => {
         return {

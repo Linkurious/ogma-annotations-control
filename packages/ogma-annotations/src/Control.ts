@@ -209,6 +209,15 @@ export class Control extends EventEmitter<FeatureEvents> {
     };
   }
 
+  /**
+   * Retrieve the annotation with the given id
+   * @param id the id of the annotation to get
+   * @returns The annotation with the given id
+   */
+  public getAnnotation = <T = Annotation>(id: Id) => {
+    return this.store.getState().getFeature(id) as T | undefined;
+  };
+
   public select(annotations: Id | Id[]): this {
     const ids = Array.isArray(annotations) ? annotations : [annotations];
     this.store.getState().setSelectedFeatures(ids);
@@ -300,5 +309,28 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.editor.destroy();
   }
 
-  public updateStyle(_id: unknown, _s: unknown) {}
+  /**
+   * Update the style of the annotation with the given id
+   * @param id The id of the annotation to update
+   * @param style The new style
+   */
+  public updateStyle<A extends Annotation>(
+    id: Id,
+    style: A["properties"]["style"]
+  ): this {
+    const feature = this.store.getState().getFeature(id);
+    if (!feature) return this;
+
+    this.store.getState().updateFeature(id, {
+      id,
+      properties: {
+        ...feature.properties,
+        style: {
+          ...feature.properties.style,
+          ...style
+        }
+      }
+    } as A);
+    return this;
+  }
 }
