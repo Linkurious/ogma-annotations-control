@@ -212,6 +212,28 @@ describe("Links", () => {
 
     // @ts-expect-error - links is private
     const links = Array.from(control.links.links.values());
-    expect(links).toMatchSnapshot();
+    console.log("Loaded links:", links);
+    expect(
+      links.map((l) => {
+        return {
+          ...l,
+          id: undefined
+        };
+      })
+    ).toMatchInlineSnapshot(`
+      [
+        {
+          "arrow": 2,
+          "id": undefined,
+          "magnet": {
+            "x": 0.5,
+            "y": 1,
+          },
+          "side": "start",
+          "target": 0,
+          "targetType": "text",
+        },
+      ]
+    `);
   });
 });

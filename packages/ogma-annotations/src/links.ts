@@ -57,7 +57,6 @@ export class Links {
     if (!annotation) return;
 
     const links = this.annotationToLink.get(annotationId);
-    console.log("Updating linked arrows for annotation", annotationId, links);
 
     if (!links) return;
 
@@ -320,7 +319,6 @@ export class Links {
     newFeatures: Record<string, Annotation>,
     prevFeatures: Record<string, Annotation>
   ) => {
-    console.log("onAddArrow", newFeatures, prevFeatures);
     const state = this.store.getState();
     const oldIds = new Set(Object.keys(prevFeatures));
     const newIds = Object.keys(newFeatures).filter((id) => !oldIds.has(id));
