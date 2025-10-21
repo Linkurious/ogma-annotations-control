@@ -1,5 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
+import { Position } from "geojson";
 import {
   EVT_CANCEL_DRAWING,
   EVT_COMPLETE_DRAWING,
@@ -383,17 +384,17 @@ export class Control extends EventEmitter<FeatureEvents> {
     const feature = this.store.getState().getFeature(id);
     if (!feature) return this;
 
+    const state = this.store.getState();
+
     if (isArrow(feature)) {
       // Scale arrow coordinates around origin
-      const coords = (feature.geometry.coordinates as [number, number][]).map(
-        ([x, y]) => {
-          const dx = x - ox;
-          const dy = y - oy;
-          return [ox + dx * scale, oy + dy * scale] as [number, number];
-        }
-      );
+      const coords = feature.geometry.coordinates.map(([x, y]) => {
+        const dx = x - ox;
+        const dy = y - oy;
+        return [ox + dx * scale, oy + dy * scale] as Position;
+      });
 
-      this.store.getState().updateFeature(id, {
+      state.updateFeature(id, {
         geometry: {
           ...feature.geometry,
           coordinates: coords
@@ -411,7 +412,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       const newHeight =
         (feature.properties as Box["properties"]).height * scale;
 
-      this.store.getState().updateFeature(id, {
+      state.updateFeature(id, {
         properties: {
           ...feature.properties,
           width: newWidth,
@@ -419,13 +420,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         },
         geometry: {
           ...feature.geometry,
-          coordinates: [newCx, newCy],
-          bbox: [
-            newCx - newWidth / 2,
-            newCy - newHeight / 2,
-            newCx + newWidth / 2,
-            newCy + newHeight / 2
-          ]
+          coordinates: [newCx, newCy]
         }
       } as Partial<Annotation>);
     }
