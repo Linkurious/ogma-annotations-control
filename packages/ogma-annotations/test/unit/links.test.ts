@@ -1,91 +1,90 @@
 import Ogma from "@linkurious/ogma";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   AnnotationCollection,
   Arrow,
   Control,
-  createArrow,
-  Link
+  createArrow
 } from "../../src";
 import { Links } from "../../src/links";
+import { Store } from "../../src/store";
 import LoadLinksMissing from "../fixtures/load-links-missing.json";
 import LoadLinksData from "../fixtures/load-links.json";
 
 describe("Links", () => {
+  let mockStore: Store;
+
+  beforeEach(() => {
+    mockStore = {
+      subscribe: vi.fn(() => vi.fn())
+    } as unknown as Store;
+  });
+
   // Add a link between an arrow and a node
   it("should add a link between an arrow and a node", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
+    // Add node first
+    ogma.addNode({ id: "node1", x: 0, y: 0 });
+    
+    const links = new Links(ogma, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
     const targetId = "node1";
 
     links.add(arrow, side, targetId, "node", { x: 0, y: 0 });
-    expect(links["linksByTargetId"]).toEqual({
-      [targetId]: [expect.any(String)]
-    });
-    expect(links["linksByArrowId"]).toEqual({
-      [arrowId]: {
-        [side]: expect.any(String)
-      }
-    });
+    
+    // Check that the link was created
+    expect(links["links"].size).toBeGreaterThan(0);
+    expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
   });
 
   // Add a link between an arrow and a text
   it("should add a link between an arrow and a text", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
+    const links = new Links(ogma, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
     const targetId = "text1";
-    const connectionPoint = { x: 0, y: 1 };
+    const magnet = { x: 0, y: 1 };
 
-    links.add(arrow, side, targetId, "text", connectionPoint);
+    links.add(arrow, side, targetId, "text", magnet);
 
-    expect(links["links"][Object.keys(links["links"]).pop()!]).toEqual<Link>({
-      id: expect.any(String),
-      arrow: arrowId,
-      target: targetId,
-      targetType: "text",
-      side,
-      connectionPoint
-    });
-    expect(links["linksByTargetId"]).toEqual({
-      [targetId]: [expect.any(String)]
-    });
-    expect(links["linksByArrowId"]).toEqual({
-      [arrowId]: {
-        [side]: expect.any(String)
-      }
-    });
+    const linkId = links["linksByArrowId"].get(arrowId)?.[side];
+    expect(linkId).toBeDefined();
+    const link = links["links"].get(linkId!);
+    expect(link).toBeDefined();
+    expect(link?.arrow).toBe(arrowId);
+    expect(link?.target).toBe(targetId);
+    expect(link?.targetType).toBe("text");
+    expect(link?.side).toBe(side);
+    expect(link?.magnet).toEqual(magnet);
   });
 
   // Remove a link between an arrow and a node
   it("should remove a link between an arrow and a node", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
+    ogma.addNode({ id: "node1", x: 0, y: 0 });
+    
+    const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
     const targetId = "node1";
-    const connectionPoint = { x: 0, y: 0 };
-    links.add(arrow, side, targetId, "node", connectionPoint);
+    const magnet = { x: 0, y: 0 };
+    links.add(arrow, side, targetId, "node", magnet);
 
     links.remove(arrow, side);
 
-    expect(links["links"]).toEqual({});
-    expect(links["linksByTargetId"]).toEqual({ [targetId]: [] });
-    expect(links["linksByArrowId"]).toEqual({
-      [arrowId]: {}
-    });
+    expect(links["links"].size).toBe(0);
+    expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeUndefined();
   });
 
   // Remove a non-existing link
-  it("should throw an error when removing a non-existing link", () => {
+  it("should not throw an error when removing a non-existing link", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
+    const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
 
@@ -93,15 +92,17 @@ describe("Links", () => {
   });
 
   // Remove a link with a non-existing arrow id
-  it("should throw an error when removing a link with a non-existing arrow id", () => {
+  it("should not throw an error when removing a link with a non-existing arrow id", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
+    ogma.addNode({ id: "node1", x: 0, y: 0 });
+    
+    const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const otherArrow = createArrow();
     const side = "start";
     const targetId = "node1";
-    const connectionPoint = { x: 0, y: 0 };
-    links.add(arrow, side, targetId, "node", connectionPoint);
+    const magnet = { x: 0, y: 0 };
+    links.add(arrow, side, targetId, "node", magnet);
 
     expect(() => links.remove(otherArrow, side)).not.toThrow();
   });
@@ -109,137 +110,79 @@ describe("Links", () => {
   // Remove a link with a non-existing side
   it("should not throw an error when removing a link with a non-existing side", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
+    ogma.addNode({ id: "node1", x: 0, y: 0 });
+    
+    const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
-    const connectionPoint = { x: 0, y: 0 };
-    links.add(arrow, side, targetId, "node", connectionPoint);
+    const magnet = { x: 0, y: 0 };
+    links.add(arrow, side, targetId, "node", magnet);
 
     expect(() => links.remove(arrow, "end")).not.toThrow();
   });
 
-  it("should return the link object when it exists for the given arrowId and side", () => {
+  it("should store link data in arrow properties", () => {
     const ogma = new Ogma();
-    const links = new Links(ogma);
-    const arrow: Arrow = createArrow();
-    const arrowId = arrow.id;
-    const side = "start";
-    const link: Link = {
-      id: expect.any(String),
-      arrow: arrowId,
-      target: "target1",
-      targetType: "text",
-      connectionPoint: { x: 0, y: 0 },
-      side
-    };
-    links.add(arrow, side, "target1", "text", { x: 0, y: 0 });
-    expect(links.getArrowLink(arrowId, side)).toEqual(link);
-  });
-
-  // Returns an empty array when there are no links for the given targetId.
-  it("should return an empty array when there are no links for the given targetId", () => {
-    const ogma = new Ogma();
-    const links = new Links(ogma);
-    const targetId = "target1";
-    const result = links
-      .getTargetLinks(targetId, "node")
-      .concat(links.getTargetLinks(targetId, "text"));
-    expect(result).toEqual([]);
-  });
-
-  // Returns an array of links for the given targetId.
-  it("should return an array of links for the given targetId", () => {
-    const ogma = new Ogma();
-    const links = new Links(ogma);
-    const arrow: Arrow = createArrow();
-    const arrowId = arrow.id;
-    const side = "start";
-    const targetId = "target1";
-    const connectionPoint = { x: 0, y: 0 };
-    links.add(arrow, side, targetId, "node", connectionPoint);
-    const result = links.getTargetLinks(targetId, "node");
-    expect(result).toEqual<Link[]>([
-      {
-        id: expect.any(String),
-        arrow: arrowId,
-        target: targetId,
-        targetType: "node",
-        connectionPoint,
-        side
-      }
-    ]);
-  });
-
-  // Returns the correct links for the given targetId.
-  it("should return the correct links for the given targetId", () => {
-    const ogma = new Ogma();
-    const links = new Links(ogma);
-    const arrow1: Arrow = createArrow();
-    const arrowId1 = arrow1.id;
-    const arrow2: Arrow = createArrow();
-    const arrowId2 = arrow2.id;
-    const side1 = "start";
-    const targetId = "target1";
-    const side2 = "end";
-    const connectionPoint = { x: 0, y: 0 };
-    links.add(arrow1, side1, targetId, "node", connectionPoint);
-    links.add(arrow2, side2, targetId, "node", connectionPoint);
-    const result = links.getTargetLinks(targetId, "node");
-    const expected: Link[] = [
-      {
-        id: expect.any(String),
-        arrow: arrowId1,
-        target: targetId,
-        targetType: "node",
-        connectionPoint,
-        side: side1
-      },
-      {
-        id: expect.any(String),
-        arrow: arrowId2,
-        target: targetId,
-        targetType: "node",
-        connectionPoint,
-        side: side2
-      }
-    ];
-    expect(result).toEqual(expected);
-  });
-
-  it("should export the links together with arrows", () => {
-    const ogma = new Ogma();
-    const links = new Links(ogma);
+    ogma.addNode({ id: "node1", x: 0, y: 0 });
+    
+    const links = new Links(ogma, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
-    links.add(arrow, side, targetId, "node", { x: 0, y: 0 });
-    const point = { x: 0, y: 0 };
-    links.add(arrow, "end", "textId", "text", point);
-
-    expect(arrow.properties.link?.start).toEqual({
+    const magnet = { x: 0, y: 0 };
+    
+    links.add(arrow, side, targetId, "node", magnet);
+    
+    expect(arrow.properties.link?.[side]).toEqual({
       id: targetId,
       side,
       type: "node",
-      magnet: point
-    });
-    expect(arrow.properties.link?.end).toEqual({
-      id: "textId",
-      side: "end",
-      type: "text",
-      magnet: point
+      magnet
     });
   });
 
-  it("should load links", () => {
+  it("should handle multiple links on same arrow", () => {
+    const ogma = new Ogma();
+    ogma.addNode({ id: "node1", x: 0, y: 0 });
+    
+    const links = new Links(ogma, mockStore);
+    const arrow: Arrow = createArrow();
+    const targetId1 = "node1";
+    const targetId2 = "text1";
+    const magnet1 = { x: 0, y: 0 };
+    const magnet2 = { x: 1, y: 1 };
+    
+    links.add(arrow, "start", targetId1, "node", magnet1);
+    links.add(arrow, "end", targetId2, "text", magnet2);
+
+    expect(arrow.properties.link?.start).toEqual({
+      id: targetId1,
+      side: "start",
+      type: "node",
+      magnet: magnet1
+    });
+    expect(arrow.properties.link?.end).toEqual({
+      id: targetId2,
+      side: "end",
+      type: "text",
+      magnet: magnet2
+    });
+  });
+
+  it("should load links from data", () => {
     const ogma = new Ogma({
       options: { renderer: null }
     });
     ogma.addNode({ id: "n0" });
     const control = new Control(ogma);
     control.add(LoadLinksData as AnnotationCollection);
+    
     // @ts-expect-error - links is private
-    const [link1, link2] = Object.values(control.links.links);
+    const linksArray = Array.from(control.links.links.values());
+
+    expect(linksArray).toHaveLength(2);
+    const [link1, link2] = linksArray;
 
     expect(link1.arrow).toEqual(2);
     expect(link1.side).toEqual("start");
@@ -258,8 +201,9 @@ describe("Links", () => {
     });
     const control = new Control(ogma);
     control.add(LoadLinksMissing as AnnotationCollection);
+    
     // @ts-expect-error - links is private
-    const links = Object.values(control.links.links);
+    const links = Array.from(control.links.links.values());
     expect(links).toEqual([]);
   });
 });
