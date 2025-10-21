@@ -1,3 +1,7 @@
 import Ogma from "@linkurious/ogma";
 
-export const createOgma = () => new Ogma({ renderer: "svg" });
+export const createOgma = () => new Ogma({
+  options: {
+    renderer: null
+  }
+});
