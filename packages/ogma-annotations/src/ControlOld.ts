@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import type Ogma from "@linkurious/ogma";
 import type {
   CanvasLayer,
