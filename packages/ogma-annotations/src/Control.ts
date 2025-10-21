@@ -28,6 +28,9 @@ import {
   createArrow,
   createBox,
   createText,
+  isArrow,
+  isBox,
+  isText,
   isAnnotationCollection
 } from "./types";
 import { migrateBoxOrTextIfNeeded } from "./utils";
@@ -189,18 +192,33 @@ export class Control extends EventEmitter<FeatureEvents> {
     return true;
   }
 
+  /**
+   * Check if there are changes to undo
+   * @returns true if undo is possible
+   */
   public canUndo(): boolean {
     return this.store.temporal.getState().pastStates.length > 0;
   }
 
+  /**
+   * Check if there are changes to redo
+   * @returns true if redo is possible
+   */
   public canRedo(): boolean {
     return this.store.temporal.getState().futureStates.length > 0;
   }
 
+  /**
+   * Clear the undo/redo history
+   */
   public clearHistory() {
     this.store.temporal.getState().clear();
   }
 
+  /**
+   * Get all annotations in the controller
+   * @returns A FeatureCollection containing all annotations
+   */
   public getAnnotations(): AnnotationCollection {
     const features = this.store.getState().features;
     return {
@@ -210,20 +228,21 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Retrieve the annotation with the given id
-   * @param id the id of the annotation to get
-   * @returns The annotation with the given id
+   * Select one or more annotations by id
+   * @param annotations The id(s) of the annotation(s) to select
+   * @returns this for chaining
    */
-  public getAnnotation = <T = Annotation>(id: Id) => {
-    return this.store.getState().getFeature(id) as T | undefined;
-  };
-
   public select(annotations: Id | Id[]): this {
     const ids = Array.isArray(annotations) ? annotations : [annotations];
     this.store.getState().setSelectedFeatures(ids);
     return this;
   }
 
+  /**
+   * Unselect one or more annotations, or all if no ids provided
+   * @param annotations The id(s) of the annotation(s) to unselect, or undefined to unselect all
+   * @returns this for chaining
+   */
   public unselect(annotations?: Id | Id[]): this {
     const ids = Array.isArray(annotations) ? annotations : [annotations];
     if (annotations === undefined)
@@ -238,14 +257,31 @@ export class Control extends EventEmitter<FeatureEvents> {
     return this;
   }
 
+  /**
+   * Cancel the current drawing operation
+   * @returns this for chaining
+   */
   public cancelDrawing() {
     this.editor.getActiveHandler()?.cancelDrawing();
     this.emit(EVT_CANCEL_DRAWING);
     return this;
   }
 
+  /**
+   * Start adding a comment/text annotation at a position
+   * @param _x X coordinate
+   * @param _y Y coordinate
+   * @param _text The text annotation to add (currently not implemented)
+   */
   public startComment(_x: number, _y: number, _text: Annotation) {}
 
+  /**
+   * Start drawing a box annotation
+   * @param x X coordinate for the box origin
+   * @param y Y coordinate for the box origin
+   * @param box The box annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   */
   public startBox(x: number, y: number, box: Box = createBox(x, y)) {
     // Mark this feature as being drawn
     this.store.setState({ drawingFeature: box.id });
@@ -260,6 +296,13 @@ export class Control extends EventEmitter<FeatureEvents> {
     return (handler as TextHandler).startDrawing(box.id, x, y);
   }
 
+  /**
+   * Start drawing an arrow annotation
+   * @param x X coordinate for the arrow start
+   * @param y Y coordinate for the arrow start
+   * @param arrow The arrow annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   */
   public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
     // Mark this feature as being drawn
     this.store.setState({ drawingFeature: arrow.id });
@@ -274,6 +317,13 @@ export class Control extends EventEmitter<FeatureEvents> {
     return (handler as ArrowHandler).startDrawing(arrow.id, x, y);
   }
 
+  /**
+   * Start drawing a text annotation
+   * @param x X coordinate for the text
+   * @param y Y coordinate for the text
+   * @param text The text annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   */
   public startText(x: number, y: number, text: Text = createText(x, y)) {
     // Mark this feature as being drawn
     this.store.setState({ drawingFeature: text.id });
@@ -288,6 +338,10 @@ export class Control extends EventEmitter<FeatureEvents> {
     return (handler as TextHandler).startDrawing(text.id, x, y);
   }
 
+  /**
+   * Get the currently selected annotations as a collection
+   * @returns A FeatureCollection of selected annotations
+   */
   public getSelectedAnnotations(): AnnotationCollection {
     const state = this.store.getState();
     return {
@@ -296,6 +350,87 @@ export class Control extends EventEmitter<FeatureEvents> {
         (id) => state.features[id]
       )
     };
+  }
+
+  /**
+   * Get the first selected annotation (for backwards compatibility)
+   * @returns The currently selected annotation, or null if none selected
+   */
+  public getSelected(): Annotation | null {
+    const state = this.store.getState();
+    const firstId = Array.from(state.selectedFeatures)[0];
+    return firstId ? state.features[firstId] : null;
+  }
+
+  /**
+   * Get a specific annotation by id
+   * @param id The id of the annotation to retrieve
+   * @returns The annotation with the given id, or undefined if not found
+   */
+  public getAnnotation<T = Annotation>(id: Id): T | undefined {
+    return this.store.getState().getFeature(id) as T | undefined;
+  }
+
+  /**
+   * Scale an annotation by a given factor around an origin point
+   * @param id The id of the annotation to scale
+   * @param scale The scale factor
+   * @param ox Origin x coordinate
+   * @param oy Origin y coordinate
+   * @returns this for chaining
+   */
+  public setScale(id: Id, scale: number, ox: number, oy: number): this {
+    const feature = this.store.getState().getFeature(id);
+    if (!feature) return this;
+
+    if (isArrow(feature)) {
+      // Scale arrow coordinates around origin
+      const coords = (feature.geometry.coordinates as [number, number][]).map(
+        ([x, y]) => {
+          const dx = x - ox;
+          const dy = y - oy;
+          return [ox + dx * scale, oy + dy * scale] as [number, number];
+        }
+      );
+
+      this.store.getState().updateFeature(id, {
+        geometry: {
+          ...feature.geometry,
+          coordinates: coords
+        }
+      } as Partial<Annotation>);
+    } else if (isText(feature) || isBox(feature)) {
+      // Scale text/box dimensions and position around origin
+      const [cx, cy] = feature.geometry.coordinates as [number, number];
+      const dx = cx - ox;
+      const dy = cy - oy;
+      const newCx = ox + dx * scale;
+      const newCy = oy + dy * scale;
+
+      const newWidth = (feature.properties as Box["properties"]).width * scale;
+      const newHeight =
+        (feature.properties as Box["properties"]).height * scale;
+
+      this.store.getState().updateFeature(id, {
+        properties: {
+          ...feature.properties,
+          width: newWidth,
+          height: newHeight
+        },
+        geometry: {
+          ...feature.geometry,
+          coordinates: [newCx, newCy],
+          bbox: [
+            newCx - newWidth / 2,
+            newCy - newHeight / 2,
+            newCx + newWidth / 2,
+            newCy + newHeight / 2
+          ]
+        }
+      } as Partial<Annotation>);
+    }
+
+    return this;
   }
 
   /**
