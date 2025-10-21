@@ -85,7 +85,8 @@ export function renderArrow(
     tail,
     head,
     strokeColor,
-    strokeWidth = 0
+    strokeWidth = 0,
+    strokeType
   } = arrow.properties.style || defaultArrowStyle;
   const vec = subtract(end, start);
   const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
@@ -109,6 +110,12 @@ export function renderArrow(
 
   const endpointsGroup = lineGroup.children[1] as SVGGElement;
   endpointsGroup.innerHTML = "";
+
+  if (strokeType === "dashed") {
+    path.setAttribute("stroke-dasharray", `5,10`);
+  } else {
+    path.removeAttribute("stroke-dasharray");
+  }
 
   addExtremity(endpointsGroup, start, color, tail, strokeWidth);
   addExtremity(endpointsGroup, end, color, head, strokeWidth);

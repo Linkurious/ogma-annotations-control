@@ -35,7 +35,7 @@
       "properties": {
         "type": "arrow",
         "style": {
-          "strokeType": "plain",
+          "strokeType": "dashed",
           "strokeColor": "#2D00A6",
           "strokeWidth": 4,
           "head": "halo-dot",
