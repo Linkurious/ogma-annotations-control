@@ -1,6 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { ArrowHandler } from "./arrow";
 import { Handler } from "./base";
+import { PolygonHandler } from "./polygon";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
 import { InteractionController } from "../interaction/index";
@@ -41,6 +42,7 @@ export class AnnotationEditor extends EventTarget {
       "arrow",
       new ArrowHandler(this.ogma, this.store, this.snapping, links)
     );
+    this.handlers.set("polygon", new PolygonHandler(this.ogma, this.store, links));
 
     this.handlers.forEach((handler) => {
       handler.addEventListener("dragstart", () => {

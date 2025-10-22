@@ -111,6 +111,24 @@ export function updateBbox<T extends Annotation>(t: T) {
     const hw = (t.properties.width as number) / 2;
     const hh = (t.properties.height as number) / 2;
     t.geometry.bbox = [cx - hw, cy - hh, cx + hw, cy + hh];
+  } else if (t.geometry.type === "Polygon") {
+    // Fallback for other annotation types
+    const coords = t.geometry.coordinates[0];
+
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+
+    for (const coord of coords) {
+      const x = coord[0];
+      const y = coord[1];
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    }
+    t.geometry.bbox = [minX, minY, maxX, maxY];
   }
 }
 

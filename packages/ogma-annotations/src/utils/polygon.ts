@@ -47,6 +47,8 @@ export function getPolygonCenter(polygon: Polygon): Point {
   };
 }
 
+export { simplify as simplifyPolygon } from "../lib/simplify";
+
 /**
  * Translate (move) a polygon by dx, dy
  */
@@ -92,90 +94,6 @@ export function updatePolygonBbox(polygon: Polygon): void {
   }
 
   polygon.geometry.bbox = [minX, minY, maxX, maxY];
-}
-
-/**
- * Simplify polygon path using Douglas-Peucker algorithm
- * @param points Array of polygon points
- * @param tolerance Maximum distance threshold
- * @returns Simplified array of points
- */
-export function simplifyPolygon(
-  points: [number, number][],
-  tolerance: number
-): [number, number][] {
-  if (points.length <= 2) return points;
-
-  const sqTolerance = tolerance * tolerance;
-
-  // Helper function to get squared distance from point to segment
-  function getSquaredSegmentDistance(
-    p: [number, number],
-    p1: [number, number],
-    p2: [number, number]
-  ): number {
-    let x = p1[0];
-    let y = p1[1];
-    let dx = p2[0] - x;
-    let dy = p2[1] - y;
-
-    if (dx !== 0 || dy !== 0) {
-      const t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
-
-      if (t > 1) {
-        x = p2[0];
-        y = p2[1];
-      } else if (t > 0) {
-        x += dx * t;
-        y += dy * t;
-      }
-    }
-
-    dx = p[0] - x;
-    dy = p[1] - y;
-
-    return dx * dx + dy * dy;
-  }
-
-  // Recursive Douglas-Peucker
-  function simplifyDouglasPeucker(
-    points: [number, number][],
-    first: number,
-    last: number,
-    sqTolerance: number,
-    simplified: [number, number][]
-  ): void {
-    let maxSqDist = sqTolerance;
-    let index = 0;
-
-    for (let i = first + 1; i < last; i++) {
-      const sqDist = getSquaredSegmentDistance(
-        points[i],
-        points[first],
-        points[last]
-      );
-
-      if (sqDist > maxSqDist) {
-        index = i;
-        maxSqDist = sqDist;
-      }
-    }
-
-    if (maxSqDist > sqTolerance) {
-      if (index - first > 1)
-        simplifyDouglasPeucker(points, first, index, sqTolerance, simplified);
-      simplified.push(points[index]);
-      if (last - index > 1)
-        simplifyDouglasPeucker(points, index, last, sqTolerance, simplified);
-    }
-  }
-
-  const last = points.length - 1;
-  const simplified: [number, number][] = [points[0]];
-  simplifyDouglasPeucker(points, 0, last, sqTolerance, simplified);
-  simplified.push(points[last]);
-
-  return simplified;
 }
 
 /**

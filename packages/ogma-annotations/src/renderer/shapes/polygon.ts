@@ -46,12 +46,14 @@ export function renderPolygon(
   const {
     strokeColor = defaultPolygonStyle.strokeColor,
     strokeWidth = defaultPolygonStyle.strokeWidth,
-    background = defaultPolygonStyle.background
+    background = defaultPolygonStyle.background,
+    strokeType = defaultPolygonStyle.strokeType
   } = polygon.properties.style || defaultPolygonStyle;
   if (strokeColor) polygonPath.setAttribute("stroke", strokeColor);
   if (strokeWidth !== undefined)
     polygonPath.setAttribute("stroke-width", String(strokeWidth));
   if (background) polygonPath.setAttribute("fill", background);
+  if (strokeType) polygonPath.setAttribute("stroke-dasharray", strokeType);
 
   g.setAttribute("transform", state.getRotationTransform(0, 0));
 

@@ -10,6 +10,7 @@ import {
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
+import { PolygonHandler } from "./handlers/polygon";
 import { TextHandler } from "./handlers/text";
 import { InteractionController } from "./interaction";
 import { Index } from "./interaction/spatialIndex";
@@ -25,6 +26,7 @@ import {
   ControllerOptions,
   FeatureEvents,
   Id,
+  Polygon,
   Text,
   createArrow,
   createBox,
@@ -341,6 +343,28 @@ export class Control extends EventEmitter<FeatureEvents> {
     // Get the text handler
     const handler = this.editor.getActiveHandler()!;
     return (handler as TextHandler).startDrawing(text.id, x, y);
+  }
+
+  /**
+   * Start drawing a polygon annotation (freehand)
+   * @param x X coordinate to start drawing
+   * @param y Y coordinate to start drawing
+   * @param polygon The polygon annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   */
+  public startPolygon(x: number, y: number, polygon: Polygon): this {
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: polygon.id });
+
+    // Add the polygon annotation
+    this.add(polygon);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(polygon.id);
+
+    // Get the polygon handler
+    const handler = this.editor.getActiveHandler()!;
+    (handler as PolygonHandler).startDrawing(polygon.id, x, y);
+    return this;
   }
 
   /**

@@ -109,8 +109,8 @@ export abstract class Handler<
 
   protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
-    this.dragStartPoint = this.clientToCanvas(evt);
     this.dragging = true;
+    this.dragStartPoint = this.clientToCanvas(evt);
     this.disablePanning();
     return true;
   }

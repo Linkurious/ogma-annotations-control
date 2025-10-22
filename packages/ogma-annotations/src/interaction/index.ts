@@ -11,8 +11,10 @@ import {
   Cursor,
   isArrow,
   isBox,
+  isPolygon,
   isText
 } from "../types";
+import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils";
 
 export class InteractionController {
@@ -70,6 +72,11 @@ export class InteractionController {
         }
       } else if (isBox(feature)) {
         if (detectBox(feature, { x, y }, 0, 1, threshold)) {
+          result = feature;
+          break;
+        }
+      } else if (isPolygon(feature)) {
+        if (detectPolygon(feature, { x, y }, threshold)) {
           result = feature;
           break;
         }

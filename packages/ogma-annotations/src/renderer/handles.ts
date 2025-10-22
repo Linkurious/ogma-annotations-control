@@ -2,7 +2,16 @@ import Ogma, { CanvasLayer } from "@linkurious/ogma";
 import { Renderer } from "./base";
 import { LAYERS } from "../constants";
 import { Store } from "../store";
-import { Arrow, Box, Text, isArrow, isBox, isText } from "../types";
+import {
+  Arrow,
+  Box,
+  Polygon,
+  Text,
+  isArrow,
+  isBox,
+  isPolygon,
+  isText
+} from "../types";
 import {
   getArrowEnd,
   getArrowStart,
@@ -22,6 +31,7 @@ export class Handles extends Renderer<CanvasLayer> {
   // TODO: move it to settings and state
   private handleFill = "#fff";
   private handleStroke = "#1A70E5";
+  private polygonFill = "rgba(00, 99, 255, 0.1)";
   private handleStrokeWidth = 1.5;
   private handleRadius = 3;
   private handleMagnifier = 1.5;
@@ -54,7 +64,6 @@ export class Handles extends Renderer<CanvasLayer> {
 
     const { hoveredHandle, rotation, liveUpdates, features } = state;
 
-    ctx.beginPath();
     const r = this.handleRadius * scale;
     ctx.fillStyle = this.handleFill;
     ctx.lineWidth = this.handleStrokeWidth * scale;
@@ -81,10 +90,16 @@ export class Handles extends Renderer<CanvasLayer> {
           state.zoom
         );
         this.renderBoxHandles(feature, ctx, r, hoveredHandle, counterRotation);
+      } else if (isPolygon(feature)) {
+        this.renderPolygonHandles(
+          feature,
+          ctx,
+          r,
+          hoveredHandle,
+          state.drawingFeature === feature.id
+        );
       }
     });
-    ctx.fill();
-    ctx.stroke();
   };
 
   private renderOutline(
@@ -172,11 +187,15 @@ export class Handles extends Renderer<CanvasLayer> {
     const startR = r * (1 + (this.handleMagnifier - 1) * startHovered);
     const endR = r * (1 + (this.handleMagnifier - 1) * endHovered);
 
+    ctx.beginPath();
     ctx.moveTo(start.x + startR, start.y);
     ctx.arc(start.x, start.y, startR, 0, 2 * Math.PI);
 
     ctx.moveTo(end.x + endR, end.y);
     ctx.arc(end.x, end.y, endR, 0, 2 * Math.PI);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
   }
 
   private renderBoxHandles(
@@ -200,6 +219,7 @@ export class Handles extends Renderer<CanvasLayer> {
 
     ctx.translate(ox, oy);
     ctx.rotate(rotation);
+    ctx.beginPath();
 
     // Draw corner handles
     for (let i = 0; i < CORNER_OFFSETS.length; i++) {
@@ -217,7 +237,56 @@ export class Handles extends Renderer<CanvasLayer> {
       // ctx.moveTo(x + handleR, y);
       // ctx.arc(x, y, handleR, 0, 2 * Math.PI);
     }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
     ctx.restore();
+  }
+
+  private renderPolygonHandles(
+    feature: Polygon,
+    ctx: CanvasRenderingContext2D,
+    r: number,
+    hoveredHandle: -1 | number,
+    isDrawing: boolean
+  ) {
+    const coords = feature.geometry.coordinates[0];
+    const style = feature.properties.style;
+
+    // If drawing, render preview path
+    if (isDrawing) {
+      ctx.save();
+      ctx.strokeStyle = this.handleStroke;
+      ctx.lineWidth = style?.strokeWidth || 2;
+      ctx.setLineDash([5, 5]); // Dashed line for preview
+
+      ctx.beginPath();
+      if (coords.length > 0) {
+        ctx.moveTo(coords[0][0], coords[0][1]);
+        for (let i = 1; i < coords.length; i++) {
+          ctx.lineTo(coords[i][0], coords[i][1]);
+        }
+      }
+
+      ctx.setLineDash([]); // Reset dash
+      ctx.fillStyle = this.polygonFill;
+      ctx.stroke();
+      ctx.fill();
+      ctx.restore();
+
+      // Don't render vertex handles while drawing
+      return;
+    }
+
+    // Render vertex handles (excluding the closing point)
+    for (let i = 0; i < coords.length - 1; i++) {
+      const [x, y] = coords[i];
+      const handleR = hoveredHandle === i ? r * this.handleMagnifier : r;
+
+      // Circle handles for vertices
+      ctx.moveTo(x + handleR, y);
+      ctx.arc(x, y, handleR, 0, 2 * Math.PI);
+    }
   }
 
   // @ts-expect-error debug method

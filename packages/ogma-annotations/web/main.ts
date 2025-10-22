@@ -8,6 +8,7 @@ import {
   createText,
   AnnotationCollection,
   createBox,
+  createPolygon,
   getAnnotationsBounds
 } from "../src";
 
@@ -115,6 +116,40 @@ addBox.addEventListener("click", () => {
       if (a.id === box.id) addBox.disabled = false;
     });
   });
+});
+
+const addPolygon = document.getElementById("add-polygon")! as HTMLButtonElement;
+addPolygon.addEventListener("click", () => {
+  if (addPolygon.disabled) return;
+  control.unselect().cancelDrawing();
+  addPolygon.disabled = true;
+
+  ogma.events.once("mousedown", (evt) => {
+    const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+    const polygon = createPolygon([[[x, y]]], {
+      style: {
+        strokeColor: "#3A03CF",
+        strokeWidth: 2,
+        background: "rgba(58, 3, 207, 0.15)"
+      }
+    });
+
+    control.startPolygon(x, y, polygon);
+
+    control.once("completeDrawing", (a) => {
+      if (a.id === polygon.id) {
+        addPolygon.disabled = false;
+        console.log("Polygon drawing completed");
+      }
+    });
+
+    control.once("cancelDrawing", () => {
+      addPolygon.disabled = false;
+      console.log("Polygon drawing canceled");
+    });
+  });
+
+  console.log("Click and drag to draw a freehand polygon. Release to finish.");
 });
 
 document.addEventListener("keydown", (evt) => {
@@ -232,5 +267,6 @@ Object.assign(window, {
   createArrow,
   createText,
   createBox,
+  createPolygon,
   control
 });
