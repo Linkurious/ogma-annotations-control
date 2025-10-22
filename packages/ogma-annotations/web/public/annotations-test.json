@@ -208,6 +208,34 @@
           145.70903990962313
         ]
       }
+    },
+    {
+      "id": "polygon-example-1",
+      "type": "Feature",
+      "properties": {
+        "type": "polygon",
+        "style": {
+          "background": "rgba(45, 0, 166, 0.15)",
+          "strokeWidth": 3,
+          "strokeColor": "#2D00A6",
+          "strokeType": "plain"
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-400, -100],
+            [-300, -150],
+            [-200, -120],
+            [-150, -50],
+            [-200, 20],
+            [-300, 10],
+            [-400, -100]
+          ]
+        ],
+        "bbox": [-400, -150, -150, 20]
+      }
     }
   ]
 }

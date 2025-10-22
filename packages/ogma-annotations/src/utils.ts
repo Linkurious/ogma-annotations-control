@@ -413,3 +413,6 @@ export function migrateBoxOrTextIfNeeded<T extends Annotation>(
 
   return annotation;
 }
+
+// Export polygon utilities
+export * from "./utils/polygon";
