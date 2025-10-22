@@ -11,7 +11,7 @@ import type {
   Text,
   Annotation
 } from "./types";
-import { isBox } from "./types";
+import { isBox, isText } from "./types";
 import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
 import { add, mul, subtract } from "./vec";
 
@@ -43,6 +43,7 @@ export class Links {
     this.store = store;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
+    this.store.subscribe((state) => state.zoom, this.onZoomChange);
     // @ts-expect-error private event
     this.ogma.events.on("setMultipleAttributes", this.onSetMultipleAttributes);
   }
@@ -173,6 +174,32 @@ export class Links {
     this.requestUpdateFromNodePositions(elements.toList() as NodeList);
   };
 
+  private onZoomChange = () => {
+    // When zoom changes, fixedSize text annotations change their graph-space dimensions
+    // We need to recalculate all links attached to fixedSize texts
+    const state = this.store.getState();
+    const linksToUpdate: LinksByArrowId = new Map();
+
+    // Find all links attached to fixedSize annotations
+    this.annotationToLink.forEach((linkIds, annotationId) => {
+      const annotation = state.getFeature(annotationId);
+      if (!annotation) return;
+
+      // Check if this is a text with fixedSize enabled
+      // (only text has fixedSize, boxes have scaled property instead)
+      if (isText(annotation) && annotation.properties.style?.fixedSize) {
+        linkIds.forEach((linkId) => {
+          const link = this.links.get(linkId);
+          if (!link) return;
+          const arrowId = link.arrow;
+          linksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        });
+      }
+    });
+
+    if (linksToUpdate.size > 0) this.update(linksToUpdate);
+  };
+
   private requestUpdateFromNodePositions(nodes: NodeList) {
     // debounce to next tick to get the real coordinates
     setTimeout(() => this.updateFromNodePositions(nodes), 1);
@@ -290,7 +317,7 @@ export class Links {
           );
         } else {
           const box = state.getFeature(start.target) as Text;
-          startPoint = this._getBoxSnapPoint(box, endCenter, start);
+          startPoint = this._getBoxSnapPoint(box, endCenter, start, state.zoom);
         }
       }
       if (end) {
@@ -302,7 +329,7 @@ export class Links {
           );
         } else {
           const box = state.getFeature(end.target) as Text;
-          endPoint = this._getBoxSnapPoint(box, startCenter, end);
+          endPoint = this._getBoxSnapPoint(box, startCenter, end, state.zoom);
         }
       }
       state.applyLiveUpdate(arrow.id, {
@@ -379,9 +406,19 @@ export class Links {
     return link.magnet.x === 0 && link.magnet.y === 0;
   }
 
-  private _getBoxSnapPoint(box: Text, _point: Point, link: Link) {
+  private _getBoxSnapPoint(
+    box: Text,
+    _point: Point,
+    link: Link,
+    zoom: number
+  ): [number, number] {
     const center = getBoxCenter(box);
-    const { width, height } = getBoxSize(box);
+    let { width, height } = getBoxSize(box);
+
+    if (box.properties.style?.fixedSize) {
+      width /= zoom;
+      height /= zoom;
+    }
 
     // Magnet is in center-relative coordinates
     let offsetX = link.magnet.x * width;
@@ -397,12 +434,7 @@ export class Links {
       offsetY = rotatedY;
     }
 
-    const endpoint = {
-      x: center.x + offsetX,
-      y: center.y + offsetY
-    };
-
-    return [endpoint.x, endpoint.y];
+    return [center.x + offsetX, center.y + offsetY];
   }
 
   private _getNodeSnapPoint(

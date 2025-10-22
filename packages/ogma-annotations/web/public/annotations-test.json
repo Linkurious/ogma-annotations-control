@@ -166,7 +166,7 @@
           "font": "IBM Plex Sans",
           "fontSize": 22,
           "color": "#E31D5B",
-          "background": "#FAEDF7",
+          "background": "rgba(227, 52, 109, 0.1)",
           "strokeWidth": 0,
           "strokeColor": "#000",
           "strokeType": "plain",
