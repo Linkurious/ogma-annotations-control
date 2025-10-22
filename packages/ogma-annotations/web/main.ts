@@ -56,6 +56,7 @@ const addArrows = document.getElementById("add-arrow")! as HTMLButtonElement;
 addArrows.addEventListener("click", () => {
   if (addArrows.disabled) return;
   addArrows.disabled = true;
+  control.unselect().cancelDrawing();
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     const arrow = createArrow(x, y, x, y, {
@@ -75,6 +76,7 @@ const addTexts = document.getElementById("add-text")! as HTMLButtonElement;
 addTexts.addEventListener("click", () => {
   if (addTexts.disabled) return;
   addTexts.disabled = true;
+  control.unselect().cancelDrawing();
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
     const text = createText(x, y, 0, 0, undefined, {
@@ -97,6 +99,7 @@ addTexts.addEventListener("click", () => {
 const addBox = document.getElementById("add-box")! as HTMLButtonElement;
 addBox.addEventListener("click", () => {
   if (addBox.disabled) return;
+  control.unselect().cancelDrawing();
   addBox.disabled = true;
   ogma.events.once("mousedown", (evt) => {
     const { x, y } = ogma.view.screenToGraphCoordinates(evt);
@@ -125,12 +128,8 @@ control.on("cancelDrawing", () => {
 });
 
 document.querySelector("#add-comment")!.addEventListener("click", () => {
-  control.cancelDrawing();
+  control.unselect().cancelDrawing();
   ogma.events.once("click", (evt) => {
-    // @ts-expect-error todo
-    const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-    //const commentPosition = control.getCommentPosition(x, y);
-
     const comment = control.startComment(
       evt.x,
       evt.y,

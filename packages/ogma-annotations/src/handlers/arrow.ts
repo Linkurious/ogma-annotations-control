@@ -95,7 +95,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     const mousePoint = this.clientToCanvas(evt);
     const handle = this.hoveredHandle!;
     const annotation = this.getAnnotation()!;
-    this.snap = this.snapping.snap(annotation, mousePoint);
+    this.snap = this.snapping.snap(mousePoint);
     const point = this.snap?.point || mousePoint;
     const link = annotation.properties.link || {};
 
@@ -202,7 +202,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.annotation = id;
     const annotation = this.getAnnotation()!;
     // ensure linking
-    const snap = this.snapping.snap(this.getAnnotation()!, {
+    const snap = this.snapping.snap({
       x: clientX,
       y: clientY
     });
@@ -226,12 +226,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       // no need to update live as we set the initial point directly
       // no need to change clientX/Y as we already have the snapped point
     }
-    const { x, y } = this.clientToCanvas({ clientX, clientY } as MouseEvent);
+    const { x, y } = this.clientToCanvas({ clientX, clientY });
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;
     this.dragStartPoint = { x, y };
 
     // Start live update
-    this.onDragStart({ clientX, clientY } as MouseEvent);
+    this.onDragStart({ clientX, clientY });
   }
 }

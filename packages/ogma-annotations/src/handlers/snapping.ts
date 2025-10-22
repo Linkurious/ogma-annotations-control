@@ -2,7 +2,7 @@ import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
-import { Annotation, Id, Text, isArrow, isBox, isText } from "../types";
+import { Id, Text, isBox, isText } from "../types";
 import { getBoxCenter, getBoxSize } from "../utils";
 import { subtract, add, length, mul, dot } from "../vec";
 
@@ -129,8 +129,7 @@ export class Snapping extends EventTarget {
     this.store = store;
   }
 
-  public snap(annotation: Annotation, position: Point) {
-    if (!isArrow(annotation)) return null;
+  public snap(position: Point) {
     const snapping = this._findMagnet(position);
     if (!snapping) return null;
     return snapping;
@@ -163,18 +162,29 @@ export class Snapping extends EventTarget {
   }
 
   private _snapToText(point: Point, texts: Text[]): TextSnap | null {
+    const { zoom } = this.store.getState();
     for (const text of texts) {
       const snap =
-        this._snapToMagnetPoints(point, text) || this._snapToEdge(point, text);
+        this._snapToMagnetPoints(point, text, zoom) ||
+        this._snapToEdge(point, text, zoom);
       if (snap) return snap;
     }
     return null;
   }
 
-  private _snapToMagnetPoints(point: Point, text: Text): TextSnap | null {
+  private _snapToMagnetPoints(
+    point: Point,
+    text: Text,
+    zoom: number
+  ): TextSnap | null {
     const center = getBoxCenter(text);
-    const { width, height } = getBoxSize(text);
+    let { width, height } = getBoxSize(text);
     const { sin, cos } = this.store.getState();
+
+    if (text.properties.style?.fixedSize) {
+      width /= zoom;
+      height /= zoom;
+    }
 
     for (const vec of MAGNETS) {
       // Calculate offset in local (box) coordinates
@@ -203,13 +213,21 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private _snapToEdge(point: Point, text: Text): TextSnap | null {
+  private _snapToEdge(point: Point, text: Text, zoom: number): TextSnap | null {
     const { x, y } = getBoxCenter(text);
-    const { width, height } = getBoxSize(text);
+    let { width, height } = getBoxSize(text);
     const magnetRadius = this.options.magnetRadius;
+
+    if (text.properties.style?.fixedSize) {
+      width /= zoom;
+      height /= zoom;
+    }
 
     const { sin, cos } = this.store.getState();
     const isRotated = !isBox(text);
+
+    let closestSnap: TextSnap | null = null;
+    let closestDist = Infinity;
 
     for (let i = 0; i < 4; i++) {
       const [lx1, ly1, lx2, ly2] = EDGE_DEFS[i];
@@ -223,15 +241,18 @@ export class Snapping extends EventTarget {
 
       const toPoint = subtract(point, p1);
       const dist = dot(edgeNorm, toPoint);
+      const projection = dot(edgeDir, toPoint);
 
-      if (Math.abs(dist) < magnetRadius) {
-        const projection = dot(edgeDir, toPoint);
+      // Check if projection is within edge bounds
+      if (projection >= 0 && projection <= edgeLength) {
+        const absDist = Math.abs(dist);
 
-        if (projection >= 0 && projection <= edgeLength) {
+        // If within magnetRadius OR if this is the closest edge (for points inside box)
+        if (absDist < magnetRadius || absDist < closestDist) {
           // Interpolate local magnet position
           const t = projection / edgeLength;
 
-          return {
+          const snap = {
             point: {
               x: p1.x + edgeDir.x * projection,
               y: p1.y + edgeDir.y * projection
@@ -243,8 +264,25 @@ export class Snapping extends EventTarget {
             type: "text" as const,
             id: text.id
           };
+
+          // If within magnetRadius, return immediately
+          if (absDist < magnetRadius) {
+            return snap;
+          }
+
+          // Otherwise track as closest for potential inside-box snap
+          if (absDist < closestDist) {
+            closestDist = absDist;
+            closestSnap = snap;
+          }
         }
       }
+    }
+
+    // If we found a closest edge and the point seems to be inside the box
+    // (all distances were checked and we have a closest), snap to it
+    if (closestSnap && closestDist < Math.max(width, height)) {
+      return closestSnap;
     }
 
     return null;

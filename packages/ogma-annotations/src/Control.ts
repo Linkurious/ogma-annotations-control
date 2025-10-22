@@ -305,6 +305,10 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
+    // stop editing any current feature
+    if (this.editor.getActiveHandler())
+      this.editor.getActiveHandler()!.stopEditing();
+    this.cancelDrawing();
     // Mark this feature as being drawn
     this.store.setState({ drawingFeature: arrow.id });
 
