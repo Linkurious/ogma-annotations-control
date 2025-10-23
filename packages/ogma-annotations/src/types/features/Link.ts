@@ -2,7 +2,7 @@ import { Id } from "./Annotation";
 import { SIDE_START, SIDE_END } from "../../constants";
 import { Point } from "../geometry";
 
-export type TargetType = "text" | "node" | "box" | "comment";
+export type TargetType = "text" | "node" | "box" | "comment" | "polygon";
 
 export type Side = typeof SIDE_START | typeof SIDE_END;
 
@@ -29,6 +29,6 @@ export type Link = {
 export type ExportedLink = {
   id: Id;
   side: Side;
-  type: "node" | "text" | "box" | "comment";
+  type: "node" | "text" | "box" | "comment" | "polygon";
   magnet?: Point;
 };
