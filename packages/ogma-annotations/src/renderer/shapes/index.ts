@@ -120,16 +120,20 @@ export class Shapes extends Renderer<SVGLayer> {
   };
 
   private getViewportBounds(): Bounds {
-    const size = this.ogma.view.getSize();
+    const ogma = this.ogma;
+    const { width, height } = ogma.view.getSize();
 
-    // Convert screen corners to graph coordinates
-    const topLeft = this.ogma.view.screenToGraphCoordinates({ x: 0, y: 0 });
-    const bottomRight = this.ogma.view.screenToGraphCoordinates({
-      x: size.width,
-      y: size.height
-    });
+    // Convert all four screen corners to graph coordinates to account for rotation
+    const tl = ogma.view.screenToGraphCoordinates({ x: 0, y: 0 });
+    const tr = ogma.view.screenToGraphCoordinates({ x: width, y: 0 });
+    const bl = ogma.view.screenToGraphCoordinates({ x: 0, y: height });
+    const br = ogma.view.screenToGraphCoordinates({ x: width, y: height });
 
-    return [topLeft.x, topLeft.y, bottomRight.x, bottomRight.y];
+    // Find the actual min/max bounds
+    const xs = [tl.x, tr.x, bl.x, br.x];
+    const ys = [tl.y, tr.y, bl.y, br.y];
+
+    return [Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)];
   }
 
   private isFeatureVisible(feature: Annotation, viewport: Bounds): boolean {
