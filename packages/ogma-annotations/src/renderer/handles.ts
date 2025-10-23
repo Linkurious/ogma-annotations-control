@@ -267,7 +267,7 @@ export class Handles extends Renderer<CanvasLayer> {
     const coords = feature.geometry.coordinates[0];
     const style = feature.properties.style;
 
-    // If drawing, render preview path
+    // If drawing, render preview path with straight lines
     if (isDrawing) {
       ctx.save();
       ctx.strokeStyle = this.handleStroke;
@@ -292,6 +292,18 @@ export class Handles extends Renderer<CanvasLayer> {
       return;
     }
 
+    // When editing (not drawing), render smooth outline
+    if (coords.length > 2) {
+      ctx.save();
+      ctx.strokeStyle = this.handleStroke;
+      ctx.lineWidth = this.handleStrokeWidth / this.store.getState().zoom;
+
+      this.drawSmoothPolygon(ctx, coords, 0.5);
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
     ctx.beginPath();
     // Render vertex handles (excluding the closing point)
     for (let i = 0; i < coords.length - 1; i++) {
@@ -305,6 +317,38 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
+  }
+
+  private drawSmoothPolygon(
+    ctx: CanvasRenderingContext2D,
+    coords: [number, number][],
+    tension: number
+  ) {
+    const points = coords.slice(0, -1); // Remove closing duplicate
+    if (points.length < 3) return;
+
+    ctx.beginPath();
+
+    for (let i = 0; i < points.length; i++) {
+      const p0 = points[(i - 1 + points.length) % points.length];
+      const p1 = points[i];
+      const p2 = points[(i + 1) % points.length];
+      const p3 = points[(i + 2) % points.length];
+
+      // Catmull-Rom to Bézier conversion
+      const cp1x = p1[0] + ((p2[0] - p0[0]) / 6) * tension;
+      const cp1y = p1[1] + ((p2[1] - p0[1]) / 6) * tension;
+      const cp2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
+      const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
+
+      if (i === 0) {
+        ctx.moveTo(p1[0], p1[1]);
+      }
+
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
+    }
+
+    ctx.closePath();
   }
 
   // @ts-expect-error debug method

@@ -9,9 +9,10 @@ import type {
   Link,
   Side,
   Text,
-  Annotation
+  Annotation,
+  Polygon
 } from "./types";
-import { isBox, isText } from "./types";
+import { isBox, isText, isPolygon } from "./types";
 import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
 import { add, mul, subtract } from "./vec";
 
@@ -298,13 +299,13 @@ export class Links {
       const startCenter = start
         ? start.targetType === "node"
           ? xyr[nodeIdToIndex.get(start.target)!]
-          : getBoxCenter(state.getFeature(start.target) as Text)
+          : this._getAnnotationCenter(state.getFeature(start.target)!)
         : { x: startPoint[0], y: startPoint[1] };
 
       const endCenter = end
         ? end.targetType === "node"
           ? xyr[nodeIdToIndex.get(end.target)!]
-          : getBoxCenter(state.getFeature(end.target) as Text)
+          : this._getAnnotationCenter(state.getFeature(end.target)!)
         : { x: endPoint[0], y: endPoint[1] };
 
       const vec = subtract(endCenter, startCenter);
@@ -316,8 +317,8 @@ export class Links {
             this._isLinkedToCenter(start)
           );
         } else {
-          const box = state.getFeature(start.target) as Text;
-          startPoint = this._getBoxSnapPoint(box, endCenter, start, state.zoom);
+          const annotation = state.getFeature(start.target)!;
+          startPoint = this._getAnnotationSnapPoint(annotation, endCenter, start, state.zoom);
         }
       }
       if (end) {
@@ -328,8 +329,8 @@ export class Links {
             this._isLinkedToCenter(end)
           );
         } else {
-          const box = state.getFeature(end.target) as Text;
-          endPoint = this._getBoxSnapPoint(box, startCenter, end, state.zoom);
+          const annotation = state.getFeature(end.target)!;
+          endPoint = this._getAnnotationSnapPoint(annotation, startCenter, end, state.zoom);
         }
       }
       state.applyLiveUpdate(arrow.id, {
@@ -404,6 +405,48 @@ export class Links {
 
   private _isLinkedToCenter(link: Link) {
     return link.magnet.x === 0 && link.magnet.y === 0;
+  }
+
+  private _getAnnotationCenter(annotation: Annotation): Point {
+    if (isPolygon(annotation)) {
+      const bbox = annotation.geometry.bbox;
+      if (bbox) {
+        return {
+          x: (bbox[0] + bbox[2]) / 2,
+          y: (bbox[1] + bbox[3]) / 2
+        };
+      }
+      // Fallback: calculate from coordinates
+      const coords = annotation.geometry.coordinates[0];
+      const xs = coords.map((c) => c[0]);
+      const ys = coords.map((c) => c[1]);
+      return {
+        x: (Math.min(...xs) + Math.max(...xs)) / 2,
+        y: (Math.min(...ys) + Math.max(...ys)) / 2
+      };
+    }
+    return getBoxCenter(annotation as Text);
+  }
+
+  private _getAnnotationSnapPoint(
+    annotation: Annotation,
+    _point: Point,
+    link: Link,
+    zoom: number
+  ): [number, number] {
+    if (isPolygon(annotation)) {
+      return this._getPolygonSnapPoint(annotation, link);
+    }
+    return this._getBoxSnapPoint(annotation as Text, _point, link, zoom);
+  }
+
+  private _getPolygonSnapPoint(
+    polygon: Polygon,
+    link: Link
+  ): [number, number] {
+    // For polygons, the magnet point is stored as absolute coordinates
+    // (not relative like boxes), so we just return it directly
+    return [link.magnet.x, link.magnet.y];
   }
 
   private _getBoxSnapPoint(

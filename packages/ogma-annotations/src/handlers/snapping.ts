@@ -2,7 +2,7 @@ import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
-import { Id, Text, isBox, isText } from "../types";
+import { Id, Text, Polygon, isBox, isText, isPolygon } from "../types";
 import { getBoxCenter, getBoxSize } from "../utils";
 import { subtract, add, length, mul, dot } from "../vec";
 
@@ -56,6 +56,13 @@ export type TextSnap = {
   id: Id;
 };
 
+export type PolygonSnap = {
+  point: Point;
+  magnet: Point;
+  type: "polygon";
+  id: Id;
+};
+
 export type NodeSnap = {
   point: Point;
   id: NodeId;
@@ -63,7 +70,7 @@ export type NodeSnap = {
   type: "node";
 };
 
-export type Snap = TextSnap | NodeSnap;
+export type Snap = TextSnap | PolygonSnap | NodeSnap;
 
 type SnappingOptions = {
   /**
@@ -130,12 +137,12 @@ export class Snapping extends EventTarget {
   }
 
   public snap(position: Point) {
-    const snapping = this._findMagnet(position);
+    const snapping = this.findMagnet(position);
     if (!snapping) return null;
     return snapping;
   }
 
-  private _findMagnet(point: Point) {
+  private findMagnet(point: Point) {
     const detectMargin = this.options.detectMargin;
     const snapWindow = {
       minX: point.x - detectMargin,
@@ -143,12 +150,15 @@ export class Snapping extends EventTarget {
       maxX: point.x + detectMargin,
       maxY: point.y + detectMargin
     };
-    const texts = this.spatialIndex
-      .search(snapWindow)
-      .filter((a) => isText(a) || isBox(a)) as Text[];
-    const snapToText = this._snapToText(point, texts);
+    const features = this.spatialIndex.search(snapWindow);
+    const texts = features.filter((a) => isText(a) || isBox(a)) as Text[];
+    const polygons = features.filter((a) => isPolygon(a)) as Polygon[];
 
+    const snapToText = this.snapToText(point, texts);
     if (snapToText) return snapToText;
+
+    const snapToPolygon = this.snapToPolygon(point, polygons);
+    if (snapToPolygon) return snapToPolygon;
 
     const nodes = this.ogma.view.getElementsInside(
       snapWindow.minX,
@@ -156,23 +166,88 @@ export class Snapping extends EventTarget {
       snapWindow.maxX,
       snapWindow.maxY
     ).nodes;
-    const snapToNode = this._snapToNodes(point, nodes);
+    const snapToNode = this.snapToNodes(point, nodes);
     if (snapToNode) return snapToNode;
     return null;
   }
 
-  private _snapToText(point: Point, texts: Text[]): TextSnap | null {
+  private snapToText(point: Point, texts: Text[]): TextSnap | null {
     const { zoom } = this.store.getState();
     for (const text of texts) {
       const snap =
-        this._snapToMagnetPoints(point, text, zoom) ||
-        this._snapToEdge(point, text, zoom);
+        this.snapToMagnetPoints(point, text, zoom) ||
+        this.snapToEdge(point, text, zoom);
       if (snap) return snap;
     }
     return null;
   }
 
-  private _snapToMagnetPoints(
+  private snapToPolygon(point: Point, polygons: Polygon[]): PolygonSnap | null {
+    const magnetRadius = this.options.magnetRadius;
+
+    for (const polygon of polygons) {
+      const coords = polygon.geometry.coordinates[0];
+
+      // Check vertex snapping first (don't check the last point as it's the same as first)
+      for (let i = 0; i < coords.length - 1; i++) {
+        const [vx, vy] = coords[i];
+        const dist = length(subtract({ x: vx, y: vy }, point));
+
+        if (dist < magnetRadius) {
+          return {
+            point: { x: vx, y: vy },
+            magnet: { x: vx, y: vy },
+            type: "polygon" as const,
+            id: polygon.id
+          };
+        }
+      }
+
+      // Check edge snapping
+      for (let i = 0; i < coords.length - 1; i++) {
+        const [x1, y1] = coords[i];
+        const [x2, y2] = coords[i + 1];
+
+        const p1 = { x: x1, y: y1 };
+        const p2 = { x: x2, y: y2 };
+
+        const edgeVec = subtract(p2, p1);
+        const edgeLength = length(edgeVec);
+        const edgeDir = {
+          x: edgeVec.x / edgeLength,
+          y: edgeVec.y / edgeLength
+        };
+        const edgeNorm = { x: -edgeDir.y, y: edgeDir.x };
+
+        const toPoint = subtract(point, p1);
+        const dist = Math.abs(dot(edgeNorm, toPoint));
+        const projection = dot(edgeDir, toPoint);
+
+        // Check if projection is within edge bounds
+        if (
+          projection >= 0 &&
+          projection <= edgeLength &&
+          dist < magnetRadius
+        ) {
+          const snapPoint = {
+            x: p1.x + edgeDir.x * projection,
+            y: p1.y + edgeDir.y * projection
+          };
+
+          return {
+            point: snapPoint,
+            magnet: snapPoint,
+            type: "polygon" as const,
+            id: polygon.id
+          };
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private snapToMagnetPoints(
     point: Point,
     text: Text,
     zoom: number
@@ -213,7 +288,7 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private _snapToEdge(point: Point, text: Text, zoom: number): TextSnap | null {
+  private snapToEdge(point: Point, text: Text, zoom: number): TextSnap | null {
     const { x, y } = getBoxCenter(text);
     let { width, height } = getBoxSize(text);
     const magnetRadius = this.options.magnetRadius;
@@ -288,7 +363,7 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private _snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {
+  private snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {
     const xyrs = nodes.getAttributes(["x", "y", "radius"]);
     for (let i = 0; i < xyrs.length; i++) {
       const xyr = xyrs[i];
