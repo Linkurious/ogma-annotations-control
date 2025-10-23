@@ -124,7 +124,6 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
   }
 
   handleMouseDown = (evt: MouseEvent): void => {
-    console.log("Mouse down on polygon handler", this.isDrawingMode);
     if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
 
     evt.preventDefault();

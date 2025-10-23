@@ -1,4 +1,5 @@
 import Ogma, { CanvasLayer } from "@linkurious/ogma";
+import { Position } from "geojson";
 import { Renderer } from "./base";
 import { LAYERS } from "../constants";
 import { Store } from "../store";
@@ -321,19 +322,20 @@ export class Handles extends Renderer<CanvasLayer> {
 
   private drawSmoothPolygon(
     ctx: CanvasRenderingContext2D,
-    coords: [number, number][],
+    coords: Position[],
     tension: number
   ) {
     const points = coords.slice(0, -1); // Remove closing duplicate
     if (points.length < 3) return;
 
     ctx.beginPath();
+    const N = points.length;
 
-    for (let i = 0; i < points.length; i++) {
-      const p0 = points[(i - 1 + points.length) % points.length];
+    for (let i = 0; i < N; i++) {
+      const p0 = points[(i - 1 + N) % N];
       const p1 = points[i];
-      const p2 = points[(i + 1) % points.length];
-      const p3 = points[(i + 2) % points.length];
+      const p2 = points[(i + 1) % N];
+      const p3 = points[(i + 2) % N];
 
       // Catmull-Rom to Bézier conversion
       const cp1x = p1[0] + ((p2[0] - p0[0]) / 6) * tension;
@@ -341,10 +343,7 @@ export class Handles extends Renderer<CanvasLayer> {
       const cp2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
       const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
-      if (i === 0) {
-        ctx.moveTo(p1[0], p1[1]);
-      }
-
+      if (i === 0) ctx.moveTo(p1[0], p1[1]);
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
     }
 

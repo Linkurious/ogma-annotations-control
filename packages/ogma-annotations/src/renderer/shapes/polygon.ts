@@ -1,3 +1,4 @@
+import { Position } from "geojson";
 import { AnnotationState } from "../../store";
 import { AnnotationType } from "../../types";
 import { Polygon, defaultPolygonStyle } from "../../types/features/Polygon";
@@ -6,10 +7,7 @@ import { createSVGElement } from "../../utils";
 /**
  * Convert polygon coordinates to a smooth SVG path using Catmull-Rom splines
  */
-function pointsToSmoothPath(
-  coords: [number, number][],
-  tension: number = 3.5
-): string {
+function pointsToSmoothPath(coords: Position[], tension: number = 3.5): string {
   if (coords.length < 3) {
     // Not enough points for smoothing, use straight lines
     return (

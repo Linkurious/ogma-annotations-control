@@ -9,6 +9,7 @@ export type Side = typeof SIDE_START | typeof SIDE_END;
 export type Link = {
   /** arrow attached to the text or node */
   arrow: Id;
+
   /** id of the text the arrow is attached to */
   id: Id;
 
@@ -17,8 +18,10 @@ export type Link = {
 
   /** id of the text or node  the arrow is attached to */
   target: Id;
+
   /** Text or node */
   targetType: TargetType;
+
   /**
    * On which point relative to topleft corner the arrow is tighten, in case of
    * node, a 0 vector represents the center, otherwise it can be deduced from the arrow itself

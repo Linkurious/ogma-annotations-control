@@ -21,13 +21,13 @@ describe("Snapping", () => {
       ogma.addNodes([
         { id: "1", attributes: { x: -100, y: -100 } },
         { id: "2", attributes: { x: 100, y: 100 } },
-        { id: "test", attributes: { x, y } },
+        { id: "test", attributes: { x, y } }
       ]);
 
       ogma.view.set({
         x: 0,
         y: 0,
-        zoom: 2,
+        zoom: 2
       });
       const editor = createEditor();
       const [topLeft, bottomRight, center] = ogma
@@ -36,11 +36,11 @@ describe("Snapping", () => {
 
       const nodeBottom = ogma.view.graphToScreenCoordinates({
         x,
-        y: y + +ogma.getNode("test")!.getAttribute("radius"),
+        y: y + +ogma.getNode("test")!.getAttribute("radius")
       });
       const start = {
         x: (topLeft.x + center.x) / 2,
-        y: (topLeft.y + center.y) / 2,
+        y: (topLeft.y + center.y) / 2
       };
       editor.startArrow(
         start.x,
@@ -66,7 +66,7 @@ describe("Snapping", () => {
       return {
         node: ogma.getNode("test")!.getPosition(),
         arrowPoints: editor.getAnnotations().features[0].geometry
-          .coordinates as number[][],
+          .coordinates as number[][]
       };
     });
     expect(
@@ -91,9 +91,9 @@ describe("Snapping", () => {
       await session.page.evaluate(
         ({ handle }) => {
           const arrow = editor.getAnnotations().features[0];
-          // @ts-ignore
+          // @ts-expect-error private
           editor.arrows.draggedHandle = handle;
-          // @ts-ignore
+          // @ts-expect-error private
           editor.arrows.startDragging(arrow, 0, 0);
         },
         { handle }
@@ -108,7 +108,7 @@ describe("Snapping", () => {
       await session.page.mouse.move(nodePos.x, nodePos.y, { steps: 10 });
       await session.page.mouse.down();
       await session.page.mouse.move(bottomRight.x, bottomRight.y, {
-        steps: 10,
+        steps: 10
       });
 
       // check that the arrow is not attached to the node
@@ -116,7 +116,7 @@ describe("Snapping", () => {
         return {
           node: ogma.getNode("test")?.getPosition(),
           arrowPoints: editor.getAnnotations().features[0].geometry
-            .coordinates as number[][],
+            .coordinates as number[][]
         };
       });
       return expect(

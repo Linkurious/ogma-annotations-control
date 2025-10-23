@@ -318,7 +318,12 @@ export class Links {
           );
         } else {
           const annotation = state.getFeature(start.target)!;
-          startPoint = this._getAnnotationSnapPoint(annotation, endCenter, start, state.zoom);
+          startPoint = this._getAnnotationSnapPoint(
+            annotation,
+            endCenter,
+            start,
+            state.zoom
+          );
         }
       }
       if (end) {
@@ -330,7 +335,12 @@ export class Links {
           );
         } else {
           const annotation = state.getFeature(end.target)!;
-          endPoint = this._getAnnotationSnapPoint(annotation, startCenter, end, state.zoom);
+          endPoint = this._getAnnotationSnapPoint(
+            annotation,
+            startCenter,
+            end,
+            state.zoom
+          );
         }
       }
       state.applyLiveUpdate(arrow.id, {
@@ -441,7 +451,7 @@ export class Links {
   }
 
   private _getPolygonSnapPoint(
-    polygon: Polygon,
+    _polygon: Polygon,
     link: Link
   ): [number, number] {
     // For polygons, the magnet point is stored as absolute coordinates
