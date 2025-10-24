@@ -1,5 +1,6 @@
 import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
+import { Position } from "geojson";
 import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
 import { Id, Text, Polygon, isBox, isText, isPolygon } from "../types";
@@ -154,12 +155,6 @@ export class Snapping extends EventTarget {
     const texts = features.filter((a) => isText(a) || isBox(a)) as Text[];
     const polygons = features.filter((a) => isPolygon(a)) as Polygon[];
 
-    const snapToText = this.snapToText(point, texts);
-    if (snapToText) return snapToText;
-
-    const snapToPolygon = this.snapToPolygon(point, polygons);
-    if (snapToPolygon) return snapToPolygon;
-
     const nodes = this.ogma.view.getElementsInside(
       snapWindow.minX,
       snapWindow.minY,
@@ -168,6 +163,13 @@ export class Snapping extends EventTarget {
     ).nodes;
     const snapToNode = this.snapToNodes(point, nodes);
     if (snapToNode) return snapToNode;
+
+    const snapToText = this.snapToText(point, texts);
+    if (snapToText) return snapToText;
+
+    const snapToPolygon = this.snapToPolygon(point, polygons);
+    if (snapToPolygon) return snapToPolygon;
+
     return null;
   }
 
@@ -210,7 +212,13 @@ export class Snapping extends EventTarget {
         }
       }
 
+      // Check if point is inside the polygon
+      const isInside = this.isPointInsidePolygon(point, points);
+
       // Check smooth curve snapping
+      let closestPoint: Point | null = null;
+      let closestDist = isInside ? Infinity : magnetRadius;
+
       for (let i = 0; i < points.length; i++) {
         const p0 = points[(i - 1 + points.length) % points.length];
         const p1 = points[i];
@@ -224,27 +232,66 @@ export class Snapping extends EventTarget {
         const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
         // Find closest point on this Bézier curve segment
-        const result = this.findClosestPointOnBezier(
+        const result = this.findClosestPointOnBezierCurve(
           point,
           { x: p1[0], y: p1[1] },
           { x: cp1x, y: cp1y },
           { x: cp2x, y: cp2y },
-          { x: p2[0], y: p2[1] },
-          magnetRadius
+          { x: p2[0], y: p2[1] }
         );
 
         if (result) {
-          return {
-            point: result,
-            magnet: result,
-            type: "polygon" as const,
-            id: polygon.id
-          };
+          const dist = result.distance;
+
+          // If inside polygon, always track the closest point
+          // If outside, only consider points within magnetRadius
+          if (isInside) {
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestPoint = result.point;
+            }
+          } else if (dist < magnetRadius) {
+            return {
+              point: result.point,
+              magnet: result.point,
+              type: "polygon" as const,
+              id: polygon.id
+            };
+          }
         }
+      }
+
+      // If point was inside and we found a closest point, return it
+      if (isInside && closestPoint) {
+        return {
+          point: closestPoint,
+          magnet: closestPoint,
+          type: "polygon" as const,
+          id: polygon.id
+        };
       }
     }
 
     return null;
+  }
+
+  /**
+   * Check if a point is inside a polygon using ray casting algorithm
+   */
+  private isPointInsidePolygon(point: Point, points: Position[]): boolean {
+    let inside = false;
+    for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+      const xi = points[i][0];
+      const yi = points[i][1];
+      const xj = points[j][0];
+      const yj = points[j][1];
+
+      const intersect =
+        yi > point.y !== yj > point.y &&
+        point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi;
+      if (intersect) inside = !inside;
+    }
+    return inside;
   }
 
   private snapToPolygonStraightEdges(
@@ -289,11 +336,7 @@ export class Snapping extends EventTarget {
       const dist = Math.abs(dot(edgeNorm, toPoint));
       const projection = dot(edgeDir, toPoint);
 
-      if (
-        projection >= 0 &&
-        projection <= edgeLength &&
-        dist < magnetRadius
-      ) {
+      if (projection >= 0 && projection <= edgeLength && dist < magnetRadius) {
         const snapPoint = {
           x: p1.x + edgeDir.x * projection,
           y: p1.y + edgeDir.y * projection
@@ -313,16 +356,15 @@ export class Snapping extends EventTarget {
 
   /**
    * Find closest point on a cubic Bézier curve using sampling
-   * Returns the point if distance is within threshold, null otherwise
+   * Returns the point and distance
    */
-  private findClosestPointOnBezier(
+  private findClosestPointOnBezierCurve(
     point: Point,
     p0: Point,
     cp1: Point,
     cp2: Point,
-    p3: Point,
-    threshold: number
-  ): Point | null {
+    p3: Point
+  ): { point: Point; distance: number } | null {
     let closestDist = Infinity;
     let closestPoint: Point | null = null;
 
@@ -339,13 +381,19 @@ export class Snapping extends EventTarget {
       }
     }
 
-    return closestDist < threshold ? closestPoint : null;
+    return closestPoint ? { point: closestPoint, distance: closestDist } : null;
   }
 
   /**
    * Calculate point on cubic Bézier curve at parameter t
    */
-  private bezierPoint(t: number, p0: Point, cp1: Point, cp2: Point, p3: Point): Point {
+  private bezierPoint(
+    t: number,
+    p0: Point,
+    cp1: Point,
+    cp2: Point,
+    p3: Point
+  ): Point {
     const t2 = t * t;
     const t3 = t2 * t;
     const mt = 1 - t;

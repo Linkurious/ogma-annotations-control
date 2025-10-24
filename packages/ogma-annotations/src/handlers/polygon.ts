@@ -1,5 +1,4 @@
 import Ogma, { Point } from "@linkurious/ogma";
-import { Position } from "geojson";
 import { Handler } from "./base";
 import {
   cursors,
@@ -33,7 +32,7 @@ type Handle = {
 export class PolygonHandler extends Handler<Polygon, Handle> {
   private links: Links;
   private isDrawingMode = false;
-  private simplificationTolerance = 5; // Graph units
+  private simplificationTolerance = 3; // Graph units
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -47,7 +46,9 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
     this.annotation = id;
     this.isDrawingMode = true;
     // Start live update tracking
-    this.store.getState().startLiveUpdate([id]);
+    const state = this.store.getState();
+    state.startLiveUpdate([id]);
+    state.setDrawingPoints([]);
 
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     this.dragStartPoint = pos;
@@ -102,7 +103,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
         type: HandleType.BODY,
         point: mousePoint
       };
-      this.store.setState({ hoveredHandle: 0 });
+      this.store.setState({ hoveredHandle: -1 });
     } else {
       this.store.setState({ hoveredHandle: -1 });
       this.hoveredHandle = undefined;
@@ -146,8 +147,14 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       // Add the first point to the polygon geometry
       const polygon = this.getAnnotation();
       if (polygon) {
-        const newCoords: [number, number][] = [[point.x, point.y]]; // Closed with duplicate
-        this.store.getState().applyLiveUpdate(polygon.id, {
+        // Closed with duplicate point
+        const newCoords = [
+          [point.x, point.y],
+          [point.x, point.y]
+        ];
+        const state = this.store.getState();
+        state.setDrawingPoints(newCoords);
+        state.applyLiveUpdate(polygon.id, {
           ...polygon,
           geometry: {
             type: "Polygon",
@@ -186,21 +193,34 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
         : basePolygon;
 
       // Get existing points (excluding the closing point) and add new one
-      const currentCoords = polygon.geometry.coordinates[0];
+      //const currentCoords = polygon.geometry.coordinates[0];
+      const currentCoords = state.drawingPoints!;
+      // last point is duplicate of first
       const existingPoints = currentCoords.slice(0, -1);
       const closedPoints = [
         ...existingPoints,
         [point.x, point.y],
         existingPoints[0]
       ];
-      //const closedPoints = [...newPoints, newPoints[0]]; // Close the polygon
+
+      state.setDrawingPoints(closedPoints);
+      const simplifiedPoints = simplifyPolygon(
+        closedPoints.slice(0, -1), // Exclude closing point
+        this.simplificationTolerance,
+        false
+      );
+      const finalPoints = [...simplifiedPoints, simplifiedPoints[0]];
+      //const simplifiedPoints = closedPoints.slice(0, -1); // --- IGNORE ---
+
+      // Ensure closed
+      //const finalPoints = [...simplifiedPoints];
 
       // Update preview with accumulated points
       state.applyLiveUpdate(this.annotation!, {
         ...polygon,
         geometry: {
           type: "Polygon",
-          coordinates: [closedPoints]
+          coordinates: [finalPoints]
         }
       });
       return;
@@ -235,7 +255,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
           return [
             this.hoveredHandle!.point.x + dx,
             this.hoveredHandle!.point.y + dy
-          ] as [number, number];
+          ];
         }
         // Also update closing point if it matches
         if (
@@ -245,7 +265,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
           return [
             this.hoveredHandle!.point.x + dx,
             this.hoveredHandle!.point.y + dy
-          ] as [number, number];
+          ];
         }
         return coord;
       });
@@ -275,28 +295,25 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       if (polygon) {
         // Get the points from the geometry (excluding the closing point)
 
-        const liveUpdate = state.liveUpdates[this.annotation!];
-        const points = liveUpdate.geometry?.coordinates[0] as Position[];
+        //const liveUpdate = state.liveUpdates[this.annotation!];
+        const points = state.drawingPoints!;
 
         // Not enough points, cancel
         if (points.length < 3) this.cancelDrawing();
         else {
           // Apply path simplification (cast to correct type)
           const simplifiedPoints = simplifyPolygon(
-            points.slice(0, -1), // Exclude closing point
+            points, // Exclude closing point
             this.simplificationTolerance,
             true
           );
-
-          // Ensure closed
-          const closedPoints = [...simplifiedPoints, simplifiedPoints[0]];
 
           // Create final polygon
           const finalPolygon: Polygon = {
             ...polygon,
             geometry: {
               type: "Polygon",
-              coordinates: [closedPoints]
+              coordinates: [simplifiedPoints]
             }
           };
           updateBbox(finalPolygon);

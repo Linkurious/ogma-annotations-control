@@ -1,4 +1,5 @@
 // store/AnnotationStore.ts
+import { Position } from "geojson";
 import { temporal } from "zundo";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
@@ -20,6 +21,7 @@ export interface AnnotationState {
   selectedFeatures: Set<Id>;
   lastChangedFeatures: Id[];
   drawingFeature: Id | null;
+  drawingPoints: Position[] | null;
 
   rotation: number;
   sin: number;
@@ -70,6 +72,7 @@ export interface AnnotationState {
   getRotationTransform: (ox: number, oy: number) => string;
 
   getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => Bounds;
+  setDrawingPoints: (points: Position[] | null) => void;
 }
 
 export const createStore = () => {
@@ -86,6 +89,7 @@ export const createStore = () => {
           selectedFeatures: new Set(),
           lastChangedFeatures: [],
           drawingFeature: null,
+          drawingPoints: null,
           rotation: 0,
           sin: 0,
           cos: 1,
@@ -312,7 +316,10 @@ export const createStore = () => {
               rotatedRect
             );
             return rabb;
-          }
+          },
+
+          setDrawingPoints: (points: Position[] | null) =>
+            set({ drawingPoints: points })
         }),
         {
           limit: 50,

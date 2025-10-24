@@ -93,14 +93,14 @@ export class Shapes extends Renderer<SVGLayer> {
           existingElement,
           state
         );
-      else if (isPolygon(feature))
+      else if (isPolygon(feature)) {
         existingElement = renderPolygon(
           annotationsRoot,
           feature,
           existingElement,
           state
         );
-      else if (isArrow(feature))
+      } else if (isArrow(feature))
         existingElement = renderArrow(
           arrowsRoot,
           feature,

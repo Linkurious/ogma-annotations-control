@@ -270,6 +270,7 @@ export class Handles extends Renderer<CanvasLayer> {
 
     // If drawing, render preview path with straight lines
     if (isDrawing) {
+      return;
       ctx.save();
       ctx.strokeStyle = this.handleStroke;
       ctx.lineWidth = style?.strokeWidth || 2;
@@ -331,6 +332,7 @@ export class Handles extends Renderer<CanvasLayer> {
     coords: Position[],
     tension: number
   ) {
+    return;
     const points = coords.slice(0, -1); // Remove closing duplicate
     if (points.length < 3) return;
 

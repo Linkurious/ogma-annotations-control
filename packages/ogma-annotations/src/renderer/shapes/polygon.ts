@@ -7,7 +7,12 @@ import { createSVGElement } from "../../utils";
 /**
  * Convert polygon coordinates to a smooth SVG path using Catmull-Rom splines
  */
-function pointsToSmoothPath(coords: Position[], tension: number = 0.5): string {
+function pointsToSmoothPath(
+  coords: Position[],
+  tension: number = 0.5,
+  isDrawing: boolean = false
+): string {
+  if (coords.length < 2) return "";
   if (coords.length < 3) {
     // Not enough points for smoothing, use straight lines
     return (
@@ -34,12 +39,13 @@ function pointsToSmoothPath(coords: Position[], tension: number = 0.5): string {
     const cp2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
     const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
-    if (i === 0) {
-      path.push(`M${p1[0]},${p1[1]}`);
-    }
-
-    path.push(`C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`);
+    if (i === 0) path.push(`M${p1[0]},${p1[1]}`);
+    if (isDrawing && i === N - 1) {
+      path.push(`L${p2[0]},${p2[1]}`);
+    } else path.push(`C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`);
   }
+
+  path.push("Z"); // Close the path
 
   return path.join(" ");
 }
@@ -77,12 +83,6 @@ export function renderPolygon(
     g.appendChild(polygonPath);
   }
 
-  // Convert coordinates to smooth SVG path
-  const coords = polygon.geometry.coordinates[0]; // Exterior ring
-  const smoothPath = pointsToSmoothPath(coords, 0.5);
-
-  polygonPath.setAttribute("d", smoothPath);
-
   // Apply styles
   const {
     strokeColor = defaultPolygonStyle.strokeColor,
@@ -95,6 +95,16 @@ export function renderPolygon(
     polygonPath.setAttribute("stroke-width", String(strokeWidth));
   if (background) polygonPath.setAttribute("fill", background);
   if (strokeType) polygonPath.setAttribute("stroke-dasharray", strokeType);
+
+  // Convert coordinates to smooth SVG path
+  const coords = polygon.geometry.coordinates[0]; // Exterior ring
+  const smoothPath = pointsToSmoothPath(
+    coords,
+    0.5,
+    state.drawingFeature === polygon.id
+  );
+
+  polygonPath.setAttribute("d", smoothPath);
 
   g.setAttribute("transform", state.getRotationTransform(0, 0));
 
