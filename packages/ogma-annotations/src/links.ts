@@ -1,4 +1,5 @@
 import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
+import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { SIDE_END, SIDE_START } from "./constants";
 import { Store } from "./store";
@@ -9,8 +10,7 @@ import type {
   Link,
   Side,
   Text,
-  Annotation,
-  Polygon
+  Annotation
 } from "./types";
 import { isBox, isText, isPolygon } from "./types";
 import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
@@ -440,23 +440,14 @@ export class Links {
 
   private _getAnnotationSnapPoint(
     annotation: Annotation,
-    _point: Point,
+    point: Point,
     link: Link,
     zoom: number
-  ): [number, number] {
-    if (isPolygon(annotation)) {
-      return this._getPolygonSnapPoint(annotation, link);
-    }
-    return this._getBoxSnapPoint(annotation as Text, _point, link, zoom);
-  }
-
-  private _getPolygonSnapPoint(
-    _polygon: Polygon,
-    link: Link
-  ): [number, number] {
+  ): Position {
     // For polygons, the magnet point is stored as absolute coordinates
     // (not relative like boxes), so we just return it directly
-    return [link.magnet.x, link.magnet.y];
+    if (isPolygon(annotation)) return [link.magnet.x, link.magnet.y];
+    return this._getBoxSnapPoint(annotation as Text, point, link, zoom);
   }
 
   private _getBoxSnapPoint(
