@@ -184,13 +184,20 @@ export class Snapping extends EventTarget {
 
   private snapToPolygon(point: Point, polygons: Polygon[]): PolygonSnap | null {
     const magnetRadius = this.options.magnetRadius;
+    const tension = 0.5; // Same as renderer
 
     for (const polygon of polygons) {
       const coords = polygon.geometry.coordinates[0];
+      const points = coords.slice(0, -1); // Remove closing duplicate
 
-      // Check vertex snapping first (don't check the last point as it's the same as first)
-      for (let i = 0; i < coords.length - 1; i++) {
-        const [vx, vy] = coords[i];
+      if (points.length < 3) {
+        // Not enough points for smoothing, use straight edges
+        return this.snapToPolygonStraightEdges(point, polygon, magnetRadius);
+      }
+
+      // Check vertex snapping first
+      for (let i = 0; i < points.length; i++) {
+        const [vx, vy] = points[i];
         const dist = length(subtract({ x: vx, y: vy }, point));
 
         if (dist < magnetRadius) {
@@ -203,40 +210,33 @@ export class Snapping extends EventTarget {
         }
       }
 
-      // Check edge snapping
-      for (let i = 0; i < coords.length - 1; i++) {
-        const [x1, y1] = coords[i];
-        const [x2, y2] = coords[i + 1];
+      // Check smooth curve snapping
+      for (let i = 0; i < points.length; i++) {
+        const p0 = points[(i - 1 + points.length) % points.length];
+        const p1 = points[i];
+        const p2 = points[(i + 1) % points.length];
+        const p3 = points[(i + 2) % points.length];
 
-        const p1 = { x: x1, y: y1 };
-        const p2 = { x: x2, y: y2 };
+        // Calculate Catmull-Rom control points
+        const cp1x = p1[0] + ((p2[0] - p0[0]) / 6) * tension;
+        const cp1y = p1[1] + ((p2[1] - p0[1]) / 6) * tension;
+        const cp2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
+        const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
-        const edgeVec = subtract(p2, p1);
-        const edgeLength = length(edgeVec);
-        const edgeDir = {
-          x: edgeVec.x / edgeLength,
-          y: edgeVec.y / edgeLength
-        };
-        const edgeNorm = { x: -edgeDir.y, y: edgeDir.x };
+        // Find closest point on this Bézier curve segment
+        const result = this.findClosestPointOnBezier(
+          point,
+          { x: p1[0], y: p1[1] },
+          { x: cp1x, y: cp1y },
+          { x: cp2x, y: cp2y },
+          { x: p2[0], y: p2[1] },
+          magnetRadius
+        );
 
-        const toPoint = subtract(point, p1);
-        const dist = Math.abs(dot(edgeNorm, toPoint));
-        const projection = dot(edgeDir, toPoint);
-
-        // Check if projection is within edge bounds
-        if (
-          projection >= 0 &&
-          projection <= edgeLength &&
-          dist < magnetRadius
-        ) {
-          const snapPoint = {
-            x: p1.x + edgeDir.x * projection,
-            y: p1.y + edgeDir.y * projection
-          };
-
+        if (result) {
           return {
-            point: snapPoint,
-            magnet: snapPoint,
+            point: result,
+            magnet: result,
             type: "polygon" as const,
             id: polygon.id
           };
@@ -245,6 +245,117 @@ export class Snapping extends EventTarget {
     }
 
     return null;
+  }
+
+  private snapToPolygonStraightEdges(
+    point: Point,
+    polygon: Polygon,
+    magnetRadius: number
+  ): PolygonSnap | null {
+    const coords = polygon.geometry.coordinates[0];
+
+    // Check vertex snapping
+    for (let i = 0; i < coords.length - 1; i++) {
+      const [vx, vy] = coords[i];
+      const dist = length(subtract({ x: vx, y: vy }, point));
+
+      if (dist < magnetRadius) {
+        return {
+          point: { x: vx, y: vy },
+          magnet: { x: vx, y: vy },
+          type: "polygon" as const,
+          id: polygon.id
+        };
+      }
+    }
+
+    // Check edge snapping
+    for (let i = 0; i < coords.length - 1; i++) {
+      const [x1, y1] = coords[i];
+      const [x2, y2] = coords[i + 1];
+
+      const p1 = { x: x1, y: y1 };
+      const p2 = { x: x2, y: y2 };
+
+      const edgeVec = subtract(p2, p1);
+      const edgeLength = length(edgeVec);
+      const edgeDir = {
+        x: edgeVec.x / edgeLength,
+        y: edgeVec.y / edgeLength
+      };
+      const edgeNorm = { x: -edgeDir.y, y: edgeDir.x };
+
+      const toPoint = subtract(point, p1);
+      const dist = Math.abs(dot(edgeNorm, toPoint));
+      const projection = dot(edgeDir, toPoint);
+
+      if (
+        projection >= 0 &&
+        projection <= edgeLength &&
+        dist < magnetRadius
+      ) {
+        const snapPoint = {
+          x: p1.x + edgeDir.x * projection,
+          y: p1.y + edgeDir.y * projection
+        };
+
+        return {
+          point: snapPoint,
+          magnet: snapPoint,
+          type: "polygon" as const,
+          id: polygon.id
+        };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Find closest point on a cubic Bézier curve using sampling
+   * Returns the point if distance is within threshold, null otherwise
+   */
+  private findClosestPointOnBezier(
+    point: Point,
+    p0: Point,
+    cp1: Point,
+    cp2: Point,
+    p3: Point,
+    threshold: number
+  ): Point | null {
+    let closestDist = Infinity;
+    let closestPoint: Point | null = null;
+
+    // Sample the curve at regular intervals (20 samples is a good balance)
+    const samples = 20;
+    for (let i = 0; i <= samples; i++) {
+      const t = i / samples;
+      const curvePoint = this.bezierPoint(t, p0, cp1, cp2, p3);
+      const dist = length(subtract(curvePoint, point));
+
+      if (dist < closestDist) {
+        closestDist = dist;
+        closestPoint = curvePoint;
+      }
+    }
+
+    return closestDist < threshold ? closestPoint : null;
+  }
+
+  /**
+   * Calculate point on cubic Bézier curve at parameter t
+   */
+  private bezierPoint(t: number, p0: Point, cp1: Point, cp2: Point, p3: Point): Point {
+    const t2 = t * t;
+    const t3 = t2 * t;
+    const mt = 1 - t;
+    const mt2 = mt * mt;
+    const mt3 = mt2 * mt;
+
+    return {
+      x: mt3 * p0.x + 3 * mt2 * t * cp1.x + 3 * mt * t2 * cp2.x + t3 * p3.x,
+      y: mt3 * p0.y + 3 * mt2 * t * cp1.y + 3 * mt * t2 * cp2.y + t3 * p3.y
+    };
   }
 
   private snapToMagnetPoints(
@@ -341,9 +452,7 @@ export class Snapping extends EventTarget {
           };
 
           // If within magnetRadius, return immediately
-          if (absDist < magnetRadius) {
-            return snap;
-          }
+          if (absDist < magnetRadius) return snap;
 
           // Otherwise track as closest for potential inside-box snap
           if (absDist < closestDist) {

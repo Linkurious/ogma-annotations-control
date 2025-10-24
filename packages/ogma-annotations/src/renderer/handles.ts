@@ -278,8 +278,14 @@ export class Handles extends Renderer<CanvasLayer> {
       ctx.beginPath();
       if (coords.length > 0) {
         ctx.moveTo(coords[0][0], coords[0][1]);
-        for (let i = 1; i < coords.length; i++) {
+        // Draw lines to all points except the closing duplicate
+        const pointCount = coords.length - 1; // Exclude closing duplicate
+        for (let i = 1; i < pointCount; i++) {
           ctx.lineTo(coords[i][0], coords[i][1]);
+        }
+        // Close the path if we have at least 3 points
+        if (pointCount >= 2) {
+          ctx.closePath();
         }
       }
 
@@ -331,6 +337,7 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.beginPath();
     const N = points.length;
 
+    // Need to loop through all N points to create N curve segments (including closing segment)
     for (let i = 0; i < N; i++) {
       const p0 = points[(i - 1 + N) % N];
       const p1 = points[i];
@@ -344,6 +351,7 @@ export class Handles extends Renderer<CanvasLayer> {
       const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
       if (i === 0) ctx.moveTo(p1[0], p1[1]);
+
       ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]);
     }
 

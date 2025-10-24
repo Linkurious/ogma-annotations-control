@@ -7,7 +7,7 @@ import { createSVGElement } from "../../utils";
 /**
  * Convert polygon coordinates to a smooth SVG path using Catmull-Rom splines
  */
-function pointsToSmoothPath(coords: Position[], tension: number = 3.5): string {
+function pointsToSmoothPath(coords: Position[], tension: number = 0.5): string {
   if (coords.length < 3) {
     // Not enough points for smoothing, use straight lines
     return (
@@ -17,10 +17,11 @@ function pointsToSmoothPath(coords: Position[], tension: number = 3.5): string {
     );
   }
 
-  const points = coords.slice(0, -1); // Remove closing duplicate point
-  const N = points.length;
+  const points = coords; // Remove closing duplicate point
+  const N = points.length - 1;
   const path: string[] = [];
 
+  // Need to loop through all N points to create N curve segments (including closing segment)
   for (let i = 0; i < N; i++) {
     const p0 = points[(i - 1 + N) % N];
     const p1 = points[i];
@@ -33,12 +34,13 @@ function pointsToSmoothPath(coords: Position[], tension: number = 3.5): string {
     const cp2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
     const cp2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
-    if (i === 0) path.push(`M${p1[0]},${p1[1]}`);
+    if (i === 0) {
+      path.push(`M${p1[0]},${p1[1]}`);
+    }
 
     path.push(`C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2[0]},${p2[1]}`);
   }
 
-  path.push("Z");
   return path.join(" ");
 }
 

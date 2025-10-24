@@ -1,4 +1,5 @@
 import Ogma, { Point } from "@linkurious/ogma";
+import { Position } from "geojson";
 import { Handler } from "./base";
 import {
   cursors,
@@ -145,10 +146,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       // Add the first point to the polygon geometry
       const polygon = this.getAnnotation();
       if (polygon) {
-        const newCoords: [number, number][] = [
-          [point.x, point.y],
-          [point.x, point.y]
-        ]; // Closed with duplicate
+        const newCoords: [number, number][] = [[point.x, point.y]]; // Closed with duplicate
         this.store.getState().applyLiveUpdate(polygon.id, {
           ...polygon,
           geometry: {
@@ -190,29 +188,19 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       // Get existing points (excluding the closing point) and add new one
       const currentCoords = polygon.geometry.coordinates[0];
       const existingPoints = currentCoords.slice(0, -1);
-      const newPoints = [
+      const closedPoints = [
         ...existingPoints,
-        [point.x, point.y] as [number, number]
+        [point.x, point.y],
+        existingPoints[0]
       ];
-      const closedPoints = [...newPoints, newPoints[0]]; // Close the polygon
-
-      // Calculate bbox
-      const xs = newPoints.map((p) => p[0]);
-      const ys = newPoints.map((p) => p[1]);
-      const bbox: [number, number, number, number] = [
-        Math.min(...xs),
-        Math.min(...ys),
-        Math.max(...xs),
-        Math.max(...ys)
-      ];
+      //const closedPoints = [...newPoints, newPoints[0]]; // Close the polygon
 
       // Update preview with accumulated points
       state.applyLiveUpdate(this.annotation!, {
         ...polygon,
         geometry: {
           type: "Polygon",
-          coordinates: [closedPoints],
-          bbox
+          coordinates: [closedPoints]
         }
       });
       return;
@@ -288,17 +276,14 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
         // Get the points from the geometry (excluding the closing point)
 
         const liveUpdate = state.liveUpdates[this.annotation!];
-        const points = liveUpdate.geometry?.coordinates[0] as [
-          number,
-          number
-        ][];
+        const points = liveUpdate.geometry?.coordinates[0] as Position[];
 
         // Not enough points, cancel
         if (points.length < 3) this.cancelDrawing();
         else {
           // Apply path simplification (cast to correct type)
           const simplifiedPoints = simplifyPolygon(
-            points,
+            points.slice(0, -1), // Exclude closing point
             this.simplificationTolerance,
             true
           );

@@ -233,8 +233,8 @@ export class Links {
         const arrowId = link.arrow;
         const arrow = this.store.getState().getFeature(arrowId) as Arrow;
         const coordinates = arrow.geometry.coordinates.slice();
-        const start = getArrowSide(arrow, SIDE_END);
-        const end = getArrowSide(arrow, SIDE_START);
+        const end = getArrowSide(arrow, SIDE_END);
+        const start = getArrowSide(arrow, SIDE_START);
 
         const positionAndRadius = xyr[i];
         // Update the arrow's position
