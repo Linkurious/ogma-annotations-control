@@ -1,6 +1,7 @@
 :root {
   --font-face: "IBM Plex Sans", sans-serif;
   --font-size: 16px;
+  --brand: #1493ff;
 }
 
 #app {
@@ -182,4 +183,13 @@ body {
 [tooltip]:hover::after,
 [tooltip]:hover::before {
   opacity: 1;
+}
+
+.control-bar > button.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.control-bar > button.active:before {
+  color: #fff;
 }
