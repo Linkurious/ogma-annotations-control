@@ -266,35 +266,32 @@ export class Handles extends Renderer<CanvasLayer> {
     isDrawing: boolean
   ) {
     const coords = feature.geometry.coordinates[0];
-    const style = feature.properties.style;
+    //const style = feature.properties.style;
 
     // If drawing, render preview path with straight lines
     if (isDrawing) {
-      return;
-      ctx.save();
-      ctx.strokeStyle = this.handleStroke;
-      ctx.lineWidth = style?.strokeWidth || 2;
-      ctx.setLineDash([5, 5]); // Dashed line for preview
+      // ctx.save();
+      // ctx.strokeStyle = this.handleStroke;
+      // ctx.lineWidth = style?.strokeWidth || 2;
+      // ctx.setLineDash([5, 5]); // Dashed line for preview
 
-      ctx.beginPath();
-      if (coords.length > 0) {
-        ctx.moveTo(coords[0][0], coords[0][1]);
-        // Draw lines to all points except the closing duplicate
-        const pointCount = coords.length - 1; // Exclude closing duplicate
-        for (let i = 1; i < pointCount; i++) {
-          ctx.lineTo(coords[i][0], coords[i][1]);
-        }
-        // Close the path if we have at least 3 points
-        if (pointCount >= 2) {
-          ctx.closePath();
-        }
-      }
+      // ctx.beginPath();
+      // if (coords.length > 0) {
+      //   ctx.moveTo(coords[0][0], coords[0][1]);
+      //   // Draw lines to all points except the closing duplicate
+      //   const pointCount = coords.length - 1; // Exclude closing duplicate
+      //   for (let i = 1; i < pointCount; i++) {
+      //     ctx.lineTo(coords[i][0], coords[i][1]);
+      //   }
+      //   // Close the path if we have at least 3 points
+      //   if (pointCount >= 2) ctx.closePath();
+      // }
 
-      ctx.setLineDash([]); // Reset dash
-      ctx.fillStyle = this.polygonFill;
-      ctx.stroke();
-      ctx.fill();
-      ctx.restore();
+      // ctx.setLineDash([]); // Reset dash
+      // ctx.fillStyle = this.polygonFill;
+      // ctx.stroke();
+      // ctx.fill();
+      // ctx.restore();
 
       // Don't render vertex handles while drawing
       return;
@@ -332,7 +329,6 @@ export class Handles extends Renderer<CanvasLayer> {
     coords: Position[],
     tension: number
   ) {
-    return;
     const points = coords.slice(0, -1); // Remove closing duplicate
     if (points.length < 3) return;
 
