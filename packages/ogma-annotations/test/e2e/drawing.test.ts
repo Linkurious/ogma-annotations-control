@@ -22,7 +22,7 @@ describe("Snapping", () => {
       await ogma.addNodes([
         { id: "1", attributes: { x: -100, y: -100 } },
         { id: "2", attributes: { x: 100, y: 100 } },
-        { id: "test", attributes: { x, y } },
+        { id: "test", attributes: { x, y } }
       ]);
       await ogma.view.locateGraph();
       await ogma.view.setZoom(2);
@@ -49,7 +49,7 @@ describe("Snapping", () => {
     expect(annotations.features[0].geometry.type).toEqual("LineString");
     expect(annotations.features[0].geometry.coordinates).toEqual([
       [20, 20],
-      [70, 30],
+      [70, 30]
     ]);
   }, 5000);
 });

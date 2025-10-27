@@ -12,6 +12,7 @@ describe("Snapping", () => {
   afterAll(async () => {
     await session.close();
   });
+
   beforeEach(async () => {
     await session.refresh();
     const pts = await session.page.evaluate(() => {

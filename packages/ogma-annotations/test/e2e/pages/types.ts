@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import Ogma, { OgmaParameters } from "@linkurious/ogma";
 import { Control, createArrow } from "../../../src";
 
 export interface AugmentedWindow {
@@ -6,7 +6,7 @@ export interface AugmentedWindow {
   ogma: Ogma;
   editor: Control;
   Control: typeof Control;
-  createOgma: (options: any) => Ogma;
+  createOgma: <T extends OgmaParameters>(options: T) => Ogma;
   createEditor: () => Control;
   createArrow: typeof createArrow;
 }

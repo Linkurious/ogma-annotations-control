@@ -15,26 +15,26 @@ declare global {
 }
 
 export class BrowserSession {
-  public server: PreviewServer;
-  public browser: Browser;
-  public page: Page;
-  public port: number;
+  public server!: PreviewServer;
+  public browser!: Browser;
+  public page!: Page;
+  public port!: number;
 
   async start(headless = true, options: InlineConfig = {}) {
     this.port = await getPort();
     await build({
       root: "test/e2e/pages",
-      ...options,
+      ...options
     });
     this.server = await preview({
       root: "test/e2e/pages",
       preview: { port: this.port },
-      ...options,
+      ...options
     });
     this.browser = await chromium.launch({
       headless,
       devtools: false,
-      slowMo: 100,
+      slowMo: 100
     });
     this.page = await this.browser.newPage();
     await this.page.goto(`http://localhost:${this.port}`);

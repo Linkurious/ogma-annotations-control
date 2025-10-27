@@ -30,6 +30,7 @@ import {
   Text,
   createArrow,
   createBox,
+  createPolygon,
   createText,
   isArrow,
   isBox,
@@ -267,6 +268,78 @@ export class Control extends EventEmitter<FeatureEvents> {
   public cancelDrawing() {
     this.editor.getActiveHandler()?.cancelDrawing();
     this.emit(EVT_CANCEL_DRAWING);
+    return this;
+  }
+
+  /**
+   * Enable arrow drawing mode - listens for next mousedown to start drawing
+   * @param style Arrow style options
+   * @returns this for chaining
+   */
+  public enableArrowDrawing(style?: Partial<Arrow["properties"]["style"]>): this {
+    this.unselect().cancelDrawing();
+
+    const handler = (evt: any) => {
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const arrow = createArrow(x, y, x, y, style);
+      this.startArrow(x, y, arrow);
+    };
+
+    this.ogma.events.once("mousedown", handler);
+    return this;
+  }
+
+  /**
+   * Enable text drawing mode - listens for next mousedown to start drawing
+   * @param style Text style options
+   * @returns this for chaining
+   */
+  public enableTextDrawing(style?: Partial<Text["properties"]["style"]>): this {
+    this.unselect().cancelDrawing();
+
+    const handler = (evt: any) => {
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const text = createText(x, y, 0, 0, undefined, style);
+      this.startText(x, y, text);
+    };
+
+    this.ogma.events.once("mousedown", handler);
+    return this;
+  }
+
+  /**
+   * Enable box drawing mode - listens for next mousedown to start drawing
+   * @param style Box style options
+   * @returns this for chaining
+   */
+  public enableBoxDrawing(style?: Partial<Box["properties"]["style"]>): this {
+    this.unselect().cancelDrawing();
+
+    const handler = (evt: any) => {
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const box = createBox(x, y, 0, 0, style);
+      this.startBox(x, y, box);
+    };
+
+    this.ogma.events.once("mousedown", handler);
+    return this;
+  }
+
+  /**
+   * Enable polygon drawing mode - listens for next mousedown to start drawing
+   * @param style Polygon style options
+   * @returns this for chaining
+   */
+  public enablePolygonDrawing(style?: Partial<Polygon["properties"]["style"]>): this {
+    this.unselect().cancelDrawing();
+
+    const handler = (evt: any) => {
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const polygon = createPolygon([[[x, y]]], { style });
+      this.startPolygon(x, y, polygon);
+    };
+
+    this.ogma.events.once("mousedown", handler);
     return this;
   }
 

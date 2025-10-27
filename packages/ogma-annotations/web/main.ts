@@ -1,14 +1,11 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import Ogma, { MouseButtonEvent, RawNode } from "@linkurious/ogma";
+import Ogma, { RawNode } from "@linkurious/ogma";
 import {
   Control,
-  createArrow,
   createText,
   AnnotationCollection,
-  createBox,
-  createPolygon,
   getAnnotationsBounds
 } from "../src";
 
@@ -139,65 +136,53 @@ class App {
   private setupArrowTool() {
     this.buttons.addArrow.addEventListener("click", () => {
       if (this.buttons.addArrow.disabled) return;
-      this.control.unselect().cancelDrawing();
       this.clearAllActiveButtons();
       this.buttons.addArrow.disabled = true;
       this.buttons.addArrow.classList.add("active");
 
-      const drawArrowHandler = (evt: MouseButtonEvent<ND, ED>) => {
-        const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
-        const arrow = createArrow(x, y, x, y, {
-          strokeType: "plain",
-          strokeColor: "#3A03CF",
-          strokeWidth: 2,
-          head: "arrow"
-        });
-        this.control.startArrow(x, y, arrow);
-        this.control.once("completeDrawing", (a) => {
-          if (a.id === arrow.id) {
-            this.buttons.addArrow.disabled = false;
-            this.buttons.addArrow.classList.remove("active");
-          }
-        });
-        this.control.once("cancelDrawing", () => {
-          this.buttons.addArrow.disabled = false;
-          this.buttons.addArrow.classList.remove("active");
-        });
-      };
+      this.control.enableArrowDrawing({
+        strokeType: "plain",
+        strokeColor: "#3A03CF",
+        strokeWidth: 2,
+        head: "arrow"
+      });
 
-      this.ogma.events.once("mousedown", drawArrowHandler);
+      this.control.once("completeDrawing", () => {
+        this.buttons.addArrow.disabled = false;
+        this.buttons.addArrow.classList.remove("active");
+      });
+
+      this.control.once("cancelDrawing", () => {
+        this.buttons.addArrow.disabled = false;
+        this.buttons.addArrow.classList.remove("active");
+      });
     });
   }
 
   private setupTextTool() {
     this.buttons.addText.addEventListener("click", () => {
       if (this.buttons.addText.disabled) return;
-      this.control.unselect().cancelDrawing();
       this.clearAllActiveButtons();
       this.buttons.addText.disabled = true;
       this.buttons.addText.classList.add("active");
 
-      this.ogma.events.once("mousedown", (evt) => {
-        const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
-        const text = createText(x, y, 0, 0, undefined, {
-          font: "IBM Plex Sans",
-          fontSize: 24,
-          color: "#3A03CF",
-          background: "#EDE6FF",
-          borderRadius: 8,
-          padding: 12
-        });
-        this.control.startText(x, y, text);
-        this.control.once("completeDrawing", (a) => {
-          if (a.id === text.id) {
-            this.buttons.addText.disabled = false;
-            this.buttons.addText.classList.remove("active");
-          }
-        });
-        this.control.once("cancelDrawing", () => {
-          this.buttons.addText.disabled = false;
-          this.buttons.addText.classList.remove("active");
-        });
+      this.control.enableTextDrawing({
+        font: "IBM Plex Sans",
+        fontSize: 24,
+        color: "#3A03CF",
+        background: "#EDE6FF",
+        borderRadius: 8,
+        padding: 12
+      });
+
+      this.control.once("completeDrawing", () => {
+        this.buttons.addText.disabled = false;
+        this.buttons.addText.classList.remove("active");
+      });
+
+      this.control.once("cancelDrawing", () => {
+        this.buttons.addText.disabled = false;
+        this.buttons.addText.classList.remove("active");
       });
     });
   }
@@ -205,29 +190,24 @@ class App {
   private setupBoxTool() {
     this.buttons.addBox.addEventListener("click", () => {
       if (this.buttons.addBox.disabled) return;
-      this.control.unselect().cancelDrawing();
       this.clearAllActiveButtons();
       this.buttons.addBox.disabled = true;
       this.buttons.addBox.classList.add("active");
 
-      this.ogma.events.once("mousedown", (evt) => {
-        const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
-        const box = createBox(x, y, 0, 0, {
-          background: "#EDE6FF",
-          borderRadius: 8,
-          padding: 12
-        });
-        this.control.startBox(x, y, box);
-        this.control.once("completeDrawing", (a) => {
-          if (a.id === box.id) {
-            this.buttons.addBox.disabled = false;
-            this.buttons.addBox.classList.remove("active");
-          }
-        });
-        this.control.once("cancelDrawing", () => {
-          this.buttons.addBox.disabled = false;
-          this.buttons.addBox.classList.remove("active");
-        });
+      this.control.enableBoxDrawing({
+        background: "#EDE6FF",
+        borderRadius: 8,
+        padding: 12
+      });
+
+      this.control.once("completeDrawing", () => {
+        this.buttons.addBox.disabled = false;
+        this.buttons.addBox.classList.remove("active");
+      });
+
+      this.control.once("cancelDrawing", () => {
+        this.buttons.addBox.disabled = false;
+        this.buttons.addBox.classList.remove("active");
       });
     });
   }
@@ -235,36 +215,26 @@ class App {
   private setupPolygonTool() {
     this.buttons.addPolygon.addEventListener("click", () => {
       if (this.buttons.addPolygon.disabled) return;
-      this.control.unselect().cancelDrawing();
       this.clearAllActiveButtons();
       this.buttons.addPolygon.disabled = true;
       this.buttons.addPolygon.classList.add("active");
 
-      this.ogma.events.once("mousedown", (evt) => {
-        const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
-        const polygon = createPolygon([[[x, y]]], {
-          style: {
-            strokeColor: "#3A03CF",
-            strokeWidth: 2,
-            background: "rgba(58, 3, 207, 0.15)"
-          }
-        });
+      this.control.enablePolygonDrawing({
+        strokeColor: "#3A03CF",
+        strokeWidth: 2,
+        background: "rgba(58, 3, 207, 0.15)"
+      });
 
-        this.control.startPolygon(x, y, polygon);
+      this.control.once("completeDrawing", () => {
+        this.buttons.addPolygon.disabled = false;
+        this.buttons.addPolygon.classList.remove("active");
+        console.log("Polygon drawing completed");
+      });
 
-        this.control.once("completeDrawing", (a) => {
-          if (a.id === polygon.id) {
-            this.buttons.addPolygon.disabled = false;
-            this.buttons.addPolygon.classList.remove("active");
-            console.log("Polygon drawing completed");
-          }
-        });
-
-        this.control.once("cancelDrawing", () => {
-          this.buttons.addPolygon.disabled = false;
-          this.buttons.addPolygon.classList.remove("active");
-          console.log("Polygon drawing canceled");
-        });
+      this.control.once("cancelDrawing", () => {
+        this.buttons.addPolygon.disabled = false;
+        this.buttons.addPolygon.classList.remove("active");
+        console.log("Polygon drawing canceled");
       });
 
       console.log("Click and drag to draw a freehand polygon. Release to finish.");
@@ -388,10 +358,6 @@ class App {
     Object.assign(window, {
       Ogma,
       Control,
-      createArrow,
-      createText,
-      createBox,
-      createPolygon,
       control: this.control
     });
   }
