@@ -1,4 +1,5 @@
 import type Ogma from "@linkurious/ogma";
+import { MouseButtonEvent } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { Position } from "geojson";
 import {
@@ -276,10 +277,12 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param style Arrow style options
    * @returns this for chaining
    */
-  public enableArrowDrawing(style?: Partial<Arrow["properties"]["style"]>): this {
+  public enableArrowDrawing(
+    style?: Partial<Arrow["properties"]["style"]>
+  ): this {
     this.unselect().cancelDrawing();
 
-    const handler = (evt: any) => {
+    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
       const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
       const arrow = createArrow(x, y, x, y, style);
       this.startArrow(x, y, arrow);
@@ -297,7 +300,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public enableTextDrawing(style?: Partial<Text["properties"]["style"]>): this {
     this.unselect().cancelDrawing();
 
-    const handler = (evt: any) => {
+    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
       const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
       const text = createText(x, y, 0, 0, undefined, style);
       this.startText(x, y, text);
@@ -315,7 +318,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public enableBoxDrawing(style?: Partial<Box["properties"]["style"]>): this {
     this.unselect().cancelDrawing();
 
-    const handler = (evt: any) => {
+    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
       const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
       const box = createBox(x, y, 0, 0, style);
       this.startBox(x, y, box);
@@ -330,10 +333,12 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param style Polygon style options
    * @returns this for chaining
    */
-  public enablePolygonDrawing(style?: Partial<Polygon["properties"]["style"]>): this {
+  public enablePolygonDrawing(
+    style?: Partial<Polygon["properties"]["style"]>
+  ): this {
     this.unselect().cancelDrawing();
 
-    const handler = (evt: any) => {
+    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
       const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
       const polygon = createPolygon([[[x, y]]], { style });
       this.startPolygon(x, y, polygon);
