@@ -69,6 +69,11 @@ export class Control extends EventEmitter<FeatureEvents> {
   private links: Links;
   private index = new Index(this.store);
 
+  // Track pending drawing listener to clean up on cancel
+  private pendingDrawingListener:
+    | (<T extends MouseButtonEvent<unknown, unknown>>(evt: T) => void)
+    | null = null;
+
   constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
@@ -267,8 +272,37 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public cancelDrawing() {
+    // Remove any pending drawing listener
+    if (this.pendingDrawingListener) {
+      this.ogma.events.off(this.pendingDrawingListener);
+      this.pendingDrawingListener = null;
+    }
+
     this.editor.getActiveHandler()?.cancelDrawing();
     this.emit(EVT_CANCEL_DRAWING);
+    return this;
+  }
+
+  /**
+   * Helper method to enable drawing mode with proper cleanup
+   * @private
+   */
+  private enableDrawingMode(
+    drawCallback: (x: number, y: number) => void
+  ): this {
+    this.unselect().cancelDrawing();
+
+    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
+      // Remove the listener and clear reference
+      this.ogma.events.off(handler);
+      this.pendingDrawingListener = null;
+
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      drawCallback(x, y);
+    };
+
+    this.pendingDrawingListener = handler;
+    this.ogma.events.once("mousedown", handler);
     return this;
   }
 
@@ -280,16 +314,10 @@ export class Control extends EventEmitter<FeatureEvents> {
   public enableArrowDrawing(
     style?: Partial<Arrow["properties"]["style"]>
   ): this {
-    this.unselect().cancelDrawing();
-
-    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
-      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+    return this.enableDrawingMode((x, y) => {
       const arrow = createArrow(x, y, x, y, style);
       this.startArrow(x, y, arrow);
-    };
-
-    this.ogma.events.once("mousedown", handler);
-    return this;
+    });
   }
 
   /**
@@ -298,16 +326,10 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public enableTextDrawing(style?: Partial<Text["properties"]["style"]>): this {
-    this.unselect().cancelDrawing();
-
-    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
-      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+    return this.enableDrawingMode((x, y) => {
       const text = createText(x, y, 0, 0, undefined, style);
       this.startText(x, y, text);
-    };
-
-    this.ogma.events.once("mousedown", handler);
-    return this;
+    });
   }
 
   /**
@@ -316,16 +338,10 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public enableBoxDrawing(style?: Partial<Box["properties"]["style"]>): this {
-    this.unselect().cancelDrawing();
-
-    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
-      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+    return this.enableDrawingMode((x, y) => {
       const box = createBox(x, y, 0, 0, style);
       this.startBox(x, y, box);
-    };
-
-    this.ogma.events.once("mousedown", handler);
-    return this;
+    });
   }
 
   /**
@@ -336,16 +352,10 @@ export class Control extends EventEmitter<FeatureEvents> {
   public enablePolygonDrawing(
     style?: Partial<Polygon["properties"]["style"]>
   ): this {
-    this.unselect().cancelDrawing();
-
-    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
-      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+    return this.enableDrawingMode((x, y) => {
       const polygon = createPolygon([[[x, y]]], { style });
       this.startPolygon(x, y, polygon);
-    };
-
-    this.ogma.events.once("mousedown", handler);
-    return this;
+    });
   }
 
   /**
@@ -508,7 +518,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       } as Partial<Annotation>);
     } else if (isText(feature) || isBox(feature)) {
       // Scale text/box dimensions and position around origin
-      const [cx, cy] = feature.geometry.coordinates as [number, number];
+      const [cx, cy] = feature.geometry.coordinates;
       const dx = cx - ox;
       const dy = cy - oy;
       const newCx = ox + dx * scale;
