@@ -32,7 +32,7 @@ export class Handles extends Renderer<CanvasLayer> {
   // TODO: move it to settings and state
   private handleFill = "#fff";
   private handleStroke = "#1A70E5";
-  private polygonFill = "rgba(00, 99, 255, 0.1)";
+  // private polygonFill = "rgba(00, 99, 255, 0.1)";
   private handleStrokeWidth = 1.5;
   private handleRadius = 3;
   private handleMagnifier = 1.5;
