@@ -9,6 +9,7 @@ import { Text } from "./Text";
 export * from "./Annotation";
 export * from "./Arrow";
 export * from "./Box";
+export * from "./Comment";
 export * from "./Link";
 export * from "./Polygon";
 export * from "./Text";

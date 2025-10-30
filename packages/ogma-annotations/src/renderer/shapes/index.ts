@@ -1,6 +1,7 @@
 import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
+import { renderComment } from "./comment";
 import { renderPolygon } from "./polygon";
 import { renderText } from "./text";
 import { LAYERS } from "../../constants";
@@ -11,6 +12,7 @@ import {
   Id,
   isArrow,
   isBox,
+  isComment,
   isPolygon,
   isText
 } from "../../types";
@@ -88,6 +90,13 @@ export class Shapes extends Renderer<SVGLayer> {
         );
       else if (isText(feature))
         existingElement = renderText(
+          annotationsRoot,
+          feature,
+          existingElement,
+          state
+        );
+      else if (isComment(feature))
+        existingElement = renderComment(
           annotationsRoot,
           feature,
           existingElement,

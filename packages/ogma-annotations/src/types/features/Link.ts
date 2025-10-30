@@ -32,6 +32,6 @@ export type Link = {
 export type ExportedLink = {
   id: Id;
   side: Side;
-  type: "node" | "text" | "box" | "comment" | "polygon";
+  type: TargetType;
   magnet?: Point;
 };

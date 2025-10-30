@@ -236,6 +236,144 @@
         ],
         "bbox": [-400, -150, -150, 20]
       }
+    },
+    {
+      "id": "comment-example-1",
+      "type": "Feature",
+      "properties": {
+        "type": "comment",
+        "content": "This polygon needs review! 🎯",
+        "mode": "expanded",
+        "width": 200,
+        "height": 80,
+        "minHeight": 60,
+        "iconSize": 32,
+        "author": "Claude",
+        "style": {
+          "background": "#FFFACD",
+          "strokeColor": "#DDD",
+          "strokeWidth": 1,
+          "strokeType": "plain",
+          "borderRadius": 4,
+          "color": "#333",
+          "font": "Arial, sans-serif",
+          "fontSize": 12,
+          "padding": 8,
+          "iconColor": "#FFD700",
+          "iconSymbol": "💬",
+          "fixedSize": true
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-650, -80]
+      }
+    },
+    {
+      "id": "comment-arrow-1",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#666",
+          "strokeWidth": 2,
+          "head": "arrow",
+          "tail": "none"
+        },
+        "link": {
+          "end": {
+            "id": "polygon-example-1",
+            "side": "end",
+            "type": "polygon",
+            "magnet": {
+              "x": -300,
+              "y": -100
+            }
+          },
+          "start": {
+            "id": "comment-example-1",
+            "side": "start",
+            "type": "comment",
+            "magnet": {
+              "x": 0.5,
+              "y": 0
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-450, -120],
+          [-300, -100]
+        ]
+      }
+    },
+    {
+      "id": "comment-collapsed-example",
+      "type": "Feature",
+      "properties": {
+        "type": "comment",
+        "content": "Quick note",
+        "mode": "collapsed",
+        "width": 200,
+        "height": 60,
+        "minHeight": 60,
+        "iconSize": 32,
+        "style": {
+          "iconColor": "#FFD700",
+          "iconSymbol": "💬",
+          "iconBorderColor": "#CCC",
+          "iconBorderWidth": 2,
+          "fixedSize": true
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-100, -80]
+      }
+    },
+    {
+      "id": "comment-arrow-2",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#666",
+          "strokeWidth": 2,
+          "head": "arrow",
+          "tail": "none"
+        },
+        "link": {
+          "start": {
+            "id": "polygon-example-1",
+            "side": "start",
+            "type": "polygon",
+            "magnet": {
+              "x": -200,
+              "y": -50
+            }
+          },
+          "end": {
+            "id": "comment-collapsed-example",
+            "side": "end",
+            "type": "comment",
+            "magnet": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-200, -50],
+          [-100, -80]
+        ]
+      }
     }
   ]
 }

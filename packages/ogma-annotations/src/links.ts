@@ -12,7 +12,7 @@ import type {
   Text,
   Annotation
 } from "./types";
-import { isBox, isText, isPolygon } from "./types";
+import { isBox, isText, isPolygon, isComment } from "./types";
 import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
 import { add, mul, subtract } from "./vec";
 
@@ -186,9 +186,13 @@ export class Links {
       const annotation = state.getFeature(annotationId);
       if (!annotation) return;
 
-      // Check if this is a text with fixedSize enabled
-      // (only text has fixedSize, boxes have scaled property instead)
-      if (isText(annotation) && annotation.properties.style?.fixedSize) {
+      // Check if this is a text with fixedSize enabled or a comment (comments always have fixedSize)
+      // (only text and comments have fixedSize, boxes have scaled property instead)
+      const hasFixedSize =
+        (isText(annotation) && annotation.properties.style?.fixedSize) ||
+        isComment(annotation); // Comments always have fixedSize
+
+      if (hasFixedSize) {
         linkIds.forEach((linkId) => {
           const link = this.links.get(linkId);
           if (!link) return;
@@ -447,11 +451,11 @@ export class Links {
     // For polygons, the magnet point is stored as absolute coordinates
     // (not relative like boxes), so we just return it directly
     if (isPolygon(annotation)) return [link.magnet.x, link.magnet.y];
-    return this._getBoxSnapPoint(annotation as Text, point, link, zoom);
+    return this._getBoxSnapPoint(annotation, point, link, zoom);
   }
 
   private _getBoxSnapPoint(
-    box: Text,
+    box: Annotation,
     _point: Point,
     link: Link,
     zoom: number
@@ -459,7 +463,11 @@ export class Links {
     const center = getBoxCenter(box);
     let { width, height } = getBoxSize(box);
 
-    if (box.properties.style?.fixedSize) {
+    // Handle fixedSize for Text and Comment (comments always have fixedSize)
+    const hasFixedSize =
+      (isText(box) && box.properties.style?.fixedSize) || isComment(box);
+
+    if (hasFixedSize) {
       width /= zoom;
       height /= zoom;
     }
@@ -468,8 +476,8 @@ export class Links {
     let offsetX = link.magnet.x * width;
     let offsetY = link.magnet.y * height;
 
-    // Texts are counter-rotated, boxes are not
-    if (!isBox(box)) {
+    // Texts are counter-rotated (but not boxes or comments - they are screen-aligned)
+    if (isText(box) && !isBox(box)) {
       const { sin, cos } = this.store.getState();
       // Rotate the offset by the current rotation
       const rotatedX = offsetX * cos - offsetY * sin;
