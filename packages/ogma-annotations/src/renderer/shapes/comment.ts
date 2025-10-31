@@ -74,54 +74,7 @@ function renderExpandedBox(
   // Reuse text renderer to render the box and content
   const renderedG = renderText(root, asText, g, state);
 
-  // Add metadata (author, timestamp) at the bottom if present
-  // if (comment.properties.author || comment.properties.timestamp) {
-  //   drawMetadata(comment, renderedG, state);
-  // }
-
   return renderedG;
-}
-
-/**
- * Draw metadata (author, timestamp) at the bottom of the comment
- */
-function _drawMetadata(
-  comment: Comment,
-  g: SVGGElement,
-  _state: AnnotationState
-): void {
-  const style = { ...defaultCommentStyle, ...comment.properties.style };
-  const {
-    color = defaultCommentStyle.color,
-    fontSize = defaultCommentStyle.fontSize
-  } = style;
-
-  const width = comment.properties.width;
-  const height = comment.properties.height;
-  const x = -width / 2;
-  const y = -height / 2;
-  const metadataY = y + height - 5; // 5px from bottom
-
-  let metadataText = "";
-  if (comment.properties.author) {
-    metadataText += comment.properties.author;
-  }
-  if (comment.properties.timestamp) {
-    if (metadataText) metadataText += " • ";
-    metadataText += new Date(comment.properties.timestamp).toLocaleDateString();
-  }
-
-  if (metadataText) {
-    const text = createSVGElement<SVGTextElement>("text");
-    text.setAttribute("x", `${x + 8}`);
-    text.setAttribute("y", `${metadataY}`);
-    text.setAttribute("font-size", `${(fontSize as number) * 0.8}`);
-    text.setAttribute("fill", color!);
-    text.setAttribute("opacity", "0.6");
-    text.setAttribute("pointer-events", "none");
-    text.textContent = metadataText;
-    g.appendChild(text);
-  }
 }
 
 /**
