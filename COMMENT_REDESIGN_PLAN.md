@@ -3,6 +3,7 @@
 ## Overview
 
 Transform the Comment annotation into a specialized type that:
+
 - Always maintains a **fixed size** (screen-space dimensions)
 - Always has an **arrow/pointer attached** to it
 - Can be in **collapsed mode** (icon) or **expanded mode** (text box)
@@ -13,6 +14,7 @@ Transform the Comment annotation into a specialized type that:
 ## Current State Analysis
 
 ### Current Comment Implementation
+
 - **Type**: `Comment extends AnnotationFeature<Polygon, CommentProps>`
 - **Geometry**: Uses Polygon (inherited from current implementation)
 - **Properties**: `text`, `author`, `timestamp` (extends `BoxProperties`)
@@ -21,6 +23,7 @@ Transform the Comment annotation into a specialized type that:
 - **No arrow**: No built-in pointer mechanism
 
 ### Existing System Capabilities to Leverage
+
 - **Arrow type**: Full-featured arrows with extremities, linking, and snapping
 - **Links system**: Bidirectional attachment to nodes and annotations
 - **Fixed-size rendering**: Text annotations support `fixedSize` property for screen-space sizing
@@ -34,21 +37,22 @@ Transform the Comment annotation into a specialized type that:
 ### 1. Comment Structure Redesign
 
 #### New Comment Properties
+
 ```typescript
 export interface CommentProps extends Omit<BoxProperties, "type"> {
   type: "comment";
 
   // Content
-  content: string;          // Text content (similar to text annotation)
+  content: string; // Text content (similar to text annotation)
 
   // Display mode
   mode: "collapsed" | "expanded";
 
   // Fixed dimensions (screen-space pixels)
-  width: number;            // Width in expanded mode
-  height: number;           // Auto-grows with content
-  minHeight: number;        // Minimum height (default: 60px)
-  iconSize: number;         // Size when collapsed (default: 32px)
+  width: number; // Width in expanded mode
+  height: number; // Auto-grows with content
+  minHeight: number; // Minimum height (default: 60px)
+  iconSize: number; // Size when collapsed (default: 32px)
 
   // Styling
   style?: CommentStyle;
@@ -60,20 +64,21 @@ export interface CommentProps extends Omit<BoxProperties, "type"> {
 
 export interface CommentStyle extends TextStyle {
   // Icon styling (collapsed mode)
-  iconColor?: string;       // Background color for collapsed icon
-  iconSymbol?: string;      // Icon to display when collapsed (default: "💬")
+  iconColor?: string; // Background color for collapsed icon
+  iconSymbol?: string; // Icon to display when collapsed (default: "💬")
   iconBorderColor?: string;
   iconBorderWidth?: number;
 
   // Editing UI
   showSendButton?: boolean; // Show "send" button in edit mode (default: true)
-  autoGrow?: boolean;       // Auto-grow height with content (default: true)
+  autoGrow?: boolean; // Auto-grow height with content (default: true)
 }
 
 export type Comment = AnnotationFeature<Point, CommentProps>;
 ```
 
 **Key Changes:**
+
 - **Geometry**: Switch from `Polygon` to `Point` (comment box center position)
 - **Fixed size**: Always use `fixedSize` behavior (screen-aligned)
 - **Arrow linking**: Arrows store references to comments (NOT vice versa) - maintains existing architecture
@@ -86,6 +91,7 @@ export type Comment = AnnotationFeature<Point, CommentProps>;
 ### 2. Geometry and Positioning
 
 #### Comment Position
+
 - **Geometry type**: `Point` - stores the center position of the comment box/icon
 - **Fixed size**: Always rendered in screen space (like fixed-size text)
 - **Rotation**: Always screen-aligned (unaffected by viewport rotation)
@@ -93,6 +99,7 @@ export type Comment = AnnotationFeature<Point, CommentProps>;
 #### Arrow-Comment Relationship
 
 **IMPORTANT**: Comments do NOT store arrow references. Instead:
+
 - **Arrows store comment references** in their `link` property (just like they do for text/box annotations)
 - **Links system manages the bidirectional relationship**
 - **A comment MUST have at least one arrow pointing TO it** (programmatic constraint)
@@ -100,6 +107,7 @@ export type Comment = AnnotationFeature<Point, CommentProps>;
 - Arrows can point FROM comments TO other entities (nodes, annotations, coordinates)
 
 This maintains the existing architecture where:
+
 ```typescript
 // Arrow feature (existing structure)
 {
@@ -128,6 +136,7 @@ This maintains the existing architecture where:
 ```
 
 #### Spatial Relationship
+
 ```
 Target (Node/Annotation/Coordinate)
     ▲
@@ -143,12 +152,14 @@ Target (Node/Annotation/Coordinate)
 #### Programmatic Constraints: Arrow-Comment Lifecycle
 
 **1. Comments Must Have At Least One Arrow**
+
 - **Creation**: When creating a comment, automatically create at least one arrow feature that links to it
 - **Deletion**: When deleting a comment, automatically delete ALL its associated arrows
 - **Validation**: Store method validates that every comment has at least one arrow pointing to it
 - **Query helpers**: Provide `getCommentArrows(commentId)` to find all associated arrows
 
 **2. Arrows Cannot Be Detached From Comments**
+
 - **If arrow points TO a comment** (`link.end.type === "comment"`):
   - Arrow END point cannot be dragged to detach it
   - Arrow can only be deleted if comment has multiple arrows (not the last one)
@@ -159,6 +170,7 @@ Target (Node/Annotation/Coordinate)
   - Arrow END point can be freely moved/retargeted
 
 **3. Multiple Arrows Support**
+
 - Comments can have multiple arrows pointing TO them (multi-source)
 - Each arrow can originate from different nodes, annotations, or coordinates
 - All arrows move together when comment is dragged (handled by Links system)
@@ -177,6 +189,7 @@ Target (Node/Annotation/Coordinate)
 - Add `CommentStyle` interface
 - Update `isComment()` type guard
 - Add helper functions:
+
   ```typescript
   export function createComment(
     position: Point,
@@ -196,7 +209,10 @@ Target (Node/Annotation/Coordinate)
 
   export function toggleCommentMode(comment: Comment): Comment;
 
-  export function getCommentArrow(commentId: Id, store: AnnotationState): Arrow | null;
+  export function getCommentArrow(
+    commentId: Id,
+    store: AnnotationState
+  ): Arrow | null;
 
   export function getCommentArrowCoordinates(
     comment: Comment,
@@ -222,7 +238,11 @@ export function renderComment(
   const group = getOrCreateGroup(cache, comment.id);
 
   // Calculate screen-aligned position
-  const transform = getScreenAlignedTransform(comment, state.zoom, state.rotation);
+  const transform = getScreenAlignedTransform(
+    comment,
+    state.zoom,
+    state.rotation
+  );
 
   if (comment.properties.mode === "collapsed") {
     // Render as icon (small circle with emoji/symbol)
@@ -271,7 +291,11 @@ export function renderCommentArrow(
   const arrowEnd = targetPosition;
 
   // Create arrow path
-  const arrow = createArrowPath(arrowStart, arrowEnd, comment.properties.arrow.style);
+  const arrow = createArrowPath(
+    arrowStart,
+    arrowEnd,
+    comment.properties.arrow.style
+  );
 
   return arrow;
 }
@@ -289,6 +313,7 @@ function calculateCommentAnchorPoint(
 **File**: `packages/ogma-annotations/src/renderer/shapes/index.ts`
 
 Update main renderer:
+
 - Add comment rendering to render loop
 - Render comment arrows in arrow layer (before annotations)
 - Handle collapsed vs expanded states
@@ -307,7 +332,10 @@ export class CommentHandler extends Handler<Comment, CommentHandle> {
   // - "toggle": click to collapse/expand
   // - "arrow": drag arrow endpoint (retarget)
 
-  protected detectHandle(evt: ClientMouseEvent, zoom: number): CommentHandle | null {
+  protected detectHandle(
+    evt: ClientMouseEvent,
+    zoom: number
+  ): CommentHandle | null {
     const point = evt.graph;
 
     // Check if clicking toggle icon (top-right corner)
@@ -344,9 +372,10 @@ export class CommentHandler extends Handler<Comment, CommentHandle> {
   }
 
   private toggleMode(): void {
-    const newMode = this.annotation.properties.mode === "collapsed"
-      ? "expanded"
-      : "collapsed";
+    const newMode =
+      this.annotation.properties.mode === COMMENT_MODE_COLLAPSED
+        ? COMMENT_MODE_EXPANDED
+        : COMMENT_MODE_COLLAPSED;
 
     store.updateFeature(this.annotation.id, {
       properties: {
@@ -361,6 +390,7 @@ export class CommentHandler extends Handler<Comment, CommentHandle> {
 **File**: `packages/ogma-annotations/src/handlers/index.ts`
 
 Update `AnnotationEditor`:
+
 - Register `CommentHandler` for comment annotations
 - Route comment interactions to CommentHandler
 
@@ -381,9 +411,10 @@ export function detectComment(
   const props = comment.properties;
 
   // Get screen-space dimensions
-  const size = props.mode === "collapsed"
-    ? props.iconSize
-    : { width: props.width, height: props.height };
+  const size =
+    props.mode === "collapsed"
+      ? props.iconSize
+      : { width: props.width, height: props.height };
 
   // AABB collision in screen space
   const halfWidth = size.width / 2 / zoom;
@@ -412,6 +443,7 @@ export function detectCommentArrow(
 ```
 
 Update `InteractionController`:
+
 - Add comment detection to `detect()` method
 - Include comment arrow in detection (treat as part of comment)
 
@@ -660,6 +692,7 @@ export class CommentHelpers {
 **File**: `packages/ogma-annotations/src/links.ts`
 
 Extend links system for comments:
+
 - Add `"comment"` to `TargetType` enum
 - Comments can be link targets (arrows point TO them)
 - No changes needed for link storage - existing structure works!
@@ -714,6 +747,7 @@ deleteFeature(id: Id): void {
 ### 4. User Interactions
 
 #### Creating a Comment
+
 1. User activates "Add Comment" tool
 2. User clicks on target (node, annotation, or coordinate)
 3. System creates TWO features atomically:
@@ -725,6 +759,7 @@ deleteFeature(id: Id): void {
 7. Comment becomes non-editable (until clicked again)
 
 #### Editing a Comment
+
 1. User selects comment (click)
 2. Comment shows selection state (highlight)
 3. All arrows connected to comment are highlighted
@@ -742,6 +777,7 @@ deleteFeature(id: Id): void {
    - **Note**: Arrow END points (pointing to comment) cannot be detached or moved
 
 #### Collapsing/Expanding
+
 1. User clicks toggle button (top-right corner icon)
 2. Comment smoothly transitions between modes:
    - **Collapsed**: Small icon (e.g., 💬) with colored background
@@ -749,12 +785,15 @@ deleteFeature(id: Id): void {
 3. Arrow remains connected in both modes
 
 #### Managing Multiple Arrows
+
 1. **Adding an arrow to a comment**:
+
    - Right-click comment → "Add arrow"
    - Click on target (node, annotation, or coordinate)
    - New arrow appears connecting target to comment
 
 2. **Retargeting an arrow**:
+
    - Drag arrow START point (when comment is selected)
    - Arrow visually follows cursor
    - Snapping highlights when over valid targets
@@ -762,6 +801,7 @@ deleteFeature(id: Id): void {
    - Arrow feature updates its link.start property
 
 3. **Deleting an arrow from a comment**:
+
    - Select arrow (click on it)
    - Press Delete key or click delete button
    - If it's the last arrow: Shows error "Cannot delete last arrow. Delete comment instead."
@@ -779,7 +819,7 @@ deleteFeature(id: Id): void {
 ```typescript
 export const defaultCommentStyle: CommentStyle = {
   // Box styling
-  background: "#FFFACD",        // Light yellow (sticky note color)
+  background: "#FFFACD", // Light yellow (sticky note color)
   padding: 8,
   borderRadius: 4,
   strokeColor: "#DDD",
@@ -787,7 +827,7 @@ export const defaultCommentStyle: CommentStyle = {
   strokeType: "plain",
 
   // Icon styling (collapsed mode)
-  iconColor: "#FFD700",         // Gold
+  iconColor: "#FFD700", // Gold
   iconSymbol: "💬",
   iconBorderColor: "#CCC",
   iconBorderWidth: 2,
@@ -795,7 +835,7 @@ export const defaultCommentStyle: CommentStyle = {
   // Text styling
   textColor: "#333",
   textFont: "Arial, sans-serif",
-  textFontSize: 12,
+  textFontSize: 12
 };
 
 export const defaultCommentOptions: Partial<CommentProps> = {
@@ -804,7 +844,7 @@ export const defaultCommentOptions: Partial<CommentProps> = {
   minHeight: 60,
   height: 60, // Initial height, will auto-grow
   iconSize: 32,
-  style: defaultCommentStyle,
+  style: defaultCommentStyle
 };
 
 // Default arrow style for comment arrows
@@ -813,8 +853,8 @@ export const defaultCommentArrowStyle: Partial<ArrowProperties> = {
     strokeColor: "#666",
     strokeWidth: 2,
     strokeType: "plain",
-    head: "arrow",    // Arrow points TO the comment
-    tail: "none",
+    head: "arrow", // Arrow points TO the comment
+    tail: "none"
   }
 };
 ```
@@ -826,6 +866,7 @@ export const defaultCommentArrowStyle: Partial<ArrowProperties> = {
 Since this is a breaking change to the Comment type:
 
 #### Option A: Version Migration
+
 1. Detect old Comment format (Polygon geometry)
 2. Convert to new format:
    - Calculate center point from polygon
@@ -835,6 +876,7 @@ Since this is a breaking change to the Comment type:
 3. Store version number in annotation metadata
 
 #### Option B: Create New Type
+
 1. Introduce new type: `"comment-v2"` or `"note"`
 2. Keep old `"comment"` type for backward compatibility
 3. Add deprecation warning for old type
@@ -847,6 +889,7 @@ Since this is a breaking change to the Comment type:
 ### 7. Implementation Phases
 
 #### Phase 1: Core Type and Data Model (2-3 days)
+
 - [ ] Update `CommentProps` interface
 - [ ] Change geometry from Polygon to Point
 - [ ] Add mode, arrow, and styling properties
@@ -854,6 +897,7 @@ Since this is a breaking change to the Comment type:
 - [ ] Add migration logic for old comments
 
 #### Phase 2: Rendering (3-4 days)
+
 - [ ] Create `renderComment()` for box/icon rendering
 - [ ] Create `renderCommentArrow()` for arrow rendering
 - [ ] Integrate into main renderer
@@ -862,6 +906,7 @@ Since this is a breaking change to the Comment type:
 - [ ] Handle hover and selection states
 
 #### Phase 3: Comment-Arrow Lifecycle (2-3 days)
+
 - [ ] Implement `CommentHelpers` class
 - [ ] Add `createCommentWithArrow()` method (atomic creation)
 - [ ] Add `getCommentArrows()` query method (returns array)
@@ -875,6 +920,7 @@ Since this is a breaking change to the Comment type:
 - [ ] Handle arrow updates when comment moves (existing Links system)
 
 #### Phase 4: Interaction and Editing (4-5 days)
+
 - [ ] Create `CommentHandler`
 - [ ] Implement body drag (move comment, arrow follows via Links)
 - [ ] Implement toggle mode interaction
@@ -891,6 +937,7 @@ Since this is a breaking change to the Comment type:
 - [ ] Highlight all arrows when comment is selected
 
 #### Phase 5: Creation Flow (2-3 days)
+
 - [ ] Add "Add Comment" tool to toolbar
 - [ ] Implement click-to-place creation (creates comment + arrow atomically)
 - [ ] Implement target selection during creation
@@ -900,6 +947,7 @@ Since this is a breaking change to the Comment type:
 - [ ] Validate comments always have arrows on load/import
 
 #### Phase 6: Polish and Testing (2-3 days)
+
 - [ ] Visual refinement (animations, transitions)
 - [ ] Accessibility (keyboard navigation)
 - [ ] Performance optimization (culling, caching)
@@ -914,86 +962,93 @@ Since this is a breaking change to the Comment type:
 ### 8. Open Questions and Decisions Needed
 
 1. **Arrow anchor point**: Should arrow always point to bottom/top of comment, or auto-determine based on target direction?
+
    - **Proposal**: Auto-determine for better visual layout
 
 2. **Arrow direction**: Should arrow point FROM target TO comment, or FROM comment TO target?
+
    - **Decision**: Arrow points FROM target TO comment (comment is link.end)
    - This makes semantic sense: "target has a comment"
 
 3. **Collapsed icon customization**: Should users be able to choose different icons/colors?
+
    - **Proposal**: Yes, include in style properties
 
 4. **Arrow style**: Should comment arrows have default style different from regular arrows?
+
    - **Proposal**: Yes, use subtle defaults (gray, medium weight)
 
 5. **Minimum/maximum comment size**:
+
    - **Proposal**:
      - Min width: 150px, min height: 60px
      - Max width: 400px (fixed)
      - Max height: unbounded (auto-grows with content)
 
 6. **Auto-grow behavior**: Should height auto-grow as user types?
+
    - **Decision**: YES - height auto-grows, no scrolling
 
 7. **Send button**: Always visible or only in edit mode?
+
    - **Proposal**: Only visible in edit mode
 
 8. **Orphaned comments**: What if user tries to delete the last arrow?
+
    - **Decision**: Store prevents deletion with error message
    - User must delete comment itself (which deletes all arrows)
 
 9. **Multiple arrows per comment**: Should comments support multiple arrows?
+
    - **Decision**: YES - comments can have multiple arrows pointing TO them
    - Use cases: Multiple sources referencing same comment, multi-issue tracking
    - First arrow is considered "primary" for default behaviors
 
 10. **Arrow deletion UI**: How to communicate "cannot delete last arrow"?
-   - **Proposal**: Show toast/notification with helpful message
-   - Message: "Cannot delete last arrow. Delete the comment instead."
+
+- **Proposal**: Show toast/notification with helpful message
+- Message: "Cannot delete last arrow. Delete the comment instead."
 
 11. **Visual distinction**: Should multiple arrows have visual priority?
-   - **Proposal**: All arrows render equally, no priority styling
-   - When comment is selected, all its arrows are highlighted
+
+- **Proposal**: All arrows render equally, no priority styling
+- When comment is selected, all its arrows are highlighted
 
 ---
 
 ### 9. API Examples
 
 #### Creating a Comment
+
 ```typescript
 import { CommentHelpers } from "./commentHelpers";
 
 const commentHelpers = new CommentHelpers(store, links);
 
 // Create comment pointing FROM a coordinate
-const { comment: comment1, arrow: arrow1 } = commentHelpers.createCommentWithArrow(
-  { x: 100, y: 100 },           // Comment position
-  "This needs attention",        // Content
-  {
-    type: "coordinate",
-    coordinate: { x: 50, y: 50 } // Target coordinate
-  }
-);
+const { comment: comment1, arrow: arrow1 } =
+  commentHelpers.createCommentWithArrow(
+    { x: 100, y: 100 }, // Comment position
+    "This needs attention", // Content
+    {
+      type: "coordinate",
+      coordinate: { x: 50, y: 50 } // Target coordinate
+    }
+  );
 
 // Create comment pointing FROM a node
-const { comment: comment2, arrow: arrow2 } = commentHelpers.createCommentWithArrow(
-  { x: 200, y: 200 },
-  "Critical node",
-  {
+const { comment: comment2, arrow: arrow2 } =
+  commentHelpers.createCommentWithArrow({ x: 200, y: 200 }, "Critical node", {
     type: "node",
     nodeId: "node-123"
-  }
-);
+  });
 
 // Create comment pointing FROM an annotation
-const { comment: comment3, arrow: arrow3 } = commentHelpers.createCommentWithArrow(
-  { x: 300, y: 300 },
-  "See this box",
-  {
+const { comment: comment3, arrow: arrow3 } =
+  commentHelpers.createCommentWithArrow({ x: 300, y: 300 }, "See this box", {
     type: "annotation",
     annotationId: "box-456"
-  }
-);
+  });
 
 // Add BOTH features to store (order matters: arrow first for link validation)
 store.addFeature(arrow1);
@@ -1001,12 +1056,14 @@ store.addFeature(comment1);
 ```
 
 #### Toggling Mode
+
 ```typescript
 const updatedComment = toggleCommentMode(comment);
 store.updateFeature(comment.id, updatedComment);
 ```
 
 #### Finding Comment's Arrows
+
 ```typescript
 const commentHelpers = new CommentHelpers(store, links);
 
@@ -1014,7 +1071,7 @@ const commentHelpers = new CommentHelpers(store, links);
 const arrows = commentHelpers.getCommentArrows(comment.id);
 
 console.log(`Comment has ${arrows.length} arrow(s)`);
-arrows.forEach(arrow => {
+arrows.forEach((arrow) => {
   console.log("Arrow links:", arrow.properties.link);
   // link.end will be the comment
   // link.start will be the target
@@ -1025,6 +1082,7 @@ const primaryArrow = commentHelpers.getPrimaryCommentArrow(comment.id);
 ```
 
 #### Adding Multiple Arrows
+
 ```typescript
 // Create comment with initial arrow
 const { comment, arrow } = commentHelpers.createCommentWithArrow(
@@ -1046,15 +1104,16 @@ const arrow2 = commentHelpers.addArrowToComment(
 store.addFeature(arrow2);
 
 // Add third arrow from coordinate
-const arrow3 = commentHelpers.addArrowToComment(
-  comment.id,
-  { type: "coordinate", coordinate: { x: 200, y: 200 } }
-);
+const arrow3 = commentHelpers.addArrowToComment(comment.id, {
+  type: "coordinate",
+  coordinate: { x: 200, y: 200 }
+});
 
 store.addFeature(arrow3);
 ```
 
 #### Deleting Arrows and Comments
+
 ```typescript
 // Try to delete a single arrow
 const success = commentHelpers.deleteArrowFromComment(arrow.id);
@@ -1077,6 +1136,7 @@ commentHelpers.deleteCommentWithArrows(comment.id);
 ```
 
 #### Validating Comments and Arrows
+
 ```typescript
 // Check if a comment has at least one arrow
 const isValid = commentHelpers.validateComment(comment.id);
@@ -1103,6 +1163,7 @@ if (commentHelpers.canDeleteArrow(arrow.id)) {
 ```
 
 #### Custom Styling
+
 ```typescript
 const { comment, arrow } = commentHelpers.createCommentWithArrow(
   position,
@@ -1113,19 +1174,19 @@ const { comment, arrow } = commentHelpers.createCommentWithArrow(
       width: 250,
       minHeight: 80,
       style: {
-        background: "#FFE6E6",      // Light pink
-        iconColor: "#FF69B4",       // Hot pink
+        background: "#FFE6E6", // Light pink
+        iconColor: "#FF69B4", // Hot pink
         iconSymbol: "⚠️",
-        color: "#CC0000",           // Text color
+        color: "#CC0000", // Text color
         showSendButton: true,
-        autoGrow: true,
+        autoGrow: true
       }
     },
     arrowStyle: {
       style: {
-        strokeColor: "#FF69B4",    // Match icon color
+        strokeColor: "#FF69B4", // Match icon color
         strokeWidth: 3,
-        head: "arrow",
+        head: "arrow"
       }
     }
   }
@@ -1137,6 +1198,7 @@ const { comment, arrow } = commentHelpers.createCommentWithArrow(
 ## Summary
 
 This design transforms Comments into a specialized, purpose-built annotation type that:
+
 - ✅ Always maintains fixed screen-space size
 - ✅ Always has at least one arrow pointing TO it (enforced programmatically)
 - ✅ Supports multiple arrows per comment (multi-source references)

@@ -13,7 +13,8 @@ import {
   isComment,
   detectArrow,
   detectComment,
-  Id
+  Id,
+  COMMENT_MODE_COLLAPSED
 } from "../../src";
 import { InteractionController as HitDetector } from "../../src/interaction/index";
 import { Index } from "../../src/interaction/spatialIndex";
@@ -547,7 +548,7 @@ describe("HitDetector", () => {
   describe("Comment Detection", () => {
     it("should detect collapsed comment", () => {
       const comment = createComment(50, 50, "Test comment");
-      comment.properties.mode = "collapsed";
+      comment.properties.mode = COMMENT_MODE_COLLAPSED;
       comment.properties.iconSize = 32;
       const mockFeatures = { comment };
 
@@ -619,7 +620,7 @@ describe("HitDetector", () => {
 
     it("should not detect comment outside bounds", () => {
       const comment = createComment(50, 50, "Test");
-      comment.properties.mode = "collapsed";
+      comment.properties.mode = COMMENT_MODE_COLLAPSED;
       comment.properties.iconSize = 32;
       const mockFeatures = { comment };
 
@@ -638,7 +639,7 @@ describe("HitDetector", () => {
 
     it("should detect comment with threshold", () => {
       const comment = createComment(50, 50, "Threshold test");
-      comment.properties.mode = "collapsed";
+      comment.properties.mode = COMMENT_MODE_COLLAPSED;
       comment.properties.iconSize = 32;
       const mockFeatures = { comment };
 
@@ -690,15 +691,15 @@ describe("HitDetector", () => {
       comment.properties.height = 60;
 
       // Test at center
-      const result1 = detectComment(comment, { x: 50, y: 50 }, 0, 1);
+      const result1 = detectComment(comment, { x: 50, y: 50 }, 0, 0, 1, 1);
       expect(result1).toBe(true);
 
       // Test at edge
-      const result2 = detectComment(comment, { x: 100, y: 50 }, 0, 1);
+      const result2 = detectComment(comment, { x: 100, y: 50 }, 1, 0, 1, 1);
       expect(result2).toBe(true);
 
       // Test outside
-      const result3 = detectComment(comment, { x: 150, y: 50 }, 0, 1);
+      const result3 = detectComment(comment, { x: 150, y: 50 }, 0, 0, 1, 1);
       expect(result3).toBe(false);
     });
   });
@@ -889,7 +890,7 @@ function createAndFill(
       const [cx, cy] = feature.geometry.coordinates as [number, number];
       let width: number, height: number;
 
-      if (feature.properties.mode === "collapsed") {
+      if (feature.properties.mode === COMMENT_MODE_COLLAPSED) {
         width = height = feature.properties.iconSize;
       } else {
         width = feature.properties.width;

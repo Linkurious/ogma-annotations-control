@@ -51,3 +51,6 @@ export const cursors: Record<string, Cursor> = {
   sResize: "s-resize",
   wResize: "w-resize"
 };
+
+export const COMMENT_MODE_COLLAPSED = "collapsed";
+export const COMMENT_MODE_EXPANDED = "expanded";

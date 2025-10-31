@@ -14,7 +14,8 @@ import {
   isBox,
   isComment,
   isPolygon,
-  isText
+  isText,
+  Text
 } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils";
@@ -83,8 +84,16 @@ export class InteractionController {
           break;
         }
       } else if (isComment(feature)) {
-        // comments are screen aligned, similar to text
-        if (detectComment(feature, { x, y }, threshold, state.zoom)) {
+        if (
+          detectComment(
+            feature,
+            { x, y },
+            threshold,
+            state.sin,
+            state.cos,
+            state.zoom
+          )
+        ) {
           result = feature;
           break;
         }
@@ -92,7 +101,7 @@ export class InteractionController {
         // texts are screen aligned
         if (
           detectText(
-            feature,
+            feature as Text,
             { x, y },
             threshold,
             state.revSin,

@@ -2,6 +2,7 @@ import { Point as GeoJSONPoint, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { Text, TextStyle, detectText } from "./Text";
+import { COMMENT_MODE_COLLAPSED, COMMENT_MODE_EXPANDED } from "../../constants";
 import { Point } from "../geometry";
 
 /**
@@ -41,7 +42,7 @@ export interface CommentProps extends AnnotationProps {
   content: string;
 
   /** Display mode: collapsed (icon) or expanded (text box) */
-  mode: "collapsed" | "expanded";
+  mode: typeof COMMENT_MODE_COLLAPSED | typeof COMMENT_MODE_EXPANDED;
 
   /** Width in expanded mode (pixels) */
   width: number;
@@ -178,7 +179,10 @@ export function toggleCommentMode(comment: Comment): Comment {
     ...comment,
     properties: {
       ...comment.properties,
-      mode: comment.properties.mode === "collapsed" ? "expanded" : "collapsed"
+      mode:
+        comment.properties.mode === COMMENT_MODE_COLLAPSED
+          ? COMMENT_MODE_EXPANDED
+          : COMMENT_MODE_COLLAPSED
     }
   };
 }
@@ -196,40 +200,43 @@ export function detectComment(
   comment: Comment,
   point: Point,
   threshold: number = 0,
+  sin: number,
+  cos: number,
   zoom: number = 1
 ): boolean {
-  return detectText(comment as unknown as Text, point, threshold, zoom);
-  // const [cx, cy] = comment.geometry.coordinates as [number, number];
-  // const props = comment.properties;
+  if (comment.properties.mode !== COMMENT_MODE_COLLAPSED)
+    return detectText(
+      comment as unknown as Text,
+      point,
+      threshold,
+      sin,
+      cos,
+      zoom
+    );
+  const props = comment.properties;
 
-  // // Get screen-space dimensions based on mode
-  // let width: number, height: number;
+  // Get screen-space dimensions based on mode
+  let width = props.iconSize;
+  let height = props.iconSize;
 
-  // if (props.mode === "collapsed") {
-  //   width = height = props.iconSize;
-  // } else {
-  //   width = props.width;
-  //   height = props.height;
-  // }
+  // For fixed-size comments, scale world-space dimensions by invZoom
+  if (props.style?.fixedSize) {
+    width /= zoom;
+    height /= zoom;
+  }
 
-  // // For fixed-size comments, scale world-space dimensions by invZoom
-  // if (props.style?.fixedSize) {
-  //   width /= zoom;
-  //   height /= zoom;
-  // }
+  const halfWidth = width / 2;
+  const halfHeight = height / 2;
 
-  // const halfWidth = width / 2;
-  // const halfHeight = height / 2;
+  const dx = point.x - comment.geometry.coordinates[0];
+  const dy = point.y - comment.geometry.coordinates[1];
 
-  // const dx = point.x - cx;
-  // const dy = point.y - cy;
-
-  // return (
-  //   dx >= -halfWidth - threshold &&
-  //   dx <= halfWidth + threshold &&
-  //   dy >= -halfHeight - threshold &&
-  //   dy <= halfHeight + threshold
-  // );
+  return (
+    dx >= -halfWidth - threshold &&
+    dx <= halfWidth + threshold &&
+    dy >= -halfHeight - threshold &&
+    dy <= halfHeight + threshold
+  );
 }
 
 /**
@@ -255,9 +262,8 @@ export function getCommentSize(comment: Comment): {
 } {
   const props = comment.properties;
 
-  if (props.mode === "collapsed") {
+  if (props.mode === COMMENT_MODE_COLLAPSED)
     return { width: props.iconSize, height: props.iconSize };
-  }
 
   return { width: props.width, height: props.height };
 }

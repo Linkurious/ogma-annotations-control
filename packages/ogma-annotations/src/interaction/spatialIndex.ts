@@ -1,6 +1,6 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
-import { Annotation, Text, isText } from "../types";
+import { Annotation, Comment, Text, isComment, isText } from "../types";
 import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
@@ -20,7 +20,8 @@ export class Index extends Rtree<Annotation> {
       (features) => {
         this.clear();
         Object.values(features).forEach((feature) => {
-          if (isText(feature)) this.updateRotatedText(feature);
+          if (isText(feature) || isComment(feature))
+            this.updateRotatedText(feature);
           else this.insert(feature);
         });
       }
@@ -44,7 +45,8 @@ export class Index extends Rtree<Annotation> {
               const newFeature = current.features[id];
               if (newFeature) {
                 updateBbox(newFeature);
-                if (isText(newFeature)) this.updateRotatedText(newFeature);
+                if (isText(newFeature) || isComment(newFeature))
+                  this.updateRotatedText(newFeature);
                 else {
                   this.remove(newFeature, compareId);
                   this.insert(newFeature);
@@ -64,7 +66,7 @@ export class Index extends Rtree<Annotation> {
     const texts = this.store
       .getState()
       .getAllFeatures()
-      .filter((feature) => isText(feature));
+      .filter((feature) => isText(feature) || isComment(feature));
 
     for (const text of texts) this.updateRotatedText(text as Text);
   };
@@ -74,13 +76,15 @@ export class Index extends Rtree<Annotation> {
       .getState()
       .getAllFeatures()
       .filter(
-        (feature) => isText(feature) && feature.properties.style?.fixedSize
+        (feature) =>
+          (isText(feature) || isComment(feature)) &&
+          feature.properties.style?.fixedSize
       );
 
     for (const text of fixedSizeTexts) this.updateRotatedText(text as Text);
   };
 
-  private updateRotatedText(text: Text) {
+  private updateRotatedText(text: Text | Comment) {
     const state = this.store.getState();
     this.remove(text, compareId);
 

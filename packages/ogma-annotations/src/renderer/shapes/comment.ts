@@ -1,4 +1,5 @@
 import { renderText } from "./text";
+import { COMMENT_MODE_COLLAPSED } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, Text, defaultCommentStyle } from "../../types";
 import { createSVGElement, getBoxCenter } from "../../utils";
@@ -91,7 +92,7 @@ export function renderComment(
 ): SVGGElement {
   const mode = annotation.properties.mode;
 
-  if (mode === "collapsed") {
+  if (mode === COMMENT_MODE_COLLAPSED) {
     // Render as icon - create simple group
     let g = cachedElement;
     if (!g) {
