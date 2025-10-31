@@ -7,10 +7,12 @@ import {
   Annotation,
   detectArrow,
   detectBox,
+  detectComment,
   detectText,
   Cursor,
   isArrow,
   isBox,
+  isComment,
   isPolygon,
   isText
 } from "../types";
@@ -77,6 +79,12 @@ export class InteractionController {
         }
       } else if (isPolygon(feature)) {
         if (detectPolygon(feature, { x, y }, threshold)) {
+          result = feature;
+          break;
+        }
+      } else if (isComment(feature)) {
+        // comments are screen aligned, similar to text
+        if (detectComment(feature, { x, y }, threshold, state.zoom)) {
           result = feature;
           break;
         }

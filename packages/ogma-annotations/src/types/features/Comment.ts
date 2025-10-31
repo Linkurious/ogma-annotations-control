@@ -1,7 +1,7 @@
 import { Point as GeoJSONPoint, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
-import { TextStyle } from "./Text";
+import { Text, TextStyle, detectText } from "./Text";
 import { Point } from "../geometry";
 
 /**
@@ -198,37 +198,38 @@ export function detectComment(
   threshold: number = 0,
   zoom: number = 1
 ): boolean {
-  const [cx, cy] = comment.geometry.coordinates as [number, number];
-  const props = comment.properties;
+  return detectText(comment as unknown as Text, point, threshold, zoom);
+  // const [cx, cy] = comment.geometry.coordinates as [number, number];
+  // const props = comment.properties;
 
-  // Get screen-space dimensions based on mode
-  let width: number, height: number;
+  // // Get screen-space dimensions based on mode
+  // let width: number, height: number;
 
-  if (props.mode === "collapsed") {
-    width = height = props.iconSize;
-  } else {
-    width = props.width;
-    height = props.height;
-  }
+  // if (props.mode === "collapsed") {
+  //   width = height = props.iconSize;
+  // } else {
+  //   width = props.width;
+  //   height = props.height;
+  // }
 
-  // For fixed-size comments, scale world-space dimensions by invZoom
-  if (props.style?.fixedSize) {
-    width /= zoom;
-    height /= zoom;
-  }
+  // // For fixed-size comments, scale world-space dimensions by invZoom
+  // if (props.style?.fixedSize) {
+  //   width /= zoom;
+  //   height /= zoom;
+  // }
 
-  const halfWidth = width / 2;
-  const halfHeight = height / 2;
+  // const halfWidth = width / 2;
+  // const halfHeight = height / 2;
 
-  const dx = point.x - cx;
-  const dy = point.y - cy;
+  // const dx = point.x - cx;
+  // const dy = point.y - cy;
 
-  return (
-    dx >= -halfWidth - threshold &&
-    dx <= halfWidth + threshold &&
-    dy >= -halfHeight - threshold &&
-    dy <= halfHeight + threshold
-  );
+  // return (
+  //   dx >= -halfWidth - threshold &&
+  //   dx <= halfWidth + threshold &&
+  //   dy >= -halfHeight - threshold &&
+  //   dy <= halfHeight + threshold
+  // );
 }
 
 /**

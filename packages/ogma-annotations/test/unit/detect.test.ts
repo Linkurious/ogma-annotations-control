@@ -3,12 +3,16 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   Annotation,
   Text,
+  Comment,
   createArrow,
+  createComment,
   createText,
   isText,
   isBox,
   isArrow,
+  isComment,
   detectArrow,
+  detectComment,
   Id
 } from "../../src";
 import { InteractionController as HitDetector } from "../../src/interaction/index";
@@ -540,6 +544,165 @@ describe("HitDetector", () => {
     });
   });
 
+  describe("Comment Detection", () => {
+    it("should detect collapsed comment", () => {
+      const comment = createComment(50, 50, "Test comment");
+      comment.properties.mode = "collapsed";
+      comment.properties.iconSize = 32;
+      const mockFeatures = { comment };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures
+      );
+
+      // Should detect at center
+      const result = detector.detect(50, 50, 0);
+      expect(result).not.toBeNull();
+      expect(result?.properties.type).toBe("comment");
+      expect(result?.id).toBe(comment.id);
+    });
+
+    it("should detect expanded comment", () => {
+      const comment = createComment(100, 100, "Expanded comment");
+      comment.properties.mode = "expanded";
+      comment.properties.width = 200;
+      comment.properties.height = 100;
+      const mockFeatures = { comment };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures
+      );
+
+      // Should detect at center
+      const result = detector.detect(100, 100, 0);
+      expect(result).not.toBeNull();
+      expect(result?.properties.type).toBe("comment");
+      expect((result as Comment).properties.content).toBe("Expanded comment");
+    });
+
+    it("should detect comment at edges in expanded mode", () => {
+      const comment = createComment(100, 100, "Edge test");
+      comment.properties.mode = "expanded";
+      comment.properties.width = 200;
+      comment.properties.height = 100;
+      const mockFeatures = { comment };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures
+      );
+
+      // Test edges (comment center at 100,100, size 200x100, so bbox is 0,50 to 200,150)
+      const resultLeft = detector.detect(10, 100, 0);
+      expect(resultLeft).not.toBeNull();
+
+      const resultRight = detector.detect(190, 100, 0);
+      expect(resultRight).not.toBeNull();
+
+      const resultTop = detector.detect(100, 60, 0);
+      expect(resultTop).not.toBeNull();
+
+      const resultBottom = detector.detect(100, 140, 0);
+      expect(resultBottom).not.toBeNull();
+    });
+
+    it("should not detect comment outside bounds", () => {
+      const comment = createComment(50, 50, "Test");
+      comment.properties.mode = "collapsed";
+      comment.properties.iconSize = 32;
+      const mockFeatures = { comment };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures
+      );
+
+      // Outside the icon bounds (iconSize = 32, so radius = 16)
+      const result = detector.detect(100, 100, 0);
+      expect(result).toBeNull();
+    });
+
+    it("should detect comment with threshold", () => {
+      const comment = createComment(50, 50, "Threshold test");
+      comment.properties.mode = "collapsed";
+      comment.properties.iconSize = 32;
+      const mockFeatures = { comment };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures
+      );
+
+      // Just outside bounds without threshold
+      const result1 = detector.detect(70, 50, 0);
+      expect(result1).toBeNull();
+
+      // Should detect with threshold
+      const result2 = detector.detect(70, 50, 10);
+      expect(result2).not.toBeNull();
+    });
+
+    it("should handle fixed-size comments with zoom", () => {
+      const comment = createComment(100, 100, "Zoomed comment");
+      comment.properties.mode = "expanded";
+      comment.properties.width = 200;
+      comment.properties.height = 100;
+      const mockFeatures = { comment };
+
+      // Zoom in 2x - world dimensions become 100x50
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures,
+        0,
+        2
+      );
+
+      // Should still detect at center
+      const result = detector.detect(100, 100, 0);
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(comment.id);
+    });
+
+    it("should use detectComment function directly", () => {
+      const comment = createComment(50, 50, "Direct test");
+      comment.properties.mode = "expanded";
+      comment.properties.width = 100;
+      comment.properties.height = 60;
+
+      // Test at center
+      const result1 = detectComment(comment, { x: 50, y: 50 }, 0, 1);
+      expect(result1).toBe(true);
+
+      // Test at edge
+      const result2 = detectComment(comment, { x: 100, y: 50 }, 0, 1);
+      expect(result2).toBe(true);
+
+      // Test outside
+      const result3 = detectComment(comment, { x: 150, y: 50 }, 0, 1);
+      expect(result3).toBe(false);
+    });
+  });
+
   describe("Fixed-Size Text Detection", () => {
     it("should detect fixed-size text at normal zoom", () => {
       const text = createText(0, 0, 100, 50, "Fixed Text", {
@@ -721,7 +884,28 @@ function createAndFill(
   // Fill the index with features
   Object.values(mockFeatures).forEach((feature) => {
     // Calculate and set bbox on feature
-    if (isText(feature) || isBox(feature)) {
+    if (isComment(feature)) {
+      // For Comment features
+      const [cx, cy] = feature.geometry.coordinates as [number, number];
+      let width: number, height: number;
+
+      if (feature.properties.mode === "collapsed") {
+        width = height = feature.properties.iconSize;
+      } else {
+        width = feature.properties.width;
+        height = feature.properties.height;
+      }
+
+      // Apply zoom scaling for fixed-size comments
+      if (feature.properties.style?.fixedSize) {
+        width /= zoom;
+        height /= zoom;
+      }
+
+      const hw = width / 2;
+      const hh = height / 2;
+      feature.geometry.bbox = [cx - hw, cy - hh, cx + hw, cy + hh];
+    } else if (isText(feature) || isBox(feature)) {
       // For Point geometry (new format)
       const [cx, cy] = feature.geometry.coordinates as [number, number];
       const width = feature.properties.width as number;
