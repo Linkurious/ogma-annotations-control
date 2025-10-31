@@ -19,6 +19,7 @@ import {
   getBoxPosition,
   getBoxSize
 } from "../utils";
+import { drawRoundedRect } from "../utils/rendering";
 
 // Corner offsets for text box handles: [x, y] multipliers
 const CORNER_OFFSETS = [
@@ -129,36 +130,46 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.translate(ox, oy);
     ctx.rotate(rotation);
 
-    // Draw box outline
-    ctx.strokeRect(-hw, -hh, width, height);
+    // Draw box outline with rounded corners if borderRadius is specified
+    const borderRadius = feature.properties.style?.borderRadius;
+    if (borderRadius && borderRadius > 0) {
+      drawRoundedRect(ctx, -hw, -hh, width, height, borderRadius);
+      ctx.stroke();
+    } else {
+      ctx.strokeRect(-hw, -hh, width, height);
+    }
     // if there's a hovered edge handle, draw thicker line on that edge
     if (hoveredHandle >= 4 && hoveredHandle < 8) {
       let x0: number, y0: number, x1: number, y1: number;
-      const r = this.handleRadius / zoom;
+      // Use borderRadius if available, otherwise fall back to handle radius
+      const edgeRadius =
+        borderRadius && borderRadius > 0
+          ? borderRadius
+          : this.handleRadius / zoom;
       switch (hoveredHandle) {
         case 4: // top edge
-          x0 = -hw + r;
+          x0 = -hw + edgeRadius;
           y0 = -hh;
-          x1 = hw - r;
+          x1 = hw - edgeRadius;
           y1 = -hh;
           break;
         case 5: // right edge
           x0 = hw;
-          y0 = -hh + r;
+          y0 = -hh + edgeRadius;
           x1 = hw;
-          y1 = hh - r;
+          y1 = hh - edgeRadius;
           break;
         case 6: // bottom edge
-          x0 = hw - r;
+          x0 = hw - edgeRadius;
           y0 = hh;
-          x1 = -hw + r;
+          x1 = -hw + edgeRadius;
           y1 = hh;
           break;
         case 7: // left edge
           x0 = -hw;
-          y0 = hh - r;
+          y0 = hh - edgeRadius;
           x1 = -hw;
-          y1 = -hh + r;
+          y1 = -hh + edgeRadius;
           break;
       }
 
