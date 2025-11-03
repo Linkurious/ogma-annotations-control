@@ -1,3 +1,4 @@
+import { Size } from "@linkurious/ogma";
 import { Point as GeoJSONPoint, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
@@ -256,14 +257,9 @@ export function getCommentPosition(comment: Comment): Point {
  * @param comment - Comment annotation
  * @returns Width and height
  */
-export function getCommentSize(comment: Comment): {
-  width: number;
-  height: number;
-} {
+export function getCommentSize(comment: Comment): Size {
   const props = comment.properties;
-
   if (props.mode === COMMENT_MODE_COLLAPSED)
     return { width: props.iconSize, height: props.iconSize };
-
   return { width: props.width, height: props.height };
 }

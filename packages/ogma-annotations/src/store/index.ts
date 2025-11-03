@@ -5,6 +5,7 @@ import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { getAABB } from "../geom";
 import { Annotation, Bounds, Id } from "../types";
+import { isComment, isArrow } from "../types";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];
 
@@ -101,6 +102,70 @@ export const createStore = () => {
 
           removeFeature: (id) =>
             set((state) => {
+              const feature = state.features[id];
+              if (!feature) return state;
+
+              // If deleting a comment, also delete ALL its arrows
+              if (isComment(feature)) {
+                const arrowsToDelete: Id[] = [];
+
+                // Find all arrows pointing to/from this comment
+                Object.values(state.features).forEach((f) => {
+                  if (isArrow(f)) {
+                    if (
+                      f.properties.link?.end?.id === id ||
+                      f.properties.link?.start?.id === id
+                    ) {
+                      arrowsToDelete.push(f.id);
+                    }
+                  }
+                });
+
+                // Delete arrows and comment
+                const newFeatures = { ...state.features };
+                arrowsToDelete.forEach((arrowId) => {
+                  delete newFeatures[arrowId];
+                });
+                delete newFeatures[id];
+
+                return { features: newFeatures };
+              }
+
+              // If deleting an arrow that points to a comment, check if it's the last arrow
+              if (isArrow(feature)) {
+                const commentId =
+                  feature.properties.link?.end?.type === "comment"
+                    ? feature.properties.link.end.id
+                    : feature.properties.link?.start?.type === "comment"
+                      ? feature.properties.link.start.id
+                      : null;
+
+                if (commentId) {
+                  // Count arrows connected to this comment
+                  let arrowCount = 0;
+                  Object.values(state.features).forEach((f) => {
+                    if (isArrow(f) && f.id !== id) {
+                      if (
+                        f.properties.link?.end?.id === commentId ||
+                        f.properties.link?.start?.id === commentId
+                      ) {
+                        arrowCount++;
+                      }
+                    }
+                  });
+
+                  // If this is the last arrow, prevent deletion
+                  if (arrowCount === 0) {
+                    console.error(
+                      "Cannot delete last arrow attached to comment. Delete the comment instead."
+                    );
+                    // Return unchanged state to prevent deletion
+                    return state;
+                  }
+                }
+              }
+
+              // Normal deletion for other features
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               const { [id]: _, ...rest } = state.features;
               return { features: rest };

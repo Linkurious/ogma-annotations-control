@@ -427,19 +427,6 @@ export function detectComment(
     point.y <= center.y + halfHeight + threshold
   );
 }
-
-export function detectCommentArrow(
-  comment: Comment,
-  targetPosition: Point,
-  point: Point,
-  threshold: number
-): boolean {
-  // Calculate arrow line coordinates
-  const [start, end] = getCommentArrowCoordinates(comment, targetPosition);
-
-  // Use existing arrow detection logic
-  return detectLineSegment(start, end, point, threshold);
-}
 ```
 
 Update `InteractionController`:
