@@ -176,7 +176,7 @@ export class TextArea {
       if (Math.abs(heightDelta) > 1) {
         const [cx, cy] = annotation.geometry.coordinates as [number, number];
         // Move center down by half the height increase to keep top edge fixed
-        newCoordinates = [cx, cy + heightDelta / 2];
+        newCoordinates = [cx, cy + heightDelta];
       }
     }
 

@@ -106,7 +106,7 @@ function drawContent(
     valign: "top",
     x: 0,
     overflow: "ellipsis",
-    parser: "html",
+    parser: Textbox.htmlparser,
     createElement: Textbox.createElement
   });
   box.overflowWrap("break-word");
@@ -115,6 +115,7 @@ function drawContent(
   if (content.length === 0) return;
 
   const lines = box.linebreak(content.replaceAll("\n", "<br>"));
+
   const text = lines.render() as SVGTextElement;
   const children = [...text.children];
 
