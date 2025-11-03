@@ -4,8 +4,7 @@ import { temporal } from "zundo";
 import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
 import { getAABB } from "../geom";
-import { Annotation, Bounds, Id } from "../types";
-import { isComment, isArrow } from "../types";
+import { Annotation, Bounds, Id, isComment, isArrow } from "../types";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];
 
@@ -156,6 +155,7 @@ export const createStore = () => {
 
                   // If this is the last arrow, prevent deletion
                   if (arrowCount === 0) {
+                    // eslint-disable-next-line no-console
                     console.error(
                       "Cannot delete last arrow attached to comment. Delete the comment instead."
                     );

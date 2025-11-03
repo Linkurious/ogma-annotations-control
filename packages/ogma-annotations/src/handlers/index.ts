@@ -38,6 +38,7 @@ export class AnnotationEditor extends EventTarget {
     );
     this.handlers.set("box", new TextHandler(this.ogma, this.store, links));
     this.handlers.set("text", new TextHandler(this.ogma, this.store, links));
+    this.handlers.set("comment", new TextHandler(this.ogma, this.store, links)); // Comments use same handler as text
     this.handlers.set(
       "arrow",
       new ArrowHandler(this.ogma, this.store, this.snapping, links)

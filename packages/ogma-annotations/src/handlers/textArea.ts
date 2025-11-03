@@ -20,7 +20,7 @@ export class TextArea {
     this.layer = this.ogma.layers.addOverlay(
       {
         element: `<div class="ogma-annotation-text-editor">
-          <textarea wrap="on" spellcheck="false"></textarea>
+          <textarea wrap="on" name="annotation-text--input" spellcheck="false"></textarea>
         </div>`,
         position,
         size
@@ -45,7 +45,7 @@ export class TextArea {
         rotation: state.rotation,
         zoom: state.zoom
       }),
-      () => this.update(),
+      this.update,
       { equalityFn: (a, b) => a.rotation === b.rotation && a.zoom === b.zoom }
     );
   }
@@ -76,6 +76,7 @@ export class TextArea {
     const annotation = this.getAnnotation();
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation);
+    //const padding = annotation.properties.style?.padding || 0;
     const fixedSize = annotation.properties.style?.fixedSize || false;
     const zoom = this.store.getState().zoom;
 
@@ -122,6 +123,12 @@ export class TextArea {
     textAreaStyle.background = background || "transparent";
     textAreaStyle.borderRadius = `${borderRadius}px`;
 
+    // Enable auto-growing for fixed-size text
+    if (fixedSize) {
+      textAreaStyle.overflow = "hidden"; // Hide scrollbars
+      textAreaStyle.resize = "none"; // Disable manual resize
+    }
+
     // transform origin at center
     textAreaStyle.transformOrigin = "center";
     textAreaStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
@@ -143,26 +150,58 @@ export class TextArea {
 
   private updateContent() {
     const annotation = this.getAnnotation();
+
+    // Calculate new height if this is a fixed-size text box (auto-grow)
+    let newHeight = annotation.properties.height;
+    const isFixedSize = annotation.properties.style?.fixedSize;
+
+    if (isFixedSize) {
+      const textareaScrollHeight = this.textarea.scrollHeight;
+      const borderWidth = getBorderWidth(annotation);
+      const zoom = this.store.getState().zoom;
+
+      // scrollHeight is in screen pixels (already scaled by 1/zoom for fixed-size)
+      // We need to convert back to graph coordinates by multiplying by zoom
+      // and then add back the border width (which was subtracted in getSize())
+      const requiredHeight =
+        (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
+
+      // Get minimum height (default to 50px if not specified)
+      const minHeight = 50;
+      newHeight = Math.max(minHeight, requiredHeight);
+    }
+
+    // Update both content and height (if changed)
     const update: Text = {
       ...annotation,
       properties: {
         ...annotation.properties,
-        content: this.textarea.value
+        content: this.textarea.value,
+        height: newHeight
       }
     };
+
+    // If height changed, update the layer size and position
+    if (isFixedSize && Math.abs(annotation.properties.height - newHeight) > 1) {
+      this.layer.setSize(this.getSize());
+      this.layer.setPosition(this.getPosition());
+    }
+
     this.store.getState().applyLiveUpdate(this.annotation, update);
   }
 
   private onInput = () => {
     this.updateContent();
     this.updateStyle();
+    this.updatePosition();
+    this.layer.setSize(this.getSize());
   };
 
-  public update() {
+  public update = () => {
     this.updateStyle();
     this.updatePosition();
     this.layer.setSize(this.getSize());
-  }
+  };
 
   destroy() {
     this.store.getState().commitLiveUpdates(new Set([this.annotation]));

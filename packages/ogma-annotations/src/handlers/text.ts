@@ -378,6 +378,7 @@ export class TextHandler extends Handler<Text, Handle> {
 
   protected onDragStart(evt: ClientMouseEvent) {
     if (!super.onDragStart(evt)) return false;
+    this.stopEditingText();
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
     return true;
@@ -433,8 +434,12 @@ export class TextHandler extends Handler<Text, Handle> {
 
   public stopEditing(): void {
     super.stopEditing();
-    if (this.textEditor) this.textEditor.destroy();
     this.commitChange();
+    this.stopEditingText();
+  }
+
+  public stopEditingText() {
+    if (this.textEditor) this.textEditor.destroy();
     this.textEditor = null;
   }
 
