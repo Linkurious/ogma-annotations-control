@@ -393,6 +393,13 @@ export class TextHandler extends Handler<Text, Handle> {
 
   protected onDragEnd(evt: ClientMouseEvent) {
     if (!super.onDragEnd(evt)) return false;
+
+    // Clear drawing flag BEFORE committing so the commit creates a history entry
+    const state = this.store.getState();
+    if (state.drawingFeature === this.annotation) {
+      this.store.setState({ drawingFeature: null });
+    }
+
     const currentPos = this.clientToCanvas(evt);
     const dx = currentPos.x - (this.dragStartPoint?.x || 0);
     const dy = currentPos.y - (this.dragStartPoint?.y || 0);
@@ -400,12 +407,6 @@ export class TextHandler extends Handler<Text, Handle> {
       this.clearDragState();
       this.onClick(evt);
     } else this.commitChange();
-
-    // Clear drawing flag if this was the feature being drawn
-    const state = this.store.getState();
-    if (state.drawingFeature === this.annotation) {
-      this.store.setState({ drawingFeature: null });
-    }
 
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;

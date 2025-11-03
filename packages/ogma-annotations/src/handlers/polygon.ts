@@ -319,9 +319,10 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
           updateBbox(finalPolygon);
 
           this.store.getState().applyLiveUpdate(polygon.id, finalPolygon);
+          // Clear drawing flag BEFORE committing so the commit creates a history entry
+          this.store.setState({ drawingFeature: null });
           // Update and commit
           this.commitChange();
-          this.store.setState({ drawingFeature: null });
 
           // Clean up drawing mode
           this.isDrawingMode = false;
