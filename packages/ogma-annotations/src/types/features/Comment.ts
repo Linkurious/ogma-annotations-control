@@ -95,9 +95,9 @@ export const defaultCommentStyle: CommentStyle = {
   strokeType: "plain",
 
   // Icon styling (collapsed mode)
-  iconColor: "#FFD700", // Gold
+  iconColor: "#FFCB2F", // Gold
   iconSymbol: "💬",
-  iconBorderColor: "#CCC",
+  iconBorderColor: "#aaa",
   iconBorderWidth: 2,
 
   // Text styling

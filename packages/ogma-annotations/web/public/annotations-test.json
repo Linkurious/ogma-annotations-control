@@ -322,10 +322,10 @@
         "minHeight": 60,
         "iconSize": 32,
         "style": {
-          "iconColor": "#FFD700",
+          "iconColor": "#FFCB2F",
           "iconSymbol": "💬",
-          "iconBorderColor": "#CCC",
-          "iconBorderWidth": 2,
+          "iconBorderColor": "#909090",
+          "iconBorderWidth": 1,
           "fixedSize": true
         }
       },
