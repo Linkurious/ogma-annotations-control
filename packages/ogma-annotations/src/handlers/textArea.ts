@@ -153,6 +153,7 @@ export class TextArea {
 
     // Calculate new height if this is a fixed-size text box (auto-grow)
     let newHeight = annotation.properties.height;
+    let newCoordinates = annotation.geometry.coordinates;
     const isFixedSize = annotation.properties.style?.fixedSize;
 
     if (isFixedSize) {
@@ -169,15 +170,27 @@ export class TextArea {
       // Get minimum height (default to 50px if not specified)
       const minHeight = 50;
       newHeight = Math.max(minHeight, requiredHeight);
+
+      // Adjust center position to grow downward only (keep top edge fixed)
+      const heightDelta = newHeight - annotation.properties.height;
+      if (Math.abs(heightDelta) > 1) {
+        const [cx, cy] = annotation.geometry.coordinates as [number, number];
+        // Move center down by half the height increase to keep top edge fixed
+        newCoordinates = [cx, cy + heightDelta / 2];
+      }
     }
 
-    // Update both content and height (if changed)
+    // Update content, height, and position (if changed)
     const update: Text = {
       ...annotation,
       properties: {
         ...annotation.properties,
         content: this.textarea.value,
         height: newHeight
+      },
+      geometry: {
+        ...annotation.geometry,
+        coordinates: newCoordinates
       }
     };
 

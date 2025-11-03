@@ -74,10 +74,10 @@
     "geojson": "0.5.0",
     "rbush": "4.0.1",
     "zundo": "2.3.0",
-    "zustand": "5.0.7"
+    "zustand": "5.0.7",
+    "@borgar/textbox": "1.8.0"
   },
   "devDependencies": {
-    "@borgar/textbox": "1.6.0",
     "@types/geojson": "7946.0.13",
     "@types/rbush": "4.0.0",
     "@linkurious/eslint-config-ogma": "1.0.14",

@@ -101,7 +101,7 @@ function drawContent(
   const box = new Textbox({
     font: `${fontSize}px/${fontSize}px ${font}`.replace(/(px)+/g, "px"),
     width: width - padding * 2,
-    height: height - padding * 2,
+    height: height - padding,
     align: "left",
     valign: "top",
     x: 0,
@@ -117,24 +117,26 @@ function drawContent(
   const lines = box.linebreak(content.replaceAll("\n", "<br>"));
   const text = lines.render() as SVGTextElement;
   const children = [...text.children];
-  // remove extra blank lines
-  let index = 0;
-  const toRemove: number[] = [];
-  content.split("\n").forEach((l) => {
-    let query = l;
-    while (query.length && index < children.length) {
-      if (children[index].innerHTML === "&nbsp;") {
-        if (!query.startsWith("\n")) toRemove.push(index);
-        index++;
-        break;
-      }
-      const text = removeEllipsis(getText(children[index]));
-      if (query.startsWith(text)) query = query.slice(text.length).trim();
-      index++;
-    }
-  });
 
-  toRemove.forEach((i) => text.removeChild(children[i]));
+  // remove extra blank lines
+  // let index = 0;
+  // const toRemove: number[] = [];
+  // content.split("\n").forEach((l) => {
+  //   let query = l;
+  //   while (query.length && index < children.length) {
+  //     if (children[index].innerHTML === "&nbsp;") {
+  //       if (!query.startsWith("\n")) toRemove.push(index);
+  //       index++;
+  //       break;
+  //     }
+  //     const text = removeEllipsis(getText(children[index]));
+  //     if (query.startsWith(text)) query = query.slice(text.length).trim();
+  //     index++;
+  //   }
+  // });
+
+  // toRemove.forEach((i) => text.removeChild(children[i]));
+
   // replace spans with links:
   const matches = content.match(/(https?:\/\/.*)/gm);
   const links = matches ? matches.map((match) => match.split(" ")[0]) : [];
