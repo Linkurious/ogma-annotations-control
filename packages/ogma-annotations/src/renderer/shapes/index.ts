@@ -54,6 +54,8 @@ export class Shapes extends Renderer<SVGLayer> {
       this.store.getState();
     root.innerHTML = "";
 
+    root.appendChild(this.getDefs());
+
     const arrowsRoot = createSVGElement<SVGGElement>("g");
     const annotationsRoot = createSVGElement<SVGGElement>("g");
     annotationsRoot.appendChild(arrowsRoot);
@@ -160,6 +162,68 @@ export class Shapes extends Renderer<SVGLayer> {
         y0 > viewport[3]
       ) // feature is below viewport
     );
+  }
+
+  private getDefs(): SVGDefsElement {
+    // Add filter definitions
+    const defs = createSVGElement<SVGDefsElement>("defs");
+
+    // Soft drop shadow filter
+    // Figma box-shadow: 0px 1px 4px 0px #00000026
+    const filter = createSVGElement<SVGFilterElement>("filter");
+    filter.setAttribute("id", "softShadow");
+    filter.setAttribute("x", "-50%");
+    filter.setAttribute("y", "-50%");
+    filter.setAttribute("width", "200%");
+    filter.setAttribute("height", "200%");
+
+    // 1. Blur the shape's alpha to make the shadow
+    const feGaussianBlur =
+      createSVGElement<SVGFEGaussianBlurElement>("feGaussianBlur");
+    feGaussianBlur.setAttribute("in", "SourceAlpha");
+    feGaussianBlur.setAttribute("stdDeviation", "2");
+    feGaussianBlur.setAttribute("result", "blur");
+
+    // 2. Shift the shadow (0px horizontal, 1px vertical)
+    const feOffset = createSVGElement<SVGFEOffsetElement>("feOffset");
+    feOffset.setAttribute("in", "blur");
+    feOffset.setAttribute("dx", "0");
+    feOffset.setAttribute("dy", "1");
+    feOffset.setAttribute("result", "offsetBlur");
+
+    // 3. Adjust opacity (#00000026 = 15% opacity)
+    const feComponentTransfer = createSVGElement<SVGFEComponentTransferElement>(
+      "feComponentTransfer"
+    );
+    feComponentTransfer.setAttribute("in", "offsetBlur");
+    feComponentTransfer.setAttribute("result", "shadow");
+
+    const feFuncA = createSVGElement<SVGFEFuncAElement>("feFuncA");
+    feFuncA.setAttribute("type", "linear");
+    feFuncA.setAttribute("slope", "0.25");
+
+    feComponentTransfer.appendChild(feFuncA);
+
+    // 4. Merge shadow + original shape
+    const feMerge = createSVGElement<SVGFEMergeElement>("feMerge");
+
+    const feMergeNode1 = createSVGElement<SVGFEMergeNodeElement>("feMergeNode");
+    feMergeNode1.setAttribute("in", "shadow");
+
+    const feMergeNode2 = createSVGElement<SVGFEMergeNodeElement>("feMergeNode");
+    feMergeNode2.setAttribute("in", "SourceGraphic");
+
+    feMerge.appendChild(feMergeNode1);
+    feMerge.appendChild(feMergeNode2);
+
+    // Assemble filter
+    filter.appendChild(feGaussianBlur);
+    filter.appendChild(feOffset);
+    filter.appendChild(feComponentTransfer);
+    filter.appendChild(feMerge);
+
+    defs.appendChild(filter);
+    return defs;
   }
 
   private removeFeatures(featureIds: Set<Id>) {

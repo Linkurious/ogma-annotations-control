@@ -250,14 +250,14 @@
         "iconSize": 32,
         "author": "Claude",
         "style": {
-          "background": "#FFFACD",
+          "background": "#FFF",
           "strokeColor": "#DDD",
-          "strokeWidth": 1,
+          "strokeWidth": 0,
           "strokeType": "plain",
           "borderRadius": 4,
           "color": "#333",
-          "font": "Arial, sans-serif",
-          "fontSize": 12,
+          "font": "IBM Plex Sans",
+          "fontSize": 14,
           "padding": 8,
           "iconColor": "#FFD700",
           "iconSymbol": "💬",
@@ -275,10 +275,9 @@
       "properties": {
         "type": "arrow",
         "style": {
-          "strokeType": "plain",
-          "strokeColor": "#666",
+          "strokeColor": "#2D00A6",
           "strokeWidth": 2,
-          "head": "arrow",
+          "head": "halo-dot",
           "tail": "none"
         },
         "link": {
@@ -343,22 +342,22 @@
           "strokeType": "plain",
           "strokeColor": "#666",
           "strokeWidth": 2,
-          "head": "arrow",
+          "head": "arrow-plain",
           "tail": "none"
         },
         "link": {
-          "start": {
+          "end": {
             "id": "polygon-example-1",
-            "side": "start",
+            "side": "end",
             "type": "polygon",
             "magnet": {
               "x": -200,
               "y": -50
             }
           },
-          "end": {
+          "start": {
             "id": "comment-collapsed-example",
-            "side": "end",
+            "side": "start",
             "type": "comment",
             "magnet": {
               "x": 0,

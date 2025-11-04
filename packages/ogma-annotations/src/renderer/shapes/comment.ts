@@ -74,6 +74,7 @@ function renderExpandedBox(
 
   // Reuse text renderer to render the box and content
   const renderedG = renderText(root, asText, g, state);
+  renderedG.setAttribute("filter", "url(#softShadow)"); // Add drop shadow for comments
 
   return renderedG;
 }

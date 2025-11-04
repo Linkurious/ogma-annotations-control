@@ -32,7 +32,7 @@ type Handle = {
 export class PolygonHandler extends Handler<Polygon, Handle> {
   private links: Links;
   private isDrawingMode = false;
-  private simplificationTolerance = 3; // Graph units
+  private simplificationTolerance = 5; // Graph units
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -205,7 +205,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
 
       state.setDrawingPoints(closedPoints);
       const simplifiedPoints = simplifyPolygon(
-        closedPoints.slice(0, -1), // Exclude closing point
+        closedPoints, // Exclude closing point
         this.simplificationTolerance,
         false
       );
@@ -303,7 +303,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
         else {
           // Apply path simplification (cast to correct type)
           const simplifiedPoints = simplifyPolygon(
-            points, // Exclude closing point
+            points.slice(1, -1), // Exclude closing point
             this.simplificationTolerance,
             true
           );
