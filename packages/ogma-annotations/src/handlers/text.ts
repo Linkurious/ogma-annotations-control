@@ -385,7 +385,10 @@ export class TextHandler extends Handler<Text, Handle> {
   }
 
   protected onClick(_evt: ClientMouseEvent) {
-    // show text editor
+    this.startEditingText();
+  }
+
+  protected startEditingText() {
     if (this.textEditor === null) {
       this.textEditor = new TextArea(this.ogma, this.store, this.annotation!);
     }
@@ -405,12 +408,15 @@ export class TextHandler extends Handler<Text, Handle> {
     const dy = currentPos.y - (this.dragStartPoint?.y || 0);
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
       this.clearDragState();
-      this.onClick(evt);
+      this.startEditingText();
     } else this.commitChange();
 
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;
     this.dragging = false;
+
+    // if we have just drawn that annotation, start editing
+    if (state.drawingFeature === this.annotation) this.startEditingText();
     return true;
   }
 

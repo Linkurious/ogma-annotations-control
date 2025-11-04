@@ -40,6 +40,8 @@ export class TextArea {
     this.updateStyle();
     this.updatePosition();
 
+    this.textarea.focus();
+
     this.unsubscribe = this.store.subscribe(
       (state) => ({
         rotation: state.rotation,
@@ -54,6 +56,7 @@ export class TextArea {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
+      return this.store.getState().getFeature(this.annotation) as Text;
     }
     return state.liveUpdates[this.annotation] as Text;
   }
