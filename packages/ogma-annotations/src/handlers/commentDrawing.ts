@@ -131,6 +131,8 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       }
     );
 
+    console.log("created comment with arrow:", result);
+
     this.arrow = result.arrow;
 
     // Store the arrow (comment is already in store as this.annotation)
@@ -146,6 +148,14 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
         this.snap.magnet
       );
     }
+    // link comment and arrow
+    this.links.add(
+      this.arrow,
+      "end",
+      annotation.id,
+      "comment",
+      { x: 0, y: -0.5 } // Top center magnet
+    );
 
     // Start live update for both features
     this.store.getState().startLiveUpdate([annotation.id, this.arrow.id]);
