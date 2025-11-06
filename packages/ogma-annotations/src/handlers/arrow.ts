@@ -1,6 +1,7 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { Snap, Snapping } from "./snapping";
+import { canDetachArrowEnd, canDetachArrowStart } from "../commentHelpers";
 import {
   EVT_DRAG,
   SIDE_END,
@@ -153,6 +154,15 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   }
   protected onDragStart(evt: ClientMouseEvent) {
     if (!super.onDragStart(evt)) return false;
+    const annotation = this.getAnnotation()!;
+    const handle = this.hoveredHandle!;
+    if (
+      (handle.type === HandleType.END && !canDetachArrowEnd(annotation)) ||
+      (handle.type === HandleType.START && !canDetachArrowStart(annotation))
+    ) {
+      this.clearDragState();
+      return false;
+    }
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
     return true;
