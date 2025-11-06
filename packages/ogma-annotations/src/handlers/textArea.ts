@@ -1,5 +1,5 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
-import { LAYERS } from "../constants";
+import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
 import { Id, Text, defaultTextStyle } from "../types";
 import { getBoxPosition, getBoxSize } from "../utils";
@@ -119,7 +119,7 @@ export class TextArea {
     textAreaStyle.fontFamily = font || "sans-serif";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
     textAreaStyle.padding = `${scaledPadding}px`;
-    textAreaStyle.lineHeight = `${scaledFontSize}px`;
+    textAreaStyle.lineHeight = `${scaledFontSize * TEXT_LINE_HEIGHT}px`;
 
     textAreaStyle.boxSizing = "border-box";
     textAreaStyle.color = color || "black";

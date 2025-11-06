@@ -1,5 +1,6 @@
 import Textbox from "@borgar/textbox";
 import { renderBox } from "./box";
+import { TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Box, Text, defaultTextStyle } from "../../types";
 import { getBoxCenter, getTextSize } from "../../utils";
@@ -98,8 +99,11 @@ function drawContent(
 
   if (width === height && width === 0) return;
 
+  // Use 1.2 line-height for better readability (20% more than font size)
+  const lineHeight = parseFloat(fontSize!.toString()) * TEXT_LINE_HEIGHT;
+
   const box = new Textbox({
-    font: `${fontSize}px/${fontSize}px ${font}`.replace(/(px)+/g, "px"),
+    font: `${fontSize}px/${lineHeight}px ${font}`.replace(/(px)+/g, "px"),
     width: width - padding * 2,
     height: height - padding,
     align: "left",
@@ -116,7 +120,8 @@ function drawContent(
 
   const lines = box.linebreak(content.replaceAll("\n", "<br>"));
 
-  const text = lines.render() as SVGTextElement;
+  // mistake in textbox types:
+  const text = lines.svg() as unknown as SVGTextElement;
   const children = [...text.children];
 
   // remove extra blank lines

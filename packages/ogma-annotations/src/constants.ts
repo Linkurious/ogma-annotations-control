@@ -54,3 +54,5 @@ export const cursors: Record<string, Cursor> = {
 
 export const COMMENT_MODE_COLLAPSED = "collapsed";
 export const COMMENT_MODE_EXPANDED = "expanded";
+
+export const TEXT_LINE_HEIGHT = 1.2;
