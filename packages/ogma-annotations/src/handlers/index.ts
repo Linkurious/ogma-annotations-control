@@ -43,7 +43,10 @@ export class AnnotationEditor extends EventTarget {
       "arrow",
       new ArrowHandler(this.ogma, this.store, this.snapping, links)
     );
-    this.handlers.set("polygon", new PolygonHandler(this.ogma, this.store, links));
+    this.handlers.set(
+      "polygon",
+      new PolygonHandler(this.ogma, this.store, links)
+    );
 
     this.handlers.forEach((handler) => {
       handler.addEventListener("dragstart", () => {

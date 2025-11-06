@@ -4,7 +4,15 @@ import { TextArea } from "./textArea";
 import { EVT_DRAG, cursors, handleRadius } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
-import { ClientMouseEvent, Cursor, Id, Text, isBox } from "../types";
+import {
+  ClientMouseEvent,
+  Cursor,
+  Id,
+  Text,
+  isBox,
+  Comment,
+  isComment
+} from "../types";
 import { getBoxCenter, getBoxSize } from "../utils";
 import { dot, subtract } from "../vec";
 
@@ -81,7 +89,7 @@ const cornerCursors: Cursor[] = [
   cursors.swResize // bottom-left (3)
 ];
 
-export class TextHandler extends Handler<Text, Handle> {
+export class TextHandler extends Handler<Text | Comment, Handle> {
   private links: Links;
   private textEditor: TextArea | null = null;
 
@@ -101,7 +109,8 @@ export class TextHandler extends Handler<Text, Handle> {
     const state = this.store.getState();
     let { revSin: sin, revCos: cos } = state;
 
-    if (isBox(annotation)) {
+    // Box and Comment annotations don't rotate with the view
+    if (isBox(annotation) || isComment(annotation)) {
       sin = 0;
       cos = 1;
     }
@@ -116,15 +125,16 @@ export class TextHandler extends Handler<Text, Handle> {
     const mx = dmx * cos - dmy * sin;
     const my = dmx * sin + dmy * cos;
 
-    // Check if this is a fixed-size text box
-    const isFixedSize = annotation.properties.style?.fixedSize === true;
+    // Check if this is a fixed-size text box or a comment
+    const isFixedSize =
+      annotation.properties.style?.fixedSize === true || isComment(annotation);
 
     if (isFixedSize) {
       width /= zoom;
       height /= zoom;
     }
 
-    // Skip resize handles for fixed-size text boxes
+    // Skip resize handles for fixed-size text boxes and comments
     if (!isFixedSize) {
       // Check corner handles first (higher priority)
       for (let i = 0; i < CORNER_HANDLES.length; i++) {
@@ -207,7 +217,7 @@ export class TextHandler extends Handler<Text, Handle> {
     const original = this.getAnnotation()!;
 
     // Create updated geometry based on handle type
-    let updatedFeature: Text | null = null;
+    let updatedFeature: Text | Comment | null = null;
 
     if (handle.type === HandleType.CORNER) {
       // Corner handle: resize from the corner
@@ -221,7 +231,7 @@ export class TextHandler extends Handler<Text, Handle> {
     }
 
     if (updatedFeature) {
-      const update = updatedFeature as Text;
+      const update = updatedFeature;
       // Apply live update to store instead of direct mutation
       this.store.getState().applyLiveUpdate(annotation.id, update);
       const displacement = subtract(
@@ -243,12 +253,10 @@ export class TextHandler extends Handler<Text, Handle> {
     );
   }
 
-  private dragBody(original: Text, delta: Point) {
+  private dragBody(original: Text | Comment, delta: Point): Text | Comment {
     const center = getBoxCenter(original);
     return {
-      type: original.type,
-      id: original.id,
-      properties: original.properties,
+      ...original,
       geometry: {
         type: original.geometry.type,
         coordinates: [center.x + delta.x, center.y + delta.y] as [
@@ -256,10 +264,14 @@ export class TextHandler extends Handler<Text, Handle> {
           number
         ]
       }
-    };
+    } as Text | Comment;
   }
 
-  private dragCorner(original: Text, delta: Point, cornerIndex: number) {
+  private dragCorner(
+    original: Text | Comment,
+    delta: Point,
+    cornerIndex: number
+  ): Text | Comment {
     const isTop = cornerIndex === 0 || cornerIndex === 1;
     const isLeft = cornerIndex === 0 || cornerIndex === 3;
     const isRight = cornerIndex === 1 || cornerIndex === 2;
@@ -270,8 +282,8 @@ export class TextHandler extends Handler<Text, Handle> {
     const state = this.store.getState();
     let { revSin: sin, revCos: cos } = state;
 
-    // box is rotated with the view
-    if (isBox(original)) {
+    // Box and Comment annotations don't rotate with the view
+    if (isBox(original) || isComment(original)) {
       sin = 0;
       cos = 1;
     }
@@ -298,8 +310,7 @@ export class TextHandler extends Handler<Text, Handle> {
     const newCenterY = center.y + delta.y / 2;
 
     return {
-      type: original.type,
-      id: original.id,
+      ...original,
       properties: {
         ...original.properties,
         width: newWidth,
@@ -309,10 +320,14 @@ export class TextHandler extends Handler<Text, Handle> {
         type: original.geometry.type,
         coordinates: [newCenterX, newCenterY]
       }
-    };
+    } as Text | Comment;
   }
 
-  private dragEdge(original: Text, delta: Point, handle: Handle) {
+  private dragEdge(
+    original: Text | Comment,
+    delta: Point,
+    handle: Handle
+  ): Text | Comment {
     const { width, height } = getBoxSize(original);
     const center = getBoxCenter(original);
 
@@ -320,8 +335,8 @@ export class TextHandler extends Handler<Text, Handle> {
     const state = this.store.getState();
     let { revSin: sin, revCos: cos } = state;
 
-    // box is rotated with the view
-    if (isBox(original)) {
+    // Box and Comment annotations don't rotate with the view
+    if (isBox(original) || isComment(original)) {
       sin = 0;
       cos = 1;
     }
@@ -359,8 +374,7 @@ export class TextHandler extends Handler<Text, Handle> {
     const centerOffsetY = -localCenterOffsetX * sin + localCenterOffsetY * cos;
 
     return {
-      type: original.type,
-      id: original.id,
+      ...original,
       properties: {
         ...original.properties,
         width: newWidth,
@@ -373,7 +387,7 @@ export class TextHandler extends Handler<Text, Handle> {
           number
         ]
       }
-    };
+    } as Text | Comment;
   }
 
   protected onDragStart(evt: ClientMouseEvent) {
@@ -388,7 +402,7 @@ export class TextHandler extends Handler<Text, Handle> {
     this.startEditingText();
   }
 
-  protected startEditingText() {
+  public startEditingText() {
     if (this.textEditor === null) {
       this.textEditor = new TextArea(this.ogma, this.store, this.annotation!);
     }

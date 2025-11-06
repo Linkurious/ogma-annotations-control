@@ -11,6 +11,7 @@ import {
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
+import { CommentDrawingHandler } from "./handlers/commentDrawing";
 import { PolygonHandler } from "./handlers/polygon";
 import { TextHandler } from "./handlers/text";
 import { InteractionController } from "./interaction";
@@ -23,7 +24,10 @@ import {
   Annotation,
   AnnotationCollection,
   Arrow,
+  ArrowProperties,
   Box,
+  Comment,
+  CommentProps,
   ControllerOptions,
   FeatureEvents,
   Id,
@@ -31,6 +35,7 @@ import {
   Text,
   createArrow,
   createBox,
+  createComment,
   createPolygon,
   createText,
   isArrow,
@@ -359,6 +364,25 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
+   * Enable comment drawing mode - listens for next mousedown to start drawing
+   * Click: Creates comment at offset from click point with arrow
+   * Drag: Creates arrow dynamically, places comment at release point
+   * @param options Drawing options including offsets and styles
+   * @returns this for chaining
+   */
+  public enableCommentDrawing(options?: {
+    offsetX?: number;
+    offsetY?: number;
+    commentStyle?: Partial<CommentProps>;
+    arrowStyle?: Partial<ArrowProperties>;
+  }): this {
+    return this.enableDrawingMode((x, y) => {
+      const comment = createComment(x, y, "", options?.commentStyle);
+      this.startCommentDrawing(x, y, comment, options);
+    });
+  }
+
+  /**
    * Start adding a comment/text annotation at a position
    * @param _x X coordinate
    * @param _y Y coordinate
@@ -452,6 +476,67 @@ export class Control extends EventEmitter<FeatureEvents> {
     // Get the polygon handler
     const handler = this.editor.getActiveHandler()!;
     (handler as PolygonHandler).startDrawing(polygon.id, x, y);
+    return this;
+  }
+
+  /**
+   * Start drawing a comment annotation with arrow
+   * @param x X coordinate to start drawing
+   * @param y Y coordinate to start drawing
+   * @param comment The comment annotation to add
+   * @param options Drawing options including offsets and styles
+   * @returns this for chaining
+   */
+  public startCommentDrawing(
+    x: number,
+    y: number,
+    comment: Comment,
+    options?: {
+      offsetX?: number;
+      offsetY?: number;
+      commentStyle?: Partial<CommentProps>;
+      arrowStyle?: Partial<ArrowProperties>;
+    }
+  ): this {
+    // stop editing any current feature
+    if (this.editor.getActiveHandler())
+      this.editor.getActiveHandler()!.stopEditing();
+    this.cancelDrawing();
+
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: comment.id });
+
+    // Add the comment annotation
+    this.add(comment);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(comment.id);
+
+    // Create and use the comment drawing handler
+    const drawingHandler = new CommentDrawingHandler(
+      this.ogma,
+      this.store,
+      this.editor.getSnapping(),
+      this.links,
+      options
+    );
+
+    drawingHandler.startDrawing(comment.id, x, y);
+
+    // Listen for drawing completion
+    const onDragEnd = () => {
+      console.log("comment drawing completed");
+      drawingHandler.removeEventListener("dragend", onDragEnd);
+      // Switch to text handler for editing after a brief delay
+      setTimeout(() => {
+        console.log("switching to text handler");
+        const textHandler = this.editor.getActiveHandler()!;
+        if (textHandler instanceof TextHandler) {
+          textHandler.startEditingText();
+        }
+      }, 50);
+    };
+    drawingHandler.addEventListener("dragend", onDragEnd);
+
     return this;
   }
 

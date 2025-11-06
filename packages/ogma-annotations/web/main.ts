@@ -4,7 +4,6 @@
 import Ogma, { RawNode } from "@linkurious/ogma";
 import {
   Control,
-  createText,
   AnnotationCollection,
   getAnnotationsBounds
 } from "../src";
@@ -243,19 +242,41 @@ class App {
 
   private setupCommentTool() {
     this.buttons.addComment.addEventListener("click", () => {
-      this.control.unselect().cancelDrawing();
-      this.ogma.events.once("click", (evt) => {
-        const comment = this.control.startComment(
-          evt.x,
-          evt.y,
-          createText(evt.x, evt.y, 200, 100, "This is a comment", {
+      if (this.buttons.addComment.disabled) return;
+      this.clearAllActiveButtons();
+      this.buttons.addComment.disabled = true;
+      this.buttons.addComment.classList.add("active");
+
+      this.control.enableCommentDrawing({
+        offsetX: 100,
+        offsetY: -50,
+        commentStyle: {
+          content: "",
+          style: {
             color: "#3A03CF",
             background: "#EDE6FF",
             fontSize: 16,
             font: "IBM Plex Sans"
-          })
-        );
-        console.log("Comment added:", comment);
+          }
+        },
+        arrowStyle: {
+          style: {
+            strokeType: "plain",
+            strokeColor: "#3A03CF",
+            strokeWidth: 2,
+            head: "arrow"
+          }
+        }
+      });
+
+      this.control.once("completeDrawing", () => {
+        this.buttons.addComment.disabled = false;
+        this.buttons.addComment.classList.remove("active");
+      });
+
+      this.control.once("cancelDrawing", () => {
+        this.buttons.addComment.disabled = false;
+        this.buttons.addComment.classList.remove("active");
       });
     });
   }
