@@ -2,11 +2,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import Ogma, { RawNode } from "@linkurious/ogma";
-import {
-  Control,
-  AnnotationCollection,
-  getAnnotationsBounds
-} from "../src";
+import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
 
 interface ND {}
 interface ED {}
@@ -236,7 +232,9 @@ class App {
         console.log("Polygon drawing canceled");
       });
 
-      console.log("Click and drag to draw a freehand polygon. Release to finish.");
+      console.log(
+        "Click and drag to draw a freehand polygon. Release to finish."
+      );
     });
   }
 
@@ -248,8 +246,8 @@ class App {
       this.buttons.addComment.classList.add("active");
 
       this.control.enableCommentDrawing({
-        offsetX: 100,
-        offsetY: -50,
+        offsetX: 200,
+        offsetY: -150,
         commentStyle: {
           content: "",
           style: {
@@ -264,7 +262,7 @@ class App {
             strokeType: "plain",
             strokeColor: "#3A03CF",
             strokeWidth: 2,
-            head: "arrow"
+            head: "halo-dot"
           }
         }
       });

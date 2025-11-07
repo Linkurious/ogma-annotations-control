@@ -67,6 +67,7 @@ export abstract class Handler<
 
   handleMouseUp = (evt: MouseEvent): void => {
     if (!this.isActive() || !this.dragging) return;
+
     this.restorePanning();
     this.onDragEnd(evt);
     this.dispatchEvent(new Event(EVT_DRAG_END));

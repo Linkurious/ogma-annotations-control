@@ -1,7 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { Handler } from "./base";
 import { Snap, Snapping } from "./snapping";
-import { createCommentWithArrow, CommentTarget } from "../commentHelpers";
 import { cursors } from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
@@ -11,22 +10,31 @@ import {
   Id,
   ClientMouseEvent,
   CommentProps,
-  ArrowProperties
+  ArrowProperties,
+  createComment
 } from "../types";
+import { createArrow, defaultArrowStyle } from "../types/features/Arrow";
 
 /**
  * Handler for drawing comments with arrows
  *
- * This handler manages the special drawing interaction for comments:
- * - Click: Creates comment at offset from click point
- * - Drag: Creates arrow dynamically, places comment at release point
- *
- * After drawing completes, TextHandler takes over for editing.
+ * Drawing flow:
+ * 1. Mousedown: Record target point (with snapping)
+ * 2. Create dummy arrow from target to cursor
+ * 3. Drag: Arrow follows mouse
+ * 4. Mouseup:
+ *    - Small distance: Apply offset, create comment at offset from target
+ *    - Large distance: Create comment at mouse position
+ *    - Update arrow to connect to comment edge
+ * 5. Set up links
+ * 6. Focus comment for text editing
+ * 7. Commit after content added
  */
 export class CommentDrawingHandler extends Handler<Comment, never> {
   private snapping: Snapping;
   private links: Links;
-  private snap: Snap | null = null;
+  private targetSnap: Snap | null = null; // Snap at mousedown (target point)
+  private targetPoint: { x: number; y: number } | null = null; // Target point where arrow ends
   private arrow: Arrow | null = null;
   private commentStyle?: Partial<CommentProps>;
   private arrowStyle?: Partial<ArrowProperties>;
@@ -59,198 +67,163 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
   }
 
   protected onDrag(evt: MouseEvent): void {
-    if (!this.dragStartPoint || !this.isActive()) return;
+    if (
+      !this.dragStartPoint ||
+      !this.isActive() ||
+      !this.arrow ||
+      !this.targetPoint
+    )
+      return;
 
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
     const mousePoint = this.clientToCanvas(evt);
-    const annotation = this.getAnnotation()!;
 
-    // Update snap
-    this.snap = this.snapping.snap(mousePoint);
-    const endPoint = this.snap?.point || mousePoint;
-
-    // Update comment position to follow mouse
-    this.store.getState().applyLiveUpdate(annotation.id, {
-      ...annotation,
+    // Update arrow: start follows mouse, end stays at target
+    this.store.getState().applyLiveUpdate(this.arrow.id, {
+      ...this.arrow,
       geometry: {
-        type: "Point",
-        coordinates: [endPoint.x, endPoint.y]
+        type: "LineString",
+        coordinates: [
+          [mousePoint.x, mousePoint.y], // Start: follows mouse (where comment will be)
+          [this.targetPoint.x, this.targetPoint.y] // End: target point (fixed)
+        ]
       }
     });
-
-    // Update arrow endpoint
-    if (this.arrow) {
-      this.store.getState().applyLiveUpdate(this.arrow.id, {
-        ...this.arrow,
-        geometry: {
-          type: "LineString",
-          coordinates: [
-            this.arrow.geometry.coordinates[0], // Keep start point
-            [endPoint.x, endPoint.y] // Update end point
-          ]
-        }
-      });
-    }
   }
 
-  protected onDragStart(evt: ClientMouseEvent): boolean {
+  protected onMouseDown(evt: ClientMouseEvent): boolean {
     if (!super.onDragStart(evt)) return false;
 
     const mousePoint = this.clientToCanvas(evt);
-    const annotation = this.getAnnotation()!;
 
-    // Check for snap at start point
-    this.snap = this.snapping.snap(mousePoint);
-    const startPoint = this.snap?.point || mousePoint;
+    // Step 2: Check for snap at mousedown (this is the target point)
+    this.targetSnap = this.snapping.snap(mousePoint);
+    this.targetPoint = this.targetSnap?.point || mousePoint;
 
-    // Create the arrow (will be updated during drag)
-    const target: CommentTarget = this.snap
-      ? {
-          type: this.snap.type === "node" ? "node" : "annotation",
-          id: this.snap.id,
-          magnet: this.snap.magnet
-        }
-      : {
-          type: "coordinate",
-          coordinate: startPoint
-        };
-
-    // Create comment + arrow
+    // Step 3: Create dummy arrow (no links yet)
+    // Arrow points FROM mouse TO target
     const state = this.store.getState();
-    const result = createCommentWithArrow(
-      state,
-      startPoint.x,
-      startPoint.y,
-      "", // Empty content initially
-      target,
+    this.arrow = createArrow(
+      mousePoint.x,
+      mousePoint.y,
+      this.targetPoint.x,
+      this.targetPoint.y,
       {
-        commentStyle: this.commentStyle,
-        arrowStyle: this.arrowStyle
+        ...defaultArrowStyle,
+        head: "arrow",
+        ...this.arrowStyle?.style
       }
     );
+    this.annotation = this.arrow.id;
 
-    console.log("created comment with arrow:", result);
+    // Store the arrow
+    state.addFeature(this.arrow);
 
-    this.arrow = result.arrow;
-
-    // Store the arrow (comment is already in store as this.annotation)
-    this.store.getState().addFeature(this.arrow);
-
-    // If we have a snap, add the link
-    if (this.snap) {
-      this.links.add(
-        this.arrow,
-        "start",
-        this.snap.id,
-        this.snap.type,
-        this.snap.magnet
-      );
-    }
-    // link comment and arrow
-    this.links.add(
-      this.arrow,
-      "end",
-      annotation.id,
-      "comment",
-      { x: 0, y: -0.5 } // Top center magnet
-    );
-
-    // Start live update for both features
-    this.store.getState().startLiveUpdate([annotation.id, this.arrow.id]);
+    // Start live update for arrow only (comment doesn't exist yet)
+    state.startLiveUpdate([this.arrow!.id]);
+    this.store.setState({ drawingFeature: this.arrow.id });
 
     return true;
   }
 
-  protected onDragEnd(evt: ClientMouseEvent): boolean {
-    if (!super.onDragEnd(evt)) return false;
+  protected onMouseUp(evt: ClientMouseEvent): boolean {
+    if (!super.onDragEnd(evt) || !this.arrow || !this.targetPoint) return false;
 
     const mousePoint = this.clientToCanvas(evt);
-    const annotation = this.getAnnotation()!;
+    const state = this.store.getState();
 
-    // Check if this was a click (minimal drag) or actual drag
-    const dx = mousePoint.x - (this.dragStartPoint?.x || 0);
-    const dy = mousePoint.y - (this.dragStartPoint?.y || 0);
+    // Step 4: Calculate distance to determine click vs drag
+    const dx = mousePoint.x - this.dragStartPoint!.x;
+    const dy = mousePoint.y - this.dragStartPoint!.y;
     const dragDistance = Math.sqrt(dx * dx + dy * dy);
 
+    let commentX: number;
+    let commentY: number;
+
     if (dragDistance < 5) {
-      // Click: position comment at offset
-      const startPoint = this.clientToCanvas({
-        clientX: this.dragStartPoint!.x,
-        clientY: this.dragStartPoint!.y
-      } as MouseEvent);
-      const commentX = startPoint.x + this.offsetX;
-      const commentY = startPoint.y + this.offsetY;
-
-      // Update comment position
-      this.store.getState().applyLiveUpdate(annotation.id, {
-        ...annotation,
-        geometry: {
-          type: "Point",
-          coordinates: [commentX, commentY]
-        }
-      });
-
-      // Update arrow to point to comment
-      if (this.arrow) {
-        this.store.getState().applyLiveUpdate(this.arrow.id, {
-          ...this.arrow,
-          geometry: {
-            type: "LineString",
-            coordinates: [
-              this.arrow.geometry.coordinates[0],
-              [commentX, commentY]
-            ]
-          }
-        });
-
-        // Add link for arrow end (pointing to comment)
-        this.links.add(
-          this.arrow,
-          "end",
-          annotation.id,
-          "comment",
-          { x: 0, y: -0.5 } // Top center magnet
-        );
-      }
+      // Case 1: Click (small distance) - apply offset from target point
+      commentX = this.targetPoint.x + this.offsetX;
+      commentY = this.targetPoint.y + this.offsetY;
     } else {
-      // Drag: comment already at mouse position, just add link
-      if (this.arrow) {
-        this.links.add(
-          this.arrow,
-          "end",
-          annotation.id,
-          "comment",
-          { x: 0, y: -0.5 } // Top center magnet
-        );
-      }
-
-      // If we ended on a snap point, update the link
-      if (this.snap) {
-        if (this.arrow) {
-          this.links.add(
-            this.arrow,
-            "end",
-            this.snap.id,
-            this.snap.type,
-            this.snap.magnet
-          );
-        }
-      }
+      // Case 2: Drag - create comment at mouse position
+      commentX = mousePoint.x;
+      commentY = mousePoint.y;
     }
 
-    // Clear drawing flag BEFORE committing
-    const state = this.store.getState();
-    if (state.drawingFeature === annotation.id) {
-      this.store.setState({ drawingFeature: null });
+    // Create the comment
+    const comment: Comment = createComment(commentX, commentY, "", {
+      ...this.commentStyle
+    });
+    state.addFeature(comment);
+    this.store.setState({ drawingFeature: comment.id });
+
+    // Update comment position
+    state.applyLiveUpdate(comment.id, {
+      ...comment,
+      geometry: {
+        type: comment.geometry.type,
+        coordinates: [commentX, commentY]
+      }
+    });
+
+    // Calculate arrow start point at comment edge (bottom center)
+    const commentHeight = comment.properties.height || 60;
+    const arrowStartX = commentX;
+    const arrowStartY = commentY + commentHeight * 0.5;
+
+    // Update arrow to connect from comment edge to target
+    state.applyLiveUpdate(this.arrow.id, {
+      ...this.arrow,
+      geometry: {
+        type: "LineString",
+        coordinates: [
+          [arrowStartX, arrowStartY], // Start: comment bottom edge
+          [this.targetPoint.x, this.targetPoint.y] // End: target point
+        ]
+      }
+    });
+
+    // Step 5: Set up links
+    // Link arrow start to comment
+    this.links.add(
+      this.arrow,
+      "start",
+      comment.id,
+      "comment",
+      { x: 0, y: 0.5 } // Bottom center magnet
+    );
+
+    // Link arrow end to target (if snapped)
+    if (this.targetSnap) {
+      this.links.add(
+        this.arrow,
+        "end",
+        this.targetSnap.id,
+        this.targetSnap.type,
+        this.targetSnap.magnet
+      );
     }
 
+    // Step 6: Commit changes
     this.commitChange();
     this.clearDragState();
 
-    this.snap = null;
+    // Clear drawing flag
+    if (
+      state.drawingFeature === comment.id ||
+      state.drawingFeature === this.arrow.id
+    ) {
+      this.store.setState({ drawingFeature: null });
+    }
+
+    // Clean up
+    this.targetSnap = null;
+    this.targetPoint = null;
     this.arrow = null;
+
+    // Step 7: Text editing will be handled by the caller
 
     return true;
   }
@@ -264,7 +237,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.setCursor(cursors.crosshair);
 
     // Initialize drag tracking
-    this.dragging = true;
+
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     this.dragStartPoint = pos;
 
@@ -272,6 +245,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.disablePanning();
 
     // Start the drag
-    this.onDragStart({ clientX: pos.x, clientY: pos.y } as MouseEvent);
+    this.onMouseDown({ clientX: pos.x, clientY: pos.y });
+    this.ogma.events.once("mouseup", (evt) => this.onMouseUp(evt.domEvent));
   }
 }

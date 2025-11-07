@@ -48,12 +48,12 @@ export const defaultCommentArrowStyle: Partial<ArrowProperties> = {
  */
 
 /**
- * Find all arrows that point TO a comment
- * Searches for arrows where link.end.id === commentId OR link.start.id === commentId
+ * Find all arrows that originate FROM a comment
+ * Searches for arrows where link.start.id === commentId
  *
  * @param state - Annotation state
  * @param commentId - ID of the comment
- * @returns Array of arrows pointing to the comment
+ * @returns Array of arrows originating from the comment
  */
 export function getCommentArrows(
   state: AnnotationState,
@@ -65,11 +65,8 @@ export function getCommentArrows(
   Object.values(features).forEach((feature) => {
     if (isArrow(feature)) {
       const arrow = feature as Arrow;
-      // Check if arrow points TO or FROM the comment
-      if (
-        arrow.properties.link?.end?.id === commentId ||
-        arrow.properties.link?.start?.id === commentId
-      ) {
+      // Check if arrow points FROM the comment (start)
+      if (arrow.properties.link?.start?.id === commentId) {
         arrows.push(arrow);
       }
     }
@@ -95,13 +92,13 @@ export function getPrimaryCommentArrow(
 
 /**
  * Create comment + arrow atomically
- * Ensures arrow always points TO the comment
+ * Ensures arrow always points FROM the comment TO the target
  *
  * @param state - Annotation state
  * @param x - X position for the comment box
  * @param y - Y position for the comment box
  * @param content - Text content
- * @param target - Target (coordinate, node, or annotation)
+ * @param target - Target (coordinate, node, or annotation) where arrow points TO
  * @param options - Optional styling for comment and arrow
  * @returns Object with comment and arrow features
  */
@@ -119,18 +116,18 @@ export function createCommentWithArrow(
   // Create comment
   const comment = createComment(x, y, content, options?.commentStyle);
 
-  // Determine arrow start point (from target)
-  const startPoint = getTargetPosition(state, target);
-
-  // Determine arrow end point (to comment, with magnet offset)
-  // Arrow points TO comment, so comment is at the END
-  const endMagnet = { x: 0, y: -0.5 }; // Top center of comment box
-  const endPoint: Point = {
+  // Determine arrow start point (FROM comment, with magnet offset)
+  // Arrow points FROM comment, so comment is at the START
+  const startMagnet = { x: 0, y: 0.5 }; // Bottom center of comment box
+  const startPoint: Point = {
     x: x,
-    y: y + endMagnet.y * (options?.commentStyle?.height || 60)
+    y: y + startMagnet.y * (options?.commentStyle?.height || 60)
   };
 
-  // Create arrow pointing FROM target TO comment
+  // Determine arrow end point (TO target)
+  const endPoint = getTargetPosition(state, target);
+
+  // Create arrow pointing FROM comment TO target
   const arrow = createArrow(
     startPoint.x,
     startPoint.y,
@@ -144,13 +141,13 @@ export function createCommentWithArrow(
 
   // Set up link properties
   arrow.properties.link = {
-    start: createTargetLink(state, target, "start"),
-    end: {
+    start: {
       id: comment.id,
-      side: "end",
+      side: "start",
       type: "comment",
-      magnet: endMagnet
-    }
+      magnet: startMagnet
+    },
+    end: createTargetLink(state, target, "end")
   };
 
   return { comment, arrow };
@@ -158,10 +155,11 @@ export function createCommentWithArrow(
 
 /**
  * Add an additional arrow to an existing comment
+ * Arrow points FROM comment TO target
  *
  * @param state - Annotation state
  * @param commentId - ID of the comment
- * @param target - Target (coordinate, node, or annotation)
+ * @param target - Target (coordinate, node, or annotation) where arrow points TO
  * @param arrowStyle - Optional arrow styling
  * @returns New arrow feature
  */
@@ -180,15 +178,15 @@ export function addArrowToComment(
   const commentX = comment.geometry.coordinates[0];
   const commentY = comment.geometry.coordinates[1];
 
-  // Determine arrow start point (from target)
-  const startPoint = getTargetPosition(state, target);
-
-  // Determine arrow end point (to comment, with magnet offset)
-  const endMagnet = { x: 0, y: -0.5 }; // Top center of comment box
-  const endPoint: Point = {
+  // Determine arrow start point (FROM comment, with magnet offset)
+  const startMagnet = { x: 0, y: 0.5 }; // Bottom center of comment box
+  const startPoint: Point = {
     x: commentX,
-    y: commentY + endMagnet.y * comment.properties.height
+    y: commentY + startMagnet.y * comment.properties.height
   };
+
+  // Determine arrow end point (TO target)
+  const endPoint = getTargetPosition(state, target);
 
   // Create arrow
   const arrow = createArrow(
@@ -204,13 +202,13 @@ export function addArrowToComment(
 
   // Set up link properties
   arrow.properties.link = {
-    start: createTargetLink(state, target, "start"),
-    end: {
+    start: {
       id: commentId,
-      side: "end",
+      side: "start",
       type: "comment",
-      magnet: endMagnet
-    }
+      magnet: startMagnet
+    },
+    end: createTargetLink(state, target, "end")
   };
 
   return arrow;
@@ -232,13 +230,11 @@ export function deleteArrowFromComment(
 
   if (!isArrow(arrow)) return false;
 
-  // Find which end points to a comment
+  // Check if arrow originates FROM a comment (start side)
   const commentId =
-    arrow.properties.link?.end?.type === "comment"
-      ? arrow.properties.link.end.id
-      : arrow.properties.link?.start?.type === "comment"
-        ? arrow.properties.link.start.id
-        : null;
+    arrow.properties.link?.start?.type === "comment"
+      ? arrow.properties.link.start.id
+      : null;
 
   if (!commentId) {
     // Not a comment arrow, allow deletion
@@ -311,11 +307,9 @@ export function canDeleteArrow(state: AnnotationState, arrowId: Id): boolean {
   if (!isArrow(arrow)) return false;
 
   const commentId =
-    arrow.properties.link?.end?.type === "comment"
-      ? arrow.properties.link.end.id
-      : arrow.properties.link?.start?.type === "comment"
-        ? arrow.properties.link.start.id
-        : null;
+    arrow.properties.link?.start?.type === "comment"
+      ? arrow.properties.link.start.id
+      : null;
 
   if (!commentId) {
     return true; // Not attached to comment, can delete
@@ -348,29 +342,30 @@ export function findOrphanedComments(state: AnnotationState): Comment[] {
 }
 
 /**
- * Check if arrow endpoint can be detached from target
- * Returns false for arrows attached to comments
- * Accepts an arrow directly instead of looking it up by ID
- *
- * @param arrow - The arrow feature
- * @returns True if arrow end can be detached
- */
-export function canDetachArrowEnd(arrow: Arrow): boolean {
-  // Cannot detach if END points to a comment
-  return arrow.properties.link?.end?.type !== "comment";
-}
-
-/**
  * Check if arrow start point can be detached from source
- * Returns false for arrows originating from comments
+ * Returns false for arrows originating FROM comments
  * Accepts an arrow directly instead of looking it up by ID
  *
  * @param arrow - The arrow feature
  * @returns True if arrow start can be detached
  */
 export function canDetachArrowStart(arrow: Arrow): boolean {
-  // Cannot detach if START points from a comment
+  // Cannot detach if START points FROM a comment
   return arrow.properties.link?.start?.type !== "comment";
+}
+
+/**
+ * Check if arrow endpoint can be detached from target
+ * Always returns true for comment arrows since end points can be retargeted
+ * Accepts an arrow directly instead of looking it up by ID
+ *
+ * @param _arrow - The arrow feature (unused, kept for API consistency)
+ * @returns True if arrow end can be detached
+ */
+export function canDetachArrowEnd(_arrow: Arrow): boolean {
+  // For comment arrows (start is comment), the end can be freely retargeted
+  // For non-comment arrows, can always detach
+  return true;
 }
 
 /**

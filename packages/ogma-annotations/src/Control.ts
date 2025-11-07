@@ -503,13 +503,13 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.editor.getActiveHandler()!.stopEditing();
     this.cancelDrawing();
 
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: comment.id });
+    // // Mark this feature as being drawn
+    // this.store.setState({ drawingFeature: comment.id });
 
-    // Add the comment annotation
-    this.add(comment);
+    // // Add the comment annotation
+    // this.add(comment);
     this.interactions.suppressClicksTemporarily(200);
-    this.select(comment.id);
+    //this.select(comment.id);
 
     // Create and use the comment drawing handler
     const drawingHandler = new CommentDrawingHandler(
@@ -520,23 +520,18 @@ export class Control extends EventEmitter<FeatureEvents> {
       options
     );
 
-    drawingHandler.startDrawing(comment.id, x, y);
-
-    // Listen for drawing completion
-    const onDragEnd = () => {
-      console.log("comment drawing completed");
-      drawingHandler.removeEventListener("dragend", onDragEnd);
+    this.once(EVT_COMPLETE_DRAWING, (e) => {
       // Switch to text handler for editing after a brief delay
       setTimeout(() => {
-        console.log("switching to text handler");
+        this.select(e.id);
         const textHandler = this.editor.getActiveHandler()!;
         if (textHandler instanceof TextHandler) {
           textHandler.startEditingText();
         }
       }, 50);
-    };
-    drawingHandler.addEventListener("dragend", onDragEnd);
+    });
 
+    drawingHandler.startDrawing(comment.id, x, y);
     return this;
   }
 
