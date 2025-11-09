@@ -206,8 +206,12 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       );
     }
 
-    // Step 6: Commit changes
-    this.commitChange();
+    // Step 6: Commit ALL changes in a single batch (arrow + comment + links)
+    // This creates a single history entry instead of multiple
+    state.batchUpdate(() => {
+      this.commitChange();
+    });
+
     this.clearDragState();
 
     // Clear drawing flag
@@ -236,8 +240,10 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.annotation = id;
     this.setCursor(cursors.crosshair);
 
-    // Initialize drag tracking
+    // Mark that we're in drawing mode (prevents creating history entry yet)
+    this.store.setState({ drawingFeature: id });
 
+    // Initialize drag tracking
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     this.dragStartPoint = pos;
 
