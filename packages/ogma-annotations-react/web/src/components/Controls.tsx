@@ -45,18 +45,15 @@ export const Controls = ({
     []
   );
 
-  const divRefCallback = React.useCallback(
-    (node: LayerType) => {
-      if (node && node.element)
-        node.element.addEventListener("wheel", preventDefault, {
-          passive: false
-        });
-      return () => {
-        node.element.removeEventListener("wheel", preventDefault);
-      };
-    },
-    [stopEvent]
-  );
+  const divRefCallback = React.useCallback((node: LayerType) => {
+    if (node && node.element)
+      node.element.addEventListener("wheel", preventDefault, {
+        passive: false
+      });
+    return () => {
+      node.element.removeEventListener("wheel", preventDefault);
+    };
+  }, []);
 
   // update default styles
   React.useEffect(() => {

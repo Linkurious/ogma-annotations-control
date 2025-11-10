@@ -34,7 +34,7 @@ export const AddMenu = () => {
         });
       });
     },
-    [defaultArrowStyle, defaultTextStyle, editor, ogma]
+    [editor, ogma]
   );
 
   function save() {

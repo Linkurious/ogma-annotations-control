@@ -20,9 +20,19 @@ export const Slider: React.FC<SliderProps> = ({
   const sliderRef = useRef<HTMLDivElement>(null);
   const knobRef = useRef<HTMLDivElement>(null);
 
+  const updateKnobPosition = React.useCallback(
+    (value: number) => {
+      if (sliderRef.current && knobRef.current) {
+        const percentage = ((value - min) / (max - min)) * 100;
+        knobRef.current.style.left = `calc(${percentage}% - ${knobRef.current.offsetWidth / 2}px)`;
+      }
+    },
+    [min, max]
+  );
+
   useEffect(() => {
     updateKnobPosition(value);
-  }, [value]);
+  }, [value, updateKnobPosition]);
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
     event.preventDefault();
@@ -54,13 +64,6 @@ export const Slider: React.FC<SliderProps> = ({
   const handleMouseUp = () => {
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
-  };
-
-  const updateKnobPosition = (value: number) => {
-    if (sliderRef.current && knobRef.current) {
-      const percentage = ((value - min) / (max - min)) * 100;
-      knobRef.current.style.left = `calc(${percentage}% - ${knobRef.current.offsetWidth / 2}px)`;
-    }
   };
 
   return (
