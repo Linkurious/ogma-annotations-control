@@ -142,6 +142,17 @@ export abstract class Handler<
       }
       const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
       this.handleMouseMove({ clientX, clientY });
+    } else {
+      // Guard against null container (e.g., in headless tests)
+      const container: HTMLElement | null = this.ogma.getContainer();
+      if (container) {
+        const win = getBrowserWindow() || container;
+        win.removeEventListener("mousemove", this.handleMouseMove);
+        win.removeEventListener("mouseup", this.handleMouseUp);
+        container.removeEventListener("mousedown", this.handleMouseDown);
+      }
+      this.clearDragState();
+      this.setCursor(cursors.default);
     }
   }
 
@@ -156,18 +167,7 @@ export abstract class Handler<
 
   stopEditing() {
     if (!this.isActive()) return;
-    // Guard against null container (e.g., in headless tests)
-    const container: HTMLElement | null = this.ogma.getContainer();
-    if (container) {
-      const win = getBrowserWindow() || container;
-      win.removeEventListener("mousemove", this.handleMouseMove);
-      win.removeEventListener("mouseup", this.handleMouseUp);
-      container.removeEventListener("mousedown", this.handleMouseDown);
-    }
     this.setAnnotation(null);
-    this.clearDragState();
-    this.annotation = null;
-    this.setCursor(cursors.default);
   }
 
   cancelDrawing() {

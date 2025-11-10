@@ -321,6 +321,9 @@
         "minHeight": 60,
         "iconSize": 32,
         "style": {
+          "padding": 8,
+          "color": "#333",
+          "font": "IBM Plex Sans",
           "iconColor": "#FFCB2F",
           "iconSymbol": "💬",
           "iconBorderColor": "#909090",

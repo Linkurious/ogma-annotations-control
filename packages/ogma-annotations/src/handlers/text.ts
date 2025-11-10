@@ -1,7 +1,13 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { TextArea } from "./textArea";
-import { EVT_DRAG, cursors, handleRadius } from "../constants";
+import {
+  COMMENT_MODE_COLLAPSED,
+  COMMENT_MODE_EXPANDED,
+  EVT_DRAG,
+  cursors,
+  handleRadius
+} from "../constants";
 import { Links } from "../links";
 import { Store } from "../store";
 import {
@@ -399,6 +405,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   protected onClick(_evt: ClientMouseEvent) {
+    console.log("TextHandler onClick", this.getAnnotation());
     this.startEditingText();
   }
 
@@ -422,15 +429,16 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     const dy = currentPos.y - (this.dragStartPoint?.y || 0);
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
       this.clearDragState();
-      this.startEditingText();
+      this.onClick({
+        clientX: evt.clientX,
+        clientY: evt.clientY
+      });
     } else this.commitChange();
 
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;
     this.dragging = false;
 
-    // if we have just drawn that annotation, start editing
-    if (state.drawingFeature === this.annotation) this.startEditingText();
     return true;
   }
 
@@ -489,5 +497,22 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
     // Start live update
     this.onDragStart({ clientX: pos.x, clientY: pos.y } as MouseEvent);
+  }
+
+  public setAnnotation(annotation: Text | Comment | null): void {
+    super.setAnnotation(annotation);
+    // if it's a collapsed comment, expand it
+    if (
+      annotation &&
+      isComment(annotation) &&
+      annotation.properties.mode === COMMENT_MODE_COLLAPSED
+    ) {
+      this.store.getState().updateFeature(annotation.id, {
+        properties: {
+          ...annotation.properties,
+          mode: COMMENT_MODE_EXPANDED
+        }
+      });
+    }
   }
 }

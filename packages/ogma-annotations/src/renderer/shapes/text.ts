@@ -3,7 +3,7 @@ import { renderBox } from "./box";
 import { TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Box, Text, defaultTextStyle } from "../../types";
-import { getBoxCenter, getTextSize } from "../../utils";
+import { createSVGElement, getBoxCenter, getTextSize } from "../../utils";
 
 export function renderText(
   root: SVGElement,
@@ -21,8 +21,8 @@ export function renderText(
     strokeColor = defaultTextStyle.strokeColor,
     strokeWidth = defaultTextStyle.strokeWidth,
     strokeType = defaultTextStyle.strokeType,
-    background,
-    borderRadius,
+    background = defaultTextStyle.background,
+    borderRadius = defaultTextStyle.borderRadius,
     fixedSize = defaultTextStyle.fixedSize
   } = annotation.properties.style || defaultTextStyle;
 
@@ -31,11 +31,20 @@ export function renderText(
   g.classList.add("annotation-text");
   g.setAttribute("fill", `${color}`);
 
-  for (const child of g.children) {
-    if (child.tagName !== "rect") g.removeChild(child);
+  let child = g.firstChild;
+  while (child) {
+    const next = child.nextSibling;
+    if (child.nodeType === 1 && (child as Element).tagName !== "rect") {
+      g.removeChild(child);
+    }
+    child = next;
   }
   // rect is used for background and stroke
-  const rect = g.firstChild as SVGRectElement;
+  let rect = g.firstChild as SVGRectElement;
+  if (!rect) {
+    rect = createSVGElement<SVGRectElement>("rect");
+    g.appendChild(rect);
+  }
 
   // we use the center of the box as the rotation point
   const x = -width / 2;
@@ -53,7 +62,7 @@ export function renderText(
   }
 
   if (background && background.length) {
-    rect.setAttribute("fill", background || "transparent");
+    rect.setAttribute("fill", background);
   }
 
   rect.setAttribute("width", `${width}`);
