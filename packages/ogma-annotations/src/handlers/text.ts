@@ -405,7 +405,6 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   protected onClick(_evt: ClientMouseEvent) {
-    console.log("TextHandler onClick", this.getAnnotation());
     this.startEditingText();
   }
 
