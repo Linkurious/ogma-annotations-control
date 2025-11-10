@@ -389,13 +389,15 @@ export const createStore = () => {
         {
           limit: 50,
           partialize: (state) => ({
+            drawingFeature: state.drawingFeature,
+            isDragging: state.isDragging,
             features: state.features // Only track features, not liveUpdates!
           }),
           equality: (a, b) => JSON.stringify(a) === JSON.stringify(b),
           handleSet: (handleSet) => (state) => {
             // Skip history during drag or when initially creating a feature that's being drawn
             if ((state as AnnotationState).isDragging) return;
-            if ((state as AnnotationState).drawingFeature) return;
+            if ((state as AnnotationState).drawingFeature !== null) return;
             handleSet(state);
           }
         }
