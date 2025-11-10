@@ -395,7 +395,7 @@ export const createStore = () => {
           handleSet: (handleSet) => (state) => {
             // Skip history during drag or when initially creating a feature that's being drawn
             if ((state as AnnotationState).isDragging) return;
-            if ((state as AnnotationState).drawingFeature !== null) return;
+            if ((state as AnnotationState).drawingFeature) return;
             handleSet(state);
           }
         }
