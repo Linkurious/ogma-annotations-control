@@ -27,6 +27,8 @@ class App {
 
   constructor() {
     this.ogma = new Ogma<ND, ED>({ container: "app" });
+
+    //this.ogma.events.once = (e, h) => console.log("ogma.once", e, h); // Temporary fix for ogma typings
     this.control = new Control(this.ogma);
 
     // @ts-ignore
@@ -142,15 +144,11 @@ class App {
         head: "arrow"
       });
 
-      this.control.once("completeDrawing", () => {
+      const done = () => {
         this.buttons.addArrow.disabled = false;
         this.buttons.addArrow.classList.remove("active");
-      });
-
-      this.control.once("cancelDrawing", () => {
-        this.buttons.addArrow.disabled = false;
-        this.buttons.addArrow.classList.remove("active");
-      });
+      };
+      this.control.once("completeDrawing", done).once("cancelDrawing", done);
     });
   }
 
@@ -170,15 +168,12 @@ class App {
         padding: 12
       });
 
-      this.control.once("completeDrawing", () => {
+      const done = () => {
         this.buttons.addText.disabled = false;
         this.buttons.addText.classList.remove("active");
-      });
+      };
 
-      this.control.once("cancelDrawing", () => {
-        this.buttons.addText.disabled = false;
-        this.buttons.addText.classList.remove("active");
-      });
+      this.control.once("completeDrawing", done).once("cancelDrawing", done);
     });
   }
 
@@ -195,15 +190,11 @@ class App {
         padding: 12
       });
 
-      this.control.once("completeDrawing", () => {
+      const done = () => {
         this.buttons.addBox.disabled = false;
         this.buttons.addBox.classList.remove("active");
-      });
-
-      this.control.once("cancelDrawing", () => {
-        this.buttons.addBox.disabled = false;
-        this.buttons.addBox.classList.remove("active");
-      });
+      };
+      this.control.once("completeDrawing", done).once("cancelDrawing", done);
     });
   }
 
@@ -220,21 +211,11 @@ class App {
         background: "rgba(58, 3, 207, 0.15)"
       });
 
-      this.control.once("completeDrawing", () => {
+      const done = () => {
         this.buttons.addPolygon.disabled = false;
         this.buttons.addPolygon.classList.remove("active");
-        console.log("Polygon drawing completed");
-      });
-
-      this.control.once("cancelDrawing", () => {
-        this.buttons.addPolygon.disabled = false;
-        this.buttons.addPolygon.classList.remove("active");
-        console.log("Polygon drawing canceled");
-      });
-
-      console.log(
-        "Click and drag to draw a freehand polygon. Release to finish."
-      );
+      };
+      this.control.once("completeDrawing", done).once("cancelDrawing", done);
     });
   }
 
@@ -267,15 +248,12 @@ class App {
         }
       });
 
-      this.control.once("completeDrawing", () => {
+      const done = () => {
         this.buttons.addComment.disabled = false;
         this.buttons.addComment.classList.remove("active");
-      });
+      };
 
-      this.control.once("cancelDrawing", () => {
-        this.buttons.addComment.disabled = false;
-        this.buttons.addComment.classList.remove("active");
-      });
+      this.control.once("completeDrawing", done).once("cancelDrawing", done);
     });
   }
 
@@ -329,6 +307,7 @@ class App {
   private setupKeyboardShortcuts() {
     document.addEventListener("keydown", (evt) => {
       if (evt.key === "Escape") {
+        console.log("draw arrow keydown Escape");
         this.control.cancelDrawing();
       }
     });

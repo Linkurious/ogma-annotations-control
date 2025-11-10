@@ -8,10 +8,10 @@ import { InteractionController } from "../interaction/index";
 import { Index } from "../interaction/spatialIndex";
 import { Links } from "../links";
 import { Store } from "../store";
-import { Annotation, Id, Text } from "../types";
+import { Annotation, AnnotationType, Id, Text } from "../types";
 
 export class AnnotationEditor extends EventTarget {
-  private handlers = new Map<string, Handler<Annotation, unknown>>();
+  private handlers = new Map<AnnotationType, Handler<Annotation, unknown>>();
   private activeHandler?: Handler<Annotation, unknown>;
   private currentTool: string = "select";
   private interaction: InteractionController;
@@ -94,12 +94,8 @@ export class AnnotationEditor extends EventTarget {
     const feature = this.store.getState().features[id];
     if (!feature) return;
     // Get handler for this feature type
-    const handlerType = feature.properties.type;
-    const handler = this.handlers.get(handlerType);
-
-    if (!handler) return;
-    this.activeHandler = handler;
-    handler.setAnnotation(feature as Text);
+    this.setActiveHandler(feature.properties.type);
+    this.activeHandler?.setAnnotation(feature as Text);
   }
 
   getSnapping() {
@@ -112,6 +108,14 @@ export class AnnotationEditor extends EventTarget {
 
   getActiveHandler() {
     return this.activeHandler;
+  }
+
+  setActiveHandler(handler: AnnotationType) {
+    const handlerInstance = this.handlers.get(handler);
+    if (!handlerInstance)
+      throw new Error(`Handler for type ${handler} not found`);
+    this.activeHandler = handlerInstance;
+    return this;
   }
 
   destroy() {
