@@ -8,6 +8,49 @@ import { Annotation, Bounds, Id, isComment, isArrow } from "../types";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];
 
+/**
+ * Equality function for temporal (undo/redo) middleware
+ * Performs efficient shallow equality checks on features and state
+ * This is critical for performance - avoids expensive JSON.stringify
+ */
+export function temporalEquality(
+  a: { features: Record<Id, Annotation>; drawingFeature: Id | null; isDragging?: boolean },
+  b: { features: Record<Id, Annotation>; drawingFeature: Id | null; isDragging?: boolean }
+): boolean {
+  // Check if number of features changed
+  const aKeys = Object.keys(a.features);
+  const bKeys = Object.keys(b.features);
+  if (aKeys.length !== bKeys.length) return false;
+
+  // Check if feature IDs are the same
+  for (const key of aKeys) {
+    if (!(key in b.features)) return false;
+  }
+
+  // Check if feature references are the same (shallow equality)
+  // This works because features are immutable - any change creates new object
+  for (const key of aKeys) {
+    const aFeature = a.features[key];
+    const bFeature = b.features[key];
+
+    if (aFeature !== bFeature) return false;
+
+    // properties and style shallow comparison
+    if (aFeature.properties !== bFeature.properties) return false;
+    if (aFeature.properties.style !== bFeature.properties.style)
+      return false;
+
+    // geometry shallow comparison
+    const aGeometry = aFeature.geometry;
+    const bGeometry = bFeature.geometry;
+    if (aGeometry !== bGeometry) return false;
+    if (aGeometry.coordinates !== bGeometry.coordinates) return false;
+  }
+
+  // Check other partialized state
+  return a.drawingFeature === b.drawingFeature;
+}
+
 export interface AnnotationState {
   // Persistent state (with history)
   features: Record<Id, Annotation>;
@@ -393,7 +436,8 @@ export const createStore = () => {
             isDragging: state.isDragging,
             features: state.features // Only track features, not liveUpdates!
           }),
-          equality: (a, b) => JSON.stringify(a) === JSON.stringify(b),
+          equality: temporalEquality,
+
           handleSet: (handleSet) => (state) => {
             // Skip history during drag or when initially creating a feature that's being drawn
             if ((state as AnnotationState).isDragging) return;
