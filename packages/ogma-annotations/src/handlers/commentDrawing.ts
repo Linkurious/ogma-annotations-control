@@ -212,22 +212,12 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
 
     this.clearDragState();
 
-    // Clear drawing flag
-    if (
-      state.drawingFeature === comment.id ||
-      state.drawingFeature === this.arrow.id
-    ) {
-      //this.store.setState({ drawingFeature: null });
-    }
-
     // Clean up
     this.targetSnap = null;
     this.targetPoint = null;
     this.arrow = null;
 
-    // Step 7: Text editing will be handled by the control
-    state.setSelectedFeatures([comment.id]);
-
+    // Step 7: Commit live updates - this creates a single history entry
     return true;
   }
 
