@@ -460,7 +460,16 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   public stopEditingText() {
-    if (this.textEditor) this.textEditor.destroy();
+    if (this.textEditor) {
+      // Clear drawing flag before destroying editor if this was a newly drawn feature
+      // This ensures the final commit creates a history entry
+      const state = this.store.getState();
+      if (state.drawingFeature === this.annotation) {
+        this.store.setState({ drawingFeature: null });
+      }
+
+      this.textEditor.destroy();
+    }
     this.textEditor = null;
   }
 

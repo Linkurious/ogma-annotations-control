@@ -9,9 +9,7 @@ import {
   Arrow,
   Id,
   ClientMouseEvent,
-  CommentProps,
-  ArrowProperties,
-  createComment
+  ArrowProperties
 } from "../types";
 import { createArrow, defaultArrowStyle } from "../types/features/Arrow";
 
@@ -36,20 +34,20 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
   private targetSnap: Snap | null = null; // Snap at mousedown (target point)
   private targetPoint: { x: number; y: number } | null = null; // Target point where arrow ends
   private arrow: Arrow | null = null;
-  private commentStyle?: Partial<CommentProps>;
   private arrowStyle?: Partial<ArrowProperties>;
   private offsetX: number;
   private offsetY: number;
+  private comment: Comment;
 
   constructor(
     ogma: Ogma,
     store: Store,
     snapping: Snapping,
     links: Links,
+    comment: Comment,
     options?: {
       offsetX?: number;
       offsetY?: number;
-      commentStyle?: Partial<CommentProps>;
       arrowStyle?: Partial<ArrowProperties>;
     }
   ) {
@@ -58,8 +56,8 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.links = links;
     this.offsetX = options?.offsetX ?? 100;
     this.offsetY = options?.offsetY ?? -50;
-    this.commentStyle = options?.commentStyle;
     this.arrowStyle = options?.arrowStyle;
+    this.comment = comment;
   }
 
   protected detectHandle(_evt: MouseEvent, _zoom: number): void {
@@ -152,11 +150,11 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       commentY = mousePoint.y;
     }
 
-    // Create the comment
-    const comment: Comment = createComment(commentX, commentY, "", {
-      ...this.commentStyle
-    });
+    // Position and add the comment
+    const comment = this.comment;
+    comment.geometry.coordinates = [commentX, commentY];
     state.addFeature(comment);
+
     this.store.setState({ drawingFeature: comment.id });
 
     // Update comment position
@@ -219,7 +217,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       state.drawingFeature === comment.id ||
       state.drawingFeature === this.arrow.id
     ) {
-      this.store.setState({ drawingFeature: null });
+      //this.store.setState({ drawingFeature: null });
     }
 
     // Clean up
@@ -227,7 +225,8 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.targetPoint = null;
     this.arrow = null;
 
-    // Step 7: Text editing will be handled by the caller
+    // Step 7: Text editing will be handled by the control
+    state.setSelectedFeatures([comment.id]);
 
     return true;
   }

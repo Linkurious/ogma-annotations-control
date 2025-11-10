@@ -3,9 +3,11 @@ import { MouseButtonEvent } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { Position } from "geojson";
 import {
+  EVT_ADD,
   EVT_CANCEL_DRAWING,
   EVT_COMPLETE_DRAWING,
   EVT_HISTORY,
+  EVT_REMOVE,
   EVT_SELECT,
   EVT_UNSELECT
 } from "./constants";
@@ -139,6 +141,23 @@ export class Control extends EventEmitter<FeatureEvents> {
       (curr, prev) => {
         if (curr === null && prev !== null) {
           this.emit(EVT_COMPLETE_DRAWING, { id: prev });
+        }
+      }
+    );
+
+    // when features are added or removed, emit an event
+    this.store.subscribe(
+      (state) => state.features,
+      (curr, prev) => {
+        if (prev) {
+          // Check for added features
+          for (const id of Object.keys(curr)) {
+            if (!prev[id]) this.emit(EVT_ADD, { id });
+          }
+          // Check for removed features
+          for (const id of Object.keys(prev)) {
+            if (!curr[id]) this.emit(EVT_REMOVE, { id });
+          }
         }
       }
     );
@@ -503,33 +522,27 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.editor.getActiveHandler()!.stopEditing();
     this.cancelDrawing();
 
-    // // Mark this feature as being drawn
-    // this.store.setState({ drawingFeature: comment.id });
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: comment.id });
 
-    // // Add the comment annotation
-    // this.add(comment);
     this.interactions.suppressClicksTemporarily(200);
-    //this.select(comment.id);
-
     // Create and use the comment drawing handler
     const drawingHandler = new CommentDrawingHandler(
       this.ogma,
       this.store,
       this.editor.getSnapping(),
       this.links,
+      comment,
       options
     );
-
-    this.once(EVT_COMPLETE_DRAWING, (e) => {
-      // Switch to text handler for editing after a brief delay
-      setTimeout(() => {
-        this.select(e.id);
-        const textHandler = this.editor.getActiveHandler()!;
-        if (textHandler instanceof TextHandler) {
-          textHandler.startEditingText();
-        }
-      }, 50);
-    });
+    const onCommentCreated = (evt: { id: Id }) => {
+      if (evt.id === comment.id) {
+        this.select(evt.id);
+        this.off(EVT_ADD, onCommentCreated);
+        (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
+      }
+    };
+    this.on(EVT_ADD, onCommentCreated);
 
     drawingHandler.startDrawing(comment.id, x, y);
     return this;
