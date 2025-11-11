@@ -8,8 +8,12 @@ import { createText, type TextStyle } from "../../src/types/features/Text";
 
 // Helper to create text with simpler signature for tests
 // createText signature is: (x, y, width, height, content, styles)
-const createTestText = (x: number, y: number, content: string, styles?: Partial<TextStyle>) =>
-  createText(x, y, 100, 50, content, styles);
+const createTestText = (
+  x: number,
+  y: number,
+  content: string,
+  styles?: Partial<TextStyle>
+) => createText(x, y, 100, 50, content, styles);
 
 /**
  * Test suite for the store's temporal equality function

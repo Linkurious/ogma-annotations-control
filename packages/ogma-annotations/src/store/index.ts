@@ -14,8 +14,18 @@ const rotatedRect: Bounds = [0, 0, 0, 0];
  * This is critical for performance - avoids expensive JSON.stringify
  */
 export function temporalEquality(
-  a: { features: Record<Id, Annotation>; drawingFeature: Id | null; isDragging?: boolean },
-  b: { features: Record<Id, Annotation>; drawingFeature: Id | null; isDragging?: boolean }
+  a: {
+    features: Record<Id, Annotation>;
+    drawingFeature: Id | null;
+    isDragging?: boolean;
+    lastChangedFeatures?: Id[];
+  },
+  b: {
+    features: Record<Id, Annotation>;
+    drawingFeature: Id | null;
+    isDragging?: boolean;
+    lastChangedFeatures?: Id[];
+  }
 ): boolean {
   // Check if number of features changed
   const aKeys = Object.keys(a.features);
@@ -33,18 +43,21 @@ export function temporalEquality(
     const aFeature = a.features[key];
     const bFeature = b.features[key];
 
-    if (aFeature !== bFeature) return false;
-
-    // properties and style shallow comparison
-    if (aFeature.properties !== bFeature.properties) return false;
-    if (aFeature.properties.style !== bFeature.properties.style)
-      return false;
-
-    // geometry shallow comparison
     const aGeometry = aFeature.geometry;
     const bGeometry = bFeature.geometry;
-    if (aGeometry !== bGeometry) return false;
+
     if (aGeometry.coordinates !== bGeometry.coordinates) return false;
+
+    // If references are identical, skip detailed checks (optimization)
+    //if (aFeature === bFeature) continue;
+
+    // References differ - check if actual content differs
+    // properties and style shallow comparison
+    if (aFeature.properties !== bFeature.properties) return false;
+    if (aFeature.properties.style !== bFeature.properties.style) return false;
+
+    // geometry shallow comparison
+    if (aGeometry !== bGeometry) return false;
   }
 
   // Check other partialized state
@@ -231,8 +244,7 @@ export const createStore = () => {
                   [id]: { ...state.features[id] }
                 }),
                 {}
-              ),
-              isDragging: true
+              )
             }));
           },
 
@@ -434,13 +446,12 @@ export const createStore = () => {
           partialize: (state) => ({
             drawingFeature: state.drawingFeature,
             isDragging: state.isDragging,
-            features: state.features // Only track features, not liveUpdates!
+            features: state.features, // Only track features, not liveUpdates!
+            lastChangedFeatures: state.lastChangedFeatures
           }),
           equality: temporalEquality,
 
           handleSet: (handleSet) => (state) => {
-            // Skip history during drag or when initially creating a feature that's being drawn
-            if ((state as AnnotationState).isDragging) return;
             if ((state as AnnotationState).drawingFeature !== null) return;
             handleSet(state);
           }
