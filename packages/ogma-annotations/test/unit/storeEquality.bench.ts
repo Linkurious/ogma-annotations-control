@@ -1,10 +1,10 @@
 import { bench, describe } from "vitest";
 import { temporalEquality } from "../../src/store";
-import { createComment } from "../../src/types/features/Comment";
+import type { Annotation, Arrow, Id, Text } from "../../src/types";
 import { createArrow } from "../../src/types/features/Arrow";
 import { createBox } from "../../src/types/features/Box";
+import { createComment } from "../../src/types/features/Comment";
 import { createText } from "../../src/types/features/Text";
-import type { Annotation, Id } from "../../src/types";
 
 /**
  * Performance benchmark comparing temporalEquality vs JSON.stringify
@@ -84,7 +84,7 @@ describe("With coordinate change - 100 features (early detection)", () => {
       ...stateB.features[0].geometry,
       coordinates: [999, 999]
     }
-  };
+  } as Text;
 
   bench("temporalEquality (detects change early)", () => {
     temporalEquality(stateA, stateB);
@@ -106,7 +106,7 @@ describe("With coordinate change - 1000 features (late detection)", () => {
       ...stateB.features[500].geometry,
       coordinates: [999, 999]
     }
-  };
+  } as Text;
 
   bench("temporalEquality (detects change at middle)", () => {
     temporalEquality(stateA, stateB);
@@ -131,7 +131,7 @@ describe("With style change - 1000 features", () => {
         strokeColor: "#ff0000"
       }
     }
-  };
+  } as Arrow;
 
   bench("temporalEquality (detects style change)", () => {
     temporalEquality(stateA, stateB);
