@@ -1,8 +1,8 @@
 // store/AnnotationStore.ts
 import { Position } from "geojson";
 import { temporal } from "zundo";
-import { create } from "zustand";
 import { subscribeWithSelector } from "zustand/middleware";
+import { createStore as createVanillaStore } from "zustand/vanilla";
 import { getAABB } from "../geom";
 import { Annotation, Bounds, Id, isComment, isArrow } from "../types";
 
@@ -132,7 +132,7 @@ export interface AnnotationState {
 }
 
 export const createStore = () => {
-  const store = create<AnnotationState>()(
+  const store = createVanillaStore<AnnotationState>()(
     subscribeWithSelector(
       temporal(
         (set, get) => ({
