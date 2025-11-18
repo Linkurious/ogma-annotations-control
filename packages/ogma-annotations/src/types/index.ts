@@ -26,6 +26,17 @@ export type ControllerOptions = {
   textPlaceholder: string;
 
   /**
+   * Show send button in text editor
+   */
+  showSendButton: boolean;
+
+  /**
+   * SVG icon for the send button in text editor
+   * Should be a complete SVG string (e.g., '<svg>...</svg>')
+   */
+  sendButtonIcon: string;
+
+  /**
    * Size of the text handle
    */
   textHandleSize: number;

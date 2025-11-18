@@ -88,6 +88,12 @@ export interface AnnotationState {
   zoom: number;
   invZoom: number;
 
+  // Controller options (for accessing in handlers)
+  options?: {
+    showSendButton?: boolean;
+    sendButtonIcon?: string;
+  };
+
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
   applyLiveUpdate: (id: Id, updates: Partial<Annotation>) => void;

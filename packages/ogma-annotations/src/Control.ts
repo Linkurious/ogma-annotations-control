@@ -47,12 +47,19 @@ import {
 } from "./types";
 import { migrateBoxOrTextIfNeeded } from "./utils";
 
+// Default send button icon (paper plane)
+const DEFAULT_SEND_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>`;
+
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
   detectMargin: 2,
   magnetHandleRadius: 5,
   magnetRadius: 10,
   textPlaceholder: "Type here",
+  showSendButton: true,
+  sendButtonIcon: DEFAULT_SEND_ICON,
   arrowHandleSize: 3.5,
   textHandleSize: 3.5,
   minArrowHeight: 20,
@@ -85,6 +92,15 @@ export class Control extends EventEmitter<FeatureEvents> {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
+
+    // Store options in state for access by handlers
+    this.store.setState({
+      options: {
+        showSendButton: this.options.showSendButton,
+        sendButtonIcon: this.options.sendButtonIcon
+      }
+    });
+
     this.links = new Links(this.ogma, this.store);
     this.interactions = new InteractionController(
       this.ogma,

@@ -7,6 +7,7 @@ import { getBoxPosition, getBoxSize } from "../utils";
 export class TextArea {
   private layer: Overlay;
   private textarea: HTMLTextAreaElement;
+  private sendButton: HTMLButtonElement | null = null;
   public isFocused: boolean;
   private unsubscribe: () => void;
 
@@ -17,10 +18,18 @@ export class TextArea {
   ) {
     const position = this.getPosition();
     const size = this.getSize();
+    const annotationData = this.getAnnotation()!;
+    const state = this.store.getState();
+    const showSendButton = state.options?.showSendButton ?? true;
+    const sendButtonIcon = state.options?.sendButtonIcon || '';
+
     this.layer = this.ogma.layers.addOverlay(
       {
         element: `<div class="ogma-annotation-text-editor">
           <textarea wrap="on" name="annotation-text--input" spellcheck="false"></textarea>
+          ${showSendButton ? `<button class="ogma-send-button" type="button" title="Send">
+            <span class="ogma-send-button-icon">${sendButtonIcon}</span>
+          </button>` : ''}
         </div>`,
         position,
         size
@@ -30,7 +39,13 @@ export class TextArea {
     this.textarea = this.layer.element.querySelector("textarea")!;
     this.textarea.setAttribute("wrap", "on");
     this.textarea.setAttribute("spellcheck", "false");
-    this.textarea.value = this.getAnnotation()!.properties.content || "";
+    this.textarea.value = annotationData.properties.content || "";
+
+    if (showSendButton) {
+      this.sendButton = this.layer.element.querySelector(".ogma-send-button")!;
+      this.sendButton.addEventListener("click", this.onSendClick);
+      this.updateSendButtonState();
+    }
 
     this.isFocused = false;
 
@@ -135,6 +150,13 @@ export class TextArea {
     // transform origin at center
     textAreaStyle.transformOrigin = "center";
     textAreaStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
+
+    // Scale send button with zoom (same as textarea for fixed-size)
+    if (this.sendButton) {
+      const buttonScale = fixedSize ? 1 / zoom : 1;
+      this.sendButton.style.transform = `scale(${buttonScale})`;
+      this.sendButton.style.transformOrigin = "bottom right";
+    }
   }
 
   private updatePosition() {
@@ -211,7 +233,22 @@ export class TextArea {
     this.updateStyle();
     this.updatePosition();
     this.layer.setSize(this.getSize());
+    this.updateSendButtonState();
   };
+
+  private onSendClick = () => {
+    if (!this.sendButton || this.sendButton.disabled) return;
+
+    // Commit changes and close editor
+    this.textarea.blur();
+  };
+
+  private updateSendButtonState() {
+    if (!this.sendButton) return;
+
+    const isEmpty = this.textarea.value.trim().length === 0;
+    this.sendButton.disabled = isEmpty;
+  }
 
   public update = () => {
     this.updateStyle();
@@ -222,6 +259,9 @@ export class TextArea {
   destroy() {
     this.store.getState().commitLiveUpdates(new Set([this.annotation]));
     this.unsubscribe();
+    if (this.sendButton) {
+      this.sendButton.removeEventListener("click", this.onSendClick);
+    }
     this.layer.destroy();
   }
 }

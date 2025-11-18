@@ -7,6 +7,9 @@
   );
   --handle-color: #38e;
   --handle-background: #fff;
+  --active-color: #1a70e5;
+  --disabled-color: #999;
+  --hover-color: rgba(56, 136, 238, 0.2);
 }
 
 svg text {
@@ -25,20 +28,89 @@ svg text {
   cursor: move;
 }
 
+.ogma-annotation-text-editor {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .ogma-annotation-text-editor textarea {
   outline: none;
   padding: 0;
+  padding-right: 32px; /* Space for send button */
   margin: 0;
   border: 0;
   width: 100%;
   height: 100%;
   cursor: text;
-  padding: 0;
   z-index: 1000;
   resize: none;
   white-space: break-spaces;
   background: transparent;
   overflow: hidden;
+}
+
+/* Send Button Styles */
+.ogma-send-button {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  z-index: 1001;
+}
+
+.ogma-send-button-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--handle-color, #38e);
+}
+
+.ogma-send-button-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Hover state */
+.ogma-send-button:not(:disabled):hover {
+  background-color: var(--hover-color);
+  transform: scale(1.05);
+}
+
+.ogma-send-button:not(:disabled):hover .ogma-send-button-icon {
+  color: var(--active-color);
+}
+
+/* Active/Pressed state */
+.ogma-send-button:not(:disabled):active {
+  background-color: var(--hover-color);
+  transform: scale(0.95);
+}
+
+.ogma-send-button:not(:disabled):active .ogma-send-button-icon {
+  color: var(--active-color);
+}
+
+/* Disabled state */
+.ogma-send-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.3;
+}
+
+.ogma-send-button:disabled .ogma-send-button-icon {
+  color: var(--disabled-color);
 }
 
 .annotation-text-handle .noevents {
