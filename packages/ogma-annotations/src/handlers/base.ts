@@ -137,7 +137,7 @@ export abstract class Handler<
       if (container) {
         const win = getBrowserWindow() || container;
         win.addEventListener("mousemove", this.handleMouseMove);
-        win.addEventListener("mouseup", this.handleMouseUp, true);
+        win.addEventListener("mouseup", this.handleMouseUp, false);
         container.addEventListener("mousedown", this.handleMouseDown, true);
       }
       const { x: clientX, y: clientY } = this.ogma.getPointerInformation();

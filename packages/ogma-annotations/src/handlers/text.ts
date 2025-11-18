@@ -410,7 +410,12 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   public startEditingText() {
     if (this.textEditor === null) {
-      this.textEditor = new TextArea(this.ogma, this.store, this.annotation!);
+      this.textEditor = new TextArea(
+        this.ogma,
+        this.store,
+        this.annotation!,
+        this.stopEditingText
+      );
     }
   }
 
@@ -466,7 +471,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     this.stopEditingText();
   }
 
-  public stopEditingText() {
+  public stopEditingText = () => {
     if (this.textEditor) {
       // Clear drawing flag before destroying editor if this was a newly drawn feature
       // This ensures the final commit creates a history entry
@@ -478,7 +483,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       this.textEditor.destroy();
     }
     this.textEditor = null;
-  }
+  };
 
   public startDrawing(id: Id, x: number, y: number) {
     this.annotation = id;

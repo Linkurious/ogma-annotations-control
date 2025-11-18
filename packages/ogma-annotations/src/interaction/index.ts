@@ -145,6 +145,7 @@ export class InteractionController {
       evt,
       this.ogma.getContainer()
     );
+
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y);
 

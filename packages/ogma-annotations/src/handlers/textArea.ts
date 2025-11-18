@@ -14,22 +14,27 @@ export class TextArea {
   constructor(
     private ogma: Ogma,
     private store: Store,
-    private annotation: Id
+    private annotation: Id,
+    private onSendHandler: () => void = () => {}
   ) {
     const position = this.getPosition();
     const size = this.getSize();
     const annotationData = this.getAnnotation()!;
     const state = this.store.getState();
     const showSendButton = state.options?.showSendButton ?? true;
-    const sendButtonIcon = state.options?.sendButtonIcon || '';
+    const sendButtonIcon = state.options?.sendButtonIcon || "";
 
     this.layer = this.ogma.layers.addOverlay(
       {
         element: `<div class="ogma-annotation-text-editor">
           <textarea wrap="on" name="annotation-text--input" spellcheck="false"></textarea>
-          ${showSendButton ? `<button class="ogma-send-button" type="button" title="Send">
+          ${
+            showSendButton
+              ? `<button class="ogma-send-button" type="button" title="Send">
             <span class="ogma-send-button-icon">${sendButtonIcon}</span>
-          </button>` : ''}
+          </button>`
+              : ""
+          }
         </div>`,
         position,
         size
@@ -236,11 +241,15 @@ export class TextArea {
     this.updateSendButtonState();
   };
 
-  private onSendClick = () => {
+  private onSendClick = (evt: MouseEvent) => {
+    evt.preventDefault();
+    evt.stopPropagation();
     if (!this.sendButton || this.sendButton.disabled) return;
 
+    this.updateContent();
     // Commit changes and close editor
     this.textarea.blur();
+    this.onSendHandler();
   };
 
   private updateSendButtonState() {
