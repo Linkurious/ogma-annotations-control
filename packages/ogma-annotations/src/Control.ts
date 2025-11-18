@@ -213,6 +213,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public undo(): boolean {
     if (!this.canUndo()) return false;
     this.store.temporal.getState().undo();
+    this.links.refresh();
     return true;
   }
 
@@ -223,6 +224,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public redo(): boolean {
     if (!this.canRedo()) return false;
     this.store.temporal.getState().redo();
+    this.links.refresh();
     return true;
   }
 

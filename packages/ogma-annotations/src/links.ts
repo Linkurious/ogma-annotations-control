@@ -44,7 +44,7 @@ export class Links {
     this.store = store;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
-    this.store.subscribe((state) => state.zoom, this.onZoomChange);
+    this.store.subscribe((state) => state.zoom, this.refresh);
     // @ts-expect-error private event
     this.ogma.events.on("setMultipleAttributes", this.onSetMultipleAttributes);
   }
@@ -175,7 +175,7 @@ export class Links {
     this.requestUpdateFromNodePositions(elements.toList() as NodeList);
   };
 
-  private onZoomChange = () => {
+  public refresh = () => {
     // When zoom changes, fixedSize text annotations change their graph-space dimensions
     // We need to recalculate all links attached to fixedSize texts
     const state = this.store.getState();
