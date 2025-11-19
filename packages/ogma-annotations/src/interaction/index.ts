@@ -28,6 +28,17 @@ export class InteractionController {
     maxY: Infinity
   };
   private suppressClickUntil = 0;
+
+  // Track mousedown state for drag detection
+  private mouseDownState: {
+    annotation: Annotation | null;
+    screenX: number;
+    screenY: number;
+    hasMoved: boolean;
+  } | null = null;
+
+  private readonly DRAG_THRESHOLD = 3; // pixels
+
   constructor(
     private ogma: Ogma,
     private store: Store,
@@ -48,6 +59,15 @@ export class InteractionController {
       passive: true,
       capture: true
     });
+    this.ogma.getContainer()?.addEventListener("mousedown", this.onMouseDown, {
+      passive: true,
+      capture: true
+    });
+    this.ogma.getContainer()?.addEventListener("mouseup", this.onMouseUp, {
+      passive: true,
+      capture: true
+    });
+
     this.ogma.events.on("rotate", () => this.links.update());
   }
 
@@ -122,48 +142,102 @@ export class InteractionController {
       evt,
       this.ogma.getContainer()
     );
-
     const state = this.store.getState();
+
+    // Handle drag detection
+    if (this.mouseDownState && !state.isDragging) {
+      const dx = evt.clientX - this.mouseDownState.screenX;
+      const dy = evt.clientY - this.mouseDownState.screenY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance > this.DRAG_THRESHOLD) {
+        this.mouseDownState.hasMoved = true;
+        // The handler will set isDragging=true via dragstart event
+        // No need to do anything else here
+      }
+    }
+
+    // Don't update hover during drag
     if (state.isDragging) return;
+
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y);
 
     // Update hover state
     const newHoveredId = annotation?.id ?? null;
     const currentHoveredId = state.hoveredFeature;
-    if (newHoveredId !== currentHoveredId)
+    if (newHoveredId !== currentHoveredId) {
       state.setHoveredFeature(newHoveredId);
+    }
 
     this.setCursor(newHoveredId === null ? cursors.default : cursors.pointer);
   };
 
-  private onMouseClick = (evt: MouseEvent) => {
-    // Ignore clicks that occur shortly after drag operations
+  private onMouseClick = () => {
+    // Most click handling is now in mousedown/mouseup
+    // Keep this for compatibility, but suppress it during/after drags
+    if (Date.now() < this.suppressClickUntil) return;
+
+    // Click event can be ignored if we're handling everything in mousedown/mouseup
+  };
+
+  private onMouseDown = (evt: MouseEvent) => {
     if (Date.now() < this.suppressClickUntil) return;
 
     const screenPoint = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
     );
-
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y);
 
+    // Record what was clicked, but don't select yet
+    this.mouseDownState = {
+      annotation,
+      screenX: evt.clientX,
+      screenY: evt.clientY,
+      hasMoved: false
+    };
+
+    // If clicking on an already-selected annotation, don't change selection yet
+    // (allows dragging multiple selected items)
     const state = this.store.getState();
-    if (annotation) {
+    if (annotation && !state.selectedFeatures.has(annotation.id)) {
+      // Not selected yet - select immediately to prepare for potential drag
       if (evt.ctrlKey || evt.metaKey) {
-        // Multi-select with Ctrl/Cmd
         state.toggleSelection(annotation.id);
       } else {
-        // Single select
         state.setSelectedFeatures([annotation.id]);
       }
-    } else if (!evt.ctrlKey && !evt.metaKey) {
-      // Clear selection when clicking empty space (unless multi-selecting)
-      state.clearSelection();
     }
   };
 
+  private onMouseUp = (evt: MouseEvent) => {
+    const state = this.store.getState();
+
+    // Handle click (mousedown + mouseup without significant movement)
+    if (
+      this.mouseDownState &&
+      !this.mouseDownState.hasMoved &&
+      !state.isDragging
+    ) {
+      const annotation = this.mouseDownState.annotation;
+
+      if (annotation) {
+        // Handle selection on mouseup for already-selected items
+        if (evt.ctrlKey || evt.metaKey) {
+          state.toggleSelection(annotation.id);
+        } else if (!state.selectedFeatures.has(annotation.id)) {
+          state.setSelectedFeatures([annotation.id]);
+        }
+      } else if (!evt.ctrlKey && !evt.metaKey) {
+        // Clicked empty space - clear selection
+        state.clearSelection();
+      }
+    }
+
+    this.mouseDownState = null;
+  };
   private setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
     if (container) (container as HTMLElement).style.cursor = cursor;
