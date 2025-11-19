@@ -46,6 +46,7 @@ import {
   isAnnotationCollection
 } from "./types";
 import { migrateBoxOrTextIfNeeded } from "./utils";
+import { findPlace } from "./utils/place-finder";
 
 // Default send button icon (paper plane)
 const DEFAULT_SEND_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -92,7 +93,6 @@ export class Control extends EventEmitter<FeatureEvents> {
     super();
     this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
-
     // Store options in state for access by handlers
     this.store.setState({
       options: {
@@ -422,6 +422,14 @@ export class Control extends EventEmitter<FeatureEvents> {
     arrowStyle?: Partial<ArrowProperties>;
   }): this {
     return this.enableDrawingMode((x, y) => {
+      if (!options) {
+        options = {};
+      }
+      if (options.offsetX === undefined && options.offsetY === undefined) {
+        const bestPoint = findPlace(x, y, this.index, this.ogma);
+        options.offsetX = bestPoint.x;
+        options.offsetY = bestPoint.y;
+      }
       const comment = createComment(x, y, "", options?.commentStyle);
       this.startCommentDrawing(x, y, comment, options);
     });
