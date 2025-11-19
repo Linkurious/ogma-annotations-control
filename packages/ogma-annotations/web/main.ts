@@ -52,8 +52,8 @@ class App {
 
   async init() {
     this.setupStyles();
-    await this.loadAnnotations();
     await this.setupGraph();
+    await this.loadAnnotations();
     this.setupEventListeners();
     this.setupControlListeners();
     await this.fitView(0);
