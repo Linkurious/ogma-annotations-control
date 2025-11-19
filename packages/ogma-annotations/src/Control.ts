@@ -127,7 +127,10 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
-    this.ogma.events.on("rotate", this.onRotate).on("zoom", this.onZoom);
+    this.ogma.events
+      .on("rotate", this.onRotate)
+      .on("zoom", this.onZoom)
+      .on("layoutEnd", this.onLayout);
     this.store.temporal.subscribe((state) => {
       this.emit(EVT_HISTORY, {
         canUndo: state.pastStates.length > 0,
@@ -184,6 +187,11 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   private onZoom = () =>
     this.store.getState().setZoom(this.ogma.view.getZoom());
+
+  private onLayout = () => {
+    // Update positions of all annotations after layout
+    this.links.update();
+  };
 
   /**
    * Set the options for the controller
