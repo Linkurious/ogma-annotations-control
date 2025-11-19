@@ -57,9 +57,10 @@ export class TextArea {
     this.textarea.addEventListener("focus", this.onFocus);
     this.textarea.addEventListener("blur", this.onBlur);
     this.textarea.addEventListener("input", this.onInput);
+    this.textarea.addEventListener("keyup", this.onKeyup);
+    this.textarea.addEventListener("keydown", this.onKeydown);
     this.updateStyle();
     this.updatePosition();
-
     this.textarea.focus();
 
     this.unsubscribe = this.store.subscribe(
@@ -177,6 +178,15 @@ export class TextArea {
     if (this.getAnnotation()) this.updateContent();
     this.isFocused = false;
   };
+  private onKeyup = (evt: KeyboardEvent) => {
+    if (evt.key === "Escape") {
+      this.textarea.blur();
+    }
+    evt.stopPropagation();
+  };
+  private onKeydown = (evt: KeyboardEvent) => {
+    evt.stopPropagation();
+  };
 
   private updateContent() {
     const annotation = this.getAnnotation();
@@ -252,6 +262,10 @@ export class TextArea {
     this.onSendHandler();
   };
 
+  // private onMouseUp = (evt: MouseEvent) => {
+  //   // Prevent textarea from losing focus when clicking the send button
+  //   evt.stopPropagation();
+  // };
   private updateSendButtonState() {
     if (!this.sendButton) return;
 
