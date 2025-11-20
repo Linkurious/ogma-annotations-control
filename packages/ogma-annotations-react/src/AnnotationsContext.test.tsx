@@ -37,6 +37,7 @@ describe("AnnotationsContextProvider", () => {
         getAttribute: vi.fn().mockReturnValue([10])
       })
     };
+
     mockEditor = {
       on: vi.fn().mockReturnThis(),
       destroy: vi.fn(),
@@ -53,7 +54,7 @@ describe("AnnotationsContextProvider", () => {
     } as unknown as Annotations.Control;
     (useOgma as Mock).mockReturnValue(mockOgma);
     (Annotations.Control as unknown as Mock).mockImplementation(
-      () => mockEditor
+      function(this: any) { return mockEditor; }
     );
   });
 
