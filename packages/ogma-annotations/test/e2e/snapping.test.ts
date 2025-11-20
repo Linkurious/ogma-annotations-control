@@ -6,7 +6,7 @@ describe("Snapping", () => {
   let nodeBottom: { x: number; y: number };
 
   beforeAll(async () => {
-    await session.start(false);
+    await session.start();
   });
 
   afterAll(async () => {
@@ -48,7 +48,6 @@ describe("Snapping", () => {
         start.y,
         createArrow(start.x, start.y, start.x, start.y)
       );
-      console.log("ICI", editor.getAnnotations().features);
       return { topLeft, center, bottomRight, nodeBottom, start };
     });
     bottomRight = pts.bottomRight;
