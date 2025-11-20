@@ -53,9 +53,9 @@ describe("AnnotationsContextProvider", () => {
       })
     } as unknown as Annotations.Control;
     (useOgma as Mock).mockReturnValue(mockOgma);
-    (Annotations.Control as unknown as Mock).mockImplementation(
-      function(this: any) { return mockEditor; }
-    );
+    (Annotations.Control as unknown as Mock).mockImplementation(function () {
+      return mockEditor;
+    });
   });
 
   afterEach(() => {
