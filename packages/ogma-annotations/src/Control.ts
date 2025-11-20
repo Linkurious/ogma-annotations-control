@@ -3,6 +3,8 @@ import { MouseButtonEvent } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { Position } from "geojson";
 import {
+  COMMENT_MODE_COLLAPSED,
+  COMMENT_MODE_EXPANDED,
   EVT_ADD,
   EVT_CANCEL_DRAWING,
   EVT_COMPLETE_DRAWING,
@@ -186,13 +188,69 @@ export class Control extends EventEmitter<FeatureEvents> {
   private onRotate = () =>
     this.store.getState().setRotation(this.ogma.view.getAngle());
 
-  private onZoom = () =>
-    this.store.getState().setZoom(this.ogma.view.getZoom());
+  private onZoom = () => {
+    const zoom = this.ogma.view.getZoom();
+    this.store.getState().setZoom(zoom);
+
+    // Auto-collapse/expand comments based on zoom threshold
+    this.updateCommentModesForZoom(zoom);
+  };
 
   private onLayout = () => {
     // Update positions of all annotations after layout
     this.links.update();
   };
+
+  /**
+   * Update comment modes based on current zoom level
+   * Uses live updates to avoid creating undo/redo history entries
+   * @param zoom Current zoom level
+   */
+  private updateCommentModesForZoom(zoom: number) {
+    const state = this.store.getState();
+    const features = state.features;
+
+    Object.values(features).forEach((feature) => {
+      if (isComment(feature)) {
+        const comment = feature as Comment;
+
+        // Get threshold - uses explicit value if set, otherwise computes from dimensions
+        const threshold = this.getCommentZoomThreshold(comment);
+
+        // Determine target mode based on zoom
+        const targetMode =
+          zoom < threshold ? COMMENT_MODE_COLLAPSED : COMMENT_MODE_EXPANDED;
+
+        // Only update if mode needs to change
+        if (comment.properties.mode !== targetMode) {
+          // Use live updates to avoid history
+          state.applyLiveUpdate(comment.id, {
+            properties: {
+              ...comment.properties,
+              mode: targetMode
+            }
+          } as Partial<Comment>);
+        }
+      }
+    });
+  }
+
+  /**
+   * Get the effective zoom threshold for a comment
+   * Uses explicit threshold if set, otherwise calculates from dimensions
+   * @param comment Comment to get threshold for
+   * @returns Zoom threshold
+   */
+  private getCommentZoomThreshold(comment: Comment): number {
+    if (comment.properties.collapseZoomThreshold !== undefined) {
+      return comment.properties.collapseZoomThreshold;
+    }
+    // Calculate based on dimensions: collapse when screen-space width < 80px
+    const minReadableWidth = 80;
+    const threshold = minReadableWidth / comment.properties.width;
+    // Clamp between reasonable bounds
+    return Math.max(0.1, Math.min(1.0, threshold));
+  }
 
   /**
    * Set the options for the controller

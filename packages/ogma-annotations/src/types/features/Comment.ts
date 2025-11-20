@@ -57,6 +57,9 @@ export interface CommentProps extends AnnotationProps {
   /** Size when collapsed (default: 32px) */
   iconSize: number;
 
+  /** Zoom threshold below which comment auto-collapses (default: 0.5) */
+  collapseZoomThreshold?: number;
+
   /** Optional metadata */
   author?: string;
   timestamp?: Date;
@@ -122,6 +125,7 @@ export const defaultCommentOptions: Partial<CommentProps> = {
   minHeight: 60,
   height: 60, // Initial height, will auto-grow
   iconSize: 32,
+  // collapseZoomThreshold is undefined by default, so it auto-calculates from dimensions
   style: defaultCommentStyle
 };
 
@@ -150,6 +154,8 @@ export function createComment(
     height: options?.height ?? defaultCommentOptions.height!,
     minHeight: options?.minHeight ?? defaultCommentOptions.minHeight!,
     iconSize: options?.iconSize ?? defaultCommentOptions.iconSize!,
+    collapseZoomThreshold:
+      options?.collapseZoomThreshold ?? defaultCommentOptions.collapseZoomThreshold,
     author: options?.author,
     timestamp: options?.timestamp,
     style: {
@@ -262,4 +268,44 @@ export function getCommentSize(comment: Comment): Size {
   if (props.mode === COMMENT_MODE_COLLAPSED)
     return { width: props.iconSize, height: props.iconSize };
   return { width: props.width, height: props.height };
+}
+
+/**
+ * Calculate optimal zoom threshold for auto-collapse based on comment dimensions
+ *
+ * The threshold is computed so that the comment collapses when its screen-space
+ * size would be smaller than a minimum readable size.
+ *
+ * @param comment - Comment annotation
+ * @param minReadableWidth - Minimum readable width in pixels (default: 80)
+ * @returns Zoom threshold below which comment should collapse
+ *
+ * @example
+ * // A 200px wide comment with minReadable=80 will collapse at zoom < 0.4
+ * // because 200 * 0.4 = 80
+ */
+export function calculateCommentZoomThreshold(
+  comment: Comment,
+  minReadableWidth: number = 80
+): number {
+  // Calculate threshold: zoom where width * zoom = minReadableWidth
+  // => zoom = minReadableWidth / width
+  const threshold = minReadableWidth / comment.properties.width;
+
+  // Clamp between reasonable bounds (0.1 to 1.0)
+  return Math.max(0.1, Math.min(1.0, threshold));
+}
+
+/**
+ * Get the effective zoom threshold for a comment
+ * Uses explicit threshold if set, otherwise calculates from dimensions
+ *
+ * @param comment - Comment annotation
+ * @returns Effective zoom threshold
+ */
+export function getCommentZoomThreshold(comment: Comment): number {
+  if (comment.properties.collapseZoomThreshold !== undefined) {
+    return comment.properties.collapseZoomThreshold;
+  }
+  return calculateCommentZoomThreshold(comment);
 }
