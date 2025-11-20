@@ -23,7 +23,6 @@ export class Shapes extends Renderer<SVGLayer> {
   private minArrowHeight = 20;
   private maxArrowHeight = 30;
   private features = new Map<Id, SVGGElement>();
-  private root: SVGGElement | null = null;
   private arrowsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
 
@@ -45,25 +44,42 @@ export class Shapes extends Renderer<SVGLayer> {
         zoom: state.zoom
       }),
       () => this.layer.refresh(),
-      { equalityFn: (a, b) => a === b }
+      {
+        equalityFn: (a, b) => {
+          return (
+            a.features === b.features &&
+            a.liveUpdates === b.liveUpdates &&
+            a.hoveredFeature === b.hoveredFeature &&
+            a.selectedFeatures === b.selectedFeatures &&
+            a.rotation === b.rotation &&
+            a.zoom === b.zoom
+          );
+        }
+      }
     );
   }
 
   render: SVGDrawingFunction = (root) => {
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
       this.store.getState();
-    root.innerHTML = "";
 
-    root.appendChild(this.getDefs());
+    // Initialize persistent container groups on first render
+    if (!this.annotationsRoot || !root.contains(this.annotationsRoot)) {
+      // Clear root only on first render
+      root.innerHTML = "";
 
-    const arrowsRoot = createSVGElement<SVGGElement>("g");
-    const annotationsRoot = createSVGElement<SVGGElement>("g");
-    annotationsRoot.appendChild(arrowsRoot);
+      // Add defs
+      root.appendChild(this.getDefs());
 
-    if (!this.root) this.root = createSVGElement<SVGGElement>("g");
-    if (!this.arrowsRoot) this.arrowsRoot = createSVGElement<SVGGElement>("g");
-    if (!this.annotationsRoot)
+      // Create persistent container groups
+      this.arrowsRoot = createSVGElement<SVGGElement>("g");
       this.annotationsRoot = createSVGElement<SVGGElement>("g");
+      this.annotationsRoot.appendChild(this.arrowsRoot);
+      root.appendChild(this.annotationsRoot);
+    }
+
+    const arrowsRoot = this.arrowsRoot!;
+    const annotationsRoot = this.annotationsRoot!;
 
     const state = this.store.getState();
 
@@ -126,8 +142,7 @@ export class Shapes extends Renderer<SVGLayer> {
     }
 
     // Apply state classes after rendering
-    this.applyStateClasses(root, hoveredFeature, selectedFeatures);
-    root.appendChild(annotationsRoot);
+    this.applyStateClasses(annotationsRoot, hoveredFeature, selectedFeatures);
   };
 
   private getViewportBounds(): Bounds {

@@ -106,7 +106,6 @@ export interface AnnotationState {
   // Immediate actions (for style/property changes)
   updateFeature: (id: Id, updates: Partial<Annotation>) => void;
   updateFeatures: (updates: Record<Id, Partial<Annotation>>) => void;
-
   // Batch operations
   batchUpdate: (fn: () => void) => void;
 

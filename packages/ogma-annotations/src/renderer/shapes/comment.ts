@@ -5,9 +5,9 @@ import { Comment, Text, defaultCommentStyle } from "../../types";
 import { createSVGElement, getBoxCenter } from "../../utils";
 
 /**
- * Render comment in collapsed mode (icon)
+ * Render or update the collapsed icon within its group
  */
-function renderCollapsedIcon(g: SVGGElement, comment: Comment): void {
+function renderCollapsedIcon(iconGroup: SVGGElement, comment: Comment): void {
   const size = comment.properties.iconSize;
   const style = { ...defaultCommentStyle, ...comment.properties.style };
   const {
@@ -17,46 +17,53 @@ function renderCollapsedIcon(g: SVGGElement, comment: Comment): void {
     iconBorderWidth = defaultCommentStyle.iconBorderWidth
   } = style;
 
-  // Clear previous content
-  g.innerHTML = "";
+  // Find or create circle
+  let circle = iconGroup.querySelector("circle") as SVGCircleElement;
+  if (!circle) {
+    circle = createSVGElement<SVGCircleElement>("circle");
+    circle.setAttribute("cx", "0");
+    circle.setAttribute("cy", "0");
+    iconGroup.appendChild(circle);
+  }
 
-  // Create circle background
-  const circle = createSVGElement<SVGCircleElement>("circle");
-  circle.setAttribute("cx", "0");
-  circle.setAttribute("cy", "0");
+  // Update circle attributes
   circle.setAttribute("r", `${size / 2}`);
   circle.setAttribute("fill", iconColor!);
 
   if (iconBorderWidth && iconBorderWidth > 0) {
     circle.setAttribute("stroke", iconBorderColor || "#CCC");
     circle.setAttribute("stroke-width", `${iconBorderWidth}`);
+  } else {
+    circle.removeAttribute("stroke");
+    circle.removeAttribute("stroke-width");
   }
 
-  g.appendChild(circle);
+  // Find or create text
+  let text = iconGroup.querySelector("text") as SVGTextElement;
+  if (!text) {
+    text = createSVGElement<SVGTextElement>("text");
+    text.setAttribute("x", "0");
+    text.setAttribute("y", "0");
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("dominant-baseline", "central");
+    text.setAttribute("pointer-events", "none");
+    iconGroup.appendChild(text);
+  }
 
-  // Create icon symbol (text/emoji)
-  const text = createSVGElement<SVGTextElement>("text");
-  text.setAttribute("x", "0");
-  text.setAttribute("y", "0");
-  text.setAttribute("text-anchor", "middle");
-  text.setAttribute("dominant-baseline", "central");
+  // Update text attributes
   text.setAttribute("font-size", `${size * 0.5}`);
-  text.setAttribute("pointer-events", "none");
   text.textContent = iconSymbol!;
-
-  g.appendChild(text);
 }
 
 /**
- * Render comment in expanded mode (text box)
- * Reuses text rendering, then adds metadata
+ * Render or update the expanded box within its group
+ * Reuses text rendering logic
  */
 function renderExpandedBox(
-  root: SVGElement,
-  g: SVGGElement,
+  boxGroup: SVGGElement,
   comment: Comment,
   state: AnnotationState
-): SVGGElement {
+): void {
   // Convert comment to text annotation for rendering
   const asText: Text = {
     ...comment,
@@ -72,17 +79,27 @@ function renderExpandedBox(
     }
   };
 
-  // Reuse text renderer to render the box and content
-  const renderedG = renderText(root, asText, g, state);
-  renderedG.setAttribute("filter", "url(#softShadow)"); // Add drop shadow for comments
+  // Create a temporary container for text rendering
+  const tempContainer = createSVGElement<SVGGElement>("g");
 
-  return renderedG;
+  // Reuse text renderer to render the box and content
+  const renderedG = renderText(tempContainer, asText, undefined, state);
+
+  // Clear and populate the boxGroup with the rendered content
+  boxGroup.innerHTML = "";
+  while (renderedG.firstChild) {
+    boxGroup.appendChild(renderedG.firstChild);
+  }
+
+  // Add drop shadow for comments
+  boxGroup.setAttribute("filter", "url(#softShadow)");
 }
 
 /**
  * Main render function for comments
  *
- * Renders a comment in either collapsed (icon) or expanded (text box) mode.
+ * Renders both collapsed (icon) and expanded (text box) states simultaneously.
+ * CSS transitions handle the animation between states.
  * Comments are always rendered with fixed screen-space size (not scaled by zoom).
  */
 export function renderComment(
@@ -93,33 +110,55 @@ export function renderComment(
 ): SVGGElement {
   const mode = annotation.properties.mode;
 
-  if (mode === COMMENT_MODE_COLLAPSED) {
-    // Render as icon - create simple group
-    let g = cachedElement;
-    if (!g) {
-      g = createSVGElement<SVGGElement>("g");
-      g.setAttribute("data-annotation", `${annotation.id}`);
-      g.setAttribute("data-annotation-type", "comment");
-      g.classList.add("annotation-comment", "comment-collapsed");
-    }
-
-    renderCollapsedIcon(g, annotation);
-
-    // Apply screen-aligned transform
-    const position = getBoxCenter(annotation);
-    g.setAttribute(
-      "transform",
-      state.getScreenAlignedTransform(position.x, position.y, false)
-    );
-
-    root.appendChild(g);
-    return g;
-  } else {
-    // Render as text box - reuse text renderer and add metadata
-    const g = renderExpandedBox(root, cachedElement!, annotation, state);
+  // Get or create the main container group
+  let g = cachedElement;
+  if (!g) {
+    g = createSVGElement<SVGGElement>("g");
+    g.setAttribute("data-annotation", `${annotation.id}`);
     g.setAttribute("data-annotation-type", "comment");
-    g.classList.remove("annotation-text");
-    g.classList.add("annotation-comment", "comment-expanded");
-    return g;
+    g.classList.add("annotation-comment");
   }
+
+  // Get or create icon group
+  let iconGroup = g.querySelector(".comment-icon") as SVGGElement;
+  if (!iconGroup) {
+    iconGroup = createSVGElement<SVGGElement>("g");
+    iconGroup.classList.add("comment-icon");
+    g.appendChild(iconGroup);
+  }
+
+  // Get or create box group
+  let boxGroup = g.querySelector(".comment-box") as SVGGElement;
+  if (!boxGroup) {
+    boxGroup = createSVGElement<SVGGElement>("g");
+    boxGroup.classList.add("comment-box");
+    g.appendChild(boxGroup);
+  }
+
+  // Render both states
+  renderCollapsedIcon(iconGroup, annotation);
+  renderExpandedBox(boxGroup, annotation, state);
+
+  // Update the mode class to trigger CSS transitions
+  if (mode === COMMENT_MODE_COLLAPSED) {
+    g.classList.remove("comment-expanded");
+    g.classList.add("comment-collapsed");
+  } else {
+    g.classList.remove("comment-collapsed");
+    g.classList.add("comment-expanded");
+  }
+
+  // Apply screen-aligned transform to the container
+  const position = getBoxCenter(annotation);
+  g.setAttribute(
+    "transform",
+    state.getScreenAlignedTransform(position.x, position.y, false)
+  );
+
+  // Append to root if not already present
+  if (!g.parentNode || g.parentNode !== root) {
+    root.appendChild(g);
+  }
+
+  return g;
 }

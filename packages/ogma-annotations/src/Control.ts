@@ -43,7 +43,8 @@ import {
   isArrow,
   isBox,
   isText,
-  isAnnotationCollection
+  isAnnotationCollection,
+  isComment
 } from "./types";
 import { migrateBoxOrTextIfNeeded } from "./utils";
 import { findPlace } from "./utils/place-finder";
@@ -668,6 +669,19 @@ export class Control extends EventEmitter<FeatureEvents> {
       } as Partial<Annotation>);
     }
 
+    return this;
+  }
+
+  toggleComment(id: Id): this {
+    const feature = this.store.getState().getFeature(id);
+    if (!feature || !isComment(feature)) return this;
+    const comment = feature as Comment;
+    this.store.getState().updateFeature(id, {
+      properties: {
+        ...comment.properties,
+        mode: comment.properties.mode === "collapsed" ? "expanded" : "collapsed"
+      }
+    } as Partial<Comment>);
     return this;
   }
 
