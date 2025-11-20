@@ -1,6 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import { Index } from "../interaction/spatialIndex";
-import { Point, Text } from "../types";
+import { Text } from "../types";
 import { getTextSize } from "../utils";
 
 export function findPlace(
