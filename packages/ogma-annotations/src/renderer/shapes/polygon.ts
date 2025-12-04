@@ -2,7 +2,7 @@ import { Position } from "geojson";
 import { AnnotationState } from "../../store";
 import { AnnotationType } from "../../types";
 import { Polygon, defaultPolygonStyle } from "../../types/features/Polygon";
-import { createSVGElement } from "../../utils";
+import { createSVGElement, autoHighlightColor } from "../../utils";
 
 /**
  * Convert polygon coordinates to a smooth SVG path using Catmull-Rom splines
@@ -93,7 +93,13 @@ export function renderPolygon(
   if (strokeColor) polygonPath.setAttribute("stroke", strokeColor);
   if (strokeWidth !== undefined)
     polygonPath.setAttribute("stroke-width", String(strokeWidth));
-  if (background) polygonPath.setAttribute("fill", background);
+  if (background) {
+    if (state.hoveredFeature === polygon.id) {
+      polygonPath.setAttribute("fill", autoHighlightColor(background));
+    } else {
+      polygonPath.setAttribute("fill", background);
+    }
+  }
   if (strokeType) polygonPath.setAttribute("stroke-dasharray", strokeType);
 
   // Convert coordinates to smooth SVG path

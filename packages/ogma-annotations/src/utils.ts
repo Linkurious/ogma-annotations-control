@@ -432,5 +432,45 @@ export function migrateBoxOrTextIfNeeded<T extends Annotation>(
   return annotation;
 }
 
+/**
+ * Automatically lightens or darkens a color (hex or rgba) for highlight purposes.
+ * @param color - Color string in hex (#RRGGBB or #RGB) or rgba format
+ * @param amount - Amount to lighten/darken (default 20 for lighter and -10 for darker)
+ * @returns Highlighted color in rgba format
+ */
+export function autoHighlightColor(color: string, amount = 20): string {
+  let r: number, g: number, b: number, a: number = 1;
+  const origColor = color.trim();
+
+  if (origColor.startsWith('#')) {
+    // Handle hex
+    const hex = origColor.length === 4 ? hexShortToLong(origColor) : origColor;
+    const rgb = hex.match(/#?(\w{2})(\w{2})(\w{2})/);
+    if (!rgb) return color;
+    r = parseInt(rgb[1], 16);
+    g = parseInt(rgb[2], 16);
+    b = parseInt(rgb[3], 16);
+  } else {
+    // Handle rgba/rgb
+    const match = origColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/);
+    if (!match) return color;
+    r = parseInt(match[1]);
+    g = parseInt(match[2]);
+    b = parseInt(match[3]);
+    a = match[4] !== undefined ? parseFloat(match[4]) : 1;
+  }
+
+  // Calculate perceived brightness
+  const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+  // If bright, darken; if dark, lighten
+  const percent = brightness > 186 ? -amount / 2 : amount;
+
+  r = Math.max(0, Math.min(255, r + Math.round(2.55 * percent)));
+  g = Math.max(0, Math.min(255, g + Math.round(2.55 * percent)));
+  b = Math.max(0, Math.min(255, b + Math.round(2.55 * percent)));
+
+  return `rgba(${r},${g},${b},${a})`;
+}
+
 // Export polygon utilities
 export * from "./utils/polygon";

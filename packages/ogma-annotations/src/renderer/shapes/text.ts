@@ -3,7 +3,7 @@ import { renderBox } from "./box";
 import { TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Box, Text, defaultTextStyle } from "../../types";
-import { createSVGElement, getBoxCenter, getTextSize } from "../../utils";
+import { autoHighlightColor, createSVGElement, getBoxCenter, getTextSize } from "../../utils";
 
 export function renderText(
   root: SVGElement,
@@ -62,7 +62,11 @@ export function renderText(
   }
 
   if (background && background.length) {
-    rect.setAttribute("fill", background);
+    if (state.hoveredFeature === annotation.id) {
+      rect.setAttribute("fill", autoHighlightColor(background));
+    } else {
+      rect.setAttribute("fill", background);
+    }
   }
 
   rect.setAttribute("width", `${width}`);
