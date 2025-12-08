@@ -6,7 +6,7 @@ import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
 import { InteractionController } from "../interaction/index";
 import { Index } from "../interaction/spatialIndex";
-import { Links } from "../links";
+import { Links } from "./links";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
 

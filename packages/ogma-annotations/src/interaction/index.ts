@@ -1,7 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
 import { cursors } from "../constants";
-import { Links } from "../links";
+import { Links } from "../handlers/links";
 import { Store } from "../store";
 import {
   Annotation,

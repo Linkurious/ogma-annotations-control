@@ -8,7 +8,7 @@ import {
   cursors,
   handleRadius
 } from "../constants";
-import { Links } from "../links";
+import { Links } from "./links";
 import { Store } from "../store";
 import {
   ClientMouseEvent,

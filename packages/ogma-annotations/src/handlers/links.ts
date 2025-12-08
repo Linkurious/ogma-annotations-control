@@ -1,8 +1,8 @@
 import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
-import { SIDE_END, SIDE_START } from "./constants";
-import { Store } from "./store";
+import { SIDE_END, SIDE_START } from "../constants";
+import { Store } from "../store";
 import type {
   Arrow,
   Id,
@@ -11,15 +11,15 @@ import type {
   Side,
   Text,
   Annotation
-} from "./types";
-import { isBox, isText, isPolygon, isComment } from "./types";
+} from "../types";
+import { isBox, isText, isPolygon, isComment } from "../types";
 import {
   getArrowSide,
   getBoxCenter,
   getBoxSize,
   updateBbox
-} from "./utils/utils";
-import { add, mul, subtract } from "./utils/vec";
+} from "../utils/utils";
+import { add, mul, subtract } from "../utils/vec";
 
 type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;

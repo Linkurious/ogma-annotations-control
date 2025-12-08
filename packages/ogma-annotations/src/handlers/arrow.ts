@@ -1,7 +1,8 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { canDetachArrowEnd, canDetachArrowStart } from "./commentHelpers";
+import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";
-import { canDetachArrowEnd, canDetachArrowStart } from "../commentHelpers";
 import {
   EVT_DRAG,
   SIDE_END,
@@ -9,7 +10,6 @@ import {
   cursors,
   handleDetectionThreshold
 } from "../constants";
-import { Links } from "../links";
 import { Store } from "../store";
 import {
   Arrow,
