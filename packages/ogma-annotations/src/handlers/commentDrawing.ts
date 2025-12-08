@@ -1,8 +1,8 @@
 import Ogma from "@linkurious/ogma";
 import { Handler } from "./base";
+import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";
 import { cursors } from "../constants";
-import { Links } from "../links";
 import { Store } from "../store";
 import {
   Comment,

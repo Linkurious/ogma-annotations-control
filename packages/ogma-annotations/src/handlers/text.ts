@@ -1,5 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { Links } from "./links";
 import { TextArea } from "./textArea";
 import {
   COMMENT_MODE_COLLAPSED,
@@ -8,7 +9,6 @@ import {
   cursors,
   handleRadius
 } from "../constants";
-import { Links } from "../links";
 import { Store } from "../store";
 import {
   ClientMouseEvent,
@@ -19,8 +19,8 @@ import {
   Comment,
   isComment
 } from "../types";
-import { getBoxCenter, getBoxSize } from "../utils";
-import { dot, subtract } from "../vec";
+import { getBoxCenter, getBoxSize } from "../utils/utils";
+import { dot, subtract } from "../utils/vec";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;

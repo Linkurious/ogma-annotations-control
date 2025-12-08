@@ -1,6 +1,6 @@
 import { AnnotationState } from "../../store";
 import { Arrow, Extremity, Id, Point, defaultArrowStyle } from "../../types";
-import { createSVGElement, getArrowEndPoints } from "../../utils";
+import { createSVGElement, getArrowEndPoints } from "../../utils/utils";
 import {
   subtract,
   length,
@@ -9,7 +9,7 @@ import {
   normalize,
   mul,
   add
-} from "../../vec";
+} from "../../utils/vec";
 
 const HALO_OPACITY = 0.5;
 

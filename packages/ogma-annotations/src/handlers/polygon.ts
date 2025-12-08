@@ -1,5 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { Links } from "./links";
 import {
   cursors,
   EVT_DRAG,
@@ -7,16 +8,15 @@ import {
   handleDetectionThreshold,
   EVT_DRAG_START
 } from "../constants";
-import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Id, Polygon } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
-import { updateBbox } from "../utils";
 import {
   simplifyPolygon,
   translatePolygon,
   updatePolygonBbox
 } from "../utils/polygon";
+import { updateBbox } from "../utils/utils";
 
 enum HandleType {
   VERTEX = "vertex",

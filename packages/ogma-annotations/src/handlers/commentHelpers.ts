@@ -1,4 +1,4 @@
-import { AnnotationState } from "./store";
+import { AnnotationState } from "../store";
 import {
   Arrow,
   Comment,
@@ -10,10 +10,10 @@ import {
   createComment,
   ExportedLink,
   TargetType
-} from "./types";
-import { createArrow, defaultArrowStyle } from "./types/features/Arrow";
-import { Point } from "./types/geometry";
-import { getBbox } from "./utils";
+} from "../types";
+import { createArrow, defaultArrowStyle } from "../types/features/Arrow";
+import { Point } from "../types/geometry";
+import { getBbox } from "../utils/utils";
 
 /**
  * Target types for comment arrows

@@ -16,7 +16,7 @@ import {
   isPolygon,
   isText
 } from "../../types";
-import { createSVGElement } from "../../utils";
+import { createSVGElement } from "../../utils/utils";
 import { Renderer } from "../base";
 
 export class Shapes extends Renderer<SVGLayer> {

@@ -6,7 +6,7 @@ const toDelete = [
   "### \\_",
   `#### Defined in`,
   `#### Inherited from`,
-  `#### Overrides`,
+  `#### Overrides`
 ];
 
 function getTitles(content, title) {

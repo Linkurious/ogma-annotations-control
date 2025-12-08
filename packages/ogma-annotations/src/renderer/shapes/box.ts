@@ -1,6 +1,11 @@
 import { AnnotationState } from "../../store";
 import { Box, Id, AnnotationType, defaultBoxStyle } from "../../types";
-import { autoHighlightColor, createSVGElement, getBoxPosition, getBoxSize } from "../../utils";
+import {
+  autoHighlightColor,
+  createSVGElement,
+  getBoxPosition,
+  getBoxSize
+} from "../../utils/utils";
 
 function createDom(
   elt: SVGGElement | undefined,

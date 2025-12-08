@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createOgma } from "./utils";
 import { AnnotationCollection, Arrow, Control, createArrow } from "../../src";
-import { Links } from "../../src/links";
+import { Links } from "../../src/handlers/links";
 import { Store } from "../../src/store";
 import LoadLinksMissing from "../fixtures/load-links-missing.json";
 import LoadLinksData from "../fixtures/load-links.json";

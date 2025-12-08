@@ -1,7 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
 import { cursors } from "../constants";
-import { Links } from "../links";
+import { Links } from "../handlers/links";
 import { Store } from "../store";
 import {
   Annotation,
@@ -18,7 +18,7 @@ import {
   Text
 } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
-import { clientToContainerPosition } from "../utils";
+import { clientToContainerPosition } from "../utils/utils";
 
 export class InteractionController {
   private query = {

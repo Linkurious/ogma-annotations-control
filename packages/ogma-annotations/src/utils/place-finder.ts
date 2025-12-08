@@ -1,10 +1,10 @@
 import Ogma from "@linkurious/ogma";
+import { getTextSize } from "./utils";
 import { Index } from "../interaction/spatialIndex";
 import { Text } from "../types";
-import { getTextSize } from "../utils";
 
 export function findPlace(
-  // px and py are in grpah space
+  // px and py are in graph space
   px: number,
   py: number,
   index: Index,
@@ -48,9 +48,9 @@ export function findPlace(
       box.maxX -= w;
     }
 
-    if (box.minX < 0 || box.maxX > width || box.minY < 0 || box.maxY > height) {
-      continue; // not on screen
-    }
+    // not on screen
+    if (box.minX < 0 || box.maxX > width || box.minY < 0 || box.maxY > height)
+      continue;
 
     // pass box in graph space to query the index
     const min = ogma.view.screenToGraphCoordinates({
@@ -65,13 +65,13 @@ export function findPlace(
     box.minY = min.y;
     box.maxX = max.x;
     box.maxY = max.y;
-    const hits = index.query(box).filter((annotation) => {
-      //ignore arrows
-      return annotation.properties.type !== "arrow";
-    });
-    if (hits.length) {
-      continue; // collision
-    }
+    //ignore arrows
+    const hits = index
+      .query(box)
+      .filter((annotation) => annotation.properties.type !== "arrow");
+
+    if (hits.length) continue; // collision
+
     return ogma.view.screenToGraphCoordinates({ x, y });
   }
 
