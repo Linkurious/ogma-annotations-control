@@ -4,6 +4,7 @@ import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { Text, TextStyle, detectText } from "./Text";
 import { COMMENT_MODE_COLLAPSED, COMMENT_MODE_EXPANDED } from "../../constants";
+import { Color } from "../colors";
 import { Point } from "../geometry";
 
 /**
@@ -12,11 +13,11 @@ import { Point } from "../geometry";
 export interface CommentStyle extends TextStyle {
   // Icon styling (collapsed mode)
   /** Background color for collapsed icon (default: "#FFD700") */
-  iconColor?: string;
+  iconColor?: Color;
   /** Icon to display when collapsed (default: "💬") */
   iconSymbol?: string;
   /** Border color for collapsed icon */
-  iconBorderColor?: string;
+  iconBorderColor?: Color;
   /** Border width for collapsed icon */
   iconBorderWidth?: number;
 

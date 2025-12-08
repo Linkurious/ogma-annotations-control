@@ -9,7 +9,7 @@ import type {
   Position,
   Point as GeoJSONPoint
 } from "geojson";
-import { SIDE_START } from "../constants";
+import { HL_BRIGHTEN, SIDE_START } from "../constants";
 import {
   Annotation,
   AnnotationCollection,
@@ -18,6 +18,10 @@ import {
   Bounds,
   Box,
   ClientMouseEvent,
+  Color,
+  HexColor,
+  RgbColor,
+  RgbaColor,
   isArrow,
   isBox,
   isText,
@@ -298,29 +302,29 @@ export function clientToContainerPosition(
   };
 }
 
-export function colorToRgba(color: string, alpha: number) {
-  if (color.startsWith("#")) return hexToRgba(color, alpha);
-  if (color.startsWith("rgb")) return rgbToRgba(color, alpha);
-  return color;
+export function colorToRgba(color: Color, alpha: number): RgbaColor {
+  if (color.startsWith("#")) return hexToRgba(color as HexColor, alpha);
+  if (color.startsWith("rgb")) return rgbToRgba(color as RgbColor, alpha);
+  return color as RgbaColor;
 }
 
-export function hexShortToLong(color: string) {
+export function hexShortToLong(color: HexColor): HexColor {
   if (color.length === 4)
     return color
       .split("")
       .map((c) => c + c)
-      .join("");
+      .join("") as HexColor;
   return color;
 }
 
-export function hexToRgba(color: string, alpha: number) {
+export function hexToRgba(color: HexColor, alpha: number): RgbaColor {
   const [r, g, b] = hexShortToLong(color)
     .match(/\w\w/g)!
     .map((c) => parseInt(c, 16));
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-export function rgbToRgba(color: string, alpha: number) {
+export function rgbToRgba(color: RgbColor, alpha: number): RgbaColor {
   const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
@@ -431,6 +435,60 @@ export function migrateBoxOrTextIfNeeded<T extends Annotation>(
 
   return annotation;
 }
+
+/**
+ * Automatically lightens or darkens a color (hex or rgba) for highlight purposes.
+ * @param color - Color string in hex (#RRGGBB or #RGB) or rgba format
+ * @param amount - Amount to lighten/darken (default 20 for lighter and -10 for darker)
+ * @returns Highlighted color in rgba format
+ */
+export function adjustColorBrightness(color: Color, amount: number): RgbaColor {
+  let r: number,
+    g: number,
+    b: number,
+    a: number = 1;
+  const origColor = color.trim();
+
+  if (origColor.startsWith("#")) {
+    // Handle hex
+    const hex =
+      origColor.length === 4
+        ? hexShortToLong(origColor as HexColor)
+        : (origColor as HexColor);
+    const rgb = hex.match(/#?(\w{2})(\w{2})(\w{2})/);
+    if (!rgb) return color as RgbaColor;
+    r = parseInt(rgb[1], 16);
+    g = parseInt(rgb[2], 16);
+    b = parseInt(rgb[3], 16);
+  } else {
+    // Handle rgba/rgb
+    const match = origColor.match(
+      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/
+    );
+    if (!match) return color as RgbaColor;
+    r = parseInt(match[1]);
+    g = parseInt(match[2]);
+    b = parseInt(match[3]);
+    a = match[4] !== undefined ? parseFloat(match[4]) : 1;
+  }
+  const c = amount * 100;
+  // Calculate perceived brightness
+  const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+  // If bright, darken; if dark, lighten
+  const percent = brightness > 186 ? -c / 2 : c;
+
+  r = Math.max(0, Math.min(255, r + Math.round(2.55 * percent)));
+  g = Math.max(0, Math.min(255, g + Math.round(2.55 * percent)));
+  b = Math.max(0, Math.min(255, b + Math.round(2.55 * percent)));
+
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+export const brighten = (color: Color): RgbaColor =>
+  adjustColorBrightness(color, HL_BRIGHTEN);
+
+export const darken = (color: Color): RgbaColor =>
+  adjustColorBrightness(color, -HL_BRIGHTEN);
 
 // Export polygon utilities
 export * from "./polygon";

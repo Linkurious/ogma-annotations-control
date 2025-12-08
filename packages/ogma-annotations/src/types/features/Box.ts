@@ -3,11 +3,12 @@ import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { StrokeOptions } from "./styles";
 import { getBoxPosition, getBoxSize } from "../../utils/utils";
+import { Color } from "../colors";
 import { Point } from "../geometry";
 
 export interface BoxStyle extends StrokeOptions {
   /** background color: empty for transparent #f00, yellow...*/
-  background?: string;
+  background?: Color;
   /** padding around the box */
   padding?: number;
   /** border radius */

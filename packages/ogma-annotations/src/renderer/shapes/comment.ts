@@ -2,12 +2,16 @@ import { renderText } from "./text";
 import { COMMENT_MODE_COLLAPSED } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, Text, defaultCommentStyle } from "../../types";
-import { createSVGElement, getBoxCenter } from "../../utils/utils";
+import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
 
 /**
  * Render or update the collapsed icon within its group
  */
-function renderCollapsedIcon(iconGroup: SVGGElement, comment: Comment): void {
+function renderCollapsedIcon(
+  iconGroup: SVGGElement,
+  comment: Comment,
+  state: AnnotationState
+): void {
   const size = comment.properties.iconSize;
   const style = { ...defaultCommentStyle, ...comment.properties.style };
   const {
@@ -28,7 +32,11 @@ function renderCollapsedIcon(iconGroup: SVGGElement, comment: Comment): void {
 
   // Update circle attributes
   circle.setAttribute("r", `${size / 2}`);
-  circle.setAttribute("fill", iconColor!);
+  if (state.hoveredFeature === comment.id) {
+    circle.setAttribute("fill", brighten(iconColor!));
+  } else {
+    circle.setAttribute("fill", iconColor!);
+  }
 
   if (iconBorderWidth && iconBorderWidth > 0) {
     circle.setAttribute("stroke", iconBorderColor || "#CCC");
@@ -136,7 +144,7 @@ export function renderComment(
   }
 
   // Render both states
-  renderCollapsedIcon(iconGroup, annotation);
+  renderCollapsedIcon(iconGroup, annotation, state);
   renderExpandedBox(boxGroup, annotation, state);
 
   // Update the mode class to trigger CSS transitions

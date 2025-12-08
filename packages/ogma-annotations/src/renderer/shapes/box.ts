@@ -1,6 +1,7 @@
 import { AnnotationState } from "../../store";
 import { Box, Id, AnnotationType, defaultBoxStyle } from "../../types";
 import {
+  brighten,
   createSVGElement,
   getBoxPosition,
   getBoxSize
@@ -53,7 +54,11 @@ export function renderBox(
     if (strokeType === "dashed") rect.setAttribute("stroke-dasharray", `5,5`);
   }
   if (background && background.length) {
-    rect.setAttribute("fill", background || "transparent");
+    if (state.hoveredFeature === annotation.id) {
+      rect.setAttribute("fill", brighten(background));
+    } else {
+      rect.setAttribute("fill", background);
+    }
   }
   const position = getBoxPosition(annotation);
   rect.setAttribute("width", `${size.width}`);

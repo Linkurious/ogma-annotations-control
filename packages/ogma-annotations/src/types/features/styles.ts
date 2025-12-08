@@ -1,12 +1,14 @@
+import { Color } from "../colors";
+
 export type StrokeOptions = {
   strokeType?: "plain" | "dashed" | "none";
-  strokeColor?: string;
+  strokeColor?: Color;
   strokeWidth?: number;
 };
 
 export type Stroke = {
   type: "plain" | "dashed" | "none";
-  color: string;
+  color: Color;
   width: number;
 };
 

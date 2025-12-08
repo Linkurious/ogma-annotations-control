@@ -46,7 +46,7 @@ svg text {
   z-index: 1000;
   resize: none;
   white-space: break-spaces;
-  background: transparent;
+  background-color: #f5f5f5 !important;
   overflow: hidden;
 }
 
@@ -265,12 +265,16 @@ svg text {
 
 /* Hover and Selected States */
 .annotation-hovered {
-  filter: brightness(1.1) drop-shadow(0 0 4px rgba(59, 130, 246, 0.5));
+  background: #f5f5f5;
+  background-color: #f5f5f5;
+  /* filter: brightness(1.1) drop-shadow(0 0 4px rgba(59, 130, 246, 0.5)); */
   /* cursor: pointer; */
 }
 
 .annotation-selected {
-  filter: brightness(1.2) drop-shadow(0 0 8px rgba(59, 130, 246, 0.8));
+  background: #f5f5f5;
+  background-color: #f5f5f5;
+  /* filter: brightness(1.2) drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)); */
 }
 
 /* Comment Animation Styles */

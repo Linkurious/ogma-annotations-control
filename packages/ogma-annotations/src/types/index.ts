@@ -1,12 +1,14 @@
 export * from "./features";
 export * from "./geometry";
 export * from "./events";
+export * from "./colors";
+import type { Color } from "./colors";
 
 export type ControllerOptions = {
   /**
    * The color of the magnet points
    */
-  magnetColor: string;
+  magnetColor: Color;
   /**
    * The radius in which arrows are attracted
    */
