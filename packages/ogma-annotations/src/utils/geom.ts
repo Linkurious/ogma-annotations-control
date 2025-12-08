@@ -1,4 +1,4 @@
-import { Point, Bounds } from "./types";
+import { Point, Bounds } from "../types";
 
 /**
  * Rotates a point around the origin (0,0) by a given angle (in radians).

@@ -4,8 +4,8 @@ import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { ExportedLink, Side } from "./Link";
 import { StrokeOptions } from "./styles";
-import { getArrowEndPoints } from "../../utils";
-import { cross, dot, length, normalize, subtract } from "../../vec";
+import { getArrowEndPoints } from "../../utils/utils";
+import { cross, dot, length, normalize, subtract } from "../../utils/vec";
 import { Vector } from "../geometry";
 
 export type Extremity = "none" | "arrow" | "arrow-plain" | "dot" | "halo-dot";

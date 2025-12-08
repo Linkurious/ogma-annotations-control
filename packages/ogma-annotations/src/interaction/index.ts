@@ -18,7 +18,7 @@ import {
   Text
 } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
-import { clientToContainerPosition } from "../utils";
+import { clientToContainerPosition } from "../utils/utils";
 
 export class InteractionController {
   private query = {

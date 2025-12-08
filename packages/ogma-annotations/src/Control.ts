@@ -48,8 +48,8 @@ import {
   isAnnotationCollection,
   isComment
 } from "./types";
-import { migrateBoxOrTextIfNeeded } from "./utils";
 import { findPlace } from "./utils/place-finder";
+import { migrateBoxOrTextIfNeeded } from "./utils/utils";
 
 // Default send button icon (paper plane)
 const DEFAULT_SEND_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

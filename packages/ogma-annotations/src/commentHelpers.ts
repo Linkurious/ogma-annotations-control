@@ -13,7 +13,7 @@ import {
 } from "./types";
 import { createArrow, defaultArrowStyle } from "./types/features/Arrow";
 import { Point } from "./types/geometry";
-import { getBbox } from "./utils";
+import { getBbox } from "./utils/utils";
 
 /**
  * Target types for comment arrows

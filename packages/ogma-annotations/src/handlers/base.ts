@@ -2,7 +2,7 @@ import Ogma, { Point } from "@linkurious/ogma";
 import { EVT_DRAG_END, EVT_DRAG, EVT_DRAG_START, cursors } from "../constants";
 import { Store } from "../store";
 import { Annotation, ClientMouseEvent, Cursor, Id } from "../types";
-import { clientToContainerPosition, getBrowserWindow } from "../utils";
+import { clientToContainerPosition, getBrowserWindow } from "../utils/utils";
 
 export abstract class Handler<
   T extends Annotation,

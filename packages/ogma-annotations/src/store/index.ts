@@ -3,7 +3,7 @@ import { Position } from "geojson";
 import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
-import { getAABB } from "../geom";
+import { getAABB } from "../utils/geom";
 import { Annotation, Bounds, Id, isComment, isArrow } from "../types";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];

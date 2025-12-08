@@ -11,12 +11,12 @@ import { Links } from "../links";
 import { Store } from "../store";
 import { ClientMouseEvent, Id, Polygon } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
-import { updateBbox } from "../utils";
 import {
   simplifyPolygon,
   translatePolygon,
   updatePolygonBbox
 } from "../utils/polygon";
+import { updateBbox } from "../utils/utils";
 
 enum HandleType {
   VERTEX = "vertex",

@@ -2,7 +2,7 @@ import { renderText } from "./text";
 import { COMMENT_MODE_COLLAPSED } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, Text, defaultCommentStyle } from "../../types";
-import { createSVGElement, getBoxCenter } from "../../utils";
+import { createSVGElement, getBoxCenter } from "../../utils/utils";
 
 /**
  * Render or update the collapsed icon within its group

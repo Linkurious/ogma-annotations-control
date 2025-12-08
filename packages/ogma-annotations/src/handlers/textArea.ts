@@ -2,7 +2,7 @@ import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
 import { Id, Text, defaultTextStyle } from "../types";
-import { getBoxPosition, getBoxSize } from "../utils";
+import { getBoxPosition, getBoxSize } from "../utils/utils";
 
 export class TextArea {
   private layer: Overlay;

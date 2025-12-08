@@ -4,8 +4,8 @@ import { Position } from "geojson";
 import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
 import { Id, Text, Polygon, isBox, isText, isPolygon } from "../types";
-import { getBoxCenter, getBoxSize } from "../utils";
-import { subtract, add, length, mul, dot } from "../vec";
+import { getBoxCenter, getBoxSize } from "../utils/utils";
+import { subtract, add, length, mul, dot } from "../utils/vec";
 
 const MAGNETS: Point[] = [
   { x: -0.5, y: -0.5 },

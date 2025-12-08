@@ -13,13 +13,13 @@ import {
   isPolygon,
   isText
 } from "../types";
+import { drawRoundedRect } from "../utils/rendering";
 import {
   getArrowEnd,
   getArrowStart,
   getBoxPosition,
   getBoxSize
-} from "../utils";
-import { drawRoundedRect } from "../utils/rendering";
+} from "../utils/utils";
 
 // Corner offsets for text box handles: [x, y] multipliers
 const CORNER_OFFSETS = [

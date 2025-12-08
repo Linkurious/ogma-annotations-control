@@ -3,7 +3,7 @@ import { renderBox } from "./box";
 import { TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Box, Text, defaultTextStyle } from "../../types";
-import { createSVGElement, getBoxCenter, getTextSize } from "../../utils";
+import { createSVGElement, getBoxCenter, getTextSize } from "../../utils/utils";
 
 export function renderText(
   root: SVGElement,

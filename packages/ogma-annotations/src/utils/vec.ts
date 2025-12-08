@@ -1,4 +1,4 @@
-import { Vector } from "./types";
+import { Vector } from "../types";
 
 // subtract two vectors
 export const subtract = (a: Vector, b: Vector): Vector => ({

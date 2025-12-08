@@ -13,8 +13,13 @@ import type {
   Annotation
 } from "./types";
 import { isBox, isText, isPolygon, isComment } from "./types";
-import { getArrowSide, getBoxCenter, getBoxSize, updateBbox } from "./utils";
-import { add, mul, subtract } from "./vec";
+import {
+  getArrowSide,
+  getBoxCenter,
+  getBoxSize,
+  updateBbox
+} from "./utils/utils";
+import { add, mul, subtract } from "./utils/vec";
 
 type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;

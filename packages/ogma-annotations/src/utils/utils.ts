@@ -9,7 +9,7 @@ import type {
   Position,
   Point as GeoJSONPoint
 } from "geojson";
-import { SIDE_START } from "./constants";
+import { SIDE_START } from "../constants";
 import {
   Annotation,
   AnnotationCollection,
@@ -23,7 +23,7 @@ import {
   isText,
   Side,
   Text
-} from "./types";
+} from "../types";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -433,4 +433,4 @@ export function migrateBoxOrTextIfNeeded<T extends Annotation>(
 }
 
 // Export polygon utilities
-export * from "./utils/polygon";
+export * from "./polygon";

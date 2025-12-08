@@ -2,7 +2,7 @@ import { Position } from "geojson";
 import { AnnotationState } from "../../store";
 import { AnnotationType } from "../../types";
 import { Polygon, defaultPolygonStyle } from "../../types/features/Polygon";
-import { createSVGElement } from "../../utils";
+import { createSVGElement } from "../../utils/utils";
 
 /**
  * Convert polygon coordinates to a smooth SVG path using Catmull-Rom splines

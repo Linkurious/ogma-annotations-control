@@ -1,6 +1,10 @@
 import { AnnotationState } from "../../store";
 import { Box, Id, AnnotationType, defaultBoxStyle } from "../../types";
-import { createSVGElement, getBoxPosition, getBoxSize } from "../../utils";
+import {
+  createSVGElement,
+  getBoxPosition,
+  getBoxSize
+} from "../../utils/utils";
 
 function createDom(
   elt: SVGGElement | undefined,

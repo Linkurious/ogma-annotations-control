@@ -19,8 +19,8 @@ import {
   Comment,
   isComment
 } from "../types";
-import { getBoxCenter, getBoxSize } from "../utils";
-import { dot, subtract } from "../vec";
+import { getBoxCenter, getBoxSize } from "../utils/utils";
+import { dot, subtract } from "../utils/vec";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;

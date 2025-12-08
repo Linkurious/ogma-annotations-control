@@ -1,7 +1,7 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
 import { Annotation, Comment, Text, isComment, isText } from "../types";
-import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils";
+import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils/utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
 
