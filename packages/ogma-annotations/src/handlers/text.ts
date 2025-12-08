@@ -1,5 +1,6 @@
 import Ogma, { Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { Links } from "./links";
 import { TextArea } from "./textArea";
 import {
   COMMENT_MODE_COLLAPSED,
@@ -8,7 +9,6 @@ import {
   cursors,
   handleRadius
 } from "../constants";
-import { Links } from "./links";
 import { Store } from "../store";
 import {
   ClientMouseEvent,

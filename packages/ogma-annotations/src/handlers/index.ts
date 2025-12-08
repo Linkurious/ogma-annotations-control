@@ -1,12 +1,12 @@
 import Ogma from "@linkurious/ogma";
 import { ArrowHandler } from "./arrow";
 import { Handler } from "./base";
+import { Links } from "./links";
 import { PolygonHandler } from "./polygon";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
 import { InteractionController } from "../interaction/index";
 import { Index } from "../interaction/spatialIndex";
-import { Links } from "./links";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
 
