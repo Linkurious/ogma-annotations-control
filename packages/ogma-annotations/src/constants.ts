@@ -56,3 +56,4 @@ export const COMMENT_MODE_COLLAPSED = "collapsed";
 export const COMMENT_MODE_EXPANDED = "expanded";
 
 export const TEXT_LINE_HEIGHT = 1.2;
+export const HL_BRIGHTEN = 0.2;

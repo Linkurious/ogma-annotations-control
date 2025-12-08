@@ -2,11 +2,7 @@ import { renderText } from "./text";
 import { COMMENT_MODE_COLLAPSED } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, Text, defaultCommentStyle } from "../../types";
-import {
-  autoHighlightColor,
-  createSVGElement,
-  getBoxCenter
-} from "../../utils/utils";
+import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
 
 /**
  * Render or update the collapsed icon within its group
@@ -37,7 +33,7 @@ function renderCollapsedIcon(
   // Update circle attributes
   circle.setAttribute("r", `${size / 2}`);
   if (state.hoveredFeature === comment.id) {
-    circle.setAttribute("fill", autoHighlightColor(iconColor!));
+    circle.setAttribute("fill", brighten(iconColor!));
   } else {
     circle.setAttribute("fill", iconColor!);
   }

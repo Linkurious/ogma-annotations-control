@@ -4,7 +4,7 @@ import { TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Box, Text, defaultTextStyle } from "../../types";
 import {
-  autoHighlightColor,
+  brighten,
   createSVGElement,
   getBoxCenter,
   getTextSize
@@ -68,7 +68,7 @@ export function renderText(
 
   if (background && background.length) {
     if (state.hoveredFeature === annotation.id) {
-      rect.setAttribute("fill", autoHighlightColor(background));
+      rect.setAttribute("fill", brighten(background));
     } else {
       rect.setAttribute("fill", background);
     }

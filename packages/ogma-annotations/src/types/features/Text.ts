@@ -3,6 +3,7 @@ import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
 import { BoxProperties, BoxStyle } from "./Box";
 import { getBoxSize } from "../../utils/utils";
+import { Color } from "../colors";
 import { Point } from "../geometry";
 
 export interface TextStyle extends BoxStyle {
@@ -11,9 +12,9 @@ export interface TextStyle extends BoxStyle {
   /** Font size, in pixels */
   fontSize?: number | string;
   /** text color: #f00, yellow...*/
-  color?: string;
+  color?: Color;
   /** background color: empty for transparent #f00, yellow...*/
-  background?: string;
+  background?: Color;
   /** padding around the text */
   padding?: number;
   /** Text box border radius */
