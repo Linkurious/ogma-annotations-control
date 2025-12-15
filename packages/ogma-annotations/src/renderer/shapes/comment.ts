@@ -149,11 +149,15 @@ export function renderComment(
 
   // Update the mode class to trigger CSS transitions
   if (mode === COMMENT_MODE_COLLAPSED) {
-    g.classList.remove("comment-expanded");
-    g.classList.add("comment-collapsed");
+    if (!g.classList.contains("comment-collapsed")) {
+      g.classList.add("comment-collapsed");
+      g.classList.remove("comment-expanded");
+    }
   } else {
-    g.classList.remove("comment-collapsed");
-    g.classList.add("comment-expanded");
+    if (g.classList.contains("comment-collapsed")) {
+      g.classList.add("comment-expanded");
+      g.classList.remove("comment-collapsed");
+    }
   }
 
   // Apply screen-aligned transform to the container

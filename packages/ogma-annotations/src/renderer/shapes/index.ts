@@ -24,6 +24,8 @@ export class Shapes extends Renderer<SVGLayer> {
   private maxArrowHeight = 30;
   private features = new Map<Id, SVGGElement>();
   private arrowsRoot: SVGGElement | null = null;
+  private shapesRoot: SVGGElement | null = null;
+  private commentsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
 
   constructor(ogma: Ogma, store: Store) {
@@ -73,13 +75,19 @@ export class Shapes extends Renderer<SVGLayer> {
 
       // Create persistent container groups
       this.arrowsRoot = createSVGElement<SVGGElement>("g");
+      this.commentsRoot = createSVGElement<SVGGElement>("g");
       this.annotationsRoot = createSVGElement<SVGGElement>("g");
+      this.shapesRoot = createSVGElement<SVGGElement>("g");
       this.annotationsRoot.appendChild(this.arrowsRoot);
+      this.annotationsRoot.appendChild(this.shapesRoot);
+      this.annotationsRoot.appendChild(this.commentsRoot);
       root.appendChild(this.annotationsRoot);
     }
 
     const arrowsRoot = this.arrowsRoot!;
     const annotationsRoot = this.annotationsRoot!;
+    const commentsRoot = this.commentsRoot!;
+    const shapesRoot = this.shapesRoot!;
 
     const state = this.store.getState();
 
@@ -101,28 +109,28 @@ export class Shapes extends Renderer<SVGLayer> {
       let existingElement = this.features.get(feature.id);
       if (isBox(feature))
         existingElement = renderBox(
-          annotationsRoot,
+          shapesRoot,
           feature,
           existingElement,
           state
         );
       else if (isText(feature))
         existingElement = renderText(
-          annotationsRoot,
+          shapesRoot,
           feature,
           existingElement,
           state
         );
       else if (isComment(feature))
         existingElement = renderComment(
-          annotationsRoot,
+          commentsRoot,
           feature,
           existingElement,
           state
         );
       else if (isPolygon(feature)) {
         existingElement = renderPolygon(
-          annotationsRoot,
+          shapesRoot,
           feature,
           existingElement,
           state
@@ -136,9 +144,7 @@ export class Shapes extends Renderer<SVGLayer> {
           existingElement,
           state
         );
-      if (existingElement) {
-        this.features.set(feature.id, existingElement);
-      }
+      if (existingElement) this.features.set(feature.id, existingElement);
     }
 
     // Apply state classes after rendering
