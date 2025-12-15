@@ -46,27 +46,31 @@ export class InteractionController {
     private links: Links,
     private threshold: number = 0.5
   ) {
+    const container = this.ogma.getContainer();
+
     // use native mousemove event to detect hover,
     // so that we can allow interactivity in the
     // SVG and DOM layers
-    this.ogma.getContainer()?.addEventListener("mousemove", this.onMouseMove, {
-      passive: true,
-      capture: true
-    });
 
-    // Add click event for selection
-    this.ogma.getContainer()?.addEventListener("click", this.onMouseClick, {
-      passive: true,
-      capture: true
-    });
-    this.ogma.getContainer()?.addEventListener("mousedown", this.onMouseDown, {
-      passive: true,
-      capture: true
-    });
-    this.ogma.getContainer()?.addEventListener("mouseup", this.onMouseUp, {
-      passive: true,
-      capture: true
-    });
+    if (container) {
+      container.addEventListener("mousemove", this.onMouseMove, {
+        passive: true,
+        capture: true
+      });
+      // Add click event for selection
+      container.addEventListener("click", this.onMouseClick, {
+        passive: true,
+        capture: true
+      });
+      container.addEventListener("mousedown", this.onMouseDown, {
+        passive: true,
+        capture: false
+      });
+      container.addEventListener("mouseup", this.onMouseUp, {
+        passive: true,
+        capture: true
+      });
+    }
 
     this.ogma.events.on("rotate", () => this.links.update());
   }
