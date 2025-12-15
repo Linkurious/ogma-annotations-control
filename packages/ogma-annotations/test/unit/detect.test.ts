@@ -16,9 +16,9 @@ import {
   Id,
   COMMENT_MODE_COLLAPSED
 } from "../../src";
+import { Links } from "../../src/handlers/links";
 import { InteractionController as HitDetector } from "../../src/interaction/index";
 import { Index } from "../../src/interaction/spatialIndex";
-import { Links } from "../../src/links";
 import { Store } from "../../src/store";
 
 describe("HitDetector", () => {
@@ -549,7 +549,7 @@ describe("HitDetector", () => {
     it("should detect collapsed comment", () => {
       const comment = createComment(50, 50, "Test comment");
       comment.properties.mode = COMMENT_MODE_COLLAPSED;
-      comment.properties.iconSize = 32;
+      comment.properties.style!.iconSize = 32;
       const mockFeatures = { comment };
 
       const { detector } = createAndFill(
@@ -621,7 +621,7 @@ describe("HitDetector", () => {
     it("should not detect comment outside bounds", () => {
       const comment = createComment(50, 50, "Test");
       comment.properties.mode = COMMENT_MODE_COLLAPSED;
-      comment.properties.iconSize = 32;
+      comment.properties.style!.iconSize = 32;
       const mockFeatures = { comment };
 
       const { detector } = createAndFill(
@@ -640,7 +640,7 @@ describe("HitDetector", () => {
     it("should detect comment with threshold", () => {
       const comment = createComment(50, 50, "Threshold test");
       comment.properties.mode = COMMENT_MODE_COLLAPSED;
-      comment.properties.iconSize = 32;
+      comment.properties.style!.iconSize = 32;
       const mockFeatures = { comment };
 
       const { detector } = createAndFill(
@@ -891,7 +891,7 @@ function createAndFill(
       let width: number, height: number;
 
       if (feature.properties.mode === COMMENT_MODE_COLLAPSED) {
-        width = height = feature.properties.iconSize;
+        width = height = feature.properties.style?.iconSize || 32;
       } else {
         width = feature.properties.width;
         height = feature.properties.height;

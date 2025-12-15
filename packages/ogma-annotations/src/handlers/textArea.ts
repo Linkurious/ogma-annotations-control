@@ -207,8 +207,10 @@ export class TextArea {
       const requiredHeight =
         (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
 
-      // Get minimum height (default to 50px if not specified)
-      const minHeight = 50;
+      // Get minimum height from style (default to 50px if not specified)
+      // For Comments, minHeight is in CommentStyle; for Text annotations it doesn't exist
+      const minHeight =
+        (annotation.properties.style as { minHeight?: number })?.minHeight || 50;
       newHeight = Math.max(minHeight, requiredHeight);
 
       // Adjust center position to grow downward only (keep top edge fixed)

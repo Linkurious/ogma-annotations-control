@@ -242,8 +242,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns Zoom threshold
    */
   private getCommentZoomThreshold(comment: Comment): number {
-    if (comment.properties.collapseZoomThreshold !== undefined) {
-      return comment.properties.collapseZoomThreshold;
+    const style = { ...comment.properties.style };
+    if (style.collapseZoomThreshold !== undefined) {
+      return style.collapseZoomThreshold;
     }
     // Calculate based on dimensions: collapse when screen-space width < 80px
     const minReadableWidth = 80;

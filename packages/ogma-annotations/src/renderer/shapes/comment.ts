@@ -12,8 +12,8 @@ function renderCollapsedIcon(
   comment: Comment,
   state: AnnotationState
 ): void {
-  const size = comment.properties.iconSize;
   const style = { ...defaultCommentStyle, ...comment.properties.style };
+  const size = style.iconSize!;
   const {
     iconColor = defaultCommentStyle.iconColor,
     iconSymbol = defaultCommentStyle.iconSymbol,

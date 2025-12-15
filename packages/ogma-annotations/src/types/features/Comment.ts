@@ -21,6 +21,14 @@ export interface CommentStyle extends TextStyle {
   /** Border width for collapsed icon */
   iconBorderWidth?: number;
 
+  // Size properties
+  /** Minimum height (default: 60px) */
+  minHeight?: number;
+  /** Size when collapsed (default: 32px) */
+  iconSize?: number;
+  /** Zoom threshold below which comment auto-collapses (default: 0.5) */
+  collapseZoomThreshold?: number;
+
   // Editing UI
   /** Show "send" button in edit mode (default: true) */
   showSendButton?: boolean;
@@ -52,17 +60,9 @@ export interface CommentProps extends AnnotationProps {
   /** Height (auto-grows with content, pixels) */
   height: number;
 
-  /** Minimum height (default: 60px) */
-  minHeight: number;
-
-  /** Size when collapsed (default: 32px) */
-  iconSize: number;
-
-  /** Zoom threshold below which comment auto-collapses (default: 0.5) */
-  collapseZoomThreshold?: number;
-
   /** Optional metadata */
   author?: string;
+
   timestamp?: Date;
 
   /** Styling */
@@ -104,6 +104,11 @@ export const defaultCommentStyle: CommentStyle = {
   iconBorderColor: "#aaa",
   iconBorderWidth: 2,
 
+  // Size properties
+  minHeight: 60,
+  iconSize: 32,
+  // collapseZoomThreshold is undefined by default, so it auto-calculates from dimensions
+
   // Text styling
   color: "#333",
   font: "Arial, sans-serif",
@@ -123,10 +128,7 @@ export const defaultCommentStyle: CommentStyle = {
 export const defaultCommentOptions: Partial<CommentProps> = {
   mode: "expanded",
   width: 200,
-  minHeight: 60,
   height: 60, // Initial height, will auto-grow
-  iconSize: 32,
-  // collapseZoomThreshold is undefined by default, so it auto-calculates from dimensions
   style: defaultCommentStyle
 };
 
@@ -153,10 +155,6 @@ export function createComment(
     mode: options?.mode ?? defaultCommentOptions.mode!,
     width: options?.width ?? defaultCommentOptions.width!,
     height: options?.height ?? defaultCommentOptions.height!,
-    minHeight: options?.minHeight ?? defaultCommentOptions.minHeight!,
-    iconSize: options?.iconSize ?? defaultCommentOptions.iconSize!,
-    collapseZoomThreshold:
-      options?.collapseZoomThreshold ?? defaultCommentOptions.collapseZoomThreshold,
     author: options?.author,
     timestamp: options?.timestamp,
     style: {
@@ -222,13 +220,14 @@ export function detectComment(
       zoom
     );
   const props = comment.properties;
+  const style = { ...defaultCommentStyle, ...props.style };
 
   // Get screen-space dimensions based on mode
-  let width = props.iconSize;
-  let height = props.iconSize;
+  let width = style.iconSize!;
+  let height = style.iconSize!;
 
   // For fixed-size comments, scale world-space dimensions by invZoom
-  if (props.style?.fixedSize) {
+  if (style.fixedSize) {
     width /= zoom;
     height /= zoom;
   }
@@ -266,8 +265,9 @@ export function getCommentPosition(comment: Comment): Point {
  */
 export function getCommentSize(comment: Comment): Size {
   const props = comment.properties;
+  const style = { ...defaultCommentStyle, ...props.style };
   if (props.mode === COMMENT_MODE_COLLAPSED)
-    return { width: props.iconSize, height: props.iconSize };
+    return { width: style.iconSize!, height: style.iconSize! };
   return { width: props.width, height: props.height };
 }
 
@@ -305,8 +305,9 @@ export function calculateCommentZoomThreshold(
  * @returns Effective zoom threshold
  */
 export function getCommentZoomThreshold(comment: Comment): number {
-  if (comment.properties.collapseZoomThreshold !== undefined) {
-    return comment.properties.collapseZoomThreshold;
+  const style = { ...defaultCommentStyle, ...comment.properties.style };
+  if (style.collapseZoomThreshold !== undefined) {
+    return style.collapseZoomThreshold;
   }
   return calculateCommentZoomThreshold(comment);
 }

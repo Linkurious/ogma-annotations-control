@@ -489,6 +489,13 @@ export class Links {
       const rotatedY = offsetX * sin + offsetY * cos;
       offsetX = rotatedX;
       offsetY = rotatedY;
+    } else if (isComment(box)) {
+      // if comment is collapsed, use the icon size for snapping
+      const style = { ...box.properties.style };
+      const iconSize = style.iconSize || 32; // default to 32 if not specified
+      const scale = (iconSize / 16) * 0.5; // 0.5 because magnet is relative to half-size
+      offsetX = link.magnet.x * iconSize * scale;
+      offsetY = link.magnet.y * iconSize * scale;
     }
 
     return [center.x + offsetX, center.y + offsetY];
