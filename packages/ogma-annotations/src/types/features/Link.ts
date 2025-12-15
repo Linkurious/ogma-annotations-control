@@ -1,8 +1,8 @@
 import { Id } from "./Annotation";
-import { SIDE_START, SIDE_END } from "../../constants";
+import { SIDE_START, SIDE_END, TARGET_TYPES } from "../../constants";
 import { Point } from "../geometry";
 
-export type TargetType = "text" | "node" | "box" | "comment" | "polygon";
+export type TargetType = (typeof TARGET_TYPES)[keyof typeof TARGET_TYPES];
 
 export type Side = typeof SIDE_START | typeof SIDE_END;
 

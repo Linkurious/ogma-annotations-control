@@ -1,7 +1,7 @@
 import type { Node, NodeId, NodeList, Ogma, Point } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
-import { SIDE_END, SIDE_START } from "../constants";
+import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
 import { Store } from "../store";
 import type {
   Arrow,
@@ -110,7 +110,7 @@ export class Links {
 
     // For polygon annotations, convert absolute magnet to relative coordinates
     let adjustedMagnet = magnet;
-    if (targetType === "polygon") {
+    if (targetType === TARGET_TYPES.POLYGON) {
       const state = this.store.getState();
       const annotation = state.getFeature(targetId);
       if (annotation && isPolygon(annotation)) {
@@ -138,7 +138,7 @@ export class Links {
       magnet: adjustedMagnet,
       side
     };
-    if (targetType === "node") {
+    if (targetType === TARGET_TYPES.NODE) {
       const node = this.ogma.getNode(targetId);
       if (!node) return;
     }
@@ -147,7 +147,10 @@ export class Links {
     // add it to the links
     this.links.set(id, link);
     // add it to the linksByTargetId
-    const map = targetType === "node" ? this.nodeToLink : this.annotationToLink;
+    const map =
+      targetType === TARGET_TYPES.NODE
+        ? this.nodeToLink
+        : this.annotationToLink;
     if (!map.has(targetId)) map.set(targetId, new Set());
     map.get(targetId)!.add(id);
 
@@ -330,20 +333,20 @@ export class Links {
       let endPoint = arrow.geometry.coordinates[1];
 
       const startCenter = start
-        ? start.targetType === "node"
+        ? start.targetType === TARGET_TYPES.NODE
           ? xyr[nodeIdToIndex.get(start.target)!]
           : this._getAnnotationCenter(state.getFeature(start.target)!)
         : { x: startPoint[0], y: startPoint[1] };
 
       const endCenter = end
-        ? end.targetType === "node"
+        ? end.targetType === TARGET_TYPES.NODE
           ? xyr[nodeIdToIndex.get(end.target)!]
           : this._getAnnotationCenter(state.getFeature(end.target)!)
         : { x: endPoint[0], y: endPoint[1] };
 
       const vec = subtract(endCenter, startCenter);
       if (start) {
-        if (start.targetType === "node") {
+        if (start.targetType === TARGET_TYPES.NODE) {
           startPoint = this._getNodeSnapPoint(
             startCenter as XYR,
             vec,
@@ -360,7 +363,7 @@ export class Links {
         }
       }
       if (end) {
-        if (end.targetType === "node") {
+        if (end.targetType === TARGET_TYPES.NODE) {
           endPoint = this._getNodeSnapPoint(
             endCenter as XYR,
             mul(vec, -1),

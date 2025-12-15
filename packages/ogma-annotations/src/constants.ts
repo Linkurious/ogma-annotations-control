@@ -57,3 +57,13 @@ export const COMMENT_MODE_EXPANDED = "expanded";
 
 export const TEXT_LINE_HEIGHT = 1.2;
 export const HL_BRIGHTEN = 0.2;
+
+export const TARGET_TYPES = {
+  TEXT: "text" as const,
+  NODE: "node" as const,
+  BOX: "box" as const,
+  COMMENT: "comment" as const,
+  POLYGON: "polygon" as const,
+  COORDINATE: "coordinate" as const,
+  ANNOTATION: "annotation" as const
+};

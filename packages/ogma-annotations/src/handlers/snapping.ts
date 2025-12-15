@@ -1,6 +1,7 @@
 import type Ogma from "@linkurious/ogma";
 import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Position } from "geojson";
+import { TARGET_TYPES } from "../constants";
 import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
 import { Id, Text, Polygon, isBox, isText, isPolygon } from "../types";
@@ -53,14 +54,14 @@ function toWorld(
 export type TextSnap = {
   point: Point;
   magnet: Point;
-  type: "text";
+  type: typeof TARGET_TYPES.TEXT;
   id: Id;
 };
 
 export type PolygonSnap = {
   point: Point;
   magnet: Point;
-  type: "polygon";
+  type: typeof TARGET_TYPES.POLYGON;
   id: Id;
 };
 
@@ -68,7 +69,7 @@ export type NodeSnap = {
   point: Point;
   id: NodeId;
   magnet: Point;
-  type: "node";
+  type: typeof TARGET_TYPES.NODE;
 };
 
 export type Snap = TextSnap | PolygonSnap | NodeSnap;
@@ -206,7 +207,7 @@ export class Snapping extends EventTarget {
           return {
             point: { x: vx, y: vy },
             magnet: { x: vx, y: vy },
-            type: "polygon" as const,
+            type: TARGET_TYPES.POLYGON,
             id: polygon.id
           };
         }
@@ -254,7 +255,7 @@ export class Snapping extends EventTarget {
             return {
               point: result.point,
               magnet: result.point,
-              type: "polygon" as const,
+              type: TARGET_TYPES.POLYGON,
               id: polygon.id
             };
           }
@@ -266,7 +267,7 @@ export class Snapping extends EventTarget {
         return {
           point: closestPoint,
           magnet: closestPoint,
-          type: "polygon" as const,
+          type: TARGET_TYPES.POLYGON,
           id: polygon.id
         };
       }
@@ -310,7 +311,7 @@ export class Snapping extends EventTarget {
         return {
           point: { x: vx, y: vy },
           magnet: { x: vx, y: vy },
-          type: "polygon" as const,
+          type: TARGET_TYPES.POLYGON,
           id: polygon.id
         };
       }
@@ -345,7 +346,7 @@ export class Snapping extends EventTarget {
         return {
           point: snapPoint,
           magnet: snapPoint,
-          type: "polygon" as const,
+          type: TARGET_TYPES.POLYGON,
           id: polygon.id
         };
       }
@@ -439,7 +440,7 @@ export class Snapping extends EventTarget {
       if (dist >= this.options.magnetRadius) continue;
       return {
         point: { x: magnetPoint.x, y: magnetPoint.y },
-        type: "text" as const,
+        type: TARGET_TYPES.TEXT,
         magnet: vec,
         id: text.id
       };
@@ -495,7 +496,7 @@ export class Snapping extends EventTarget {
               x: lx1 + (lx2 - lx1) * t,
               y: ly1 + (ly2 - ly1) * t
             },
-            type: "text" as const,
+            type: TARGET_TYPES.TEXT,
             id: text.id
           };
 
@@ -538,7 +539,7 @@ export class Snapping extends EventTarget {
         point: snapPoint,
         id: nodes.get(i).getId(),
         magnet,
-        type: "node" as const
+        type: TARGET_TYPES.NODE
       };
     }
     return null;

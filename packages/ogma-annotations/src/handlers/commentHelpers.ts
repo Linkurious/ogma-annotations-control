@@ -1,3 +1,4 @@
+import { TARGET_TYPES } from "../constants";
 import { AnnotationState } from "../store";
 import {
   Arrow,
@@ -15,13 +16,38 @@ import { createArrow, defaultArrowStyle } from "../types/features/Arrow";
 import { Point } from "../types/geometry";
 import { getBbox } from "../utils/utils";
 
+interface CoordinateTarget {
+  type: typeof TARGET_TYPES.COORDINATE;
+  coordinate: Point;
+}
+
+interface NodeTarget {
+  type: typeof TARGET_TYPES.NODE;
+  id: Id;
+  magnet?: Point;
+}
+
+interface AnnotationTarget {
+  type: typeof TARGET_TYPES.ANNOTATION;
+  id: Id;
+  magnet?: Point;
+}
+
 /**
  * Target types for comment arrows
  */
-export type CommentTarget =
-  | { type: "coordinate"; coordinate: Point }
-  | { type: "node"; id: Id; magnet?: Point }
-  | { type: "annotation"; id: Id; magnet?: Point };
+export type CommentTarget = AnnotationTarget | NodeTarget | CoordinateTarget;
+
+const isNodeTarget = (target: CommentTarget): target is NodeTarget =>
+  target.type === TARGET_TYPES.NODE;
+
+const isAnnotationTarget = (
+  target: CommentTarget
+): target is AnnotationTarget => target.type === TARGET_TYPES.ANNOTATION;
+
+const isCoordinateTarget = (
+  target: CommentTarget
+): target is CoordinateTarget => target.type === TARGET_TYPES.COORDINATE;
 
 /**
  * Default arrow style for comment arrows
@@ -232,7 +258,7 @@ export function deleteArrowFromComment(
 
   // Check if arrow originates FROM a comment (start side)
   const commentId =
-    arrow.properties.link?.start?.type === "comment"
+    arrow.properties.link?.start?.type === TARGET_TYPES.COMMENT
       ? arrow.properties.link.start.id
       : null;
 
@@ -307,7 +333,7 @@ export function canDeleteArrow(state: AnnotationState, arrowId: Id): boolean {
   if (!isArrow(arrow)) return false;
 
   const commentId =
-    arrow.properties.link?.start?.type === "comment"
+    arrow.properties.link?.start?.type === TARGET_TYPES.COMMENT
       ? arrow.properties.link.start.id
       : null;
 
@@ -351,7 +377,7 @@ export function findOrphanedComments(state: AnnotationState): Comment[] {
  */
 export function canDetachArrowStart(arrow: Arrow): boolean {
   // Cannot detach if START points FROM a comment
-  return arrow.properties.link?.start?.type !== "comment";
+  return arrow.properties.link?.start?.type !== TARGET_TYPES.COMMENT;
 }
 
 /**
@@ -379,12 +405,12 @@ function getTargetPosition(
   state: AnnotationState,
   target: CommentTarget
 ): Point {
-  if (target.type === "coordinate") {
+  if (isCoordinateTarget(target)) {
     return target.coordinate;
-  } else if (target.type === "node") {
+  } else if (isNodeTarget(target)) {
     // For now, return a placeholder - this will be updated by the Links system
     return { x: 0, y: 0 };
-  } else if (target.type === "annotation") {
+  } else if (isAnnotationTarget(target)) {
     const annotation = state.getFeature(target.id);
     if (!annotation) {
       throw new Error(`Annotation ${target.id} not found`);
@@ -419,21 +445,21 @@ function createTargetLink(
   target: CommentTarget,
   side: "start" | "end"
 ): ExportedLink {
-  if (target.type === "coordinate") {
+  if (isCoordinateTarget(target)) {
     // For coordinates, we don't create a link (no ID)
     // The arrow will just have fixed coordinates
     return {
       id: "coordinate" as Id,
       side,
-      type: "node", // Placeholder type
+      type: TARGET_TYPES.NODE, // Placeholder type
       magnet: target.coordinate
     };
   }
-  if (target.type === "node") {
+  if (isNodeTarget(target)) {
     return {
       id: target.id,
       side,
-      type: "node",
+      type: TARGET_TYPES.NODE,
       magnet: target.magnet || { x: 0, y: 0 }
     };
   }
@@ -448,4 +474,13 @@ function createTargetLink(
     type: annotation.properties.type as TargetType,
     magnet: target.magnet || { x: 0, y: 0 }
   };
+}
+
+export function isCommentArrow(arrow: Arrow): boolean {
+  const link = arrow.properties.link;
+  if (!link) return false;
+  return (
+    link.start?.type === TARGET_TYPES.COMMENT ||
+    link.end?.type === TARGET_TYPES.COMMENT
+  );
 }
