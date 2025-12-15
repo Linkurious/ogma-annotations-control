@@ -7,9 +7,7 @@ export type BBox = [number, number, number, number];
  * Get bounding box of a polygon
  */
 export function getPolygonBounds(polygon: Polygon): BBox {
-  if (polygon.geometry.bbox) {
-    return polygon.geometry.bbox as BBox;
-  }
+  if (polygon.geometry.bbox) return polygon.geometry.bbox as BBox;
 
   const coords = polygon.geometry.coordinates[0];
   let minX = Infinity;

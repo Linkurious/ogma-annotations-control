@@ -17,6 +17,8 @@ import {
   getArrowSide,
   getBoxCenter,
   getBoxSize,
+  getPolygonBounds,
+  getPolygonCenter,
   updateBbox
 } from "../utils/utils";
 import { add, mul, subtract } from "../utils/vec";
@@ -105,13 +107,35 @@ export class Links {
   ) {
     const id = getId();
     const arrowId = arrow.id;
+
+    // For polygon annotations, convert absolute magnet to relative coordinates
+    let adjustedMagnet = magnet;
+    if (targetType === "polygon") {
+      const state = this.store.getState();
+      const annotation = state.getFeature(targetId);
+      if (annotation && isPolygon(annotation)) {
+        const bbox = getPolygonBounds(annotation);
+        // Convert absolute coordinates to relative (0-1 range) based on bbox
+        const bboxWidth = bbox[2] - bbox[0];
+        const bboxHeight = bbox[3] - bbox[1];
+        const ox = magnet.x - bbox[0];
+        const oy = magnet.y - bbox[1];
+
+        // Avoid division by zero
+        const relativeX = bboxWidth > 0 ? ox / bboxWidth : 0.5;
+        const relativeY = bboxHeight > 0 ? oy / bboxHeight : 0.5;
+
+        adjustedMagnet = { x: relativeX, y: relativeY };
+      }
+    }
+
     // create a link
     const link: Link = {
       id,
       arrow: arrowId,
       target: targetId,
       targetType,
-      magnet,
+      magnet: adjustedMagnet,
       side
     };
     if (targetType === "node") {
@@ -139,7 +163,7 @@ export class Links {
       id: targetId,
       side,
       type: targetType,
-      magnet: magnet
+      magnet: adjustedMagnet
     };
     return this;
   }
@@ -427,23 +451,7 @@ export class Links {
   }
 
   private _getAnnotationCenter(annotation: Annotation): Point {
-    if (isPolygon(annotation)) {
-      const bbox = annotation.geometry.bbox;
-      if (bbox) {
-        return {
-          x: (bbox[0] + bbox[2]) / 2,
-          y: (bbox[1] + bbox[3]) / 2
-        };
-      }
-      // Fallback: calculate from coordinates
-      const coords = annotation.geometry.coordinates[0];
-      const xs = coords.map((c) => c[0]);
-      const ys = coords.map((c) => c[1]);
-      return {
-        x: (Math.min(...xs) + Math.max(...xs)) / 2,
-        y: (Math.min(...ys) + Math.max(...ys)) / 2
-      };
-    }
+    if (isPolygon(annotation)) return getPolygonCenter(annotation);
     return getBoxCenter(annotation as Text);
   }
 
@@ -453,9 +461,15 @@ export class Links {
     link: Link,
     zoom: number
   ): Position {
-    // For polygons, the magnet point is stored as absolute coordinates
-    // (not relative like boxes), so we just return it directly
-    if (isPolygon(annotation)) return [link.magnet.x, link.magnet.y];
+    // For polygons, the magnet point is stored as relative coordinates (0-1 range)
+    // based on the bounding box, similar to boxes
+    if (isPolygon(annotation)) {
+      const bbox = getPolygonBounds(annotation);
+      // Calculate absolute position from relative magnet
+      const x = bbox[0] + link.magnet.x * (bbox[2] - bbox[0]);
+      const y = bbox[1] + link.magnet.y * (bbox[3] - bbox[1]);
+      return [x, y];
+    }
     return this._getBoxSnapPoint(annotation, point, link, zoom);
   }
 

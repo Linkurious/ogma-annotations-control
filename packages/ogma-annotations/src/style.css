@@ -248,9 +248,9 @@ svg text {
 }
 
 .annotation-text {
-  /* pointer-events: visible; */
-  /* cursor: pointer; */
+  cursor: pointer;
 }
+
 .annotation-text:hover > rect {
   stroke: var(--handle-color);
 }
