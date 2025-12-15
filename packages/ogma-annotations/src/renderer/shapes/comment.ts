@@ -124,7 +124,6 @@ export function renderComment(
     g = createSVGElement<SVGGElement>("g");
     g.setAttribute("data-annotation", `${annotation.id}`);
     g.setAttribute("data-annotation-type", "comment");
-    g.classList.add("annotation-comment");
   }
 
   // Get or create icon group
@@ -148,16 +147,18 @@ export function renderComment(
   renderExpandedBox(boxGroup, annotation, state);
 
   // Update the mode class to trigger CSS transitions
-  if (mode === COMMENT_MODE_COLLAPSED) {
-    if (!g.classList.contains("comment-collapsed")) {
-      g.classList.add("comment-collapsed");
-      g.classList.remove("comment-expanded");
-    }
-  } else {
-    if (g.classList.contains("comment-collapsed")) {
-      g.classList.add("comment-expanded");
-      g.classList.remove("comment-collapsed");
-    }
+  if (
+    mode === COMMENT_MODE_COLLAPSED &&
+    !g.classList.contains("comment-collapsed")
+  ) {
+    g.classList.add("comment-collapsed");
+    g.classList.remove("comment-expanded");
+  } else if (
+    mode !== COMMENT_MODE_COLLAPSED &&
+    g.classList.contains("comment-collapsed")
+  ) {
+    g.classList.add("comment-expanded");
+    g.classList.remove("comment-collapsed");
   }
 
   // Apply screen-aligned transform to the container

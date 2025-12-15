@@ -280,33 +280,30 @@ svg text {
 /* Comment Animation Styles */
 .comment-icon,
 .comment-box {
-  transition: opacity 0.25s ease-in-out,
-              transform 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
-  will-change: transform, opacity;
+  transition:
+    opacity 0.25s ease-in-out,
+    scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: scale, opacity;
 }
 
 /* Collapsed state: icon visible, box hidden */
 .comment-collapsed .comment-icon {
   opacity: 1;
-  transform: scale(1);
-  pointer-events: all;
+  scale: 1;
 }
 
 .comment-collapsed .comment-box {
   opacity: 0;
-  transform: scale(0.5);
-  pointer-events: none;
+  scale: 0.5;
 }
 
 /* Expanded state: box visible, icon hidden */
 .comment-expanded .comment-icon {
   opacity: 0;
-  transform: scale(0.5);
-  pointer-events: none;
+  scale: 0.5;
 }
 
 .comment-expanded .comment-box {
   opacity: 1;
-  transform: scale(1);
-  pointer-events: all;
+  scale: 1;
 }
