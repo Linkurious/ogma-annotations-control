@@ -3,7 +3,8 @@ import { Position } from "geojson";
 import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
-import { Annotation, Bounds, Id, isComment, isArrow } from "../types";
+import { DEFAULT_SEND_ICON } from "../constants";
+import { Annotation, Bounds, ControllerOptions, Id, isComment, isArrow } from "../types";
 import { getAABB } from "../utils/geom";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];
@@ -89,10 +90,19 @@ export interface AnnotationState {
   invZoom: number;
 
   // Controller options (for accessing in handlers)
-  options?: {
-    showSendButton?: boolean;
-    sendButtonIcon?: string;
+  options: {
+    showSendButton: boolean;
+    sendButtonIcon: string;
+    minArrowHeight: number;
+    maxArrowHeight: number;
+    detectMargin: number;
+    magnetColor: string;
+    magnetRadius: number;
+    magnetHandleRadius: number;
+    textPlaceholder: string;
   };
+
+  setOptions: (options: Partial<AnnotationState["options"]>) => void;
 
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
@@ -136,7 +146,7 @@ export interface AnnotationState {
   setDrawingPoints: (points: Position[] | null) => void;
 }
 
-export const createStore = () => {
+export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
   const store = createVanillaStore<AnnotationState>()(
     subscribeWithSelector(
       temporal(
@@ -159,6 +169,23 @@ export const createStore = () => {
           revCos: 1,
           zoom: 1,
           invZoom: 1,
+
+          options: {
+            showSendButton: initialOptions?.showSendButton ?? true,
+            sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
+            minArrowHeight: initialOptions?.minArrowHeight ?? 20,
+            maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
+            detectMargin: initialOptions?.detectMargin ?? 2,
+            magnetColor: initialOptions?.magnetColor ?? "#3e8",
+            magnetRadius: initialOptions?.magnetRadius ?? 10,
+            magnetHandleRadius: initialOptions?.magnetHandleRadius ?? 5,
+            textPlaceholder: initialOptions?.textPlaceholder ?? "Type here"
+          },
+
+          setOptions: (newOptions) =>
+            set((state) => ({
+              options: { ...state.options, ...newOptions }
+            })),
 
           removeFeature: (id) =>
             set((state) => {

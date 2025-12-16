@@ -5,6 +5,7 @@ import { Position } from "geojson";
 import {
   COMMENT_MODE_COLLAPSED,
   COMMENT_MODE_EXPANDED,
+  DEFAULT_SEND_ICON,
   EVT_ADD,
   EVT_CANCEL_DRAWING,
   EVT_COMPLETE_DRAWING,
@@ -51,11 +52,6 @@ import {
 import { findPlace } from "./utils/place-finder";
 import { migrateBoxOrTextIfNeeded } from "./utils/utils";
 
-// Default send button icon (paper plane)
-const DEFAULT_SEND_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>`;
-
 const defaultOptions: ControllerOptions = {
   magnetColor: "#3e8",
   detectMargin: 2,
@@ -77,15 +73,14 @@ interface RendererMap {
 
 export class Control extends EventEmitter<FeatureEvents> {
   private ogma: Ogma;
-  private options: ControllerOptions;
-  private store = createStore();
+  private store: ReturnType<typeof createStore>;
 
   private renderers = {} as RendererMap;
   private interactions: InteractionController;
   private editor: AnnotationEditor;
   // TODO: maybe links should be part of the store?
   private links: Links;
-  private index = new Index(this.store);
+  private index: Index;
 
   // Track pending drawing listener to clean up on cancel
   private pendingDrawingListener:
@@ -94,23 +89,19 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
-    this.options = this.setOptions({ ...defaultOptions, ...options });
     this.ogma = ogma;
-    // Store options in state for access by handlers
-    this.store.setState({
-      options: {
-        showSendButton: this.options.showSendButton,
-        sendButtonIcon: this.options.sendButtonIcon
-      }
-    });
+
+    // Create store with merged options
+    const mergedOptions = { ...defaultOptions, ...options };
+    this.store = createStore(mergedOptions);
+    this.index = new Index(this.store);
 
     this.links = new Links(this.ogma, this.store);
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
       this.index,
-      this.links,
-      this.options.detectMargin
+      this.links
     );
     this.editor = new AnnotationEditor(
       this.ogma,
@@ -259,11 +250,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns the updated options
    */
   public setOptions(options: Partial<ControllerOptions> = {}) {
-    this.options = {
-      ...(this.options || {}),
-      ...options
-    } as ControllerOptions;
-    return this.options;
+    this.store.getState().setOptions(options);
+    return this.store.getState().options;
   }
 
   /**

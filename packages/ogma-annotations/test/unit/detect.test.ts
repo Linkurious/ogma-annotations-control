@@ -42,8 +42,21 @@ describe("HitDetector", () => {
       getState: vi.fn(() => ({
         getFeature: vi.fn(),
         revSin: 0,
-        revCos: 1
+        revCos: 1,
+        options: {
+          detectMargin: 5,
+          showSendButton: true,
+          sendButtonIcon: "",
+          minArrowHeight: 20,
+          maxArrowHeight: 30,
+          magnetColor: "#3e8",
+          magnetRadius: 10,
+          magnetHandleRadius: 5,
+          textPlaceholder: "Type here"
+        }
       })),
+      // need real setOptions implementation for some tests
+      setState: vi.fn(),
       subscribe: vi.fn()
     } as unknown as Store;
 
@@ -52,19 +65,20 @@ describe("HitDetector", () => {
       update: vi.fn()
     } as unknown as Links;
 
-    hitDetector = new HitDetector(mockOgma, mockStore, mockIndex, mockLinks, 5);
+    hitDetector = new HitDetector(mockOgma, mockStore, mockIndex, mockLinks);
   });
 
   describe("Constructor and Initialization", () => {
     it("should initialize with correct threshold and store", () => {
-      const threshold = 10;
       const testIndex = new Index(mockStore);
+      mockStore.setState({
+        options: { ...mockStore.getState().options, detectMargin: 10 }
+      });
       const detector = new HitDetector(
         mockOgma,
         mockStore,
         testIndex,
-        mockLinks,
-        threshold
+        mockLinks
       );
 
       expect(detector).toBeInstanceOf(HitDetector);
@@ -81,8 +95,11 @@ describe("HitDetector", () => {
         }
       } as unknown as Ogma;
       const testIndex = new Index(mockStore);
+      mockStore.setState({
+        options: { ...mockStore.getState().options, detectMargin: 5 }
+      });
 
-      new HitDetector(testOgma, mockStore, testIndex, mockLinks, 5);
+      new HitDetector(testOgma, mockStore, testIndex, mockLinks);
 
       expect(testOgma.getContainer).toHaveBeenCalled();
       expect(testOgma.events.on).toHaveBeenCalledWith(
@@ -373,7 +390,18 @@ describe("HitDetector", () => {
       store.getState = vi.fn(() => ({
         getFeature,
         revSin: 0,
-        revCos: 1
+        revCos: 1,
+        options: {
+          detectMargin: 0,
+          showSendButton: true,
+          sendButtonIcon: "",
+          minArrowHeight: 20,
+          maxArrowHeight: 30,
+          magnetColor: "#3e8",
+          magnetRadius: 10,
+          magnetHandleRadius: 5,
+          textPlaceholder: "Type here"
+        }
       }));
 
       // Old feature should not be found
@@ -862,6 +890,17 @@ function createAndFill(
       revCos,
       zoom,
       invZoom,
+      options: {
+        detectMargin: threshold || 0,
+        showSendButton: true,
+        sendButtonIcon: "",
+        minArrowHeight: 20,
+        maxArrowHeight: 30,
+        magnetColor: "#3e8",
+        magnetRadius: 10,
+        magnetHandleRadius: 5,
+        textPlaceholder: "Type here"
+      },
       getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [
         x0,
         y0,
@@ -869,18 +908,16 @@ function createAndFill(
         y1
       ]
     })),
-    subscribe: vi.fn()
+    subscribe: vi.fn(),
+    setState: vi.fn()
   } as unknown as Store;
+  testStore.setState({
+    options: { ...testStore.getState().options, detectMargin: threshold }
+  });
 
   const index = new Index(testStore);
 
-  const detector = new HitDetector(
-    mockOgma,
-    testStore,
-    index,
-    mockLinks,
-    threshold
-  );
+  const detector = new HitDetector(mockOgma, testStore, index, mockLinks);
 
   // Fill the index with features
   Object.values(mockFeatures).forEach((feature) => {

@@ -43,8 +43,7 @@ export class InteractionController {
     private ogma: Ogma,
     private store: Store,
     private index: Index,
-    private links: Links,
-    private threshold: number = 0.5
+    private links: Links
   ) {
     const container = this.ogma.getContainer();
 
@@ -78,7 +77,7 @@ export class InteractionController {
   detect(x: number, y: number, thresholdOverride?: number): Annotation | null {
     let result: Annotation | null = null;
     const state = this.store.getState();
-    const threshold = thresholdOverride ?? this.threshold;
+    const threshold = thresholdOverride ?? state.options.detectMargin;
     this.query.minX = x - threshold;
     this.query.minY = y - threshold;
     this.query.maxX = x + threshold;

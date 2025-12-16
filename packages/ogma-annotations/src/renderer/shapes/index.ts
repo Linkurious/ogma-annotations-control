@@ -20,8 +20,6 @@ import { createSVGElement } from "../../utils/utils";
 import { Renderer } from "../base";
 
 export class Shapes extends Renderer<SVGLayer> {
-  private minArrowHeight = 10;
-  private maxArrowHeight = 20;
   private features = new Map<Id, SVGGElement>();
   private arrowsRoot: SVGGElement | null = null;
   private shapesRoot: SVGGElement | null = null;
@@ -135,15 +133,16 @@ export class Shapes extends Renderer<SVGLayer> {
           existingElement,
           state
         );
-      } else if (isArrow(feature))
+      } else if (isArrow(feature)) {
         existingElement = renderArrow(
           arrowsRoot,
           feature,
-          this.minArrowHeight,
-          this.maxArrowHeight,
+          state.options?.minArrowHeight,
+          state.options?.maxArrowHeight,
           existingElement,
           state
         );
+      }
       if (existingElement) this.features.set(feature.id, existingElement);
     }
 
