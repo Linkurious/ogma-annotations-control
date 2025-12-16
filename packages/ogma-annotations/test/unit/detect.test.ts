@@ -21,6 +21,19 @@ import { InteractionController as HitDetector } from "../../src/interaction/inde
 import { Index } from "../../src/interaction/spatialIndex";
 import { Store } from "../../src/store";
 
+// Helper to create default options for tests
+const createMockOptions = (detectMargin: number = 0) => ({
+  detectMargin,
+  showSendButton: true,
+  sendButtonIcon: "",
+  minArrowHeight: 20,
+  maxArrowHeight: 30,
+  magnetColor: "#3e8",
+  magnetRadius: 10,
+  magnetHandleRadius: 5,
+  textPlaceholder: "Type here"
+});
+
 describe("HitDetector", () => {
   let hitDetector: HitDetector;
   let mockStore: Store;
@@ -43,19 +56,8 @@ describe("HitDetector", () => {
         getFeature: vi.fn(),
         revSin: 0,
         revCos: 1,
-        options: {
-          detectMargin: 5,
-          showSendButton: true,
-          sendButtonIcon: "",
-          minArrowHeight: 20,
-          maxArrowHeight: 30,
-          magnetColor: "#3e8",
-          magnetRadius: 10,
-          magnetHandleRadius: 5,
-          textPlaceholder: "Type here"
-        }
+        options: createMockOptions(5)
       })),
-      // need real setOptions implementation for some tests
       setState: vi.fn(),
       subscribe: vi.fn()
     } as unknown as Store;
@@ -391,17 +393,7 @@ describe("HitDetector", () => {
         getFeature,
         revSin: 0,
         revCos: 1,
-        options: {
-          detectMargin: 0,
-          showSendButton: true,
-          sendButtonIcon: "",
-          minArrowHeight: 20,
-          maxArrowHeight: 30,
-          magnetColor: "#3e8",
-          magnetRadius: 10,
-          magnetHandleRadius: 5,
-          textPlaceholder: "Type here"
-        }
+        options: createMockOptions(0)
       }));
 
       // Old feature should not be found
@@ -890,17 +882,7 @@ function createAndFill(
       revCos,
       zoom,
       invZoom,
-      options: {
-        detectMargin: threshold || 0,
-        showSendButton: true,
-        sendButtonIcon: "",
-        minArrowHeight: 20,
-        maxArrowHeight: 30,
-        magnetColor: "#3e8",
-        magnetRadius: 10,
-        magnetHandleRadius: 5,
-        textPlaceholder: "Type here"
-      },
+      options: createMockOptions(threshold),
       getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [
         x0,
         y0,
@@ -911,9 +893,6 @@ function createAndFill(
     subscribe: vi.fn(),
     setState: vi.fn()
   } as unknown as Store;
-  testStore.setState({
-    options: { ...testStore.getState().options, detectMargin: threshold }
-  });
 
   const index = new Index(testStore);
 
