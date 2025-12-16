@@ -20,8 +20,8 @@ import { createSVGElement } from "../../utils/utils";
 import { Renderer } from "../base";
 
 export class Shapes extends Renderer<SVGLayer> {
-  private minArrowHeight = 20;
-  private maxArrowHeight = 30;
+  private minArrowHeight = 10;
+  private maxArrowHeight = 20;
   private features = new Map<Id, SVGGElement>();
   private arrowsRoot: SVGGElement | null = null;
   private shapesRoot: SVGGElement | null = null;
