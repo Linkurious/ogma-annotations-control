@@ -1,3 +1,4 @@
+import { isCommentArrow } from "../../handlers/commentHelpers";
 import { AnnotationState } from "../../store";
 import { Arrow, Extremity, Id, Point, defaultArrowStyle } from "../../types";
 import { createSVGElement, getArrowEndPoints } from "../../utils/utils";
@@ -18,14 +19,15 @@ const HALO_OPACITY = 0.5;
  * @param arrow The arrow to measure
  * @returns The height of the bounding box of the arrow
  */
-export function getArrowHeight(arrow: Arrow, min = 2, max = 30): number {
+export function getArrowHeight(
+  arrow: Arrow,
+  strokeWidth: number,
+  min = 2,
+  max = 30
+): number {
   const { start, end } = getArrowEndPoints(arrow);
   const vec = subtract(end, start);
-  const strokeW =
-    arrow.properties.style && arrow.properties.style.strokeWidth
-      ? arrow.properties.style?.strokeWidth
-      : 0;
-  return Math.min(max, Math.max(2 * strokeW, length(vec) * 0.01, min));
+  return Math.min(max, Math.max(2 * strokeWidth, length(vec) * 0.01, min));
 }
 
 /**
@@ -81,15 +83,13 @@ export function renderArrow(
   state: AnnotationState
 ) {
   const { start, end } = getArrowEndPoints(arrow);
-  const {
-    tail,
-    head,
-    strokeColor,
-    strokeWidth = 0,
-    strokeType
-  } = arrow.properties.style || defaultArrowStyle;
+  const style = arrow.properties.style || defaultArrowStyle;
+  const { tail, strokeWidth = 0, head, strokeColor, strokeType } = style;
   const vec = subtract(end, start);
-  const tipLength = getArrowHeight(arrow, minArrowHeight, maxArrowHeight);
+  const zoom = isCommentArrow(arrow) ? 1 / state.zoom : 1;
+
+  const tipLength =
+    getArrowHeight(arrow, strokeWidth, minArrowHeight, maxArrowHeight) * zoom;
 
   const lineGroup = createDom(chachedElement, arrow.id);
   const path = lineGroup.firstChild as SVGPathElement;
@@ -97,7 +97,7 @@ export function renderArrow(
   const filled = head === "arrow-plain" || tail === "arrow";
   const color = strokeColor || "none";
   path.setAttribute("stroke", color);
-  path.setAttribute("stroke-width", `${strokeWidth}`);
+  path.setAttribute("stroke-width", `${zoom * strokeWidth}`);
   path.setAttribute("fill", filled ? strokeColor || "" : "none");
   path.setAttribute("stroke-linecap", "round");
   path.setAttribute("stroke-linejoin", "round");
@@ -117,8 +117,8 @@ export function renderArrow(
     path.removeAttribute("stroke-dasharray");
   }
 
-  addExtremity(endpointsGroup, start, color, tail, strokeWidth);
-  addExtremity(endpointsGroup, end, color, head, strokeWidth);
+  addExtremity(endpointsGroup, start, color, tail, strokeWidth, zoom);
+  addExtremity(endpointsGroup, end, color, head, strokeWidth, zoom);
   lineGroup.setAttribute(
     "transform",
     `rotate(${-state.rotation * (180 / Math.PI)})`
@@ -132,7 +132,8 @@ function addExtremity(
   point: Point,
   color: string,
   type: Extremity | undefined,
-  strokeWidth: number
+  strokeWidth: number,
+  zoom: number
 ) {
   if (type === "halo-dot")
     addDot(
@@ -140,10 +141,10 @@ function addExtremity(
       point,
       getHaloColor(color),
       HALO_OPACITY,
-      strokeWidth * 4
+      strokeWidth * zoom * 4
     );
   if (type === "dot" || type === "halo-dot")
-    addDot(lineGroup, point, color, 1, strokeWidth * 2);
+    addDot(lineGroup, point, color, 1, strokeWidth * zoom * 2);
 }
 
 function getHaloColor(color: string) {
