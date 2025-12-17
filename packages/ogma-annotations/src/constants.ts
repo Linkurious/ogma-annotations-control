@@ -28,8 +28,8 @@ export const LAYERS = {
   HANDLES: 3
 };
 
-export const SIDE_START = "start";
-export const SIDE_END = "end";
+export const SIDE_START = "start" as const;
+export const SIDE_END = "end" as const;
 
 export const cursors: Record<string, Cursor> = {
   default: "default",

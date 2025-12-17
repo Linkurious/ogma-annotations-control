@@ -16,7 +16,7 @@ The plugin comes with no UI of its own, but provides a set of tools that you can
 - **Arrows**: Arrows can be drawn between nodes. They can be styled and can snap to both nodes and text annotations.
 
 ```ts
-import Ogma from '@linkurious/ogma';
+import { Ogma } from '@linkurious/ogma';
 import {
   Control,
   createArrow,

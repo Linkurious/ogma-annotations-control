@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
 import { cursors } from "../constants";
 import { Links } from "../handlers/links";

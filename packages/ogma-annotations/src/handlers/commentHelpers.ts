@@ -1,4 +1,4 @@
-import { TARGET_TYPES } from "../constants";
+import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
 import { AnnotationState } from "../store";
 import {
   Arrow,
@@ -169,11 +169,11 @@ export function createCommentWithArrow(
   arrow.properties.link = {
     start: {
       id: comment.id,
-      side: "start",
-      type: "comment",
+      side: SIDE_START,
+      type: TARGET_TYPES.COMMENT,
       magnet: startMagnet
     },
-    end: createTargetLink(state, target, "end")
+    end: createTargetLink(state, target, SIDE_END)
   };
 
   return { comment, arrow };
@@ -230,11 +230,11 @@ export function addArrowToComment(
   arrow.properties.link = {
     start: {
       id: commentId,
-      side: "start",
-      type: "comment",
+      side: SIDE_START,
+      type: TARGET_TYPES.COMMENT,
       magnet: startMagnet
     },
-    end: createTargetLink(state, target, "end")
+    end: createTargetLink(state, target, SIDE_END)
   };
 
   return arrow;
@@ -443,7 +443,7 @@ function getTargetPosition(
 function createTargetLink(
   state: AnnotationState,
   target: CommentTarget,
-  side: "start" | "end"
+  side: typeof SIDE_START | typeof SIDE_END
 ): ExportedLink {
   if (isCoordinateTarget(target)) {
     // For coordinates, we don't create a link (no ID)

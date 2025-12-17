@@ -1,7 +1,14 @@
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { describe, it, assert, beforeEach, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import { Control, createArrow, createText, createBox } from "../../src";
+import {
+  Control,
+  createArrow,
+  createText,
+  createBox,
+  Text,
+  Box
+} from "../../src";
 
 describe("Control.setScale", () => {
   let ogma: Ogma;
@@ -103,7 +110,7 @@ describe("Control.setScale", () => {
     it("should scale text dimensions and position around origin (0,0)", () => {
       const text = createText(0, 0, 100, 50, "Hello");
       const addedCollection = control.add(text);
-      const addedText = addedCollection.getAnnotations().features[0];
+      const addedText = addedCollection.getAnnotations().features[0] as Text;
 
       assert.equal(addedText.properties.width, 100);
       assert.equal(addedText.properties.height, 50);
@@ -112,7 +119,9 @@ describe("Control.setScale", () => {
       control.setScale(addedText.id, 2, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedText.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedText.id
+      ) as Text;
 
       assert.equal(scaled?.properties.width, 200);
       assert.equal(scaled?.properties.height, 100);
@@ -131,7 +140,9 @@ describe("Control.setScale", () => {
       control.setScale(addedText.id, 2, 100, 100);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedText.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedText.id
+      ) as Text;
 
       assert.equal(scaled?.properties.width, 200);
       assert.equal(scaled?.properties.height, 100);
@@ -141,7 +152,7 @@ describe("Control.setScale", () => {
     it("should update text position and dimensions when scaling", () => {
       const text = createText(0, 0, 100, 50, "Hello");
       const addedCollection = control.add(text);
-      const addedText = addedCollection.getAnnotations().features[0];
+      const addedText = addedCollection.getAnnotations().features[0] as Text;
 
       // Initial state: center at (50, 25), size 100x50
       assert.deepEqual(addedText.geometry.coordinates, [50, 25]);
@@ -151,7 +162,9 @@ describe("Control.setScale", () => {
       control.setScale(addedText.id, 2, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedText.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedText.id
+      ) as Text;
 
       // After scaling by 2x around (0,0):
       // - New center: (100, 50)
@@ -169,7 +182,9 @@ describe("Control.setScale", () => {
       control.setScale(addedText.id, 0.5, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedText.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedText.id
+      ) as Text;
 
       assert.equal(scaled?.properties.width, 50);
       assert.equal(scaled?.properties.height, 25);
@@ -184,7 +199,9 @@ describe("Control.setScale", () => {
       control.setScale(addedText.id, 2, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedText.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedText.id
+      ) as Text;
 
       assert.equal(scaled?.properties.content, "Hello World");
     });
@@ -196,12 +213,14 @@ describe("Control.setScale", () => {
         font: "Arial"
       });
       const addedCollection = control.add(text);
-      const addedText = addedCollection.getAnnotations().features[0];
+      const addedText = addedCollection.getAnnotations().features[0] as Text;
 
       control.setScale(addedText.id, 2, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedText.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedText.id
+      ) as Text;
 
       assert.equal(scaled?.properties.style?.color, "red");
       assert.equal(scaled?.properties.style?.fontSize, "16px");
@@ -213,7 +232,7 @@ describe("Control.setScale", () => {
     it("should scale box dimensions and position", () => {
       const box = createBox(0, 0, 100, 50);
       const addedCollection = control.add(box);
-      const addedBox = addedCollection.getAnnotations().features[0];
+      const addedBox = addedCollection.getAnnotations().features[0] as Box;
 
       assert.equal(addedBox.properties.width, 100);
       assert.equal(addedBox.properties.height, 50);
@@ -221,7 +240,9 @@ describe("Control.setScale", () => {
       control.setScale(addedBox.id, 2, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedBox.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedBox.id
+      ) as Box;
 
       assert.equal(scaled?.properties.width, 200);
       assert.equal(scaled?.properties.height, 100);
@@ -239,7 +260,9 @@ describe("Control.setScale", () => {
       control.setScale(addedBox.id, 2, 0, 0);
 
       const annotations = control.getAnnotations();
-      const scaled = annotations.features.find((f) => f.id === addedBox.id);
+      const scaled = annotations.features.find(
+        (f) => f.id === addedBox.id
+      ) as Box;
 
       assert.equal(scaled?.properties.style?.background, "blue");
       assert.equal(scaled?.properties.style?.strokeColor, "red");

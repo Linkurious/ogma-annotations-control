@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { getTextSize } from "./utils";
 import { Index } from "../interaction/spatialIndex";
 import { Text } from "../types";

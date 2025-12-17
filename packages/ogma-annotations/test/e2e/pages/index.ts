@@ -1,14 +1,14 @@
-import Ogma from "@linkurious/ogma";
-import { Control, createArrow } from "../../../src";
+import { Ogma } from "@linkurious/ogma";
 import { AugmentedWindow } from "./types.ts";
+import { Control, createArrow } from "../../../src";
 declare global {
   // eslint-disable-next-line
-  interface Window extends AugmentedWindow { }
+  interface Window extends AugmentedWindow {}
 }
 function createOgma(options) {
   const ogma = new Ogma({
     container: "graph-container",
-    ...options,
+    ...options
   });
   window.ogma = ogma;
   return ogma;

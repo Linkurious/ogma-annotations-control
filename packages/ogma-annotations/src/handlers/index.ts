@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { ArrowHandler } from "./arrow";
 import { Handler } from "./base";
 import { Links } from "./links";
@@ -100,6 +100,10 @@ export class AnnotationEditor extends EventTarget {
 
   getSnapping() {
     return this.snapping;
+  }
+
+  getArrowHandler(): ArrowHandler {
+    return this.handlers.get("arrow") as ArrowHandler;
   }
 
   getCurrentTool(): string {

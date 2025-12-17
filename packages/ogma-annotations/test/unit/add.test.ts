@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { describe, it, assert, beforeEach } from "vitest";
 import { createOgma } from "./utils";
 import { Control, Text } from "../../src";

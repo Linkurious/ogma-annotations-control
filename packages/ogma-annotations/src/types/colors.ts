@@ -23,7 +23,13 @@ export type RgbaColor =
 /**
  * Any valid color format
  */
-export type Color = HexColor | RgbColor | RgbaColor | "transparent" | "none";
+export type Color =
+  | HexColor
+  | RgbColor
+  | RgbaColor
+  | "transparent"
+  | "none"
+  | string;
 
 /**
  * Type guard to check if a string is a valid hex color

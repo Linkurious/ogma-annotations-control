@@ -1,4 +1,4 @@
-import type Ogma from "@linkurious/ogma";
+import type { Ogma } from "@linkurious/ogma";
 import { MouseButtonEvent } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { Position } from "geojson";
@@ -463,16 +463,15 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param options Drawing options including offsets and styles
    * @returns this for chaining
    */
-  public enableCommentDrawing(options?: {
-    offsetX?: number;
-    offsetY?: number;
-    commentStyle?: Partial<CommentProps>;
-    arrowStyle?: Partial<ArrowProperties>;
-  }): this {
+  public enableCommentDrawing(
+    options: {
+      offsetX?: number;
+      offsetY?: number;
+      commentStyle?: Partial<CommentProps>;
+      arrowStyle?: Partial<ArrowProperties>;
+    } = {}
+  ): this {
     return this.enableDrawingMode((x, y) => {
-      if (!options) {
-        options = {};
-      }
       if (options.offsetX === undefined && options.offsetY === undefined) {
         const bestPoint = findPlace(x, y, this.index, this.ogma);
         options.offsetX = bestPoint.x;
@@ -612,8 +611,9 @@ export class Control extends EventEmitter<FeatureEvents> {
     const drawingHandler = new CommentDrawingHandler(
       this.ogma,
       this.store,
-      this.editor.getSnapping(),
       this.links,
+      this.editor.getSnapping(),
+      this.editor.getArrowHandler(),
       comment,
       options
     );

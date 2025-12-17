@@ -12,7 +12,7 @@ import type {
   Text,
   Annotation
 } from "../types";
-import { isBox, isText, isPolygon, isComment } from "../types";
+import { isBox, isText, isPolygon, isComment, isArrow } from "../types";
 import {
   getArrowSide,
   getBoxCenter,
@@ -396,6 +396,10 @@ export class Links {
     const state = this.store.getState();
     const oldIds = new Set(Object.keys(prevFeatures));
     const newIds = Object.keys(newFeatures).filter((id) => !oldIds.has(id));
+    const removedIds = Object.keys(prevFeatures).filter(
+      (id) => !newFeatures[id]
+    );
+
     newIds.forEach((id) => {
       const feature = state.getFeature(id);
       if (!feature || feature.properties.type !== "arrow") return;
@@ -444,6 +448,27 @@ export class Links {
             linkData.type,
             linkData.magnet!
           );
+        }
+      }
+    });
+
+    removedIds.forEach((id) => {
+      const feature = prevFeatures[id];
+      if (isArrow(feature)) {
+        const arrow = feature as Arrow;
+        // Remove all links associated with this arrow
+        this.remove(arrow, SIDE_START);
+        this.remove(arrow, SIDE_END);
+      } else {
+        // Remove all links associated with this annotation
+        const annotationLinks = this.annotationToLink.get(id);
+        if (annotationLinks) {
+          for (const linkId of annotationLinks) {
+            const link = this.links.get(linkId);
+            if (!link) continue;
+            const arrow = state.getFeature(link.arrow) as Arrow;
+            this.remove(arrow, link.side);
+          }
         }
       }
     });

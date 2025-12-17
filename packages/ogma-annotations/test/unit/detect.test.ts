@@ -1,4 +1,4 @@
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   Annotation,

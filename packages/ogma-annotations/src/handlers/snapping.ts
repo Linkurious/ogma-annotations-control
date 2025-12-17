@@ -1,5 +1,4 @@
-import type Ogma from "@linkurious/ogma";
-import type { Node, NodeId, NodeList, Point } from "@linkurious/ogma";
+import type { Ogma, Node, NodeId, NodeList, Point } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { TARGET_TYPES } from "../constants";
 import { Index } from "../interaction/spatialIndex";

@@ -5,7 +5,6 @@ import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";
 import {
   EVT_DRAG,
-  SIDE_END,
   SIDE_START,
   cursors,
   handleDetectionThreshold
@@ -21,8 +20,8 @@ import {
 } from "../types";
 
 enum HandleType {
-  START = SIDE_START,
-  END = SIDE_END,
+  START = "start",
+  END = "end",
   BODY = "body"
 }
 
@@ -209,14 +208,8 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     return true;
   }
 
-  public startDrawing(id: Id, clientX: number, clientY: number) {
-    this.annotation = id;
-    const annotation = this.getAnnotation()!;
-    // ensure linking
-    const snap = this.snapping.snap({
-      x: clientX,
-      y: clientY
-    });
+  private snapDrawingStart(annotation: Arrow, x: number, y: number) {
+    const snap = this.snapping.snap({ x, y });
     if (snap) {
       annotation.geometry.coordinates[0] = [snap.point.x, snap.point.y];
       annotation.properties.link = {
@@ -237,6 +230,14 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       // no need to update live as we set the initial point directly
       // no need to change clientX/Y as we already have the snapped point
     }
+  }
+
+  public startDrawing(id: Id, clientX: number, clientY: number) {
+    this.annotation = id;
+    const annotation = this.getAnnotation()!;
+    // ensure linking
+    this.snapDrawingStart(annotation, clientX, clientY);
+
     const { x, y } = this.clientToCanvas({ clientX, clientY });
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;
