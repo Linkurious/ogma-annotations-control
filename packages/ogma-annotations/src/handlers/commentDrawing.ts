@@ -6,7 +6,7 @@ import { Snapping } from "./snapping";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
 import { Store } from "../store";
 import { Comment, Id, ArrowProperties, isArrow } from "../types";
-import { createArrow, defaultArrowStyle } from "../types/features/Arrow";
+import { Arrow, createArrow, defaultArrowStyle } from "../types/features/Arrow";
 
 /**
  * Meta-handler for drawing comments with arrows
@@ -27,7 +27,6 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
   private comment: Comment;
   private startX: number = 0;
   private startY: number = 0;
-  private onArrowCompleteBound: () => void;
 
   constructor(
     ogma: Ogma,
@@ -50,7 +49,6 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.offsetY = options?.offsetY ?? -50;
     this.arrowStyle = options?.arrowStyle;
     this.comment = comment;
-    this.onArrowCompleteBound = this.onArrowComplete.bind(this);
   }
 
   protected detectHandle(_evt: MouseEvent, _zoom: number): void {
@@ -73,7 +71,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.store.setState({ drawingFeature: arrow.id });
 
     // Listen for arrow completion
-    this.arrowHandler.addEventListener("dragend", this.onArrowCompleteBound);
+    this.arrowHandler.addEventListener("dragend", this.onArrowComplete);
 
     // Activate ArrowHandler by selecting the arrow
     this.store.getState().setSelectedFeatures([arrow.id]);
@@ -83,9 +81,25 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.arrowHandler.startDrawing(arrow.id, pos.x, pos.y);
   }
 
-  private onArrowComplete(): void {
+  private snapArrowStart(arrow: Arrow, x: number, y: number) {
+    const snap = this.snapping.snap({ x, y });
+    if (snap) {
+      arrow.geometry.coordinates[0] = [snap.point.x, snap.point.y];
+      arrow.properties.link = {
+        start: {
+          side: SIDE_START,
+          id: snap.id,
+          type: snap.type,
+          magnet: snap.magnet
+        }
+      };
+      this.links.add(arrow, SIDE_START, snap.id, snap.type, snap.magnet);
+    }
+  }
+
+  private onArrowComplete = () => {
     // Remove listener
-    this.arrowHandler.removeEventListener("dragend", this.onArrowCompleteBound);
+    this.arrowHandler.removeEventListener("dragend", this.onArrowComplete);
 
     const state = this.store.getState();
 
@@ -130,7 +144,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     const arrowFromCommentX = commentX;
     const arrowFromCommentY = commentY + commentHeight * 0.5;
 
-    // Preserve any existing link from ArrowHandler (at START position, which becomes END after flip)
+    this.snapArrowStart(arrow, arrowStart[0], arrowStart[1]);
     const existingStartLink = arrow.properties.link?.start;
 
     // Update arrow to connect from comment edge to the original click point
@@ -173,8 +187,6 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       y: 0.5
     });
 
-    console.log({ existingStartLink });
-
     // If there was a link at the original arrow start, it's now at the end
     if (existingStartLink && existingStartLink.magnet) {
       this.links.add(
@@ -191,5 +203,5 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
 
     // Clear drawing state
     this.store.setState({ drawingFeature: null });
-  }
+  };
 }

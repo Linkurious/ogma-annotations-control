@@ -402,7 +402,7 @@ export class Links {
 
     newIds.forEach((id) => {
       const feature = state.getFeature(id);
-      if (!feature || feature.properties.type !== "arrow") return;
+      if (!feature || !isArrow(feature)) return;
       const arrow = feature as Arrow;
       if (arrow.properties.link?.start) {
         const linkData = arrow.properties.link.start;
@@ -467,7 +467,9 @@ export class Links {
             const link = this.links.get(linkId);
             if (!link) continue;
             const arrow = state.getFeature(link.arrow) as Arrow;
-            this.remove(arrow, link.side);
+            if (arrow) this.remove(arrow, link.side);
+            this.linksByArrowId.delete(link.arrow);
+            this.links.delete(linkId);
           }
         }
       }

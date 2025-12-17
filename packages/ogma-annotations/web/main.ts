@@ -309,6 +309,9 @@ class App {
       if (evt.key === "Escape") {
         console.log("draw arrow keydown Escape");
         this.control.cancelDrawing();
+      } else if (evt.key === "Backspace" || evt.key === "Delete") {
+        console.log("delete keydown", evt);
+        this.control.remove(this.control.getSelectedAnnotations());
       }
     });
 
