@@ -22,8 +22,8 @@ const HALO_OPACITY = 0.5;
 export function getArrowHeight(
   arrow: Arrow,
   strokeWidth: number,
-  min = 2,
-  max = 30
+  min: number,
+  max: number
 ): number {
   const { start, end } = getArrowEndPoints(arrow);
   const vec = subtract(end, start);

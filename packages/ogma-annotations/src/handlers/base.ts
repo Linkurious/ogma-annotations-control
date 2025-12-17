@@ -174,9 +174,8 @@ export abstract class Handler<
     if (!this.isActive()) return;
     // Only delete the annotation if it's being drawn (not an existing annotation being edited)
     const state = this.store.getState();
-    if (state.drawingFeature === this.annotation) {
+    if (state.drawingFeature === this.annotation)
       state.removeFeature(this.annotation!);
-    }
     this.stopEditing();
   }
 

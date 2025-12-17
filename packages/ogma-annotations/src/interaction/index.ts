@@ -241,6 +241,7 @@ export class InteractionController {
 
     this.mouseDownState = null;
   };
+
   private setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
     if (container) (container as HTMLElement).style.cursor = cursor;

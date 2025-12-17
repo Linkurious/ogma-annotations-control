@@ -4,7 +4,14 @@ import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
 import { DEFAULT_SEND_ICON } from "../constants";
-import { Annotation, Bounds, ControllerOptions, Id, isComment, isArrow } from "../types";
+import {
+  Annotation,
+  Bounds,
+  ControllerOptions,
+  Id,
+  isComment,
+  isArrow
+} from "../types";
 import { getAABB } from "../utils/geom";
 
 const rotatedRect: Bounds = [0, 0, 0, 0];
@@ -173,8 +180,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           options: {
             showSendButton: initialOptions?.showSendButton ?? true,
             sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
-            minArrowHeight: initialOptions?.minArrowHeight ?? 20,
-            maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
+            minArrowHeight: initialOptions?.minArrowHeight ?? 5,
+            maxArrowHeight: initialOptions?.maxArrowHeight ?? 10,
             detectMargin: initialOptions?.detectMargin ?? 2,
             magnetColor: initialOptions?.magnetColor ?? "#3e8",
             magnetRadius: initialOptions?.magnetRadius ?? 10,
