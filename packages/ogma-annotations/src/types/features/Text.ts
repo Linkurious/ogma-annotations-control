@@ -35,7 +35,10 @@ export interface TextProperties extends Omit<BoxProperties, "type"> {
   style?: TextStyle;
 }
 
-export type Text = AnnotationFeature<GeoJSONPoint, TextProperties>;
+/**
+ * Text annotation feature, represents a text box at a specific position
+ */
+export interface Text extends AnnotationFeature<GeoJSONPoint, TextProperties> {}
 
 export const isText = (
   a: AnnotationFeature<Geometry, AnnotationProps>

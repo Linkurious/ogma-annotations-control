@@ -21,7 +21,11 @@ export interface ArrowProperties extends AnnotationProps {
   link?: Partial<Record<Side, ExportedLink>>;
 }
 
-export type Arrow = AnnotationFeature<LineString, ArrowProperties>;
+/**
+ * Arrow annotation feature. Represents a directed line between two points,
+ * can connect a textbox to a shape.
+ */
+export interface Arrow extends AnnotationFeature<LineString, ArrowProperties> {}
 
 export const isArrow = (
   a: AnnotationFeature<Geometry, AnnotationProps>

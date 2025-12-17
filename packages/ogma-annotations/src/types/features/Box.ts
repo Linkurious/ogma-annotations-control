@@ -23,10 +23,14 @@ export interface BoxProperties extends AnnotationProps {
   width: number;
   /** Height of the box */
   height: number;
+  /** Style options for the box */
   style?: BoxStyle;
 }
 
-export type Box = AnnotationFeature<GeoJSONPoint, BoxProperties>;
+/**
+ * Box annotation feature
+ */
+export interface Box extends AnnotationFeature<GeoJSONPoint, BoxProperties> {}
 
 export const isBox = (
   a: AnnotationFeature<Geometry, AnnotationProps>

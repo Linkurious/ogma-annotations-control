@@ -75,9 +75,9 @@ export interface CommentProps extends AnnotationProps {
  *
  * Note: Arrows are stored separately in Arrow features.
  * Arrows reference comments via their link.start or link.end properties.
- * Comments do NOT store arrow references.
  */
-export type Comment = AnnotationFeature<GeoJSONPoint, CommentProps>;
+export interface Comment
+  extends AnnotationFeature<GeoJSONPoint, CommentProps> {}
 
 /**
  * Type guard to check if an annotation is a Comment

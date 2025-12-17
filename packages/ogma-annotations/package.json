@@ -21,8 +21,8 @@
       "default": "./dist/index.mjs"
     },
     "./style.css": {
-      "import": "./dist/style.css",
-      "require": "./dist/style.css"
+      "import": "./dist/ogma-annotations.css",
+      "require": "./dist/ogma-annotations.css"
     },
     "./umd": "./dist/index.js",
     "./esm": "./dist/index.mjs"
@@ -85,8 +85,8 @@
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
     "playwright": "1.57.0",
-    "typedoc": "^0.25.13",
-    "typedoc-plugin-markdown": "^3.17.1",
+    "typedoc": "0.28.15",
+    "typedoc-plugin-markdown": "4.9.0",
     "typescript": "5.3.3",
     "vite": "latest",
     "vite-plugin-dts": "^4.1.0",

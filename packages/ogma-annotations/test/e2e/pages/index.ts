@@ -3,9 +3,11 @@ import { AugmentedWindow } from "./types.ts";
 import { Control, createArrow } from "../../../src";
 declare global {
   // eslint-disable-next-line
-  interface Window extends AugmentedWindow {}
+  interface Window extends AugmentedWindow {
+    ogma: Ogma;
+  }
 }
-function createOgma(options) {
+function createOgma(options = {}) {
   const ogma = new Ogma({
     container: "graph-container",
     ...options
@@ -13,8 +15,9 @@ function createOgma(options) {
   window.ogma = ogma;
   return ogma;
 }
+
 function createEditor() {
-  const editor = new Control(ogma);
+  const editor = new Control(window.ogma);
   window.editor = editor;
   return editor;
 }
