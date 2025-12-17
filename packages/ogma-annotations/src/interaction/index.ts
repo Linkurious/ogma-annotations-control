@@ -202,9 +202,15 @@ export class InteractionController {
       hasMoved: false
     };
 
+    // Store mouse press state globally for handlers
+    const state = this.store.getState();
+    this.store.setState({
+      mousePressed: true,
+      mousePressPoint: { x, y }
+    });
+
     // If clicking on an already-selected annotation, don't change selection yet
     // (allows dragging multiple selected items)
-    const state = this.store.getState();
     if (annotation && !state.selectedFeatures.has(annotation.id)) {
       // Not selected yet - select immediately to prepare for potential drag
       if (evt.ctrlKey || evt.metaKey) {
@@ -217,6 +223,12 @@ export class InteractionController {
 
   private onMouseUp = (evt: MouseEvent) => {
     const state = this.store.getState();
+
+    // Clear global mouse press state
+    this.store.setState({
+      mousePressed: false,
+      mousePressPoint: null
+    });
 
     // Handle click (mousedown + mouseup without significant movement)
     if (

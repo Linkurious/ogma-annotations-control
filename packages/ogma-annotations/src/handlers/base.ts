@@ -32,6 +32,22 @@ export abstract class Handler<
   handleMouseMove = (evt: ClientMouseEvent): void => {
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
+
+    const state = this.store.getState();
+
+    // Check if mouse was pressed before handler became active
+    if (!this.dragging && state.mousePressed && state.mousePressPoint) {
+      // We missed the mousedown event - simulate it if we have a hovered handle
+      this.detectHandle(evt, this.ogma.view.getZoom());
+      if (this.hoveredHandle) {
+        this.dragStartPoint = state.mousePressPoint;
+        this.onDragStart(evt);
+        this.dispatchEvent(new Event(EVT_DRAG_START));
+        this.disablePanning();
+        return;
+      }
+    }
+
     if (!this.dragging) this.detectHandle(evt, this.ogma.view.getZoom());
     else if (this.dragStartPoint) this.onDrag(evt);
   };

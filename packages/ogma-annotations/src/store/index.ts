@@ -10,7 +10,8 @@ import {
   ControllerOptions,
   Id,
   isComment,
-  isArrow
+  isArrow,
+  Point
 } from "../types";
 import { getAABB } from "../utils/geom";
 
@@ -86,6 +87,10 @@ export interface AnnotationState {
   lastChangedFeatures: Id[];
   drawingFeature: Id | null;
   drawingPoints: Position[] | null;
+
+  // Mouse press state for drag detection
+  mousePressed: boolean;
+  mousePressPoint: Point | null;
 
   rotation: number;
   sin: number;
@@ -168,6 +173,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           lastChangedFeatures: [],
           drawingFeature: null,
           drawingPoints: null,
+          mousePressed: false,
+          mousePressPoint: null,
           rotation: 0,
           sin: 0,
           cos: 1,
@@ -180,8 +187,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           options: {
             showSendButton: initialOptions?.showSendButton ?? true,
             sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
-            minArrowHeight: initialOptions?.minArrowHeight ?? 5,
-            maxArrowHeight: initialOptions?.maxArrowHeight ?? 10,
+            minArrowHeight: initialOptions?.minArrowHeight ?? 20,
+            maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
             detectMargin: initialOptions?.detectMargin ?? 2,
             magnetColor: initialOptions?.magnetColor ?? "#3e8",
             magnetRadius: initialOptions?.magnetRadius ?? 10,

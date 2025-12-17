@@ -62,8 +62,8 @@ const defaultOptions: ControllerOptions = {
   sendButtonIcon: DEFAULT_SEND_ICON,
   arrowHandleSize: 3.5,
   textHandleSize: 3.5,
-  minArrowHeight: 5,
-  maxArrowHeight: 18
+  minArrowHeight: 20,
+  maxArrowHeight: 30
 };
 
 interface RendererMap {
