@@ -1,36 +1,52 @@
-import { useState } from "react";
-import { Ogma } from "@linkurious/ogma-react";
-import "./App.css";
-import { RawGraph } from "@linkurious/ogma/umd";
+import React from "react";
+import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
+import { Edge, Ogma as OgmaLib, RawGraph } from "@linkurious/ogma";
+import { AnnotationCollection } from "@linkurious/ogma-annotations";
 import { AnnotationsContextProvider } from "../../src/AnnotationsContext";
 import { Controls } from "./components/Controls";
 
-function App() {
-  const [graph] = useState<RawGraph>({
-    nodes: [
-      { id: 0, attributes: { x: 0, y: 0 } },
-      { id: 1, attributes: { x: 50, y: -100 } },
-      { id: 2, attributes: { x: -50, y: -100 } }
-    ],
-    edges: [
-      {
-        source: 0,
-        target: 1
-      },
-      {
-        source: 1,
-        target: 2
-      },
-      {
-        source: 2,
-        target: 0
+import "./App.css";
+
+async function loadGraph() {
+  const graph = await OgmaLib.parse.jsonFromUrl("./graph.json");
+  return graph;
+}
+
+async function loadAnnotations(): Promise<AnnotationCollection> {
+  const response = await fetch("annotations-test.json");
+  return response.json();
+}
+
+export default function App() {
+  const [graph, setGraph] = React.useState<RawGraph | null>(null);
+  const [annotations, setAnnotations] =
+    React.useState<AnnotationCollection | null>(null);
+
+  React.useEffect(() => {
+    Promise.all([loadGraph(), loadAnnotations()]).then(
+      ([graphData, annotationsData]) => {
+        setGraph(graphData);
+        setAnnotations(annotationsData);
       }
-    ]
-  });
+    );
+  }, []);
+
+  if (!graph || !annotations) {
+    return <div>Loading graph...</div>;
+  }
+
   return (
     <div className="App">
-      <Ogma graph={graph}>
-        <AnnotationsContextProvider>
+      <Ogma
+        graph={graph}
+        onReady={(ogma) => {
+          // Apply force layout after graph is loaded
+          ogma.layouts.force({ locate: true });
+        }}
+      >
+        <NodeStyle attributes={{ color: "#5B97F8" }} />
+        <EdgeStyle attributes={{ color: "#C2D7FF" }} />
+        <AnnotationsContextProvider annotations={annotations}>
           <Controls
             minThickness={1}
             maxThickness={10}
@@ -42,7 +58,7 @@ function App() {
             }}
             defaultTextStyle={{
               font: "IBM Plex Sans",
-              fontSize: 10,
+              fontSize: 24,
               color: "#3A03CF",
               background: "#EDE6FF",
               borderRadius: 8,
@@ -54,5 +70,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

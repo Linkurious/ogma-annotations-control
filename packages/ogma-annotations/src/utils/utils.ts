@@ -241,7 +241,12 @@ export function getCoordinates(
 ): Position[] {
   let coords: Position[] = [];
   if (geojson.type == "Point") {
-    coords = [geojson.coordinates];
+    if (geojson.bbox) {
+      coords = [
+        [geojson.bbox[0], geojson.bbox[1]],
+        [geojson.bbox[2], geojson.bbox[3]]
+      ];
+    } else coords = [geojson.coordinates];
   } else if (geojson.type == "LineString" || geojson.type == "MultiPoint") {
     coords = geojson.coordinates;
   } else if (geojson.type == "Polygon" || geojson.type == "MultiLineString") {

@@ -4,18 +4,27 @@ import React, {
   Context,
   useState,
   ReactElement,
-  useReducer,
   useEffect
 } from "react";
 import {
   AnnotationCollection,
   AnnotationFeature,
   ArrowStyles,
+  ArrowProperties,
   TextStyle,
   Control as AnnotationsEditor,
   Annotation,
   isArrow,
-  isText
+  isText,
+  Box,
+  Polygon,
+  Comment,
+  EVT_ADD,
+  EVT_REMOVE,
+  EVT_UPDATE,
+  EVT_HISTORY,
+  EVT_SELECT,
+  EVT_UNSELECT
 } from "@linkurious/ogma-annotations";
 import { defaultArrowStyle, defaultTextStyle } from "./constants";
 import { useOgma } from "@linkurious/ogma-react";
@@ -31,8 +40,6 @@ import { mean } from "./utils";
 export interface IAnnotationsContext {
   /** Current annotations in the application. */
   annotations: AnnotationCollection;
-  /** Updates the annotations in the application. */
-  updateAnnotations: React.Dispatch<AnnotationAction>;
   /** The currently selected annotation in the application. */
   currentAnnotation: AnnotationFeature | null;
   /** Sets the currently selected annotation in the application. */
@@ -58,6 +65,43 @@ export interface IAnnotationsContext {
   editor: AnnotationsEditor;
   /** Sets the current annotations editor for managing annotations. */
   setEditor: (editor: AnnotationsEditor) => void;
+
+  // History management
+  /** Whether undo is available */
+  canUndo: boolean;
+  /** Whether redo is available */
+  canRedo: boolean;
+  /** Undo the last action */
+  undo: () => boolean;
+  /** Redo the last undone action */
+  redo: () => boolean;
+  /** Clear the history */
+  clearHistory: () => void;
+
+  // Annotation management
+  /** Add annotations */
+  add: (annotation: Annotation | AnnotationCollection) => void;
+  /** Remove annotations */
+  remove: (annotation: Annotation | AnnotationCollection) => void;
+  /** Cancel the current drawing operation */
+  cancelDrawing: () => void;
+  /** Select annotations by ID */
+  select: (ids: string | string[]) => void;
+
+  // Drawing methods
+  /** Enable box drawing mode */
+  enableBoxDrawing: (style?: Partial<Box["properties"]["style"]>) => void;
+  /** Enable polygon drawing mode */
+  enablePolygonDrawing: (
+    style?: Partial<Polygon["properties"]["style"]>
+  ) => void;
+  /** Enable comment drawing mode */
+  enableCommentDrawing: (options?: {
+    offsetX?: number;
+    offsetY?: number;
+    commentStyle?: Partial<Comment["properties"]>;
+    arrowStyle?: Partial<ArrowProperties>;
+  }) => void;
 }
 
 /**
@@ -93,39 +137,6 @@ interface Props {
   annotations?: AnnotationCollection;
 }
 
-type AnnotationActionType = "add" | "remove" | "update";
-type AnnotationAction = {
-  type: AnnotationActionType;
-  payload: Annotation;
-};
-
-const annotationsReducer = (
-  state: AnnotationCollection,
-  action: AnnotationAction
-) => {
-  switch (action.type) {
-    case "add":
-      return {
-        ...state,
-        features: [...state.features, action.payload]
-      };
-    case "remove":
-      return {
-        ...state,
-        features: state.features.filter((a) => a.id !== action.payload.id)
-      };
-    case "update":
-      return {
-        ...state,
-        features: state.features.map((a) =>
-          a.id === action.payload.id ? action.payload : a
-        )
-      };
-    default:
-      return state;
-  }
-};
-
 /**
  * Provides a context provider for managing annotations in a graph visualization.
  *
@@ -140,8 +151,7 @@ export const AnnotationsContextProvider = ({
   annotations: initialAnnotations
 }: Props) => {
   const ogma = useOgma();
-  const [annotations, updateAnnotations] = useReducer(
-    annotationsReducer,
+  const [annotations, setAnnotations] = useState<AnnotationCollection>(
     initialAnnotations || {
       type: "FeatureCollection",
       features: []
@@ -154,6 +164,8 @@ export const AnnotationsContextProvider = ({
   const [editor, setEditor] = useState<AnnotationsEditor>();
   const [arrowWidthFactor, setArrowWidthFactor] = useState(1);
   const [textSizeFactor, setTextSizeFactor] = useState(1);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
 
   useEffect(() => {
     if (!ogma) return;
@@ -170,8 +182,10 @@ export const AnnotationsContextProvider = ({
     });
     setArrowWidthFactor(newArrowWidthFactor);
     setTextSizeFactor(newTextSizeFactor);
+
+    // Wire up Control events to React state
     newEditor
-      .on("select", () => {
+      .on(EVT_SELECT, () => {
         // read back the current options from the selected annotation
         newEditor.getSelectedAnnotations().features.forEach((annotation) => {
           if (!annotation) return;
@@ -187,12 +201,29 @@ export const AnnotationsContextProvider = ({
           setCurrentAnnotation(annotation);
         });
       })
-      .on("unselect", () => {
+      .on(EVT_UNSELECT, () => {
         setCurrentAnnotation(null);
+      })
+      .on(EVT_ADD, () => {
+        setAnnotations(newEditor.getAnnotations());
+      })
+      .on(EVT_REMOVE, () => {
+        setAnnotations(newEditor.getAnnotations());
+      })
+      .on(EVT_UPDATE, () => {
+        setAnnotations(newEditor.getAnnotations());
+      })
+      .on(EVT_HISTORY, () => {
+        setCanUndo(newEditor.canUndo());
+        setCanRedo(newEditor.canRedo());
       });
+
     setEditor(newEditor);
     // load the initial annotations into the editor
-    if (initialAnnotations) newEditor.add(initialAnnotations);
+    if (initialAnnotations) {
+      newEditor.add(initialAnnotations);
+      newEditor.clearHistory();
+    }
     return () => {
       newEditor.destroy();
     };
@@ -226,7 +257,6 @@ export const AnnotationsContextProvider = ({
       value={
         {
           annotations,
-          updateAnnotations,
 
           currentAnnotation,
           setCurrentAnnotation,
@@ -241,7 +271,35 @@ export const AnnotationsContextProvider = ({
           setTextSizeFactor,
 
           editor,
-          setEditor
+          setEditor,
+
+          // History management
+          canUndo,
+          canRedo,
+          undo: () => editor?.undo() || false,
+          redo: () => editor?.redo() || false,
+          clearHistory: () => editor?.clearHistory(),
+
+          // Annotation management
+          add: (annotation: Annotation | AnnotationCollection) =>
+            editor?.add(annotation),
+          remove: (annotation: Annotation | AnnotationCollection) =>
+            editor?.remove(annotation),
+          cancelDrawing: () => editor?.cancelDrawing(),
+          select: (ids: string | string[]) => editor?.select(ids),
+
+          // Drawing methods
+          enableBoxDrawing: (style?: Partial<Box["properties"]["style"]>) =>
+            editor?.enableBoxDrawing(style),
+          enablePolygonDrawing: (
+            style?: Partial<Polygon["properties"]["style"]>
+          ) => editor?.enablePolygonDrawing(style),
+          enableCommentDrawing: (options?: {
+            offsetX?: number;
+            offsetY?: number;
+            commentStyle?: Partial<Comment["properties"]>;
+            arrowStyle?: Partial<ArrowProperties>;
+          }) => editor?.enableCommentDrawing(options)
         } as IAnnotationsContext
       }
     >

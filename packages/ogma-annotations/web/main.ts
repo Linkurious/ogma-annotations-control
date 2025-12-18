@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import Ogma, { RawNode } from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
 
 interface ND {}
@@ -30,9 +30,6 @@ class App {
 
     //this.ogma.events.once = (e, h) => console.log("ogma.once", e, h); // Temporary fix for ogma typings
     this.control = new Control(this.ogma);
-
-    // @ts-ignore
-    window.ogma = this.ogma;
 
     this.buttons = {
       addArrow: document.getElementById("add-arrow")! as HTMLButtonElement,
@@ -80,24 +77,10 @@ class App {
   }
 
   private async setupGraph() {
-    const graph = await this.ogma.generate.flower({ depth: 3 });
-
-    const nodesMap = graph.nodes.reduce(
-      (acc, node, i) => {
-        acc[node.id!] = node;
-        node.id = `n${i}`;
-        return acc;
-      },
-      {} as Record<string, RawNode>
-    );
-
-    graph.edges.forEach((edge) => {
-      edge.source = nodesMap[edge.source].id!;
-      edge.target = nodesMap[edge.target].id!;
-    });
+    const graph = await Ogma.parse.jsonFromUrl<ND, ED>("graph.json");
 
     await this.ogma.setGraph(graph);
-    await this.ogma.layouts.force({ locate: true });
+    this.fitView();
   }
 
   private setupEventListeners() {
@@ -359,7 +342,8 @@ class App {
     Object.assign(window, {
       Ogma,
       Control,
-      control: this.control
+      control: this.control,
+      ogma: this.ogma
     });
   }
 }

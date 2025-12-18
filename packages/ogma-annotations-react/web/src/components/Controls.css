@@ -35,6 +35,44 @@ button[type="button"].btn {
   border-radius: 10px;
 }
 
+/* Side panel styles */
+.side-panel {
+  z-index: 999;
+}
+
+.side-panel-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 20px;
+  min-width: 250px;
+  max-width: 300px;
+  max-height: calc(100vh - 20px);
+  overflow-y: auto;
+}
+
+.side-panel-container .settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.side-panel-container .settings-panel > h4 {
+  margin: 0;
+  margin-bottom: 0.5em;
+  font-weight: 500;
+  font-size: 14px;
+  color: #333;
+}
+
+.side-panel-container .settings-panel > div {
+  margin-bottom: 0.5em;
+}
+
+/* Legacy settings styles - keeping for backward compatibility */
 .settings .settings-panel {
   padding: 1em;
   display: flex;

@@ -8,7 +8,6 @@ const __dirname = dirname(__filename);
 
 export default defineConfig({
   base: "./",
-  // @ts-expect-error Types incompatible
   plugins: [react()],
   root: resolve(__dirname),
   build: {

@@ -1,9 +1,9 @@
 .add-menu {
   display: flex;
   flex-direction: row;
-  align-items: flex-end;
+  align-items: center;
   justify-content: flex-start;
-  gap: 10px;
+  gap: 5px;
 }
 
 .add-menu > button {
@@ -20,4 +20,17 @@
 .add-menu > button:hover {
   background: #f0f0f0;
   color: #222;
+}
+
+.add-menu > button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.add-menu > .separator {
+  border-left: 1px solid #ccc;
+  margin: 0 5px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
 }

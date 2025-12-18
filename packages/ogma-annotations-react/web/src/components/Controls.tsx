@@ -26,6 +26,28 @@ const preventDefault = (
   if (evt.cancelable) evt.stopPropagation();
 };
 
+const useKeyboardShortcuts = () => {
+  const { cancelDrawing, remove, editor } = useAnnotationsContext();
+
+  React.useEffect(() => {
+    const handleKeyDown = (evt: KeyboardEvent) => {
+      if (evt.key === "Escape") {
+        cancelDrawing();
+      } else if (evt.key === "Backspace" || evt.key === "Delete") {
+        const selected = editor?.getSelectedAnnotations();
+        if (selected && selected.features.length > 0) {
+          remove(selected);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [cancelDrawing, remove, editor]);
+};
+
 interface ControlProps {
   minThickness: number;
   maxThickness: number;
@@ -40,6 +62,10 @@ export const Controls = ({
   defaultTextStyle: defaultTextStyleProp = {}
 }: ControlProps) => {
   const { currentAnnotation } = useAnnotationsContext();
+
+  // Set up keyboard shortcuts
+  useKeyboardShortcuts();
+
   const stopEvent: React.MouseEventHandler<HTMLDivElement> = React.useCallback(
     preventDefault,
     []
@@ -62,19 +88,32 @@ export const Controls = ({
   }, [defaultArrowStyleProp, defaultTextStyleProp]);
 
   return (
-    <Layer className="controls" ref={divRefCallback} index={100}>
-      <div className="container">
-        {!currentAnnotation && <AddMenu />}
-        <div className="settings" onMouseDown={stopEvent} onClick={stopEvent}>
-          {currentAnnotation && isArrow(currentAnnotation) && (
-            <ArrowSettings
-              minThickness={minThickness}
-              maxThickness={maxThickness}
-            />
-          )}
-          {currentAnnotation && isText(currentAnnotation) && <TextSettings />}
+    <>
+      {/* Bottom toolbar */}
+      <Layer className="controls" ref={divRefCallback} index={100}>
+        <div className="container">
+          <AddMenu />
         </div>
-      </div>
-    </Layer>
+      </Layer>
+
+      {/* Right side panel for settings */}
+      {currentAnnotation && (
+        <Layer className="side-panel" index={100}>
+          <div
+            className="side-panel-container"
+            onMouseDown={stopEvent}
+            onClick={stopEvent}
+          >
+            {isArrow(currentAnnotation) && (
+              <ArrowSettings
+                minThickness={minThickness}
+                maxThickness={maxThickness}
+              />
+            )}
+            {isText(currentAnnotation) && <TextSettings />}
+          </div>
+        </Layer>
+      )}
+    </>
   );
 };

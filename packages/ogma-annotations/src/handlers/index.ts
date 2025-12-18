@@ -106,10 +106,6 @@ export class AnnotationEditor extends EventTarget {
     return this.handlers.get("arrow") as ArrowHandler;
   }
 
-  getCurrentTool(): string {
-    return this.currentTool;
-  }
-
   getActiveHandler() {
     return this.activeHandler;
   }
