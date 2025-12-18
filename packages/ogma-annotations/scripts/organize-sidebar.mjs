@@ -203,9 +203,7 @@ const organizedSidebar = [
     collapsed: true,
     items: getItems([
       "Point",
-      "Vector",
       "Bounds",
-      "Rect",
       "Side",
       "SIDE_START",
       "SIDE_END",

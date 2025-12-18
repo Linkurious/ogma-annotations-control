@@ -1,16 +1,11 @@
+/** 2D coordinate */
 export type Point = {
   x: number;
   y: number;
 };
 
+/** @private */
 export type Vector = Point;
-
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 /**
  * Bounding box object, with the following properties:
