@@ -202,3 +202,11 @@ body {
   font-family: var(--font-face);
   border-radius: 5px;
 }
+
+.brand a {
+  color: var(--brand);
+}
+
+.brand:hover {
+  background: #f0f0f0;
+}

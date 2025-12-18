@@ -15,44 +15,6 @@ function cleanBasePaths(items: DefaultTheme.SidebarItem[]) {
   return items;
 }
 
-// recursively go into input dir and create a vitepress sidebar config
-async function createSidebar(dir: string): Promise<DefaultTheme.SidebarItem[]> {
-  return fs
-    .readdir(dir, { withFileTypes: true })
-    .then((files) => {
-      const promises = files.map((file) => {
-        if (file.isDirectory()) {
-          return createSidebar(`${dir}/${file.name}`);
-        } else if (file.name.endsWith(".md")) {
-          console.log(`${dir}/${file.name}`);
-          return {
-            text: file.name.replace(".md", ""),
-            link: `${dir.replace("docs/", "")}/${file.name.replace(".md", "")}`
-          } as DefaultTheme.SidebarItem;
-        }
-      });
-      return Promise.all(promises);
-    })
-    .then((res) => res.filter((r) => r));
-}
-const classes = await createSidebar("docs/api/classes");
-const interfaces = await createSidebar("docs/api/interfaces");
-const sidebar: DefaultTheme.Sidebar = {
-  "api/": [
-    {
-      text: "Classes",
-      items: classes
-    },
-    {
-      text: "Interfaces",
-      items: interfaces
-    },
-    {
-      text: "Misc",
-      link: "api/modules"
-    }
-  ]
-};
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "Ogma annotations",

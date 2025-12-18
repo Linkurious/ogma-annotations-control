@@ -28,7 +28,11 @@ class App {
   constructor() {
     this.ogma = new Ogma<ND, ED>({ container: "app" });
     this.ogma.tools.brand.set(
-      '<div class="brand"><code>@linkurious/ogma-annotations</code></div>',
+      `<div class="brand">
+        <a href="../api/">
+          <code>@linkurious/ogma-annotations</code>
+        </a>
+      </div>`,
       {
         position: "bottom-right",
         horizontalMargin: 10,

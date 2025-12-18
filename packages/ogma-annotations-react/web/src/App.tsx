@@ -40,11 +40,14 @@ export default function App() {
       <Ogma
         graph={graph}
         onReady={(ogma) => {
-          // Apply force layout after graph is loaded
-          ogma.layouts.force({ locate: true });
+          //ogma.view.locateGraph({ padding: 50 });
 
           ogma.tools.brand.set(
-            '<div class="brand"><code>@linkurious/ogma-annotations-react</code></div>',
+            `<div class="brand">
+              <a href="../react/">
+                <code>@linkurious/ogma-annotations-react</code>
+              </a>
+            </div>`,
             {
               position: "bottom-right",
               horizontalMargin: 10,

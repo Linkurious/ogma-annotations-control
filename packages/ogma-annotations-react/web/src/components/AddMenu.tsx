@@ -19,16 +19,16 @@ export const AddMenu = () => {
   const { editor, canUndo, canRedo, undo, redo, remove } =
     useAnnotationsContext();
 
-  const handleArrow = () => {
+  const handleArrow = React.useCallback(() => {
     editor.enableArrowDrawing({
       strokeType: "plain",
       strokeColor: "#3A03CF",
       strokeWidth: 2,
       head: "arrow"
     });
-  };
+  }, [editor]);
 
-  const handleText = () => {
+  const handleText = React.useCallback(() => {
     editor.enableTextDrawing({
       font: "IBM Plex Sans",
       fontSize: 24,
@@ -37,25 +37,25 @@ export const AddMenu = () => {
       borderRadius: 8,
       padding: 12
     });
-  };
+  }, [editor]);
 
-  const handleBox = () => {
+  const handleBox = React.useCallback(() => {
     editor.enableBoxDrawing({
       background: "#EDE6FF",
       borderRadius: 8,
       padding: 12
     });
-  };
+  }, [editor]);
 
-  const handlePolygon = () => {
+  const handlePolygon = React.useCallback(() => {
     editor.enablePolygonDrawing({
       strokeColor: "#3A03CF",
       strokeWidth: 2,
       background: "rgba(58, 3, 207, 0.15)"
     });
-  };
+  }, [editor]);
 
-  const handleComment = () => {
+  const handleComment = React.useCallback(() => {
     editor.enableCommentDrawing({
       offsetX: 200,
       offsetY: -150,
@@ -77,14 +77,14 @@ export const AddMenu = () => {
         }
       }
     });
-  };
+  }, [editor]);
 
-  const handleDelete = () => {
+  const handleDelete = React.useCallback(() => {
     const selected = editor.getSelectedAnnotations();
     if (selected.features.length > 0) {
       remove(selected);
     }
-  };
+  }, [editor, remove]);
 
   function save() {
     // download the file
@@ -98,9 +98,13 @@ export const AddMenu = () => {
     a.click();
   }
 
+  const stopEvent = React.useCallback((evt: React.MouseEvent) => {
+    evt.stopPropagation();
+  }, []);
+
   const buttonSize = 16;
   return (
-    <div className="add-menu">
+    <div className="add-menu" onClick={stopEvent} onMouseMove={stopEvent}>
       <button data-tooltip="Add arrow" onClick={handleArrow}>
         <ArrowRight width={buttonSize} height={buttonSize} />
       </button>

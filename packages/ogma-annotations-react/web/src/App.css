@@ -35,6 +35,9 @@ html {
 }
 
 .brand a {
-  color: #ffffff;
-  display: block;
+  color: var(--brand);
+}
+
+.brand:hover {
+  background: #f0f0f0;
 }
