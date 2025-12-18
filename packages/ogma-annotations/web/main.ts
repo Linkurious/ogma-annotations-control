@@ -27,6 +27,15 @@ class App {
 
   constructor() {
     this.ogma = new Ogma<ND, ED>({ container: "app" });
+    this.ogma.tools.brand.set(
+      '<div class="brand"><code>@linkurious/ogma-annotations</code></div>',
+      {
+        position: "bottom-right",
+        horizontalMargin: 10,
+        verticalMargin: 10,
+        className: "brand"
+      }
+    );
 
     //this.ogma.events.once = (e, h) => console.log("ogma.once", e, h); // Temporary fix for ogma typings
     this.control = new Control(this.ogma);

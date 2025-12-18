@@ -42,6 +42,16 @@ export default function App() {
         onReady={(ogma) => {
           // Apply force layout after graph is loaded
           ogma.layouts.force({ locate: true });
+
+          ogma.tools.brand.set(
+            '<div class="brand"><code>@linkurious/ogma-annotations-react</code></div>',
+            {
+              position: "bottom-right",
+              horizontalMargin: 10,
+              verticalMargin: 10,
+              className: "brand"
+            }
+          );
         }}
       >
         <NodeStyle attributes={{ color: "#5B97F8" }} />

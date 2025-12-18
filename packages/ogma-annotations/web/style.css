@@ -193,3 +193,12 @@ body {
 .control-bar > button.active:before {
   color: #fff;
 }
+
+.brand {
+  color: var(--brand);
+  font-size: 12px;
+  padding: 5px;
+  margin: 0;
+  font-family: var(--font-face);
+  border-radius: 5px;
+}
