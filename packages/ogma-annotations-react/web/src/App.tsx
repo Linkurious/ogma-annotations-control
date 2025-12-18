@@ -1,6 +1,6 @@
 import React from "react";
 import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
-import { Edge, Ogma as OgmaLib, RawGraph } from "@linkurious/ogma";
+import { Ogma as OgmaLib, RawGraph } from "@linkurious/ogma";
 import { AnnotationCollection } from "@linkurious/ogma-annotations";
 import { AnnotationsContextProvider } from "../../src/AnnotationsContext";
 import { Controls } from "./components/Controls";

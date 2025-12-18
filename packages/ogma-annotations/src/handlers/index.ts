@@ -13,7 +13,6 @@ import { Annotation, AnnotationType, Id, Text } from "../types";
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<AnnotationType, Handler<Annotation, unknown>>();
   private activeHandler?: Handler<Annotation, unknown>;
-  private currentTool: string = "select";
   private interaction: InteractionController;
   private ogma: Ogma;
   private snapping: Snapping;
