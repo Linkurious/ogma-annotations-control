@@ -1,12 +1,10 @@
 import type { Polygon } from "../types/features/Polygon";
-import type { Point } from "../types/geometry";
-
-export type BBox = [number, number, number, number];
+import type { Bounds, Point } from "../types/geometry";
 
 /**
  * Get bounding box of a polygon
  */
-export function getPolygonBounds(polygon: Polygon): BBox {
+export function getPolygonBounds(polygon: Polygon): Bounds {
   if (polygon.geometry.bbox) return polygon.geometry.bbox as BBox;
 
   const coords = polygon.geometry.coordinates[0];
@@ -61,7 +59,7 @@ export function translatePolygon(
 
   const bbox = polygon.geometry.bbox;
   const newBbox = bbox
-    ? ([bbox[0] + dx, bbox[1] + dy, bbox[2] + dx, bbox[3] + dy] as BBox)
+    ? ([bbox[0] + dx, bbox[1] + dy, bbox[2] + dx, bbox[3] + dy] as Bounds)
     : undefined;
 
   return {

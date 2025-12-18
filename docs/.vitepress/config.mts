@@ -1,6 +1,19 @@
 import { DefaultTheme, defineConfig } from "vitepress";
 import path from "path";
 import fs from "fs/promises";
+import sidebarJSON from "../api/typedoc-sidebar.json";
+
+function cleanBasePaths(items: DefaultTheme.SidebarItem[]) {
+  for (const item of items) {
+    if ("link" in item && item.link) {
+      item.link = item.link.replace("/../../docs/api/", "/api/");
+    }
+    if ("items" in item && item.items) {
+      cleanBasePaths(item.items);
+    }
+  }
+  return items;
+}
 
 // recursively go into input dir and create a vitepress sidebar config
 async function createSidebar(dir: string): Promise<DefaultTheme.SidebarItem[]> {
@@ -60,7 +73,7 @@ export default defineConfig({
     outline: {
       level: [2, 3]
     },
-    sidebar,
+    sidebar: [{ text: "API", items: cleanBasePaths(sidebarJSON) }],
     socialLinks: [
       {
         icon: "github",

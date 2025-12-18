@@ -50,30 +50,29 @@ export type FeatureEvents = {
    * @param evt The annotation added
    */
   [EVT_ADD]: (evt: { id: Id }) => void;
+  /**
+   * Event trigerred when canceling drawing mode
+   */
   [EVT_CANCEL_DRAWING]: () => void;
+  /**
+   * Event trigerred when completing a drawing operation
+   * @param evt Contains the ID of the completed annotation
+   */
   [EVT_COMPLETE_DRAWING]: (evt: { id: Id }) => void;
   /**
-   * Event trigerred when updating an annotation
-   * @returns The annotation updated
+   * Event trigerred when updating an annotation.
+   * This fires after any modification including drag operations, style changes, scaling, etc.
+   * @param evt The updated annotation with all changes applied
    */
   [EVT_UPDATE]: (evt: Annotation) => void;
   /**
-   * Event trigerred when linking an arrow to a text or node
+   * Event trigerred when linking an arrow to a node or annotation
+   * @param evt Contains the arrow and link details
    */
   [EVT_LINK]: (evt: { arrow: Arrow; link: Link }) => void;
   /**
-   * Event trigerred when starting to drag an arrow or a text
+   * Event trigerred when history state changes (after undo/redo operations)
+   * @param evt Contains boolean flags for undo/redo availability
    */
-  [EVT_DRAG_START]: (evt: Annotation) => void;
-  /**
-   * Event trigerred when dragging an arrow or a text
-   */
-  [EVT_DRAG]: (evt: Annotation, key: "line" | Side | "text") => void;
-  /**
-   * Event trigerred when stopped dragging an arrow or a text
-   */
-  [EVT_DRAG_END]: (evt: Annotation) => void;
-
-  /** History state change */
   [EVT_HISTORY]: (evt: { canUndo: boolean; canRedo: boolean }) => void;
 };

@@ -45,10 +45,16 @@ export class Links {
   private store: Store;
   private ogma: Ogma;
   private updatedItems = new Set<Id>();
+  private onLinkCreated?: (arrow: Arrow, link: Link) => void;
 
-  constructor(ogma: Ogma, store: Store) {
+  constructor(
+    ogma: Ogma,
+    store: Store,
+    onLinkCreated?: (arrow: Arrow, link: Link) => void
+  ) {
     this.ogma = ogma;
     this.store = store;
+    this.onLinkCreated = onLinkCreated;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
     this.store.subscribe((state) => state.zoom, this.refresh);
@@ -168,6 +174,12 @@ export class Links {
       type: targetType,
       magnet: adjustedMagnet
     };
+
+    // Emit link event if callback is provided
+    if (this.onLinkCreated) {
+      this.onLinkCreated(arrow, link);
+    }
+
     return this;
   }
 

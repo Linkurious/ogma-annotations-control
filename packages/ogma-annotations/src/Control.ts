@@ -12,7 +12,9 @@ import {
   EVT_HISTORY,
   EVT_REMOVE,
   EVT_SELECT,
-  EVT_UNSELECT
+  EVT_UNSELECT,
+  EVT_UPDATE,
+  EVT_LINK
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
@@ -71,6 +73,10 @@ interface RendererMap {
   handles: Handles;
 }
 
+/**
+ * Main controller class for managing annotations.
+ * It manages rendering and editing of annotations.
+ */
 export class Control extends EventEmitter<FeatureEvents> {
   private ogma: Ogma;
   private store: ReturnType<typeof createStore>;
@@ -96,7 +102,9 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store = createStore(mergedOptions);
     this.index = new Index(this.store);
 
-    this.links = new Links(this.ogma, this.store);
+    this.links = new Links(this.ogma, this.store, (arrow, link) => {
+      this.emit(EVT_LINK, { arrow, link });
+    });
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
@@ -165,7 +173,12 @@ export class Control extends EventEmitter<FeatureEvents> {
         if (prev) {
           // Check for added features
           for (const id of Object.keys(curr)) {
-            if (!prev[id]) this.emit(EVT_ADD, { id });
+            if (!prev[id]) {
+              this.emit(EVT_ADD, { id });
+            } else if (prev[id] !== curr[id]) {
+              // Feature was updated (reference changed)
+              this.emit(EVT_UPDATE, curr[id]);
+            }
           }
           // Check for removed features
           for (const id of Object.keys(prev)) {
@@ -405,9 +418,27 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Enable arrow drawing mode - listens for next mousedown to start drawing
+   * Enable arrow drawing mode - the recommended way to add arrows.
+   *
+   * Call this method when the user clicks an "Add Arrow" button. The control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create an arrow at that position with the specified style
+   * 3. Start the interactive drawing process
+   * 4. Clean up automatically when done
+   *
+   * **This is the recommended API for 99% of use cases.** Only use `startArrow()`
+   * if you need to implement custom mouse handling or positioning logic.
+   *
+   * @example
+   * ```ts
+   * addArrowButton.addEventListener('click', () => {
+   *   control.enableArrowDrawing({ strokeColor: '#3A03CF', strokeWidth: 2 });
+   * });
+   * ```
+   *
    * @param style Arrow style options
    * @returns this for chaining
+   * @see startArrow for low-level programmatic control
    */
   public enableArrowDrawing(
     style?: Partial<Arrow["properties"]["style"]>
@@ -419,9 +450,27 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Enable text drawing mode - listens for next mousedown to start drawing
+   * Enable text drawing mode - the recommended way to add text annotations.
+   *
+   * Call this method when the user clicks an "Add Text" button. The control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create a text box at that position with the specified style
+   * 3. Start the interactive drawing/editing process
+   * 4. Clean up automatically when done
+   *
+   * **This is the recommended API for 99% of use cases.** Only use `startText()`
+   * if you need to implement custom mouse handling or positioning logic.
+   *
+   * @example
+   * ```ts
+   * addTextButton.addEventListener('click', () => {
+   *   control.enableTextDrawing({ color: '#3A03CF', fontSize: 24 });
+   * });
+   * ```
+   *
    * @param style Text style options
    * @returns this for chaining
+   * @see startText for low-level programmatic control
    */
   public enableTextDrawing(style?: Partial<Text["properties"]["style"]>): this {
     return this.enableDrawingMode((x, y) => {
@@ -431,9 +480,27 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Enable box drawing mode - listens for next mousedown to start drawing
+   * Enable box drawing mode - the recommended way to add boxes.
+   *
+   * Call this method when the user clicks an "Add Box" button. The control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create a box at that position with the specified style
+   * 3. Start the interactive drawing process (drag to size)
+   * 4. Clean up automatically when done
+   *
+   * **This is the recommended API for 99% of use cases.** Only use `startBox()`
+   * if you need to implement custom mouse handling or positioning logic.
+   *
+   * @example
+   * ```ts
+   * addBoxButton.addEventListener('click', () => {
+   *   control.enableBoxDrawing({ background: '#EDE6FF', borderRadius: 8 });
+   * });
+   * ```
+   *
    * @param style Box style options
    * @returns this for chaining
+   * @see startBox for low-level programmatic control
    */
   public enableBoxDrawing(style?: Partial<Box["properties"]["style"]>): this {
     return this.enableDrawingMode((x, y) => {
@@ -443,9 +510,27 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Enable polygon drawing mode - listens for next mousedown to start drawing
+   * Enable polygon drawing mode - the recommended way to add polygons.
+   *
+   * Call this method when the user clicks an "Add Polygon" button. The control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create a polygon starting at that position with the specified style
+   * 3. Start the interactive drawing process (click points to draw shape)
+   * 4. Clean up automatically when done
+   *
+   * **This is the recommended API for 99% of use cases.** Only use `startPolygon()`
+   * if you need to implement custom mouse handling or positioning logic.
+   *
+   * @example
+   * ```ts
+   * addPolygonButton.addEventListener('click', () => {
+   *   control.enablePolygonDrawing({ strokeColor: '#3A03CF', background: 'rgba(58, 3, 207, 0.15)' });
+   * });
+   * ```
+   *
    * @param style Polygon style options
    * @returns this for chaining
+   * @see startPolygon for low-level programmatic control
    */
   public enablePolygonDrawing(
     style?: Partial<Polygon["properties"]["style"]>
@@ -457,11 +542,35 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Enable comment drawing mode - listens for next mousedown to start drawing
-   * Click: Creates comment at offset from click point with arrow
-   * Drag: Creates arrow dynamically, places comment at release point
+   * Enable comment drawing mode - the recommended way to add comments.
+   *
+   * Call this method when the user clicks an "Add Comment" button. The control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create a comment with an arrow pointing to that position
+   * 3. Smart positioning: automatically finds the best placement for the comment box
+   * 4. Start the interactive editing process
+   * 5. Clean up automatically when done
+   *
+   * **This is the recommended API for 99% of use cases.** Only use `startComment()`
+   * if you need to implement custom mouse handling or positioning logic.
+   *
+   * @example
+   * ```ts
+   * addCommentButton.addEventListener('click', () => {
+   *   control.enableCommentDrawing({
+   *     commentStyle: { color: '#3A03CF', background: '#EDE6FF' },
+   *     arrowStyle: { strokeColor: '#3A03CF', head: 'halo-dot' }
+   *   });
+   * });
+   * ```
+   *
    * @param options Drawing options including offsets and styles
+   * @param options.offsetX Manual X offset for comment placement (overrides smart positioning)
+   * @param options.offsetY Manual Y offset for comment placement (overrides smart positioning)
+   * @param options.commentStyle Style options for the comment box
+   * @param options.arrowStyle Style options for the arrow
    * @returns this for chaining
+   * @see startComment for low-level programmatic control
    */
   public enableCommentDrawing(
     options: {
@@ -478,116 +587,43 @@ export class Control extends EventEmitter<FeatureEvents> {
         options.offsetY = bestPoint.y;
       }
       const comment = createComment(x, y, "", options?.commentStyle);
-      this.startCommentDrawing(x, y, comment, options);
+      this.startComment(x, y, comment, options);
     });
   }
 
   /**
-   * Start adding a comment/text annotation at a position
-   * @param _x X coordinate
-   * @param _y Y coordinate
-   * @param _text The text annotation to add (currently not implemented)
-   */
-  public startComment(_x: number, _y: number, _text: Annotation) {}
-
-  /**
-   * Start drawing a box annotation
-   * @param x X coordinate for the box origin
-   * @param y Y coordinate for the box origin
-   * @param box The box annotation to add (optional, will be created if not provided)
-   * @returns this for chaining
-   */
-  public startBox(x: number, y: number, box: Box = createBox(x, y)) {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: box.id });
-
-    // Add the box annotation
-    this.add(box);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(box.id);
-
-    // // Get the text handler (box uses the same handler as text)
-    const handler = this.editor.getActiveHandler()!;
-    return (handler as TextHandler).startDrawing(box.id, x, y);
-  }
-
-  /**
-   * Start drawing an arrow annotation
-   * @param x X coordinate for the arrow start
-   * @param y Y coordinate for the arrow start
-   * @param arrow The arrow annotation to add (optional, will be created if not provided)
-   * @returns this for chaining
-   */
-  public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
-    // stop editing any current feature
-    if (this.editor.getActiveHandler())
-      this.editor.getActiveHandler()!.stopEditing();
-    this.cancelDrawing();
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: arrow.id });
-
-    // Add the arrow annotation
-    this.add(arrow);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(arrow.id);
-
-    // Get the arrow handler
-    const handler = this.editor.getActiveHandler()!;
-    return (handler as ArrowHandler).startDrawing(arrow.id, x, y);
-  }
-
-  /**
-   * Start drawing a text annotation
-   * @param x X coordinate for the text
-   * @param y Y coordinate for the text
-   * @param text The text annotation to add (optional, will be created if not provided)
-   * @returns this for chaining
-   */
-  public startText(x: number, y: number, text: Text = createText(x, y)) {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: text.id });
-
-    // Add the text annotation
-    this.add(text);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(text.id);
-
-    // Get the text handler
-    const handler = this.editor.getActiveHandler()!;
-    return (handler as TextHandler).startDrawing(text.id, x, y);
-  }
-
-  /**
-   * Start drawing a polygon annotation (freehand)
-   * @param x X coordinate to start drawing
-   * @param y Y coordinate to start drawing
-   * @param polygon The polygon annotation to add (optional, will be created if not provided)
-   * @returns this for chaining
-   */
-  public startPolygon(x: number, y: number, polygon: Polygon): this {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: polygon.id });
-
-    // Add the polygon annotation
-    this.add(polygon);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(polygon.id);
-
-    // Get the polygon handler
-    const handler = this.editor.getActiveHandler()!;
-    (handler as PolygonHandler).startDrawing(polygon.id, x, y);
-    return this;
-  }
-
-  /**
-   * Start drawing a comment annotation with arrow
+   * **Advanced API:** Programmatically start drawing a comment at specific coordinates.
+   *
+   * This is a low-level method that gives you full control over the drawing process.
+   * You must handle mouse events and create the comment object yourself.
+   *
+   * **For most use cases, use `enableCommentDrawing()` instead** - it handles all
+   * mouse events and annotation creation automatically.
+   *
+   * Use this method only when you need:
+   * - Custom mouse event handling (e.g., custom cursors, right-click menus)
+   * - Programmatic placement without user interaction
+   * - Integration with custom UI frameworks
+   *
+   * @example
+   * ```ts
+   * // Custom cursor example
+   * ogma.setOptions({ cursor: { default: 'crosshair' } });
+   * ogma.events.once('mousedown', (evt) => {
+   *   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+   *   const comment = createComment(x, y, 'My comment', { color: '#3A03CF' });
+   *   control.startComment(x, y, comment);
+   * });
+   * ```
+   *
    * @param x X coordinate to start drawing
    * @param y Y coordinate to start drawing
    * @param comment The comment annotation to add
    * @param options Drawing options including offsets and styles
    * @returns this for chaining
+   * @see enableCommentDrawing for the recommended high-level API
    */
-  public startCommentDrawing(
+  public startComment(
     x: number,
     y: number,
     comment: Comment,
@@ -627,6 +663,191 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.on(EVT_ADD, onCommentCreated);
 
     drawingHandler.startDrawing(comment.id, x, y);
+    return this;
+  }
+
+  /**
+   * **Advanced API:** Programmatically start drawing a box at specific coordinates.
+   *
+   * This is a low-level method that gives you full control over the drawing process.
+   * You must handle mouse events and optionally create the box object yourself.
+   *
+   * **For most use cases, use `enableBoxDrawing()` instead** - it handles all
+   * mouse events and annotation creation automatically.
+   *
+   * Use this method only when you need:
+   * - Custom mouse event handling (e.g., custom cursors, right-click menus)
+   * - Programmatic placement without user interaction
+   * - Integration with custom UI frameworks
+   *
+   * @example
+   * ```ts
+   * // Custom cursor example
+   * ogma.setOptions({ cursor: { default: 'crosshair' } });
+   * ogma.events.once('mousedown', (evt) => {
+   *   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+   *   const box = createBox(x, y, 100, 50, { background: '#EDE6FF' });
+   *   control.startBox(x, y, box);
+   * });
+   * ```
+   *
+   * @param x X coordinate for the box origin
+   * @param y Y coordinate for the box origin
+   * @param box The box annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   * @see enableBoxDrawing for the recommended high-level API
+   */
+  public startBox(x: number, y: number, box: Box = createBox(x, y)) {
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: box.id });
+
+    // Add the box annotation
+    this.add(box);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(box.id);
+
+    // // Get the text handler (box uses the same handler as text)
+    const handler = this.editor.getActiveHandler()!;
+    return (handler as TextHandler).startDrawing(box.id, x, y);
+  }
+
+  /**
+   * **Advanced API:** Programmatically start drawing an arrow at specific coordinates.
+   *
+   * This is a low-level method that gives you full control over the drawing process.
+   * You must handle mouse events and optionally create the arrow object yourself.
+   *
+   * **For most use cases, use `enableArrowDrawing()` instead** - it handles all
+   * mouse events and annotation creation automatically.
+   *
+   * Use this method only when you need:
+   * - Custom mouse event handling (e.g., custom cursors, right-click menus)
+   * - Programmatic placement without user interaction
+   * - Integration with custom UI frameworks
+   *
+   * @example
+   * ```ts
+   * // Custom cursor example
+   * ogma.setOptions({ cursor: { default: 'crosshair' } });
+   * ogma.events.once('mousedown', (evt) => {
+   *   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+   *   const arrow = createArrow(x, y, x, y, { strokeColor: '#3A03CF' });
+   *   control.startArrow(x, y, arrow);
+   * });
+   * ```
+   *
+   * @param x X coordinate for the arrow start
+   * @param y Y coordinate for the arrow start
+   * @param arrow The arrow annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   * @see enableArrowDrawing for the recommended high-level API
+   */
+  public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
+    // stop editing any current feature
+    if (this.editor.getActiveHandler())
+      this.editor.getActiveHandler()!.stopEditing();
+    this.cancelDrawing();
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: arrow.id });
+
+    // Add the arrow annotation
+    this.add(arrow);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(arrow.id);
+
+    // Get the arrow handler
+    const handler = this.editor.getActiveHandler()!;
+    return (handler as ArrowHandler).startDrawing(arrow.id, x, y);
+  }
+
+  /**
+   * **Advanced API:** Programmatically start drawing a text annotation at specific coordinates.
+   *
+   * This is a low-level method that gives you full control over the drawing process.
+   * You must handle mouse events and optionally create the text object yourself.
+   *
+   * **For most use cases, use `enableTextDrawing()` instead** - it handles all
+   * mouse events and annotation creation automatically.
+   *
+   * Use this method only when you need:
+   * - Custom mouse event handling (e.g., custom cursors, right-click menus)
+   * - Programmatic placement without user interaction
+   * - Integration with custom UI frameworks
+   *
+   * @example
+   * ```ts
+   * // Custom cursor example
+   * ogma.setOptions({ cursor: { default: 'crosshair' } });
+   * ogma.events.once('mousedown', (evt) => {
+   *   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+   *   const text = createText(x, y, 0, 0, 'Hello', { color: '#3A03CF' });
+   *   control.startText(x, y, text);
+   * });
+   * ```
+   *
+   * @param x X coordinate for the text
+   * @param y Y coordinate for the text
+   * @param text The text annotation to add (optional, will be created if not provided)
+   * @returns this for chaining
+   * @see enableTextDrawing for the recommended high-level API
+   */
+  public startText(x: number, y: number, text: Text = createText(x, y)) {
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: text.id });
+
+    // Add the text annotation
+    this.add(text);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(text.id);
+
+    // Get the text handler
+    const handler = this.editor.getActiveHandler()!;
+    return (handler as TextHandler).startDrawing(text.id, x, y);
+  }
+
+  /**
+   * **Advanced API:** Programmatically start drawing a polygon at specific coordinates.
+   *
+   * This is a low-level method that gives you full control over the drawing process.
+   * You must handle mouse events and create the polygon object yourself.
+   *
+   * **For most use cases, use `enablePolygonDrawing()` instead** - it handles all
+   * mouse events and annotation creation automatically.
+   *
+   * Use this method only when you need:
+   * - Custom mouse event handling (e.g., custom cursors, right-click menus)
+   * - Programmatic placement without user interaction
+   * - Integration with custom UI frameworks
+   *
+   * @example
+   * ```ts
+   * // Custom cursor example
+   * ogma.setOptions({ cursor: { default: 'crosshair' } });
+   * ogma.events.once('mousedown', (evt) => {
+   *   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
+   *   const polygon = createPolygon([[[x, y]]], { strokeColor: '#3A03CF' });
+   *   control.startPolygon(x, y, polygon);
+   * });
+   * ```
+   *
+   * @param x X coordinate to start drawing
+   * @param y Y coordinate to start drawing
+   * @param polygon The polygon annotation to add
+   * @returns this for chaining
+   * @see enablePolygonDrawing for the recommended high-level API
+   */
+  public startPolygon(x: number, y: number, polygon: Polygon): this {
+    // Mark this feature as being drawn
+    this.store.setState({ drawingFeature: polygon.id });
+
+    // Add the polygon annotation
+    this.add(polygon);
+    this.interactions.suppressClicksTemporarily(200);
+    this.select(polygon.id);
+
+    // Get the polygon handler
+    const handler = this.editor.getActiveHandler()!;
+    (handler as PolygonHandler).startDrawing(polygon.id, x, y);
     return this;
   }
 
