@@ -1,18 +1,19 @@
 import React from "react";
 import { useAnnotationsContext } from "../../../src/AnnotationsContext";
 import "../tooltip.css";
+import "./AddMenu.css";
+
 import {
-  Text,
-  ArrowRight,
-  Download,
-  Square,
-  Pentagon,
-  ChatBubble,
+  Trash,
   Undo,
   Redo,
-  Trash
-} from "iconoir-react";
-import "./AddMenu.css";
+  Pentagon,
+  RectangleHorizontal,
+  MessageSquare,
+  Download,
+  Type,
+  ArrowRight
+} from "lucide-react";
 
 export const AddMenu = () => {
   const { editor, canUndo, canRedo, undo, redo, remove } =
@@ -104,13 +105,13 @@ export const AddMenu = () => {
         <ArrowRight width={buttonSize} height={buttonSize} />
       </button>
       <button data-tooltip="Add comment" onClick={handleComment}>
-        <ChatBubble width={buttonSize} height={buttonSize} />
+        <MessageSquare width={buttonSize} height={buttonSize} />
       </button>
       <button data-tooltip="Add box" onClick={handleBox}>
-        <Square width={buttonSize} height={buttonSize} />
+        <RectangleHorizontal width={buttonSize} height={buttonSize} />
       </button>
       <button data-tooltip="Add text" onClick={handleText}>
-        <Text width={buttonSize} height={buttonSize} />
+        <Type width={buttonSize} height={buttonSize} />
       </button>
       <button
         data-tooltip="Add polygon (click points, Esc to finish)"

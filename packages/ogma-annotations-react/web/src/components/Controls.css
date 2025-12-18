@@ -35,6 +35,22 @@ button[type="button"].btn {
   border-radius: 10px;
 }
 
+/* View controls container */
+.view-controls-layer {
+  z-index: 999;
+}
+
+.view-controls-container {
+  position: fixed;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+  padding: 5px;
+  border-radius: 10px;
+}
+
 /* Side panel styles */
 .side-panel {
   z-index: 999;

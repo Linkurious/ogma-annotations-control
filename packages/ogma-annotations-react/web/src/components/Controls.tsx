@@ -1,5 +1,5 @@
 import React from "react";
-import { Layer } from "@linkurious/ogma-react";
+import { Layer, useOgma } from "@linkurious/ogma-react";
 import type { Layer as LayerType } from "@linkurious/ogma";
 import {
   ArrowStyles,
@@ -13,11 +13,13 @@ import "./Controls.css";
 import { AddMenu } from "./AddMenu";
 import { ArrowSettings } from "./ArrowSettings";
 import { TextSettings } from "./TextSettings";
+import { ViewControls } from "./ViewControls";
 
 import {
   useAnnotationsContext,
   defaultArrowStyle,
-  defaultTextStyle
+  defaultTextStyle,
+  getAnnotationsBounds
 } from "../../../src";
 
 const preventDefault = (
@@ -26,7 +28,9 @@ const preventDefault = (
   if (evt.cancelable) evt.stopPropagation();
 };
 
-const useKeyboardShortcuts = () => {
+const useKeyboardShortcuts = (
+  onCenterView: () => void
+) => {
   const { cancelDrawing, remove, editor } = useAnnotationsContext();
 
   React.useEffect(() => {
@@ -38,6 +42,8 @@ const useKeyboardShortcuts = () => {
         if (selected && selected.features.length > 0) {
           remove(selected);
         }
+      } else if (evt.key === "0") {
+        onCenterView();
       }
     };
 
@@ -45,7 +51,7 @@ const useKeyboardShortcuts = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [cancelDrawing, remove, editor]);
+  }, [cancelDrawing, remove, editor, onCenterView]);
 };
 
 interface ControlProps {
@@ -61,10 +67,20 @@ export const Controls = ({
   defaultArrowStyle: defaultArrowStyleProp = {},
   defaultTextStyle: defaultTextStyleProp = {}
 }: ControlProps) => {
-  const { currentAnnotation } = useAnnotationsContext();
+  const { currentAnnotation, annotations } = useAnnotationsContext();
+  const ogma = useOgma();
+
+  // Center view callback
+  const handleCenterView = React.useCallback(async () => {
+    const bounds = ogma.view.getGraphBoundingBox();
+    await ogma.view.moveToBounds(
+      bounds.extend(getAnnotationsBounds(annotations)),
+      { duration: 200 }
+    );
+  }, [ogma, annotations]);
 
   // Set up keyboard shortcuts
-  useKeyboardShortcuts();
+  useKeyboardShortcuts(handleCenterView);
 
   const stopEvent: React.MouseEventHandler<HTMLDivElement> = React.useCallback(
     preventDefault,
@@ -93,6 +109,13 @@ export const Controls = ({
       <Layer className="controls" ref={divRefCallback} index={100}>
         <div className="container">
           <AddMenu />
+        </div>
+      </Layer>
+
+      {/* Right side vertical toolbar for view controls */}
+      <Layer className="view-controls-layer" index={100}>
+        <div className="view-controls-container">
+          <ViewControls />
         </div>
       </Layer>
 
