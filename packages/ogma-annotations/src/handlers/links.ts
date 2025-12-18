@@ -57,9 +57,18 @@ export class Links {
     this.onLinkCreated = onLinkCreated;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
-    this.store.subscribe((state) => state.zoom, this.refresh);
-    // @ts-expect-error private event
-    this.ogma.events.on("setMultipleAttributes", this.onSetMultipleAttributes);
+    this.store.subscribe(
+      (state) => ({ zoom: state.zoom, rotation: state.rotation }),
+      this.refresh,
+      {
+        equalityFn: (a, b) => a.zoom === b.zoom && a.rotation === b.rotation
+      }
+    );
+
+    this.ogma.events
+      // @ts-expect-error private event
+      .on("setMultipleAttributes", this.onSetMultipleAttributes)
+      .on("viewChanged", this.refresh);
   }
 
   /**
@@ -486,6 +495,7 @@ export class Links {
         }
       }
     });
+    this.refresh();
   };
 
   private _isLinkedToCenter(link: Link) {

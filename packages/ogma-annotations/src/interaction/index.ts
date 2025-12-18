@@ -1,7 +1,6 @@
 import { Ogma } from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
 import { cursors } from "../constants";
-import { Links } from "../handlers/links";
 import { Store } from "../store";
 import {
   Annotation,
@@ -42,8 +41,7 @@ export class InteractionController {
   constructor(
     private ogma: Ogma,
     private store: Store,
-    private index: Index,
-    private links: Links
+    private index: Index
   ) {
     const container = this.ogma.getContainer();
 
@@ -70,8 +68,6 @@ export class InteractionController {
         capture: true
       });
     }
-
-    this.ogma.events.on("rotate", () => this.links.update());
   }
 
   detect(x: number, y: number, thresholdOverride?: number): Annotation | null {

@@ -105,8 +105,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
-      this.index,
-      this.links
+      this.index
     );
     this.editor = new AnnotationEditor(
       this.ogma,
