@@ -55,17 +55,44 @@ const organizedSidebar = [
         text: "Events",
         link: "/../../docs/api/type-aliases/FeatureEvents.md",
         collapsed: true,
-        items: getItems([
-          "EVT_SELECT",
-          "EVT_UNSELECT",
-          "EVT_ADD",
-          "EVT_REMOVE",
-          "EVT_UPDATE",
-          "EVT_LINK",
-          "EVT_CANCEL_DRAWING",
-          "EVT_COMPLETE_DRAWING",
-          "EVT_HISTORY"
-        ])
+        items: [
+          {
+            text: "select - fires when annotations are selected",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "unselect - fires when annotations are unselected",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "add - fires when annotation is added",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "remove - fires when annotation is removed",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "update - fires after any modification (drag, style, scale)",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "link - fires when arrow connects to node/annotation",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "cancelDrawing - fires when drawing is canceled",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "completeDrawing - fires when drawing completes",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          },
+          {
+            text: "history - fires when undo/redo state changes",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+          }
+        ]
       }
     ].filter(Boolean)
   },
