@@ -2,13 +2,11 @@ export * from "./features";
 export * from "./geometry";
 export * from "./events";
 export * from "./colors";
-import type { Color } from "./colors";
 
+/**
+ * Options for the annotations control
+ */
 export type ControllerOptions = {
-  /**
-   * The color of the magnet points
-   */
-  magnetColor: Color;
   /**
    * The radius in which arrows are attracted
    */
@@ -37,16 +35,6 @@ export type ControllerOptions = {
    * Should be a complete SVG string (e.g., '<svg>...</svg>')
    */
   sendButtonIcon: string;
-
-  /**
-   * Size of the text handle
-   */
-  textHandleSize: number;
-
-  /**
-   * Size of the arrow handle
-   */
-  arrowHandleSize: number;
 
   /**
    * Minimum height of the arrow in units

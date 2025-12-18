@@ -75,10 +75,6 @@ export type Snap = TextSnap | PolygonSnap | NodeSnap;
 
 type SnappingOptions = {
   /**
-   * The color of the magnet points
-   */
-  // magnetColor: string;
-  /**
    * The radius in which arrows are attracted
    */
   magnetRadius: number;
@@ -89,32 +85,6 @@ type SnappingOptions = {
   /**
    * Display size of the magnet point
    */
-  // magnetHandleRadius: number;
-
-  /**
-   * Placeholder for the text input
-   */
-  // textPlaceholder: string;
-
-  /**
-   * Size of the text handle
-   */
-  // textHandleSize: number;
-
-  /**
-   * Size of the arrow handle
-   */
-  // arrowHandleSize: number;
-
-  /**
-   * Minimum height of the arrow in units
-   */
-  // minArrowHeight: number;
-
-  /**
-   * Maximum height of the arrow in units
-   */
-  // maxArrowHeight: number;
 };
 
 export class Snapping extends EventTarget {

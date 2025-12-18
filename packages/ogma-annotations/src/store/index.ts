@@ -108,7 +108,6 @@ export interface AnnotationState {
     minArrowHeight: number;
     maxArrowHeight: number;
     detectMargin: number;
-    magnetColor: string;
     magnetRadius: number;
     magnetHandleRadius: number;
     textPlaceholder: string;
@@ -190,7 +189,6 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             minArrowHeight: initialOptions?.minArrowHeight ?? 20,
             maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
             detectMargin: initialOptions?.detectMargin ?? 2,
-            magnetColor: initialOptions?.magnetColor ?? "#3e8",
             magnetRadius: initialOptions?.magnetRadius ?? 10,
             magnetHandleRadius: initialOptions?.magnetHandleRadius ?? 5,
             textPlaceholder: initialOptions?.textPlaceholder ?? "Type here"

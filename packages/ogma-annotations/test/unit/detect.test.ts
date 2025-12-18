@@ -28,7 +28,6 @@ const createMockOptions = (detectMargin: number = 0) => ({
   sendButtonIcon: "",
   minArrowHeight: 20,
   maxArrowHeight: 30,
-  magnetColor: "#3e8",
   magnetRadius: 10,
   magnetHandleRadius: 5,
   textPlaceholder: "Type here"

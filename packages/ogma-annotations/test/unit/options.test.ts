@@ -55,7 +55,6 @@ describe("Options Reactivity", () => {
       // Original options should still be there
       expect(options.showSendButton).toBe(true);
       expect(options.minArrowHeight).toBe(20);
-      expect(options.magnetColor).toBe("#3e8");
     });
 
     it("should affect detection behavior", () => {
@@ -95,7 +94,6 @@ describe("Options Reactivity", () => {
       expect(options.minArrowHeight).toBe(20);
       expect(options.maxArrowHeight).toBe(30);
       expect(options.showSendButton).toBe(true);
-      expect(options.magnetColor).toBe("#3e8");
       expect(options.magnetRadius).toBe(10);
       expect(options.textPlaceholder).toBe("Type here");
 
@@ -106,8 +104,7 @@ describe("Options Reactivity", () => {
       const customControl = new Control(ogma, {
         detectMargin: 20,
         showSendButton: false,
-        textPlaceholder: "Enter text",
-        magnetColor: "#ff0000"
+        textPlaceholder: "Enter text"
       });
 
       const options = customControl["store"].getState().options;
@@ -115,7 +112,6 @@ describe("Options Reactivity", () => {
       expect(options.detectMargin).toBe(20);
       expect(options.showSendButton).toBe(false);
       expect(options.textPlaceholder).toBe("Enter text");
-      expect(options.magnetColor).toBe("#ff0000");
       // Unspecified options should use defaults
       expect(options.minArrowHeight).toBe(20);
       expect(options.magnetRadius).toBe(10);
@@ -134,7 +130,6 @@ describe("Options Reactivity", () => {
       expect(storeOptions).toHaveProperty("sendButtonIcon");
       expect(storeOptions).toHaveProperty("minArrowHeight");
       expect(storeOptions).toHaveProperty("maxArrowHeight");
-      expect(storeOptions).toHaveProperty("magnetColor");
       expect(storeOptions).toHaveProperty("magnetRadius");
       expect(storeOptions).toHaveProperty("magnetHandleRadius");
       expect(storeOptions).toHaveProperty("textPlaceholder");

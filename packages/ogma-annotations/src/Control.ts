@@ -55,15 +55,12 @@ import { findPlace } from "./utils/place-finder";
 import { migrateBoxOrTextIfNeeded } from "./utils/utils";
 
 const defaultOptions: ControllerOptions = {
-  magnetColor: "#3e8",
   detectMargin: 2,
   magnetHandleRadius: 5,
   magnetRadius: 10,
   textPlaceholder: "Type here",
   showSendButton: true,
   sendButtonIcon: DEFAULT_SEND_ICON,
-  arrowHandleSize: 3.5,
-  textHandleSize: 3.5,
   minArrowHeight: 20,
   maxArrowHeight: 30
 };
