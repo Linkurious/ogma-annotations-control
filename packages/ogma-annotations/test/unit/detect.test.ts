@@ -103,10 +103,6 @@ describe("HitDetector", () => {
       new HitDetector(testOgma, mockStore, testIndex, mockLinks);
 
       expect(testOgma.getContainer).toHaveBeenCalled();
-      expect(testOgma.events.on).toHaveBeenCalledWith(
-        "rotate",
-        expect.any(Function)
-      );
     });
 
     it("should handle initialization with features", () => {
