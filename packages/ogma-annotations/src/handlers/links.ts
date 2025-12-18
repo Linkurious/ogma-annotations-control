@@ -495,7 +495,6 @@ export class Links {
         }
       }
     });
-    this.refresh();
   };
 
   private _isLinkedToCenter(link: Link) {
