@@ -190,11 +190,6 @@ const organizedSidebar = [
         text: "Stroke",
         collapsed: true,
         items: getItems(["Stroke", "StrokeStyle", "StrokeOptions", "Extremity"])
-      },
-      {
-        text: "Cursors",
-        collapsed: true,
-        items: getItems(["Cursor", "cursors"])
       }
     ]
   },
@@ -205,8 +200,6 @@ const organizedSidebar = [
       "Point",
       "Bounds",
       "Side",
-      "SIDE_START",
-      "SIDE_END",
       "getBoxPosition",
       "getBoxSize",
       "getBoxCenter",
@@ -305,6 +298,8 @@ const organizedSidebar = [
           "DEFAULT_SEND_ICON",
           "TARGET_TYPES",
           "TEXT_LINE_HEIGHT",
+          "SIDE_START",
+          "SIDE_END",
           "TargetType"
         ])
       }

@@ -14,6 +14,7 @@ export default defineConfig({
     react({
       jsxRuntime: "classic"
     }),
+    // @ts-expect-error - libInjectCss has no types
     libInjectCss(),
     dts({
       outDir: "dist/types",

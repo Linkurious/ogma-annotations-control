@@ -52,6 +52,7 @@ export type AnnotationOptions = {
   placeholder?: string;
 };
 
+/** @private */
 export type Cursor =
   | "default"
   | "pointer"
