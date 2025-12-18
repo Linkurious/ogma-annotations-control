@@ -23,11 +23,12 @@ export class TextArea {
     const state = this.store.getState();
     const showSendButton = state.options?.showSendButton ?? true;
     const sendButtonIcon = state.options?.sendButtonIcon || "";
+    const placeholderText = state.options?.textPlaceholder || "Enter text";
 
     this.layer = this.ogma.layers.addOverlay(
       {
         element: `<div class="ogma-annotation-text-editor">
-          <textarea wrap="on" name="annotation-text--input" spellcheck="false"></textarea>
+          <textarea wrap="on" name="annotation-text--input" spellcheck="false" placeholder="${placeholderText}"></textarea>
           ${
             showSendButton
               ? `<button class="ogma-send-button" type="button" title="Send">
@@ -210,7 +211,8 @@ export class TextArea {
       // Get minimum height from style (default to 50px if not specified)
       // For Comments, minHeight is in CommentStyle; for Text annotations it doesn't exist
       const minHeight =
-        (annotation.properties.style as { minHeight?: number })?.minHeight || 50;
+        (annotation.properties.style as { minHeight?: number })?.minHeight ||
+        50;
       newHeight = Math.max(minHeight, requiredHeight);
 
       // Adjust center position to grow downward only (keep top edge fixed)
