@@ -5,7 +5,7 @@ import type { Bounds, Point } from "../types/geometry";
  * Get bounding box of a polygon
  */
 export function getPolygonBounds(polygon: Polygon): Bounds {
-  if (polygon.geometry.bbox) return polygon.geometry.bbox as BBox;
+  if (polygon.geometry.bbox) return polygon.geometry.bbox as Bounds;
 
   const coords = polygon.geometry.coordinates[0];
   let minX = Infinity;
