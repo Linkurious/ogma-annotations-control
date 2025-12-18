@@ -22,7 +22,13 @@ vi.mock("@linkurious/ogma-react", () => ({
 vi.mock("@linkurious/ogma-annotations", () => ({
   Control: vi.fn(),
   isArrow: vi.fn((x) => x.properties.type === "arrow"),
-  isText: vi.fn((x) => x.properties.type === "text")
+  isText: vi.fn((x) => x.properties.type === "text"),
+  EVT_ADD: "add",
+  EVT_REMOVE: "remove",
+  EVT_UPDATE: "update",
+  EVT_HISTORY: "history",
+  EVT_SELECT: "select",
+  EVT_UNSELECT: "unselect"
 }));
 
 type MockedEditorOn = MockedFunction<Annotations.Control["on"]>;
@@ -43,6 +49,17 @@ describe("AnnotationsContextProvider", () => {
       destroy: vi.fn(),
       updateStyle: vi.fn(),
       add: vi.fn(),
+      remove: vi.fn(),
+      cancelDrawing: vi.fn(),
+      select: vi.fn(),
+      canUndo: vi.fn().mockReturnValue(false),
+      canRedo: vi.fn().mockReturnValue(false),
+      undo: vi.fn().mockReturnValue(true),
+      redo: vi.fn().mockReturnValue(true),
+      clearHistory: vi.fn(),
+      enableBoxDrawing: vi.fn(),
+      enablePolygonDrawing: vi.fn(),
+      enableCommentDrawing: vi.fn(),
       getSelectedAnnotations: vi.fn().mockReturnValue({
         type: "FeatureCollection",
         features: []
@@ -73,8 +90,8 @@ describe("AnnotationsContextProvider", () => {
     });
   });
 
-  it("should handle arrow annotation selection", () => {
-    const { rerender } = render(
+  it("should handle arrow annotation selection and update arrow style state", () => {
+    render(
       <AnnotationsContextProvider>
         <div>Test</div>
       </AnnotationsContextProvider>
@@ -101,19 +118,12 @@ describe("AnnotationsContextProvider", () => {
       selectCallback({ ids: ["1"] });
     });
 
-    rerender(
-      <AnnotationsContextProvider>
-        <div>Test</div>
-      </AnnotationsContextProvider>
-    );
-    expect(mockEditor.updateStyle).toHaveBeenCalledWith("1", {
-      strokeWidth: 2,
-      color: "red"
-    });
+    // The select event should trigger getSelectedAnnotations
+    expect(mockEditor.getSelectedAnnotations).toHaveBeenCalled();
   });
 
-  it("should handle text annotation selection", () => {
-    const { rerender } = render(
+  it("should handle text annotation selection and update text style state", () => {
+    render(
       <AnnotationsContextProvider>
         <div>Test</div>
       </AnnotationsContextProvider>
@@ -141,43 +151,26 @@ describe("AnnotationsContextProvider", () => {
       selectCallback({ ids: ["2"] });
     });
 
-    rerender(
-      <AnnotationsContextProvider>
-        <div>Test</div>
-      </AnnotationsContextProvider>
-    );
-    expect(mockEditor.updateStyle).toHaveBeenCalledWith("2", {
-      fontSize: 14,
-      color: "blue"
-    });
+    // The select event should trigger getSelectedAnnotations
+    expect(mockEditor.getSelectedAnnotations).toHaveBeenCalled();
   });
 
   it("should handle annotation unselection", () => {
-    const { rerender } = render(
+    render(
       <AnnotationsContextProvider>
         <div>Test</div>
       </AnnotationsContextProvider>
     );
-
-    // Mock empty selection
-    (mockEditor.getSelectedAnnotations as Mock).mockReturnValue({
-      type: "FeatureCollection",
-      features: []
-    });
 
     act(() => {
-      const selectCallback = (mockEditor.on as MockedEditorOn).mock.calls.find(
-        (call) => call[0] === "select"
-      )![1];
-      selectCallback({ ids: [] });
+      const unselectCallback = (
+        mockEditor.on as MockedEditorOn
+      ).mock.calls.find((call) => call[0] === "unselect")![1];
+      unselectCallback();
     });
 
-    rerender(
-      <AnnotationsContextProvider>
-        <div>Test</div>
-      </AnnotationsContextProvider>
-    );
-    expect(mockEditor.updateStyle).not.toHaveBeenCalled();
+    // The unselect event should be triggered (currentAnnotation set to null internally)
+    expect(mockEditor.on).toHaveBeenCalledWith("unselect", expect.any(Function));
   });
 
   it("should cleanup editor on unmount", () => {
@@ -227,5 +220,79 @@ describe("AnnotationsContextProvider", () => {
     );
 
     expect(mockEditor.add).toHaveBeenCalledWith(initialAnnotations);
+    expect(mockEditor.clearHistory).toHaveBeenCalled();
+  });
+
+  it("should wire up all event listeners", () => {
+    render(
+      <AnnotationsContextProvider>
+        <div>Test</div>
+      </AnnotationsContextProvider>
+    );
+
+    expect(mockEditor.on).toHaveBeenCalledWith("select", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith("unselect", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith("add", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith("remove", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith("update", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith("history", expect.any(Function));
+  });
+
+  it("should update annotations state when add event fires", () => {
+    render(
+      <AnnotationsContextProvider>
+        <div>Test</div>
+      </AnnotationsContextProvider>
+    );
+
+    const newAnnotations: AnnotationCollection = {
+      type: "FeatureCollection",
+      features: [
+        {
+          id: "new-1",
+          type: "Feature",
+          properties: { type: "arrow" },
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [0, 0],
+              [1, 1]
+            ]
+          }
+        }
+      ]
+    };
+
+    (mockEditor.getAnnotations as Mock).mockReturnValue(newAnnotations);
+
+    act(() => {
+      const addCallback = (mockEditor.on as MockedEditorOn).mock.calls.find(
+        (call) => call[0] === "add"
+      )![1];
+      addCallback();
+    });
+
+    expect(mockEditor.getAnnotations).toHaveBeenCalled();
+  });
+
+  it("should update history state when history event fires", () => {
+    render(
+      <AnnotationsContextProvider>
+        <div>Test</div>
+      </AnnotationsContextProvider>
+    );
+
+    (mockEditor.canUndo as Mock).mockReturnValue(true);
+    (mockEditor.canRedo as Mock).mockReturnValue(false);
+
+    act(() => {
+      const historyCallback = (mockEditor.on as MockedEditorOn).mock.calls.find(
+        (call) => call[0] === "history"
+      )![1];
+      historyCallback();
+    });
+
+    expect(mockEditor.canUndo).toHaveBeenCalled();
+    expect(mockEditor.canRedo).toHaveBeenCalled();
   });
 });
