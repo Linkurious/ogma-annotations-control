@@ -66,7 +66,7 @@ describe("HitDetector", () => {
       update: vi.fn()
     } as unknown as Links;
 
-    hitDetector = new HitDetector(mockOgma, mockStore, mockIndex, mockLinks);
+    hitDetector = new HitDetector(mockOgma, mockStore, mockIndex);
   });
 
   describe("Constructor and Initialization", () => {
@@ -75,12 +75,7 @@ describe("HitDetector", () => {
       mockStore.setState({
         options: { ...mockStore.getState().options, detectMargin: 10 }
       });
-      const detector = new HitDetector(
-        mockOgma,
-        mockStore,
-        testIndex,
-        mockLinks
-      );
+      const detector = new HitDetector(mockOgma, mockStore, testIndex);
 
       expect(detector).toBeInstanceOf(HitDetector);
       expect(mockOgma.getContainer).toHaveBeenCalled();
@@ -100,7 +95,7 @@ describe("HitDetector", () => {
         options: { ...mockStore.getState().options, detectMargin: 5 }
       });
 
-      new HitDetector(testOgma, mockStore, testIndex, mockLinks);
+      new HitDetector(testOgma, mockStore, testIndex);
 
       expect(testOgma.getContainer).toHaveBeenCalled();
     });
@@ -891,7 +886,7 @@ function createAndFill(
 
   const index = new Index(testStore);
 
-  const detector = new HitDetector(mockOgma, testStore, index, mockLinks);
+  const detector = new HitDetector(mockOgma, testStore, index);
 
   // Fill the index with features
   Object.values(mockFeatures).forEach((feature) => {
