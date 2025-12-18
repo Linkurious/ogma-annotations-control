@@ -9,26 +9,29 @@
  * 6. Functions & Helpers
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const sidebarPath = path.resolve(__dirname, '../../../docs/api/typedoc-sidebar.json');
+const sidebarPath = path.resolve(
+  __dirname,
+  "../../../docs/api/typedoc-sidebar.json"
+);
 
 // Read the generated sidebar
-const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
+const sidebar = JSON.parse(fs.readFileSync(sidebarPath, "utf-8"));
 
 // Extract all items into a flat map for easy lookup
 const itemMap = new Map();
 
 function extractItems(items, category) {
-  items.forEach(item => {
+  items.forEach((item) => {
     itemMap.set(item.text, { ...item, category });
   });
 }
 
-sidebar.forEach(section => {
+sidebar.forEach((section) => {
   if (section.items) {
     extractItems(section.items, section.text);
   }
@@ -41,7 +44,7 @@ function getItem(name) {
 
 // Helper to get items matching a pattern
 function getItems(names) {
-  return names.map(name => getItem(name)).filter(Boolean);
+  return names.map((name) => getItem(name)).filter(Boolean);
 }
 
 // Build the new organized sidebar
@@ -57,40 +60,40 @@ const organizedSidebar = [
         collapsed: true,
         items: [
           {
-            text: "select - fires when annotations are selected",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "select",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#select"
           },
           {
-            text: "unselect - fires when annotations are unselected",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "unselect",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#unselect"
           },
           {
-            text: "add - fires when annotation is added",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "add",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#add"
           },
           {
-            text: "remove - fires when annotation is removed",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "remove",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#remove"
           },
           {
-            text: "update - fires after any modification (drag, style, scale)",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "update",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#update"
           },
           {
-            text: "link - fires when arrow connects to node/annotation",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "link",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#link"
           },
           {
-            text: "cancelDrawing - fires when drawing is canceled",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "cancelDrawing",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#cancelDrawing"
           },
           {
-            text: "completeDrawing - fires when drawing completes",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "completeDrawing",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#completeDrawing"
           },
           {
-            text: "history - fires when undo/redo state changes",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md"
+            text: "history",
+            link: "/../../docs/api/type-aliases/FeatureEvents.md#history"
           }
         ]
       }
@@ -103,7 +106,12 @@ const organizedSidebar = [
       {
         text: "Arrow",
         collapsed: true,
-        items: getItems(["Arrow", "ArrowProperties", "ArrowStyles", "createArrow"])
+        items: getItems([
+          "Arrow",
+          "ArrowProperties",
+          "ArrowStyles",
+          "createArrow"
+        ])
       },
       {
         text: "Text",
@@ -118,7 +126,12 @@ const organizedSidebar = [
       {
         text: "Polygon",
         collapsed: true,
-        items: getItems(["Polygon", "PolygonProperties", "PolygonStyle", "createPolygon"])
+        items: getItems([
+          "Polygon",
+          "PolygonProperties",
+          "PolygonStyle",
+          "createPolygon"
+        ])
       },
       {
         text: "Comment",
@@ -213,20 +226,6 @@ const organizedSidebar = [
       "updatePolygonBbox",
       "getAnnotationsBounds",
       "getCoordinates"
-    ])
-  },
-  {
-    text: "Detection & Hit Testing",
-    collapsed: true,
-    items: getItems([
-      "detectArrow",
-      "detectText",
-      "detectBox",
-      "detectPolygon",
-      "detectComment",
-      "getHandleId",
-      "handleDetectionThreshold",
-      "handleRadius"
     ])
   },
   {
@@ -337,13 +336,12 @@ const organizedSidebar = [
       "Id"
     ])
   }
-].filter(section => section && section.items && section.items.length > 0);
+].filter((section) => section && section.items && section.items.length > 0);
 
 // Write the organized sidebar
-fs.writeFileSync(
-  sidebarPath,
-  JSON.stringify(organizedSidebar, null, 2)
-);
+fs.writeFileSync(sidebarPath, JSON.stringify(organizedSidebar, null, 2));
 
-console.log('✅ Sidebar organized successfully!');
+// eslint-disable-next-line no-console
+console.log("✅ Sidebar organized successfully!");
+// eslint-disable-next-line no-console
 console.log(`📝 ${organizedSidebar.length} top-level sections created`);
