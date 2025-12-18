@@ -44,6 +44,24 @@ export const isText = (
   a: AnnotationFeature<Geometry, AnnotationProps>
 ): a is Text => a.properties.type === "text";
 
+/**
+ * Default style configuration for text annotations.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   font: "sans-serif",
+ *   fontSize: 18,
+ *   color: "#505050",
+ *   background: "#f5f5f5",
+ *   strokeWidth: 0,
+ *   borderRadius: 8,
+ *   padding: 16,
+ *   strokeType: "plain",
+ *   fixedSize: false
+ * }
+ * ```
+ */
 export const defaultTextStyle: TextStyle = {
   font: "sans-serif",
   fontSize: 18,
@@ -56,6 +74,10 @@ export const defaultTextStyle: TextStyle = {
   fixedSize: false
 };
 
+/**
+ * Default options for creating new Text annotations.
+ * Contains the default text structure with {@link defaultTextStyle}.
+ */
 //used when adding a new Text
 export const defaultTextOptions: Text = {
   id: getId(),

@@ -16,18 +16,21 @@ import { createArrow, defaultArrowStyle } from "../types/features/Arrow";
 import { Point } from "../types/geometry";
 import { getBbox } from "../utils/utils";
 
-interface CoordinateTarget {
+/** Target type representing a coordinate point, anywhere in space */
+export interface CoordinateTarget {
   type: typeof TARGET_TYPES.COORDINATE;
   coordinate: Point;
 }
 
-interface NodeTarget {
+/** Target type representing a node in the graph */
+export interface NodeTarget {
   type: typeof TARGET_TYPES.NODE;
   id: Id;
   magnet?: Point;
 }
 
-interface AnnotationTarget {
+/** Target type representing another annotation */
+export interface AnnotationTarget {
   type: typeof TARGET_TYPES.ANNOTATION;
   id: Id;
   magnet?: Point;
@@ -51,6 +54,19 @@ const isCoordinateTarget = (
 
 /**
  * Default arrow style for comment arrows
+ *
+ * @example
+ * ```typescript
+ * {
+ *   style: {
+ *     strokeType: "plain",
+ *     strokeColor: "#666",
+ *     strokeWidth: 2,
+ *     head: "arrow", // Arrow points TO the comment
+ *     tail: "none"
+ *   }
+ * }
+ * ```
  */
 export const defaultCommentArrowStyle: Partial<ArrowProperties> = {
   style: {

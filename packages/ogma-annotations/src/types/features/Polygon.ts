@@ -155,6 +155,21 @@ export function createPolygon(
   };
 }
 
+/**
+ * Default style configuration for polygon annotations.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   background: "transparent",
+ *   strokeWidth: 2,
+ *   borderRadius: 8,
+ *   padding: 16,
+ *   strokeType: "plain",
+ *   strokeColor: "#000000"
+ * }
+ * ```
+ */
 export const defaultPolygonStyle: PolygonStyle = {
   ...defaultBoxStyle,
   strokeColor: "#000000",
@@ -163,7 +178,8 @@ export const defaultPolygonStyle: PolygonStyle = {
 };
 
 /**
- * Default polygon properties
+ * Default polygon properties for creating new Polygon annotations.
+ * Contains the default polygon configuration with {@link defaultPolygonStyle}.
  */
 export const defaultPolygonProperties: PolygonProperties = {
   type: "polygon",

@@ -88,6 +88,41 @@ export const isComment = (
 
 /**
  * Default style for Comment annotations
+ *
+ * @example
+ * ```typescript
+ * {
+ *   // Box styling
+ *   background: "#FFFACD", // Light yellow (sticky note color)
+ *   padding: 8,
+ *   borderRadius: 4,
+ *   strokeColor: "#DDD",
+ *   strokeWidth: 1,
+ *   strokeType: "plain",
+ *
+ *   // Icon styling (collapsed mode)
+ *   iconColor: "#FFCB2F", // Gold
+ *   iconSymbol: "💬",
+ *   iconBorderColor: "#aaa",
+ *   iconBorderWidth: 2,
+ *
+ *   // Size properties
+ *   minHeight: 60,
+ *   iconSize: 32,
+ *
+ *   // Text styling
+ *   color: "#333",
+ *   font: "Arial, sans-serif",
+ *   fontSize: 12,
+ *
+ *   // Editing UI
+ *   showSendButton: true,
+ *   autoGrow: true,
+ *
+ *   // Fixed size (always screen-aligned)
+ *   fixedSize: true
+ * }
+ * ```
  */
 export const defaultCommentStyle: CommentStyle = {
   // Box styling
@@ -123,7 +158,19 @@ export const defaultCommentStyle: CommentStyle = {
 };
 
 /**
- * Default options for creating new Comments
+ * Default options for creating new Comments.
+ * Contains the default comment configuration with {@link defaultCommentStyle}.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   mode: "expanded",
+ *   width: 200,
+ *   height: 120,
+ *   content: "",
+ *   style: defaultCommentStyle
+ * }
+ * ```
  */
 export const defaultCommentOptions: Partial<CommentProps> = {
   mode: "expanded",

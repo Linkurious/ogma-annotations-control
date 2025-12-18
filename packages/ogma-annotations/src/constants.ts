@@ -22,6 +22,7 @@ export const DATA_ATTR = "data-annotation";
 export const handleDetectionThreshold = 5; // pixels
 export const handleRadius = 3; // pixels
 
+/** @private */
 export const LAYERS = {
   SHAPES: 1,
   EDITOR: 2,
@@ -31,6 +32,7 @@ export const LAYERS = {
 export const SIDE_START = "start" as const;
 export const SIDE_END = "end" as const;
 
+/** @private */
 export const cursors: Record<string, Cursor> = {
   default: "default",
   move: "move",
@@ -58,6 +60,7 @@ export const COMMENT_MODE_EXPANDED = "expanded";
 export const TEXT_LINE_HEIGHT = 1.2;
 export const HL_BRIGHTEN = 0.2;
 
+/** @private */
 export const TARGET_TYPES = {
   TEXT: "text" as const,
   NODE: "node" as const,
@@ -68,7 +71,7 @@ export const TARGET_TYPES = {
   ANNOTATION: "annotation" as const
 };
 
-// Default send button icon (paper plane)
+/** Default send button icon (paper plane) */
 export const DEFAULT_SEND_ICON = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;

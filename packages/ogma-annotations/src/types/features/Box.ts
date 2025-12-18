@@ -59,6 +59,20 @@ export function detectBox(
   );
 }
 
+/**
+ * Default style configuration for box annotations.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   background: "#f5f5f5",
+ *   strokeWidth: 0,
+ *   borderRadius: 8,
+ *   padding: 16,
+ *   strokeType: "plain"
+ * }
+ * ```
+ */
 export const defaultBoxStyle: BoxStyle = {
   background: "#f5f5f5",
   strokeWidth: 0,
@@ -67,6 +81,10 @@ export const defaultBoxStyle: BoxStyle = {
   strokeType: "plain"
 };
 
+/**
+ * Default options for creating new Box annotations.
+ * Contains the default box structure with {@link defaultBoxStyle}.
+ */
 //used when adding a new Box
 export const defaultBoxOptions: Box = {
   id: undefined as unknown as string, // will be set by the editor

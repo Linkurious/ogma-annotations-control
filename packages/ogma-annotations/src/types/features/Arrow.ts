@@ -53,6 +53,20 @@ export function detectArrow(
   );
 }
 
+/**
+ * Default style configuration for arrow annotations.
+ *
+ * @example
+ * ```typescript
+ * {
+ *   strokeType: "plain",
+ *   strokeColor: "#202020",
+ *   strokeWidth: 1,
+ *   head: "none",
+ *   tail: "none"
+ * }
+ * ```
+ */
 export const defaultArrowStyle: ArrowStyles = {
   strokeType: "plain",
   strokeColor: "#202020",
@@ -61,6 +75,10 @@ export const defaultArrowStyle: ArrowStyles = {
   tail: "none"
 };
 
+/**
+ * Default options for creating new Arrow annotations.
+ * Contains the default arrow structure with {@link defaultArrowStyle}.
+ */
 // used when adding a new Arrow
 export const defaultArrowOptions: Arrow = {
   id: undefined as unknown as string, // will be set by the editor

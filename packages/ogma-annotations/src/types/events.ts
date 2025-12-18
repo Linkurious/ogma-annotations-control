@@ -11,11 +11,13 @@ import {
   EVT_COMPLETE_DRAWING
 } from "../constants";
 
+/** Event related to multiple annotation features */
 export interface FeaturesEvent {
   /** Annotation IDs involved in the event */
   ids: Id[];
 }
 
+/** Event related to a single annotation feature */
 export interface FeatureEvent {
   /** Annotation ID involved in the event */
   id: Id;

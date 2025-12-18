@@ -50,7 +50,7 @@ function getItems(names) {
 // Build the new organized sidebar
 const organizedSidebar = [
   {
-    text: "Getting Started",
+    text: "Core",
     collapsed: false,
     items: [
       getItem("Control"),
@@ -142,9 +142,7 @@ const organizedSidebar = [
           "CommentStyle",
           "createComment",
           "createCommentWithArrow",
-          "CommentTarget",
-          "COMMENT_MODE_COLLAPSED",
-          "COMMENT_MODE_EXPANDED"
+          "CommentTarget"
         ])
       }
     ]
@@ -306,11 +304,7 @@ const organizedSidebar = [
         text: "Constants",
         collapsed: true,
         items: getItems([
-          "DATA_ATTR",
           "DEFAULT_SEND_ICON",
-          "HL_BRIGHTEN",
-          "LAYERS",
-          "NONE",
           "TARGET_TYPES",
           "TEXT_LINE_HEIGHT",
           "TargetType"
@@ -322,13 +316,7 @@ const organizedSidebar = [
     text: "Utilities",
     collapsed: true,
     items: getItems([
-      "createSVGElement",
       "clientToContainerPosition",
-      "getBrowserWindow",
-      "migrateBoxOrTextIfNeeded",
-      "debounce",
-      "debounceTail",
-      "throttle",
       "AnnotationGetter",
       "ClientMouseEvent",
       "Events",

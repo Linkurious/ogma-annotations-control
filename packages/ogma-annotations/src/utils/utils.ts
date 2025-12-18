@@ -31,6 +31,7 @@ import {
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
+/** @private */
 export function createSVGElement<T extends SVGElement>(tag: string): T {
   return document.createElementNS(SVG_NS, tag) as T;
 }
@@ -329,12 +330,14 @@ export function rgbToRgba(color: RgbColor, alpha: number): RgbaColor {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/** @private */
 export function getBrowserWindow() {
   return typeof window !== "undefined"
     ? (window as unknown as HTMLElement)
     : undefined;
 }
 
+/** @private */
 export const throttle = <T extends unknown[]>(
   callback: (...args: T) => void,
   delay: number
@@ -353,6 +356,7 @@ export const throttle = <T extends unknown[]>(
   };
 };
 
+/** @private */
 export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
   func: F,
   waitFor: number
@@ -367,6 +371,7 @@ export const debounce = <F extends (...args: Parameters<F>) => ReturnType<F>>(
   return debounced;
 };
 
+/** @private */
 export function debounceTail<T, A extends unknown[]>(
   fn: (this: T, ...args: A) => void,
   delay: number
@@ -397,6 +402,7 @@ export {
 /**
  * Migrates old Polygon-based Box/Text to new Point-based format
  * Called only when annotations are added/loaded
+ * @private
  */
 export function migrateBoxOrTextIfNeeded<T extends Annotation>(
   annotation: T
@@ -484,9 +490,19 @@ export function adjustColorBrightness(color: Color, amount: number): RgbaColor {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+/**
+ * Brighten a color for highlight purposes.
+ * @param color - Color string in hex (#RRGGBB or #RGB) or rgba format
+ * @returns
+ */
 export const brighten = (color: Color): RgbaColor =>
   adjustColorBrightness(color, HL_BRIGHTEN);
 
+/**
+ * Darken a color for highlight purposes.
+ * @param color - Color string in hex (#RRGGBB or #RGB) or rgba format
+ * @returns
+ */
 export const darken = (color: Color): RgbaColor =>
   adjustColorBrightness(color, -HL_BRIGHTEN);
 
