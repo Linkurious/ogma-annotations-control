@@ -2,8 +2,14 @@ import { Size } from "@linkurious/ogma";
 import { Point as GeoJSONPoint, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps } from "./Annotation";
+import type { Arrow, ArrowStyles, Extremity } from "./Arrow";
+import { createArrow, defaultArrowStyle } from "./Arrow";
 import { Text, TextStyle, detectText } from "./Text";
-import { COMMENT_MODE_COLLAPSED, COMMENT_MODE_EXPANDED } from "../../constants";
+import {
+  COMMENT_MODE_COLLAPSED,
+  COMMENT_MODE_EXPANDED,
+  SIDE_END
+} from "../../constants";
 import { Color } from "../colors";
 import { Point } from "../geometry";
 
@@ -182,13 +188,18 @@ export const defaultCommentOptions: Partial<CommentProps> = {
 /**
  * Create a new Comment annotation
  *
- * @param position - Center position of the comment box/icon
+ * @param x - X coordinate of the comment box/icon center
+ * @param y - Y coordinate of the comment box/icon center
  * @param content - Text content
  * @param options - Optional configuration
  * @returns New Comment feature
  *
- * Note: This creates ONLY the comment. Use createCommentWithArrow() to create
- * a comment with its required arrow atomically.
+ * @important This creates ONLY the comment box without an arrow. Since comments
+ * require at least one arrow, you should use {@link createCommentWithArrow}
+ * instead for programmatic creation. This function is primarily used internally
+ * by the interactive drawing handlers.
+ *
+ * @see createCommentWithArrow for creating comments programmatically
  */
 export function createComment(
   x: number,
@@ -357,4 +368,95 @@ export function getCommentZoomThreshold(comment: Comment): number {
     return style.collapseZoomThreshold;
   }
   return calculateCommentZoomThreshold(comment);
+}
+
+/**
+ * Create a comment with an arrow pointing to a target location
+ *
+ * This is the recommended way to create comments programmatically, as it ensures
+ * that the comment always has at least one arrow (which is required).
+ *
+ * @param targetX - X coordinate where the arrow points to
+ * @param targetY - Y coordinate where the arrow points to
+ * @param commentX - X coordinate of the comment box center
+ * @param commentY - Y coordinate of the comment box center
+ * @param content - Text content of the comment
+ * @param options - Optional configuration
+ * @param options.commentStyle - Style options for the comment
+ * @param options.arrowStyle - Style options for the arrow
+ * @returns Object containing the comment and arrow features
+ *
+ * @example
+ * ```typescript
+ * import { createCommentWithArrow } from '@linkurious/ogma-annotations';
+ *
+ * // Create a comment pointing to a node at (100, 100)
+ * const { comment, arrow } = createCommentWithArrow(
+ *   100, 100,           // Target position (where arrow points)
+ *   300, 50,            // Comment position
+ *   "Important node!",  // Comment text
+ *   {
+ *     commentStyle: {
+ *       style: {
+ *         background: "#FFFACD",
+ *         color: "#333"
+ *       }
+ *     },
+ *     arrowStyle: {
+ *       strokeColor: "#3498db",
+ *       strokeWidth: 2,
+ *       head: "arrow"
+ *     }
+ *   }
+ * );
+ *
+ * // Add both to the controller
+ * controller.add(comment);
+ * controller.add(arrow);
+ *
+ * // The arrow is automatically linked to the comment
+ * ```
+ */
+export function createCommentWithArrow(
+  targetX: number,
+  targetY: number,
+  commentX: number,
+  commentY: number,
+  content: string = "",
+  options?: {
+    commentStyle?: Partial<CommentProps>;
+    arrowStyle?: Partial<ArrowStyles>;
+  }
+): {
+  comment: Comment;
+  arrow: Arrow;
+} {
+  // Create the comment
+  const comment = createComment(
+    commentX,
+    commentY,
+    content,
+    options?.commentStyle
+  );
+
+  // Create the arrow pointing from target to comment
+  const arrowStyles: ArrowStyles = {
+    ...defaultArrowStyle,
+    head: "arrow" as Extremity, // Default to arrow head
+    ...options?.arrowStyle
+  };
+
+  const arrow = createArrow(targetX, targetY, commentX, commentY, arrowStyles);
+
+  // Link the arrow's end to the comment
+  arrow.properties.link = {
+    [SIDE_END]: {
+      id: comment.id,
+      side: SIDE_END,
+      type: "comment" as const,
+      magnet: { x: commentX, y: commentY }
+    }
+  };
+
+  return { comment, arrow };
 }

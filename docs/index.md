@@ -25,6 +25,10 @@ features:
     title: Fully Customizable
     details: Control every aspect of your annotations - colors, fonts, line styles, arrow heads, and more
 
+  - icon: 💾
+    title: Persistence and Export
+    details: You can easily save, load, and export annotations in GeoJSON format, as well as export to PNG/SVG images
+
   - icon: 📘
     title: TypeScript Support
     details: Built with TypeScript for complete type safety and excellent IDE autocomplete
@@ -33,14 +37,9 @@ features:
     title: React Integration
     details: Ready-to-use React hooks and context provider for seamless integration with React apps
 
-  - icon: 🎯
-    title: Event-Driven
-    details: Rich event system to respond to user interactions and annotation lifecycle changes
-
   - icon: 🚀
     title: Production Ready
     details: Battle-tested in production applications with comprehensive documentation
-
 ---
 
 ## Why Use Ogma Annotations?
@@ -58,40 +57,43 @@ Annotations enhance graph visualizations by allowing you to:
 ::: code-group
 
 ```typescript [TypeScript]
-import Ogma from '@linkurious/ogma';
-import { Control, createArrow, createText } from '@linkurious/ogma-annotations';
+import Ogma from "@linkurious/ogma";
+import { Control, createArrow, createText } from "@linkurious/ogma-annotations";
 
-const ogma = new Ogma({ container: 'graph-container' });
+const ogma = new Ogma({ container: "graph-container" });
 const controller = new Control(ogma);
 
 // Add an arrow annotation
 const arrow = createArrow(0, 0, 100, 100, {
-  stroke: '#ff6b6b',
+  stroke: "#ff6b6b",
   strokeWidth: 3
 });
 controller.add(arrow);
 
 // Add a text annotation
-const text = createText(50, 50, 'Important Node', {
-  color: '#4ecdc4',
+const text = createText(50, 50, "Important Node", {
+  color: "#4ecdc4",
   fontSize: 16
 });
 controller.add(text);
 ```
 
 ```tsx [React]
-import { Ogma } from '@linkurious/ogma-react';
-import { AnnotationsContextProvider, useAnnotationsContext } from '@linkurious/ogma-annotations-react';
-import { createArrow } from '@linkurious/ogma-annotations';
+import { Ogma } from "@linkurious/ogma-react";
+import {
+  AnnotationsContextProvider,
+  useAnnotationsContext
+} from "@linkurious/ogma-annotations-react";
+import { createArrow } from "@linkurious/ogma-annotations";
 
 function AnnotationTools() {
   const { editor } = useAnnotationsContext();
   const ogma = useOgma();
 
   const addArrow = () => {
-    ogma.events.once('click', (evt) => {
+    ogma.events.once("click", (evt) => {
       const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-      const arrow = createArrow(x, y, x, y, { stroke: '#ff6b6b' });
+      const arrow = createArrow(x, y, x, y, { stroke: "#ff6b6b" });
       editor.startArrow(x, y, arrow);
     });
   };

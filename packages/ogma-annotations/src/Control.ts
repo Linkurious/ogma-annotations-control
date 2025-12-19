@@ -49,7 +49,8 @@ import {
   isBox,
   isText,
   isAnnotationCollection,
-  isComment
+  isComment,
+  DeepPartial
 } from "./types";
 import { findPlace } from "./utils/place-finder";
 import { migrateBoxOrTextIfNeeded } from "./utils/utils";
@@ -982,6 +983,75 @@ export class Control extends EventEmitter<FeatureEvents> {
         }
       }
     } as A);
+    return this;
+  }
+
+  /**
+   * Update an annotation with partial updates
+   *
+   * This method allows you to update any properties of an annotation, including
+   * geometry, properties, and style. Updates are merged with existing data.
+   *
+   * @param annotation Partial annotation object with id and properties to update
+   * @returns this for chaining
+   *
+   * @example
+   * ```ts
+   * // Update arrow geometry
+   * controller.update({
+   *   id: arrowId,
+   *   geometry: {
+   *     type: 'LineString',
+   *     coordinates: [[0, 0], [200, 200]]
+   *   }
+   * });
+   *
+   * // Update text content and position
+   * controller.update({
+   *   id: textId,
+   *   geometry: {
+   *     type: 'Point',
+   *     coordinates: [100, 100]
+   *   },
+   *   properties: {
+   *     content: 'Updated text'
+   *   }
+   * });
+   *
+   * // Update style only (prefer updateStyle for style-only updates)
+   * controller.update({
+   *   id: boxId,
+   *   properties: {
+   *     style: {
+   *       background: '#ff0000'
+   *     }
+   *   }
+   * });
+   * ```
+   */
+  public update<A extends Annotation>(
+    annotation: DeepPartial<A> & { id: Id }
+  ): this {
+    const state = this.store.getState();
+    const feature = state.getFeature(annotation.id);
+    if (!feature) return this;
+
+    state.updateFeature(annotation.id, {
+      ...feature,
+      ...annotation,
+      properties: {
+        ...feature.properties,
+        ...annotation.properties,
+        style: {
+          ...feature.properties.style,
+          ...annotation.properties?.style
+        }
+      },
+      geometry: {
+        ...feature.geometry,
+        ...annotation.geometry
+      }
+    } as Annotation);
     return this;
   }
 }
