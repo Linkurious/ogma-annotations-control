@@ -27,10 +27,21 @@ export default defineConfig({
   ignoreDeadLinks: true,
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    logo: "https://doc.linkurious.com/ogma/latest/logo-white.svg",
     nav: [
       { text: "Home", link: "/" },
-      { text: "Demo", link: "/demo/index.html", target: "_blank" },
-      { text: "React Demo", link: "/demo-react/index.html", target: "_blank" }
+      { text: "API", link: "/api/index.html" },
+      {
+        text: "Demo",
+        items: [
+          { text: "Typescript", link: "/demo/index.html", target: "_blank" },
+          {
+            text: "React",
+            link: "/demo-react/index.html",
+            target: "_blank"
+          }
+        ]
+      }
     ],
     outline: {
       level: [2, 3]
@@ -41,6 +52,9 @@ export default defineConfig({
         icon: "github",
         link: "https://github.com/Linkurious/ogma-annotations-control"
       }
-    ]
+    ],
+    search: {
+      provider: "local"
+    }
   }
 });
