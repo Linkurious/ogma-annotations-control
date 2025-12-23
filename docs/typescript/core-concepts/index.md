@@ -4,15 +4,15 @@ This section covers the fundamental concepts of using `@linkurious/ogma-annotati
 
 ## [Controller](./controller.md)
 
-This is the maon class that manages annotations. All the functionality is exposed through the controller. It manages renderering, state and user interactions.
+This is the main class that manages annotations. All the functionality is exposed through the controller. It manages renderering, state and user interactions.
 
-- [Docs and usage](/typescript/core-concepts/controller.md)
+- [Docs and usage](./controller.md)
 
 ## [Annotation Types](./annotations.md)
 
 Supported annotations types and their JSON representations.
 
-- [Docs and usage](/typescript/core-concepts/annotations.md)
+- [Docs and usage](./annotations.md)
 
 ## [Events](./events.md)
 

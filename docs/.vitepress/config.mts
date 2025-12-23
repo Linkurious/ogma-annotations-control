@@ -70,6 +70,7 @@ export default defineConfig({
             {
               text: "Core Concepts",
               collapsed: false,
+              link: "/typescript/core-concepts/",
               items: [
                 {
                   text: "Controller",
