@@ -19,6 +19,21 @@
       <div class="left"></div>
       <div id="app"></div>
     </div>
+    <!-- SVG Export Popup -->
+    <div id="svg-popup" class="popup-backdrop" style="display: none;">
+      <div class="popup-content">
+        <div class="popup-header">
+          <h2>SVG Export Preview</h2>
+          <button id="popup-close" class="popup-close">&times;</button>
+        </div>
+        <div class="popup-body">
+          <div id="svg-preview"></div>
+        </div>
+        <div class="popup-footer">
+          <button id="popup-download" class="popup-button">Download SVG</button>
+        </div>
+      </div>
+    </div>
     <div id="controls" class="control-bar">
       <button id="add-arrow" tooltip="Add arrow">
         <i class="icon-arrow-right"></i>
@@ -49,6 +64,9 @@
       <span class="separator"></span>
       <button id="export" tooltip="Export annotations">
         <i class="icon-download"></i>
+      </button>
+      <button id="export-svg" tooltip="Export SVG">
+        <i class="icon-camera"></i>
       </button>
     </div>
     <div class="control-bar vertical" id="vis-controls">

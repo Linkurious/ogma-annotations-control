@@ -20,6 +20,7 @@ class App {
     redo: HTMLButtonElement;
     delete: HTMLButtonElement;
     export: HTMLButtonElement;
+    exportSvg: HTMLButtonElement;
     centerView: HTMLButtonElement;
     rotateCW: HTMLButtonElement;
     rotateCCW: HTMLButtonElement;
@@ -54,6 +55,7 @@ class App {
       redo: document.getElementById("redo")! as HTMLButtonElement,
       delete: document.getElementById("delete")! as HTMLButtonElement,
       export: document.getElementById("export")! as HTMLButtonElement,
+      exportSvg: document.getElementById("export-svg")! as HTMLButtonElement,
       centerView: document.getElementById("center-view")! as HTMLButtonElement,
       rotateCW: document.getElementById("rotate-cw")! as HTMLButtonElement,
       rotateCCW: document.getElementById("rotate-ccw")! as HTMLButtonElement
@@ -101,6 +103,7 @@ class App {
     this.setupHistoryControls();
     this.setupDeleteControl();
     this.setupExportControl();
+    this.setupSvgExportControl();
     this.setupViewControls();
     this.setupKeyboardShortcuts();
   }
@@ -283,6 +286,30 @@ class App {
       dl.remove();
 
       console.log("Exported annotations:", annotations);
+    });
+  }
+
+  private setupSvgExportControl() {
+    this.buttons.exportSvg.addEventListener("click", async () => {
+      try {
+        // Export SVG with clipping enabled
+        const svg = await this.ogma.export.svg({ clip: true });
+
+        // Create download link
+        const blob = new Blob([svg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
+        const dl = document.createElement("a");
+        document.body.appendChild(dl);
+        dl.setAttribute("href", url);
+        dl.setAttribute("download", "graph-with-annotations.svg");
+        dl.click();
+        dl.remove();
+        URL.revokeObjectURL(url);
+
+        console.log("Exported SVG (cropped)");
+      } catch (error) {
+        console.error("Failed to export SVG:", error);
+      }
     });
   }
 
