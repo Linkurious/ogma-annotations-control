@@ -2,6 +2,8 @@
 
 This package provides a set of React components to create and manage annotations in an Ogma graph. It doesn't depend on your UI components library, but provides the utilities to deal with the annotations in React way.
 
+[Example](https://linkurious.github.io/ogma-annotations-control/examples/react/) | [code](https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/ogma-annotations-react/web/)
+
 ## Installation
 
 ```bash

@@ -2,6 +2,7 @@
   --font-face: "IBM Plex Sans", sans-serif;
   --font-size: 16px;
   --brand: #1493ff;
+  --brand-darker: #0e7acc;
 }
 
 #app {
@@ -195,11 +196,10 @@ body {
 }
 
 .brand {
-  color: var(--brand);
   font-size: 12px;
   padding: 5px;
   margin: 0;
-  font-family: var(--font-face);
+  font-family: var(--font);
   border-radius: 5px;
 }
 
@@ -207,6 +207,10 @@ body {
   color: var(--brand);
 }
 
+.brand a:hover {
+  color: var(--brand-darker);
+}
+
 .brand:hover {
-  background: #f0f0f0;
+  background: #f9f9f9;
 }

@@ -30,11 +30,11 @@ class App {
     this.ogma.tools.brand.set(
       `<div class="brand">
         <a href="../api/">
-          <code>@linkurious/ogma-annotations</code>
-        </a>
+          <code>ogma-annotations</code>
+        </a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/ogma-annotations/web/">code</a>
       </div>`,
       {
-        position: "bottom-right",
+        position: "top-left",
         horizontalMargin: 10,
         verticalMargin: 10,
         className: "brand"
