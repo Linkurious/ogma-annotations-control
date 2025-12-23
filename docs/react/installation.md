@@ -105,14 +105,14 @@ const graph = {
 function ToolbarButton() {
   const { editor } = useAnnotationsContext();
 
-  const handleAddArrow = () => {
+  const handleAddArrow = React.useCallback(() => {
     editor.enableArrowDrawing({
       strokeType: "plain",
       strokeColor: "#3498db",
       strokeWidth: 2,
       head: "arrow"
     });
-  };
+  }, [editor]);
 
   return <button onClick={handleAddArrow}>Add Arrow</button>;
 }

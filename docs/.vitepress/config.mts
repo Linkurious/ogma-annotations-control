@@ -1,12 +1,14 @@
 import { DefaultTheme, defineConfig } from "vitepress";
 import path from "path";
-import fs from "fs/promises";
-import sidebarJSON from "../api/typedoc-sidebar.json";
+import sidebarJSON from "../typescript/api/typedoc-sidebar.json";
+import reactSidebarJSON from "../react/api/typedoc-sidebar.json";
 
 function cleanBasePaths(items: DefaultTheme.SidebarItem[]) {
   for (const item of items) {
     if ("link" in item && item.link) {
-      item.link = item.link.replace("/../../docs/api/", "/api/");
+      item.link = item.link
+        .replace("/../../docs/typescript/api/", "/typescript/api/")
+        .replace("/../../docs/react/api/", "/react/api/");
     }
     if ("items" in item && item.items) {
       cleanBasePaths(item.items);
@@ -23,7 +25,7 @@ export default defineConfig({
   head: [
     ["link", { rel: "icon", href: "/ogma-annotations-control/favicon.ico" }]
   ],
-  outDir: path.resolve(process.cwd(), "dist"),
+  outDir: path.resolve(process.cwd(), "dist", "docs"),
   base: "/ogma-annotations-control/",
   ignoreDeadLinks: true,
   themeConfig: {
@@ -34,7 +36,13 @@ export default defineConfig({
     },
     siteTitle: false, // Hide title text, show only logo
     nav: [
-      { text: "API", link: "/api/index.html" },
+      {
+        text: "API",
+        items: [
+          { text: "TypeScript", link: "/typescript/api/" },
+          { text: "React", link: "/react/api/" }
+        ]
+      },
       { text: "Docs", link: "/typescript/installation.html" },
       { text: "React", link: "/react/installation.html" },
       {
@@ -115,7 +123,7 @@ export default defineConfig({
         },
         {
           text: "API Reference",
-          items: [{ text: "Full API Documentation", link: "/api/" }]
+          items: [{ text: "Full API Documentation", link: "/typescript/api/" }]
         }
       ],
 
@@ -179,6 +187,10 @@ export default defineConfig({
           ]
         },
         {
+          text: "API Reference",
+          items: [{ text: "React API Documentation", link: "/react/api/" }]
+        },
+        {
           text: "Examples",
           items: [
             { text: "Simple Toolbar", link: "/examples/react/simple-toolbar" },
@@ -214,8 +226,18 @@ export default defineConfig({
         }
       ],
 
-      // API documentation (TypeDoc generated)
-      "/api/": [{ text: "API Reference", items: cleanBasePaths(sidebarJSON) }],
+      // TypeScript API documentation (TypeDoc generated)
+      "/typescript/api/": [
+        { text: "TypeScript API Reference", items: cleanBasePaths(sidebarJSON) }
+      ],
+
+      // React API documentation (TypeDoc generated)
+      "/react/api/": [
+        {
+          text: "React API Reference",
+          items: cleanBasePaths(reactSidebarJSON)
+        }
+      ],
 
       // Getting Started and other root pages
       "/": [

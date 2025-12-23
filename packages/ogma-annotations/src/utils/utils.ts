@@ -189,6 +189,7 @@ export const getHandleId = (handle: HTMLDivElement): number =>
 /**
  * Calculate the bounds of a collection of annotations
  * @param annotations
+ * @returns Bounds [minX, minY, maxX, maxY]
  */
 export function getAnnotationsBounds(
   annotations: AnnotationCollection
@@ -323,6 +324,12 @@ export function hexShortToLong(color: HexColor): HexColor {
   return color;
 }
 
+/**
+ * Adds alpha channel to a hex color
+ * @param color
+ * @param alpha
+ * @returns rgba color string
+ */
 export function hexToRgba(color: HexColor, alpha: number): RgbaColor {
   const [r, g, b] = hexShortToLong(color)
     .match(/\w\w/g)!
@@ -330,6 +337,12 @@ export function hexToRgba(color: HexColor, alpha: number): RgbaColor {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/**
+ * Adds alpha channel to an rgb color
+ * @param color
+ * @param alpha
+ * @returns rgba color string
+ */
 export function rgbToRgba(color: RgbColor, alpha: number): RgbaColor {
   const [r, g, b] = color.match(/\d+/g)!.map((c) => parseInt(c, 10));
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;

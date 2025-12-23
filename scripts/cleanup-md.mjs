@@ -89,4 +89,8 @@ async function cleanupDir(dir) {
   return Promise.all(promises);
 }
 
-cleanupDir("docs/api");
+// Clean up both TypeScript and React API docs
+Promise.all([
+  cleanupDir("docs/typescript/api"),
+  cleanupDir("docs/react/api")
+]);

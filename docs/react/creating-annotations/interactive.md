@@ -16,14 +16,14 @@ import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 function AddArrowButton() {
   const { editor } = useAnnotationsContext();
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     editor.enableArrowDrawing({
       strokeType: "plain",
       strokeColor: "#3498db",
       strokeWidth: 2,
       head: "arrow"
     });
-  };
+  }, [editor]);
 
   return <button onClick={handleClick}>Add Arrow</button>;
 }
@@ -44,7 +44,7 @@ Use `editor.enableTextDrawing()` to let users create text annotations:
 function AddTextButton() {
   const { editor } = useAnnotationsContext();
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     editor.enableTextDrawing({
       font: "Arial",
       fontSize: 16,
@@ -53,7 +53,7 @@ function AddTextButton() {
       borderRadius: 4,
       padding: 8
     });
-  };
+  }, [editor]);
 
   return <button onClick={handleClick}>Add Text</button>;
 }
@@ -75,13 +75,13 @@ When clicked, the user can:
 function AddBoxButton() {
   const { editor } = useAnnotationsContext();
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     editor.enableBoxDrawing({
       background: "#f0f0f0",
       borderRadius: 8,
       padding: 12
     });
-  };
+  }, [editor]);
 
   return <button onClick={handleClick}>Add Box</button>;
 }
@@ -93,13 +93,13 @@ function AddBoxButton() {
 function AddPolygonButton() {
   const { editor } = useAnnotationsContext();
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     editor.enablePolygonDrawing({
       strokeColor: "#3498db",
       strokeWidth: 2,
       background: "rgba(52, 152, 219, 0.2)"
     });
-  };
+  }, [editor]);
 
   return <button onClick={handleClick}>Add Polygon</button>;
 }
@@ -118,7 +118,7 @@ Comments are text annotations with arrows:
 function AddCommentButton() {
   const { editor } = useAnnotationsContext();
 
-  const handleClick = () => {
+  const handleClick = React.useCallback(() => {
     editor.enableCommentDrawing({
       offsetX: 200,
       offsetY: -150,
@@ -139,7 +139,7 @@ function AddCommentButton() {
         }
       }
     });
-  };
+  }, [editor]);
 
   return <button onClick={handleClick}>Add Comment</button>;
 }
@@ -285,32 +285,36 @@ function SmartToolbar() {
   const { editor } = useAnnotationsContext();
   const [activeMode, setActiveMode] = React.useState<string | null>(null);
 
-  const enableMode = (mode: string, enableFn: () => void) => {
+  const enableMode = React.useCallback((mode: string, enableFn: () => void) => {
     setActiveMode(mode);
     enableFn();
 
     const cleanup = () => setActiveMode(null);
     editor.once("completeDrawing", cleanup);
     editor.once("cancelDrawing", cleanup);
-  };
+  }, [editor]);
+
+  const handleArrow = React.useCallback(() => {
+    enableMode("arrow", () =>
+      editor.enableArrowDrawing({ strokeColor: "#3498db" })
+    );
+  }, [editor, enableMode]);
+
+  const handleText = React.useCallback(() => {
+    enableMode("text", () => editor.enableTextDrawing({ fontSize: 16 }));
+  }, [editor, enableMode]);
 
   return (
     <div className="toolbar">
       <button
         className={activeMode === "arrow" ? "active" : ""}
-        onClick={() =>
-          enableMode("arrow", () =>
-            editor.enableArrowDrawing({ strokeColor: "#3498db" })
-          )
-        }
+        onClick={handleArrow}
       >
         Add Arrow
       </button>
       <button
         className={activeMode === "text" ? "active" : ""}
-        onClick={() =>
-          enableMode("text", () => editor.enableTextDrawing({ fontSize: 16 }))
-        }
+        onClick={handleText}
       >
         Add Text
       </button>
@@ -334,15 +338,15 @@ Use the current style from context for new annotations:
 function StyledToolbar() {
   const { editor, arrowStyle, textStyle } = useAnnotationsContext();
 
-  const handleArrow = () => {
+  const handleArrow = React.useCallback(() => {
     // Use current arrow style
     editor.enableArrowDrawing(arrowStyle);
-  };
+  }, [editor, arrowStyle]);
 
-  const handleText = () => {
+  const handleText = React.useCallback(() => {
     // Use current text style
     editor.enableTextDrawing(textStyle);
-  };
+  }, [editor, textStyle]);
 
   return (
     <>
@@ -363,22 +367,22 @@ import { createArrow, createText } from "@linkurious/ogma-annotations";
 function QuickAddButtons() {
   const { add } = useAnnotationsContext();
 
-  const addArrow = () => {
+  const addArrow = React.useCallback(() => {
     const arrow = createArrow(0, 0, 100, 100, {
       strokeColor: "#3498db",
       strokeWidth: 2,
       head: "arrow"
     });
     add(arrow);
-  };
+  }, [add]);
 
-  const addText = () => {
+  const addText = React.useCallback(() => {
     const text = createText(50, 50, "Quick Label", {
       fontSize: 16,
       color: "#2c3e50"
     });
     add(text);
-  };
+  }, [add]);
 
   return (
     <>

@@ -220,16 +220,18 @@ function Toolbar() {
     localStorage.setItem("annotations", JSON.stringify(annotations));
   }, [annotations]);
 
+  const handleArrow = React.useCallback(() => {
+    editor.enableArrowDrawing({ strokeColor: "#3498db" });
+  }, [editor]);
+
+  const handleText = React.useCallback(() => {
+    editor.enableTextDrawing({ fontSize: 16 });
+  }, [editor]);
+
   return (
     <div className="toolbar">
-      <button
-        onClick={() => editor.enableArrowDrawing({ strokeColor: "#3498db" })}
-      >
-        Add Arrow
-      </button>
-      <button onClick={() => editor.enableTextDrawing({ fontSize: 16 })}>
-        Add Text
-      </button>
+      <button onClick={handleArrow}>Add Arrow</button>
+      <button onClick={handleText}>Add Text</button>
       <button onClick={undo} disabled={!canUndo}>
         Undo
       </button>

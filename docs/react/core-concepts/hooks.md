@@ -441,12 +441,12 @@ function AnnotationsSync() {
 function DeleteButton() {
   const { editor, remove, currentAnnotation } = useAnnotationsContext();
 
-  const handleDelete = () => {
+  const handleDelete = React.useCallback(() => {
     const selected = editor.getSelectedAnnotations();
     if (selected.features.length > 0) {
       remove(selected);
     }
-  };
+  }, [editor, remove]);
 
   return (
     <button
@@ -465,17 +465,23 @@ function DeleteButton() {
 function Toolbar() {
   const { editor, undo, redo, canUndo, canRedo } = useAnnotationsContext();
 
+  const handleArrow = React.useCallback(() => {
+    editor.enableArrowDrawing({ strokeColor: '#3498db' });
+  }, [editor]);
+
+  const handleText = React.useCallback(() => {
+    editor.enableTextDrawing({ fontSize: 16 });
+  }, [editor]);
+
+  const handleBox = React.useCallback(() => {
+    editor.enableBoxDrawing({});
+  }, [editor]);
+
   return (
     <div className="toolbar">
-      <button onClick={() => editor.enableArrowDrawing({ strokeColor: '#3498db' })}>
-        Arrow
-      </button>
-      <button onClick={() => editor.enableTextDrawing({ fontSize: 16 })}>
-        Text
-      </button>
-      <button onClick={() => editor.enableBoxDrawing({})}>
-        Box
-      </button>
+      <button onClick={handleArrow}>Arrow</button>
+      <button onClick={handleText}>Text</button>
+      <button onClick={handleBox}>Box</button>
       <span className="separator" />
       <button onClick={undo} disabled={!canUndo}>Undo</button>
       <button onClick={redo} disabled={!canRedo}>Redo</button>

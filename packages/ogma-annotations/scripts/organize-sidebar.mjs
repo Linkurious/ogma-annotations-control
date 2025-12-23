@@ -16,7 +16,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sidebarPath = path.resolve(
   __dirname,
-  "../../../docs/api/typedoc-sidebar.json"
+  "../../../docs/typescript/api/typedoc-sidebar.json"
 );
 
 // Read the generated sidebar
@@ -56,44 +56,44 @@ const organizedSidebar = [
       getItem("Control"),
       {
         text: "Events",
-        link: "/../../docs/api/type-aliases/FeatureEvents.md",
+        link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md",
         collapsed: true,
         items: [
           {
             text: "select",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#select"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#select"
           },
           {
             text: "unselect",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#unselect"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#unselect"
           },
           {
             text: "add",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#add"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#add"
           },
           {
             text: "remove",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#remove"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#remove"
           },
           {
             text: "update",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#update"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#update"
           },
           {
             text: "link",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#link"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#link"
           },
           {
             text: "cancelDrawing",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#cancelDrawing"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#cancelDrawing"
           },
           {
             text: "completeDrawing",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#completeDrawing"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#completeDrawing"
           },
           {
             text: "history",
-            link: "/../../docs/api/type-aliases/FeatureEvents.md#history"
+            link: "/../../docs/typescript/api/type-aliases/FeatureEvents.md#history"
           }
         ]
       }

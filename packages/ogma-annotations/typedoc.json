@@ -5,7 +5,7 @@
   "indexFormat": "table",
   "useCodeBlocks": true,
   "disableSources": true,
-  "out": "../../docs/api",
+  "out": "../../docs/typescript/api",
   "docsRoot": "./",
   "sidebar": { "pretty": true }
 }
