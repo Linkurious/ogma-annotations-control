@@ -1,7 +1,10 @@
 import { ArrowStyles, TextStyle } from "@linkurious/ogma-annotations";
 
+/** @private */
 export const fontSizes = [8, 10, 12, 14, 16, 24, 32, 48, 64, 72];
+/** @private */
 export const TRANSPARENT = "none";
+/** @private */
 export const BLACK = "#333333";
 
 /**
@@ -25,6 +28,7 @@ export const defaultColors = [
 
 /**
  * List of available fonts for annotations.
+ * @private
  */
 export const fonts = [
   "Roboto",

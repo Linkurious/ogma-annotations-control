@@ -1,4 +1,4 @@
-# Interactive Creation
+# Interactive creation of Annotations
 
 Learn how to let users draw annotations interactively by clicking and dragging on the graph. This is the recommended approach for most user-facing annotation tools.
 

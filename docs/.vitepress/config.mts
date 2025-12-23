@@ -87,12 +87,12 @@ export default defineConfig({
               collapsed: false,
               items: [
                 {
-                  text: "Programmatically",
-                  link: "/typescript/creating-annotations/programmatic"
+                  text: "Interactively",
+                  link: "/typescript/creating-annotations/interactive"
                 },
                 {
-                  text: "Interactive Creation",
-                  link: "/typescript/creating-annotations/interactive"
+                  text: "Programmatically",
+                  link: "/typescript/creating-annotations/programmatic"
                 }
               ]
             },
@@ -152,11 +152,11 @@ export default defineConfig({
               collapsed: false,
               items: [
                 {
-                  text: "Interactive Creation",
+                  text: "Interactively",
                   link: "/react/creating-annotations/interactive"
                 },
                 {
-                  text: "Programmatic Creation",
+                  text: "Programmatically",
                   link: "/react/creating-annotations/programmatic"
                 }
               ]
