@@ -285,14 +285,17 @@ function SmartToolbar() {
   const { editor } = useAnnotationsContext();
   const [activeMode, setActiveMode] = React.useState<string | null>(null);
 
-  const enableMode = React.useCallback((mode: string, enableFn: () => void) => {
-    setActiveMode(mode);
-    enableFn();
+  const enableMode = React.useCallback(
+    (mode: string, enableFn: () => void) => {
+      setActiveMode(mode);
+      enableFn();
 
-    const cleanup = () => setActiveMode(null);
-    editor.once("completeDrawing", cleanup);
-    editor.once("cancelDrawing", cleanup);
-  }, [editor]);
+      const cleanup = () => setActiveMode(null);
+      editor.once("completeDrawing", cleanup);
+      editor.once("cancelDrawing", cleanup);
+    },
+    [editor]
+  );
 
   const handleArrow = React.useCallback(() => {
     enableMode("arrow", () =>
