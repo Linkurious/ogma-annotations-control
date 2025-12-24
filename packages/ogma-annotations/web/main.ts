@@ -290,13 +290,62 @@ class App {
   }
 
   private setupSvgExportControl() {
+    const popup = document.getElementById("svg-popup")!;
+    const svgPreview = document.getElementById("svg-preview")!;
+    const closeBtn = document.getElementById("popup-close")!;
+    const downloadBtn = document.getElementById("popup-download")!;
+
+    let currentSvg = "";
+
     this.buttons.exportSvg.addEventListener("click", async () => {
       try {
-        // Export SVG with clipping enabled
-        const svg = await this.ogma.export.svg({ clip: true });
+        // Export SVG with clipping enabled, without auto-download
+        const svg = await this.ogma.export.svg({ clip: true, download: false });
+        currentSvg = svg;
 
-        // Create download link
-        const blob = new Blob([svg], { type: "image/svg+xml" });
+        // Display SVG in popup
+        svgPreview.innerHTML = svg;
+
+        const svgElement = svgPreview.querySelector<SVGSVGElement>("svg")!;
+
+        setSVGAttribute(svgElement, "preserveAspectRatio", "xMidYMid meet");
+        setSVGAttribute(
+          svgElement,
+          "viewBox",
+          "0 0 " +
+            svgElement.getAttribute("width") +
+            " " +
+            svgElement.getAttribute("height")
+        );
+        svgElement.style.width = svgElement.getAttribute("width") + "px";
+        svgElement.style.height = svgElement.getAttribute("height") + "px";
+
+        popup.style.display = "flex";
+      } catch (error) {
+        console.error("Failed to export SVG:", error);
+      }
+    });
+
+    // Close popup when clicking close button
+    closeBtn.addEventListener("click", () => {
+      popup.style.display = "none";
+      svgPreview.innerHTML = "";
+      currentSvg = "";
+    });
+
+    // Close popup when clicking backdrop
+    popup.addEventListener("click", (e) => {
+      if (e.target === popup) {
+        popup.style.display = "none";
+        svgPreview.innerHTML = "";
+        currentSvg = "";
+      }
+    });
+
+    // Download SVG when clicking download button
+    downloadBtn.addEventListener("click", () => {
+      if (currentSvg) {
+        const blob = new Blob([currentSvg], { type: "image/svg+xml" });
         const url = URL.createObjectURL(blob);
         const dl = document.createElement("a");
         document.body.appendChild(dl);
@@ -306,9 +355,7 @@ class App {
         dl.remove();
         URL.revokeObjectURL(url);
 
-        console.log("Exported SVG (cropped)");
-      } catch (error) {
-        console.error("Failed to export SVG:", error);
+        console.log("Downloaded SVG");
       }
     });
   }
@@ -386,6 +433,10 @@ class App {
       ogma: this.ogma
     });
   }
+}
+
+function setSVGAttribute(element: SVGElement, name: string, value: string) {
+  element.setAttributeNS("http://www.w3.org/2000/svg", name, value);
 }
 
 // Initialize the app
