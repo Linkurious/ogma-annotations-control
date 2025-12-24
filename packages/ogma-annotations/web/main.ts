@@ -303,24 +303,17 @@ class App {
         const svg = await this.ogma.export.svg({ clip: true, download: false });
         currentSvg = svg;
 
-        // Display SVG in popup
-        svgPreview.innerHTML = svg;
+        // Create data URL for the SVG
+        const blob = new Blob([svg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(blob);
 
-        const svgElement = svgPreview.querySelector<SVGSVGElement>("svg")!;
+        // Display SVG as image in popup
+        svgPreview.innerHTML = `<img src="${url}" alt="Graph Export" />`;
 
-        setSVGAttribute(svgElement, "preserveAspectRatio", "xMidYMid meet");
-        setSVGAttribute(
-          svgElement,
-          "viewBox",
-          "0 0 " +
-            svgElement.getAttribute("width") +
-            " " +
-            svgElement.getAttribute("height")
-        );
-        svgElement.style.width = svgElement.getAttribute("width") + "px";
-        svgElement.style.height = svgElement.getAttribute("height") + "px";
-
+        // Show popup
         popup.style.display = "flex";
+
+        console.log("SVG preview ready");
       } catch (error) {
         console.error("Failed to export SVG:", error);
       }
@@ -433,10 +426,6 @@ class App {
       ogma: this.ogma
     });
   }
-}
-
-function setSVGAttribute(element: SVGElement, name: string, value: string) {
-  element.setAttributeNS("http://www.w3.org/2000/svg", name, value);
 }
 
 // Initialize the app

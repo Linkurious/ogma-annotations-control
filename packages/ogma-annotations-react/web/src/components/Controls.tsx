@@ -14,6 +14,7 @@ import { AddMenu } from "./AddMenu";
 import { ArrowSettings } from "./ArrowSettings";
 import { TextSettings } from "./TextSettings";
 import { ViewControls } from "./ViewControls";
+import { SvgExportPopup } from "./SvgExportPopup";
 
 import {
   useAnnotationsContext,
@@ -70,6 +71,40 @@ export const Controls = ({
   const { currentAnnotation, annotations } = useAnnotationsContext();
   const ogma = useOgma();
 
+  // SVG Export popup state
+  const [isPopupOpen, setIsPopupOpen] = React.useState(false);
+  const [svgContent, setSvgContent] = React.useState("");
+
+  const handleSvgExport = React.useCallback(async () => {
+    try {
+      const svg = await ogma.export.svg({ clip: true, download: false });
+      setSvgContent(svg);
+      setIsPopupOpen(true);
+    } catch (error) {
+      console.error("Failed to export SVG:", error);
+    }
+  }, [ogma]);
+
+  const handleClosePopup = React.useCallback(() => {
+    setIsPopupOpen(false);
+    setSvgContent("");
+  }, []);
+
+  const handleDownloadSvg = React.useCallback(() => {
+    if (svgContent) {
+      const blob = new Blob([svgContent], { type: "image/svg+xml" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.setAttribute("href", url);
+      a.setAttribute("download", "graph-with-annotations.svg");
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      console.log("Downloaded SVG");
+    }
+  }, [svgContent]);
+
   // Center view callback
   const handleCenterView = React.useCallback(async () => {
     const bounds = ogma.view.getGraphBoundingBox();
@@ -108,7 +143,7 @@ export const Controls = ({
       {/* Bottom toolbar */}
       <Layer className="controls" ref={divRefCallback} index={100}>
         <div className="container">
-          <AddMenu />
+          <AddMenu onSvgExport={handleSvgExport} />
         </div>
       </Layer>
 
@@ -137,6 +172,16 @@ export const Controls = ({
           </div>
         </Layer>
       )}
+
+      {/* SVG Export Popup - rendered at higher z-index */}
+      <Layer className="svg-popup-layer" index={1000}>
+        <SvgExportPopup
+          isOpen={isPopupOpen}
+          svgContent={svgContent}
+          onClose={handleClosePopup}
+          onDownload={handleDownloadSvg}
+        />
+      </Layer>
     </>
   );
 };

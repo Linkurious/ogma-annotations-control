@@ -12,10 +12,15 @@ import {
   MessageSquare,
   Download,
   Type,
-  ArrowRight
+  ArrowRight,
+  Camera
 } from "lucide-react";
 
-export const AddMenu = () => {
+interface AddMenuProps {
+  onSvgExport: () => void;
+}
+
+export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
   const { editor, canUndo, canRedo, undo, redo, remove } =
     useAnnotationsContext();
 
@@ -137,6 +142,9 @@ export const AddMenu = () => {
       <span className="separator"></span>
       <button data-tooltip="Export annotations" onClick={() => save()}>
         <Download width={buttonSize} height={buttonSize} />
+      </button>
+      <button data-tooltip="Export SVG" onClick={onSvgExport}>
+        <Camera width={buttonSize} height={buttonSize} />
       </button>
     </div>
   );
