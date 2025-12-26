@@ -2,6 +2,7 @@ import { Polygon as GeoJSONPolygon, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { AnnotationFeature, AnnotationProps, Id } from "./Annotation";
 import { BoxStyle, defaultBoxStyle } from "./Box";
+import { distanceToSegment } from "../../utils/geom";
 import { Point } from "../geometry";
 
 export interface PolygonStyle extends BoxStyle {}
@@ -23,6 +24,11 @@ export const isPolygon = (
 
 /**
  * Point-in-polygon detection using ray casting algorithm
+ * @private
+ * @param polygon The polygon annotation
+ * @param point The point to test
+ * @param threshold Detection threshold in pixels
+ * @return True if the point is inside the polygon or within the threshold distance from its edges
  */
 export function detectPolygon(
   polygon: Polygon,
@@ -73,33 +79,6 @@ export function detectPolygon(
   }
 
   return false;
-}
-
-/**
- * Distance from point to line segment
- */
-function distanceToSegment(p: Point, a: Point, b: Point): number {
-  const dx = b.x - a.x;
-  const dy = b.y - a.y;
-  const lengthSquared = dx * dx + dy * dy;
-
-  if (lengthSquared === 0) {
-    // a and b are the same point
-    const ddx = p.x - a.x;
-    const ddy = p.y - a.y;
-    return Math.sqrt(ddx * ddx + ddy * ddy);
-  }
-
-  // Parameter t represents position along segment
-  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSquared;
-  t = Math.max(0, Math.min(1, t));
-
-  const nearestX = a.x + t * dx;
-  const nearestY = a.y + t * dy;
-  const ddx = p.x - nearestX;
-  const ddy = p.y - nearestY;
-
-  return Math.sqrt(ddx * ddx + ddy * ddy);
 }
 
 /**

@@ -26,7 +26,7 @@ Stroke color: #f00, yellow...
 ### strokeType?
 
 ```ts
-optional strokeType: "plain" | "dashed" | "none";
+optional strokeType: StrokeType;
 ```
 
 Type of stroke: plain, dashed, or none

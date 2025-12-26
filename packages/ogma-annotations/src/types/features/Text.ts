@@ -120,6 +120,17 @@ export const createText = (
   }
 });
 
+/**
+ * Detects whether a point is within a text annotation's bounds.
+ * @private
+ * @param a Text annotation
+ * @param p Point to test
+ * @param threshold  Detection threshold
+ * @param sin Rotation sine
+ * @param cos Rotation cosine
+ * @param zoom Current zoom level
+ * @returns True if the point is within the text bounds, false otherwise
+ */
 export function detectText(
   a: Text,
   p: Point,

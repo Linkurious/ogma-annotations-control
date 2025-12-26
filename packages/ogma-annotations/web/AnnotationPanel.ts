@@ -13,7 +13,8 @@ import {
   isPolygon,
   parseColor,
   Extremity,
-  defaultArrowStyle
+  defaultArrowStyle,
+  defaultTextStyle
 } from "../src";
 import "./AnnotationPanel.css";
 
@@ -134,27 +135,57 @@ export class AnnotationPanel {
     }
   }
 
+  private renderStrokeWidthSection(strokeWidth: number) {
+    return `<div class="section-header">
+        <h3>Stroke width</h3>
+      </div>
+      <div class="slider-section">
+        <input type="range" id="line-width-slider" class="slider" min="1" max="20" value="${strokeWidth}">
+        <div class="slider-value">
+          <span id="line-width-value">${strokeWidth}</span>
+        </div>
+      </div>`;
+  }
+
   private renderArrowExtremity(arrow: Arrow, side: "tail" | "head") {
     const ext = arrow.properties.style?.[side] || "none";
-    return `<div class="section-header">
-        <h3>${side}</h3>
-      </div>
-      <div class="direction-section">
-        <button class="direction-button ${ext === "none" ? "active" : ""}" data-end="${side}" data-style="none" title="None">
-          <i class="icon-x"></i>
-        </button>
-        <button class="direction-button ${ext === "arrow" ? "active" : ""}" data-end="${side}" data-style="arrow" title="Open Arrow">
-          <i class="icon-arrow-${side === "tail" ? "left" : "right"}"></i>
-        </button>
-        <button class="direction-button ${ext === "arrow-plain" ? "active" : ""}" data-end="${side}" data-style="arrow-plain" style="transform: rotate(${side === "tail" ? "180deg" : "0deg"})" title="Filled Arrow">
-          <i class="icon-play"></i>
-        </button>
-        <button class="direction-button ${ext === "halo-dot" ? "active" : ""}" data-end="${side}" data-style="halo-dot" title="Halo Dot">
-          <i class="icon-circle-dot"></i>
-        </button>
-        <button class="direction-button ${ext === "dot" ? "active" : ""}" data-end="${side}" data-style="dot" title="Dot">
-          <i class="icon-dot"></i>
-        </button>
+
+    const options = [
+      { value: "none", label: "None", icon: "icon-x" },
+      {
+        value: "arrow",
+        label: "Open Arrow",
+        icon: side === "tail" ? "icon-arrow-left" : "icon-arrow-right"
+      },
+      { value: "arrow-plain", label: "Filled Arrow", icon: "icon-play" },
+      { value: "halo-dot", label: "Halo Dot", icon: "icon-circle-dot" },
+      { value: "dot", label: "Dot", icon: "icon-dot" }
+    ];
+
+    const selectedOption =
+      options.find((opt) => opt.value === ext) || options[0];
+
+    return `<div class="extremity-wrapper">
+        <label>${side}</label>
+        <div class="custom-select" data-end="${side}">
+          <div class="custom-select-trigger">
+            <i class="${selectedOption.icon}" ${selectedOption.value === "arrow-plain" && side === "tail" ? 'style="transform: rotate(180deg)"' : ""}></i>
+            <span>${selectedOption.label}</span>
+            <i class="icon-chevron-down custom-select-arrow"></i>
+          </div>
+          <div class="custom-select-options">
+            ${options
+              .map(
+                (opt) => `
+              <div class="custom-select-option ${opt.value === ext ? "selected" : ""}" data-value="${opt.value}" title="${opt.label}">
+                <i class="${opt.icon}" ${opt.value === "arrow-plain" && side === "tail" ? 'style="transform: rotate(180deg)"' : ""}></i>
+                <span>${opt.label}</span>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
       </div>`;
   }
 
@@ -180,26 +211,21 @@ export class AnnotationPanel {
         </button>
       </div>
 
-      <!-- Arrow Head -->
-      ${this.renderArrowExtremity(arrow, "head")}
-
-      <!-- Arrow Tail -->
-      ${this.renderArrowExtremity(arrow, "tail")}
+      <!-- Arrow Extremities -->
+      <div class="section-header">
+        <h3>Extremities</h3>
+      </div>
+      <div class="custom-select-section">
+        ${this.renderArrowExtremity(arrow, "head")}
+        ${this.renderArrowExtremity(arrow, "tail")}
+      </div>
 
       <!-- Line Width -->
-      <div class="section-header">
-        <h3>SIZE</h3>
-      </div>
-      <div class="slider-section">
-        <input type="range" id="line-width-slider" class="slider" min="1" max="20" value="${strokeWidth}">
-        <div class="slider-value">
-          <span id="line-width-value">${strokeWidth}</span>
-        </div>
-      </div>
+      ${this.renderStrokeWidthSection(strokeWidth!)}
 
       <!-- Line Type -->
       <div class="section-header">
-        <h3>LINE TYPE</h3>
+        <h3>Line type</h3>
       </div>
       <div class="linetype-section">
         <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain" title="Plain">
@@ -215,10 +241,15 @@ export class AnnotationPanel {
   }
 
   private renderTextMode(text: Text) {
-    const color = text.properties.style?.color || "#505050";
-    const fontSize = text.properties.style?.fontSize || 18;
+    const color = text.properties.style?.color || defaultTextStyle.color;
+    const fontSize =
+      text.properties.style?.fontSize || defaultTextStyle.fontSize;
+    const strokeWidth =
+      text.properties.style?.strokeWidth || defaultTextStyle.strokeWidth;
+    const strokeType =
+      text.properties.style?.strokeType || defaultTextStyle.strokeType;
 
-    this.updateColorFromAnnotation(color);
+    this.updateColorFromAnnotation(color!);
 
     this.panelBody.innerHTML = `
       <!-- Color circles -->
@@ -236,7 +267,7 @@ export class AnnotationPanel {
 
       <!-- Background Color -->
       <div class="section-header">
-        <h3>BACKGROUND</h3>
+        <h3>Background</h3>
       </div>
       <div class="color-selector">
         <button class="color-circle" data-background-color="#f5f5f5">
@@ -252,7 +283,7 @@ export class AnnotationPanel {
 
       <!-- Font Size -->
       <div class="section-header">
-        <h3>FONT SIZE</h3>
+        <h3>Font size</h3>
       </div>
       <div class="slider-section">
         <input type="range" id="font-size-slider" class="slider" min="8" max="72" value="${fontSize}">
@@ -260,9 +291,27 @@ export class AnnotationPanel {
           <span id="font-size-value">${fontSize}</span>
         </div>
       </div>
+
+      ${this.renderStrokeWidthSection(strokeWidth!)}
+
+      ${this.renderLineTypeSection(strokeType || "plain")}
     `;
 
     this.bindTextEvents();
+  }
+
+  private renderLineTypeSection(currentType: string) {
+    return `<div class="section-header">
+        <h3>Line type</h3>
+      </div>
+      <div class="linetype-section">
+        <button class="linetype-button ${currentType === "plain" ? "active" : ""}" data-linetype="plain" title="Plain">
+          <i class="icon-circle"></i>
+        </button>
+        <button class="linetype-button ${currentType === "dashed" ? "active" : ""}" data-linetype="dashed" title="Dashed">
+          <i class="icon-circle-dashed"></i>
+        </button>
+      </div>`;
   }
 
   private renderPolygonMode(polygon: Polygon) {
@@ -296,29 +345,10 @@ export class AnnotationPanel {
         </label>
       </div>
 
-      <!-- Line Width -->
-      <div class="section-header">
-        <h3>SIZE</h3>
-      </div>
-      <div class="slider-section">
-        <input type="range" id="line-width-slider" class="slider" min="1" max="20" value="${strokeWidth}">
-        <div class="slider-value">
-          <span id="line-width-value">${strokeWidth}</span>
-        </div>
-      </div>
+      ${this.renderStrokeWidthSection(strokeWidth!)}
 
       <!-- Line Type -->
-      <div class="section-header">
-        <h3>LINE TYPE</h3>
-      </div>
-      <div class="linetype-section">
-        <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain" title="Plain">
-          <i class="icon-circle"></i>
-        </button>
-        <button class="linetype-button ${strokeType === "dashed" ? "active" : ""}" data-linetype="dashed" title="Dashed">
-          <i class="icon-circle-dashed"></i>
-        </button>
-      </div>
+      ${this.renderLineTypeSection(strokeType)}
     `;
 
     this.bindPolygonEvents();
@@ -327,27 +357,8 @@ export class AnnotationPanel {
   private bindArrowEvents() {
     this.rebindColorCircles();
 
-    // Head and Tail style buttons
-    const directionButtons =
-      this.panelBody.querySelectorAll<HTMLButtonElement>(".direction-button");
-    directionButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const end = btn.dataset.end as "head" | "tail";
-        const style = btn.dataset.style as Extremity;
-
-        // Only toggle active state within the same section (head or tail)
-        const sameEndButtons =
-          this.panelBody.querySelectorAll<HTMLButtonElement>(
-            `.direction-button[data-end="${end}"]`
-          );
-        sameEndButtons.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-
-        // Update the appropriate end
-        if (end === "head") this.updateArrow({ head: style });
-        else this.updateArrow({ tail: style });
-      });
-    });
+    // Head and Tail custom select dropdowns
+    this.setupCustomSelects();
 
     // Line width slider
     const lineWidthSlider =
@@ -359,16 +370,62 @@ export class AnnotationPanel {
       this.updateArrow({ strokeWidth: value });
     });
 
-    // Line type buttons
-    const linetypeButtons =
-      this.panelBody.querySelectorAll<HTMLButtonElement>(".linetype-button");
-    linetypeButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const linetype = btn.dataset.linetype as "plain" | "dashed";
-        linetypeButtons.forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        console.log("Updating arrow line type to", linetype);
-        this.updateArrow({ strokeType: linetype });
+    this.setupLineTypeButtons();
+  }
+
+  private setupCustomSelects() {
+    const customSelects =
+      this.panelBody.querySelectorAll<HTMLElement>(".custom-select");
+
+    customSelects.forEach((select) => {
+      const trigger = select.querySelector<HTMLElement>(
+        ".custom-select-trigger"
+      )!;
+      const options = select.querySelectorAll<HTMLElement>(
+        ".custom-select-option"
+      );
+      const end = select.dataset.end as "head" | "tail";
+
+      // Toggle dropdown
+      trigger.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Close other dropdowns
+        this.panelBody.querySelectorAll(".custom-select").forEach((s) => {
+          if (s !== select) s.classList.remove("open");
+        });
+        select.classList.toggle("open");
+      });
+
+      // Select option
+      options.forEach((option) => {
+        option.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const value = option.dataset.value as Extremity;
+
+          // Update selected state
+          options.forEach((opt) => opt.classList.remove("selected"));
+          option.classList.add("selected");
+
+          // Update trigger display
+          const icon = option.querySelector("i")!.className;
+          const label = option.querySelector("span")!.textContent;
+          trigger.querySelector("i")!.className = icon;
+          trigger.querySelector("span")!.textContent = label;
+
+          // Close dropdown
+          select.classList.remove("open");
+
+          // Update annotation
+          if (end === "head") this.updateArrow({ head: value });
+          else this.updateArrow({ tail: value });
+        });
+      });
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener("click", () => {
+      this.panelBody.querySelectorAll(".custom-select").forEach((s) => {
+        s.classList.remove("open");
       });
     });
   }
@@ -396,6 +453,8 @@ export class AnnotationPanel {
       fontSizeValue.textContent = value.toString();
       this.updateText({ fontSize: value });
     });
+
+    this.setupLineTypeButtons();
   }
 
   private bindPolygonEvents() {
@@ -421,6 +480,11 @@ export class AnnotationPanel {
     });
 
     // Line type buttons
+    this.setupLineTypeButtons();
+  }
+
+  private setupLineTypeButtons() {
+    // Line type buttons
     const linetypeButtons =
       this.panelBody.querySelectorAll<HTMLButtonElement>(".linetype-button");
     linetypeButtons.forEach((btn) => {
@@ -428,8 +492,10 @@ export class AnnotationPanel {
         const linetype = btn.dataset.linetype as "plain" | "dashed";
         linetypeButtons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
-        console.log("Updating polygon line type to", linetype);
-        this.updatePolygon({ strokeType: linetype });
+        if (this.currentAnnotation)
+          this.control.updateStyle(this.currentAnnotation.id, {
+            strokeType: linetype
+          });
       });
     });
   }

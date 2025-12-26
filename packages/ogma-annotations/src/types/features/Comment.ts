@@ -253,7 +253,7 @@ export function toggleCommentMode(comment: Comment): Comment {
 
 /**
  * Detect if a point is within a comment's bounds
- *
+ * @private
  * @param comment - Comment to test
  * @param point - Point to test
  * @param threshold - Detection threshold in pixels

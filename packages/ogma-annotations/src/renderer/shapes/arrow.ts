@@ -70,6 +70,7 @@ function createDom(elt: SVGGElement | undefined, id: Id): SVGGElement {
 }
 
 /**
+ * @private
  * @function draw
  * @param arrow The arrow to draw
  * @param g the group in which to draw

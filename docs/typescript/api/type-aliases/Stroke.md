@@ -4,6 +4,8 @@
 type Stroke = object;
 ```
 
+Stroke style for arrow annotations
+
 ## Properties
 
 ### color
@@ -19,7 +21,7 @@ Stroke color
 ### type
 
 ```ts
-type: "plain" | "dashed" | "none";
+type: StrokeType;
 ```
 
 Stroke type

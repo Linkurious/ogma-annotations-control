@@ -1,6 +1,6 @@
 # Interface: ArrowStyles
 
-Stroke style options for annotations
+Styles specific to arrow annotations.
 
 ## Extends
 
@@ -13,6 +13,8 @@ Stroke style options for annotations
 ```ts
 optional head: Extremity;
 ```
+
+Head extremity style
 
 ***
 
@@ -27,7 +29,7 @@ Stroke color: #f00, yellow...
 ### strokeType?
 
 ```ts
-optional strokeType: "none" | "plain" | "dashed";
+optional strokeType: StrokeType;
 ```
 
 Type of stroke: plain, dashed, or none
@@ -45,3 +47,5 @@ Stroke width
 ```ts
 optional tail: Extremity;
 ```
+
+Tail extremity style

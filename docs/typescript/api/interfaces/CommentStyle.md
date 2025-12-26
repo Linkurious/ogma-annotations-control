@@ -173,7 +173,7 @@ Stroke color: #f00, yellow...
 ### strokeType?
 
 ```ts
-optional strokeType: "none" | "plain" | "dashed";
+optional strokeType: StrokeType;
 ```
 
 Type of stroke: plain, dashed, or none

@@ -103,6 +103,17 @@ function simplifyDouglasPeucker(points: Position[], sqTolerance: number) {
 }
 
 // both algorithms combined for awesome performance
+/**
+ * Polyline simplification using a combination of
+ * the Radial Distance and
+ * the Douglas-Peucker algorithms
+ * See https://github.com/mourner/simplify-js for more details
+ *
+ * @param points Points to simplify
+ * @param tolerance Tolerance in pixels
+ * @param highestQuality Whether to skip radial distance simplification
+ * @returns Simplified points
+ */
 export function simplify(
   points: Position[],
   tolerance: number,

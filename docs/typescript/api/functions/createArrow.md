@@ -33,6 +33,8 @@ function createArrow(
 
 [`Extremity`](../type-aliases/Extremity.md)
 
+Head extremity style
+
 #### strokeColor?
 
 `string`
@@ -41,7 +43,7 @@ Stroke color: #f00, yellow...
 
 #### strokeType?
 
-`"none"` \| `"plain"` \| `"dashed"`
+[`StrokeType`](../type-aliases/StrokeType.md)
 
 Type of stroke: plain, dashed, or none
 
@@ -54,6 +56,8 @@ Stroke width
 #### tail?
 
 [`Extremity`](../type-aliases/Extremity.md)
+
+Tail extremity style
 
 ## Returns
 

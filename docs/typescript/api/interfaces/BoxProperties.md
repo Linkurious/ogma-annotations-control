@@ -1,6 +1,6 @@
 # Interface: BoxProperties
 
-Base properties for all annotations.
+Properties specific to box annotations.
 
 ## Extends
 

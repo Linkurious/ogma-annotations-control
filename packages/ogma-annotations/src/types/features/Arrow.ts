@@ -8,10 +8,16 @@ import { getArrowEndPoints } from "../../utils/utils";
 import { cross, dot, length, normalize, subtract } from "../../utils/vec";
 import { Vector } from "../geometry";
 
+/** Extremity types for arrow annotations. */
 export type Extremity = "none" | "arrow" | "arrow-plain" | "dot" | "halo-dot";
 
+/**
+ * Styles specific to arrow annotations.
+ */
 export interface ArrowStyles extends StrokeOptions {
+  /** Tail extremity style */
   tail?: Extremity;
+  /** Head extremity style */
   head?: Extremity;
 }
 
@@ -31,6 +37,13 @@ export const isArrow = (
   a: AnnotationFeature<Geometry, AnnotationProps>
 ): a is Arrow => a.properties.type === "arrow";
 
+/**
+ * @private
+ * @param a Arrow annotation
+ * @param point Point to test
+ * @param threshold Detection threshold
+ * @returns True if the point is on the arrow line within the given threshold
+ */
 export function detectArrow(
   a: Arrow,
   point: Point,

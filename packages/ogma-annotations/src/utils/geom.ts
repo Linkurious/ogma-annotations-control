@@ -354,3 +354,31 @@ export function getAABB(
   dest[3] = Math.max(y1, y2, y3, y4);
   return dest;
 }
+
+/**
+ * Distance from point to line segment
+ * @private
+ */
+export function distanceToSegment(p: Point, a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lengthSquared = dx * dx + dy * dy;
+
+  if (lengthSquared === 0) {
+    // a and b are the same point
+    const ddx = p.x - a.x;
+    const ddy = p.y - a.y;
+    return Math.sqrt(ddx * ddx + ddy * ddy);
+  }
+
+  // Parameter t represents position along segment
+  let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / lengthSquared;
+  t = Math.max(0, Math.min(1, t));
+
+  const nearestX = a.x + t * dx;
+  const nearestY = a.y + t * dy;
+  const ddx = p.x - nearestX;
+  const ddy = p.y - nearestY;
+
+  return Math.sqrt(ddx * ddx + ddy * ddy);
+}

@@ -15,10 +15,10 @@
 | [AnnotationProps](interfaces/AnnotationProps.md) | Base properties for all annotations. |
 | [Arrow](interfaces/Arrow.md) | Arrow annotation feature. Represents a directed line between two points, can connect a textbox to a shape. |
 | [ArrowProperties](interfaces/ArrowProperties.md) | Base properties for all annotations. |
-| [ArrowStyles](interfaces/ArrowStyles.md) | Stroke style options for annotations |
+| [ArrowStyles](interfaces/ArrowStyles.md) | Styles specific to arrow annotations. |
 | [Box](interfaces/Box.md) | Box annotation feature |
-| [BoxProperties](interfaces/BoxProperties.md) | Base properties for all annotations. |
-| [BoxStyle](interfaces/BoxStyle.md) | Stroke style options for annotations |
+| [BoxProperties](interfaces/BoxProperties.md) | Properties specific to box annotations. |
+| [BoxStyle](interfaces/BoxStyle.md) | Styles specific to box annotations. |
 | [Comment](interfaces/Comment.md) | Comment annotation type Geometry: Point (center position of comment box/icon) |
 | [CommentProps](interfaces/CommentProps.md) | Properties for Comment annotations |
 | [CommentStyle](interfaces/CommentStyle.md) | Style configuration for Comment annotations |
@@ -28,10 +28,10 @@
 | [Link](interfaces/Link.md) | Link between an arrow and a text or node |
 | [Polygon](interfaces/Polygon.md) | Polygon placed on the graph, use it to highlight areas |
 | [PolygonProperties](interfaces/PolygonProperties.md) | Base properties for all annotations. |
-| [PolygonStyle](interfaces/PolygonStyle.md) | Stroke style options for annotations |
+| [PolygonStyle](interfaces/PolygonStyle.md) | Styles specific to box annotations. |
 | [Text](interfaces/Text.md) | Text annotation feature, represents a text box at a specific position |
 | [TextProperties](interfaces/TextProperties.md) | - |
-| [TextStyle](interfaces/TextStyle.md) | Stroke style options for annotations |
+| [TextStyle](interfaces/TextStyle.md) | Styles specific to box annotations. |
 
 ## Type Aliases
 
@@ -47,7 +47,7 @@
 | [ControllerOptions](type-aliases/ControllerOptions.md) | Options for the annotations control |
 | [DeepPartial](type-aliases/DeepPartial.md) | - |
 | [ExportedLink](type-aliases/ExportedLink.md) | - |
-| [Extremity](type-aliases/Extremity.md) | - |
+| [Extremity](type-aliases/Extremity.md) | Extremity types for arrow annotations. |
 | [FeatureEvents](type-aliases/FeatureEvents.md) | - |
 | [HexColor](type-aliases/HexColor.md) | Hex color string in format #RGB or #RRGGBB |
 | [Id](type-aliases/Id.md) | Unique identifier type for annotations |
@@ -55,9 +55,10 @@
 | [RgbaColor](type-aliases/RgbaColor.md) | RGBA color string in format rgba(r, g, b, a) |
 | [RgbColor](type-aliases/RgbColor.md) | RGB color string in format rgb(r, g, b) |
 | [Side](type-aliases/Side.md) | - |
-| [Stroke](type-aliases/Stroke.md) | - |
+| [Stroke](type-aliases/Stroke.md) | Stroke style for arrow annotations |
 | [StrokeOptions](type-aliases/StrokeOptions.md) | Stroke style options for annotations |
 | [StrokeStyle](type-aliases/StrokeStyle.md) | - |
+| [StrokeType](type-aliases/StrokeType.md) | Stroke types available for annotations |
 | [TargetType](type-aliases/TargetType.md) | - |
 
 ## Variables
@@ -122,11 +123,6 @@
 | [createPolygon](functions/createPolygon.md) | Create a polygon annotation |
 | [createText](functions/createText.md) | - |
 | [darken](functions/darken.md) | Darken a color for highlight purposes. |
-| [detectArrow](functions/detectArrow.md) | - |
-| [detectBox](functions/detectBox.md) | - |
-| [detectComment](functions/detectComment.md) | Detect if a point is within a comment's bounds |
-| [detectPolygon](functions/detectPolygon.md) | Point-in-polygon detection using ray casting algorithm |
-| [detectText](functions/detectText.md) | - |
 | [getAnnotationsBounds](functions/getAnnotationsBounds.md) | Calculate the bounds of a collection of annotations |
 | [getArrowEnd](functions/getArrowEnd.md) | - |
 | [getArrowEndPoints](functions/getArrowEndPoints.md) | - |
@@ -157,6 +153,7 @@
 | [isRgbaColor](functions/isRgbaColor.md) | Type guard to check if a string is a valid RGBA color |
 | [isRgbColor](functions/isRgbColor.md) | Type guard to check if a string is a valid RGB color |
 | [isText](functions/isText.md) | - |
+| [parseColor](functions/parseColor.md) | - |
 | [rgbToRgba](functions/rgbToRgba.md) | Adds alpha channel to an rgb color |
 | [scaleGeometry](functions/scaleGeometry.md) | - |
 | [scalePolygon](functions/scalePolygon.md) | Scale polygon around an origin point |
@@ -164,7 +161,7 @@
 | [setArrowEndPoint](functions/setArrowEndPoint.md) | - |
 | [setArrowStart](functions/setArrowStart.md) | - |
 | [setBbox](functions/setBbox.md) | - |
-| [simplifyPolygon](functions/simplifyPolygon.md) | - |
+| [simplifyPolygon](functions/simplifyPolygon.md) | Polyline simplification using a combination of the Radial Distance and the Douglas-Peucker algorithms See https://github.com/mourner/simplify-js for more details |
 | [toggleCommentMode](functions/toggleCommentMode.md) | Toggle comment mode between collapsed and expanded |
 | [translatePolygon](functions/translatePolygon.md) | Translate (move) a polygon by dx, dy |
 | [updateBbox](functions/updateBbox.md) | - |

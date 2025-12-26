@@ -6,6 +6,7 @@ import { getBoxPosition, getBoxSize } from "../../utils/utils";
 import { Color } from "../colors";
 import { Point } from "../geometry";
 
+/** Styles specific to box annotations. */
 export interface BoxStyle extends StrokeOptions {
   /** background color: empty for transparent #f00, yellow...*/
   background?: Color;
@@ -17,6 +18,7 @@ export interface BoxStyle extends StrokeOptions {
   scaled?: boolean;
 }
 
+/** Properties specific to box annotations. */
 export interface BoxProperties extends AnnotationProps {
   type: "box";
   /** Width of the box */
@@ -36,6 +38,7 @@ export const isBox = (
   a: AnnotationFeature<Geometry, AnnotationProps>
 ): a is Box => a.properties.type === "box";
 
+/** @private */
 export function detectBox(
   a: Box,
   p: Point,
