@@ -11,6 +11,7 @@ interface ED {}
 class App {
   private ogma: Ogma<ND, ED>;
   private control: Control;
+  // @ts-expect-error Used for debugging
   private annotationPanel: AnnotationPanel | null = null;
   private buttons: {
     addArrow: HTMLButtonElement;
