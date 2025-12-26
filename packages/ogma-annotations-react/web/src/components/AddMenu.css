@@ -22,6 +22,16 @@
   color: #222;
 }
 
+.add-menu > button.active {
+  background: var(--brand);
+  color: #fff;
+}
+
+.add-menu > button.active:hover {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
 .add-menu > button:disabled {
   color: #aaa;
   cursor: not-allowed;

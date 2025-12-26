@@ -1,5 +1,6 @@
 import React from "react";
 import { useAnnotationsContext } from "../../../src/AnnotationsContext";
+import { EVT_COMPLETE_DRAWING, EVT_CANCEL_DRAWING } from "@linkurious/ogma-annotations";
 import "../tooltip.css";
 import "./AddMenu.css";
 
@@ -20,9 +21,29 @@ interface AddMenuProps {
   onSvgExport: () => void;
 }
 
+type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
+
 export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
   const { editor, canUndo, canRedo, undo, redo, remove } =
     useAnnotationsContext();
+  const [activeMode, setActiveMode] = React.useState<DrawingMode>(null);
+
+  // Listen to drawing completion and cancellation events to clear active mode
+  React.useEffect(() => {
+    if (!editor) return;
+
+    const handleDrawingEnd = () => {
+      setActiveMode(null);
+    };
+
+    editor.on(EVT_COMPLETE_DRAWING, handleDrawingEnd);
+    editor.on(EVT_CANCEL_DRAWING, handleDrawingEnd);
+
+    return () => {
+      editor.off(EVT_COMPLETE_DRAWING, handleDrawingEnd);
+      editor.off(EVT_CANCEL_DRAWING, handleDrawingEnd);
+    };
+  }, [editor]);
 
   const handleArrow = React.useCallback(() => {
     editor.enableArrowDrawing({
@@ -31,6 +52,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
       strokeWidth: 2,
       head: "arrow"
     });
+    setActiveMode("arrow");
   }, [editor]);
 
   const handleText = React.useCallback(() => {
@@ -42,6 +64,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
       borderRadius: 8,
       padding: 12
     });
+    setActiveMode("text");
   }, [editor]);
 
   const handleBox = React.useCallback(() => {
@@ -50,6 +73,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
       borderRadius: 8,
       padding: 12
     });
+    setActiveMode("box");
   }, [editor]);
 
   const handlePolygon = React.useCallback(() => {
@@ -58,6 +82,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
       strokeWidth: 2,
       background: "rgba(58, 3, 207, 0.15)"
     });
+    setActiveMode("polygon");
   }, [editor]);
 
   const handleComment = React.useCallback(() => {
@@ -82,6 +107,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
         }
       }
     });
+    setActiveMode("comment");
   }, [editor]);
 
   const handleDelete = React.useCallback(() => {
@@ -110,21 +136,38 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
   const buttonSize = 16;
   return (
     <div className="add-menu" onClick={stopEvent} onMouseMove={stopEvent}>
-      <button data-tooltip="Add arrow" onClick={handleArrow}>
+      <button
+        data-tooltip="Add arrow"
+        onClick={handleArrow}
+        className={activeMode === "arrow" ? "active" : ""}
+      >
         <ArrowRight width={buttonSize} height={buttonSize} />
       </button>
-      <button data-tooltip="Add comment" onClick={handleComment}>
+      <button
+        data-tooltip="Add comment"
+        onClick={handleComment}
+        className={activeMode === "comment" ? "active" : ""}
+      >
         <MessageSquare width={buttonSize} height={buttonSize} />
       </button>
-      <button data-tooltip="Add box" onClick={handleBox}>
+      <button
+        data-tooltip="Add box"
+        onClick={handleBox}
+        className={activeMode === "box" ? "active" : ""}
+      >
         <RectangleHorizontal width={buttonSize} height={buttonSize} />
       </button>
-      <button data-tooltip="Add text" onClick={handleText}>
+      <button
+        data-tooltip="Add text"
+        onClick={handleText}
+        className={activeMode === "text" ? "active" : ""}
+      >
         <Type width={buttonSize} height={buttonSize} />
       </button>
       <button
         data-tooltip="Add polygon (click points, Esc to finish)"
         onClick={handlePolygon}
+        className={activeMode === "polygon" ? "active" : ""}
       >
         <Pentagon width={buttonSize} height={buttonSize} />
       </button>

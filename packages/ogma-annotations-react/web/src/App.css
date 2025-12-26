@@ -1,6 +1,6 @@
 :root {
-  --brand-color: #4999f7;
-  --brand-color-darker: #337fdd;
+  --brand: #4999f7;
+  --brand-darker: #337fdd;
   --font: "IBM Plex Sans", sans-serif;
 }
 
@@ -35,11 +35,11 @@ html {
 }
 
 .brand a {
-  color: var(--brand-color);
+  color: var(--brad);
 }
 
 .brand a:hover {
-  color: var(--brand-color-darker);
+  color: var(--brand-darker);
 }
 
 .brand:hover {
