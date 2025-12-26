@@ -33,13 +33,11 @@ export function getArrowHeight(
 /**
  * @function getExtremityOffset
  * @param type The extremity type
- * @param tipLength The length of arrow tips
  * @param strokeWidth The stroke width
  * @returns The offset distance from the endpoint
  */
 function getExtremityOffset(
   type: Extremity | undefined,
-  tipLength: number,
   strokeWidth: number
 ): number {
   if (!type || type === "none") return 0;
@@ -98,8 +96,8 @@ export function renderArrow(
   path.setAttribute("stroke-linejoin", "round");
 
   // Calculate shortened line endpoints to avoid overlap with arrow heads
-  const startOffset = getExtremityOffset(tail, tipLength, strokeWidth * zoom);
-  const endOffset = getExtremityOffset(head, tipLength, strokeWidth * zoom);
+  const startOffset = getExtremityOffset(tail, strokeWidth * zoom);
+  const endOffset = getExtremityOffset(head, strokeWidth * zoom);
 
   const vecNorm = normalize(vec);
   const adjustedStart = add(start, mul(vecNorm, startOffset));
