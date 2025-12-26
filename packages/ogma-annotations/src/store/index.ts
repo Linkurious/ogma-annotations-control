@@ -342,12 +342,24 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
 
           // Regular update - creates history entry
           updateFeature: (id, updates) =>
-            set((state) => ({
-              features: {
-                ...state.features,
-                [id]: { ...state.features[id], ...updates } as Annotation
-              }
-            })),
+            set((state) => {
+              const merged = {
+                ...state.features[id],
+                ...updates
+              } as Annotation;
+
+              // Clear any stale liveUpdates for this feature
+              const newLiveUpdates = { ...state.liveUpdates };
+              delete newLiveUpdates[id];
+
+              return {
+                features: {
+                  ...state.features,
+                  [id]: merged
+                },
+                liveUpdates: newLiveUpdates
+              };
+            }),
 
           // Batch update multiple features - single history entry
           updateFeatures: (updates) =>

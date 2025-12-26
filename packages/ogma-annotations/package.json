@@ -89,6 +89,7 @@
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
+    "vanilla-colorful": "0.7.2",
     "vite": "latest",
     "vite-plugin-dts": "^4.1.0",
     "vitest": "latest",

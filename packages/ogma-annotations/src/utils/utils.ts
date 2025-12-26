@@ -315,6 +315,32 @@ export function colorToRgba(color: Color, alpha: number): RgbaColor {
   return color as RgbaColor;
 }
 
+export function parseColor(color: Color): {
+  r: number;
+  g: number;
+  b: number;
+  a: number;
+} {
+  if (color.startsWith("#")) {
+    const hex = hexShortToLong(color as HexColor);
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return { r, g, b, a: 1 };
+  } else {
+    const rgb = color.match(
+      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([0-9.]+))?\)/
+    );
+    if (!rgb) throw new Error(`Invalid RGB color: ${color}`);
+    return {
+      r: parseInt(rgb[1]),
+      g: parseInt(rgb[2]),
+      b: parseInt(rgb[3]),
+      a: rgb[4] !== undefined ? parseFloat(rgb[4]) : 1
+    };
+  }
+}
+
 export function hexShortToLong(color: HexColor): HexColor {
   if (color.length === 4)
     return color

@@ -159,8 +159,6 @@ function drawContent(
   //   }
   // });
 
-  // toRemove.forEach((i) => text.removeChild(children[i]));
-
   // replace spans with links:
   const matches = content.match(/(https?:\/\/.*)/gm);
   const links = matches ? matches.map((match) => match.split(" ")[0]) : [];

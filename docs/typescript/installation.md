@@ -6,7 +6,7 @@ This guide covers how to install and set up Ogma Annotations in your TypeScript 
 
 Before installing Ogma Annotations, you need:
 
-- **Ogma** (version 5.3.8 or higher) installed in your project
+- **Ogma** (version 5.3.8 or higher) installed in your project - [Ogma installation guide](https://doc.linkurious.com/ogma/latest/tutorials/getting-started/install.html))
 - A modern JavaScript environment with ES6 module support
 - For TypeScript users: TypeScript 4.5 or higher (optional but recommended)
 
@@ -17,7 +17,7 @@ Install the package using your preferred package manager:
 ::: code-group
 
 ```bash [npm]
-npm install @linkurious/ogma-annotations
+npm install -S @linkurious/ogma-annotations
 ```
 
 ```bash [yarn]

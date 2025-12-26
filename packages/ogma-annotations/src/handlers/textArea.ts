@@ -67,10 +67,16 @@ export class TextArea {
     this.unsubscribe = this.store.subscribe(
       (state) => ({
         rotation: state.rotation,
-        zoom: state.zoom
+        zoom: state.zoom,
+        annotation: state.features[this.annotation]
       }),
       this.update,
-      { equalityFn: (a, b) => a.rotation === b.rotation && a.zoom === b.zoom }
+      {
+        equalityFn: (a, b) =>
+          a.rotation === b.rotation &&
+          a.zoom === b.zoom &&
+          a.annotation === b.annotation
+      }
     );
   }
 

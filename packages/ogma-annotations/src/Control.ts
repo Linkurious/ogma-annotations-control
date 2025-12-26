@@ -983,6 +983,7 @@ export class Control extends EventEmitter<FeatureEvents> {
         }
       }
     } as A);
+
     return this;
   }
 

@@ -7,7 +7,7 @@ This guide covers how to install and set up Ogma Annotations in your React appli
 Before installing the React wrapper, you need:
 
 - **React** (version 18.0 or higher with Hooks support)
-- **Ogma** (version 5.3.8 or higher) installed in your project
+- **Ogma** (version 5.3.8 or higher) installed in your project - [Ogma installation guide](https://doc.linkurious.com/ogma/latest/tutorials/getting-started/install.html))
 - **@linkurious/ogma-react** (Ogma's official React bindings)
 - **@linkurious/ogma-annotations** (the core annotations package)
 

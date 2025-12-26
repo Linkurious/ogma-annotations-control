@@ -43,17 +43,17 @@ export class Shapes extends Renderer<SVGLayer> {
         rotation: state.rotation,
         zoom: state.zoom
       }),
-      () => this.layer.refresh(),
+      this.layer.refresh,
       {
         equalityFn: (a, b) => {
-          return (
+          const equal =
             a.features === b.features &&
             a.liveUpdates === b.liveUpdates &&
             a.hoveredFeature === b.hoveredFeature &&
             a.selectedFeatures === b.selectedFeatures &&
             a.rotation === b.rotation &&
-            a.zoom === b.zoom
-          );
+            a.zoom === b.zoom;
+          return equal;
         }
       }
     );
@@ -137,8 +137,8 @@ export class Shapes extends Renderer<SVGLayer> {
         existingElement = renderArrow(
           arrowsRoot,
           feature,
-          state.options?.minArrowHeight,
-          state.options?.maxArrowHeight,
+          state.options.minArrowHeight,
+          state.options.maxArrowHeight,
           existingElement,
           state
         );

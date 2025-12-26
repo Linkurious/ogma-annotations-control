@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { Ogma } from "@linkurious/ogma";
+import { AnnotationPanel } from "./AnnotationPanel";
 import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
 
 interface ND {}
@@ -10,6 +11,7 @@ interface ED {}
 class App {
   private ogma: Ogma<ND, ED>;
   private control: Control;
+  private annotationPanel: AnnotationPanel | null = null;
   private buttons: {
     addArrow: HTMLButtonElement;
     addText: HTMLButtonElement;
@@ -106,6 +108,7 @@ class App {
     this.setupSvgExportControl();
     this.setupViewControls();
     this.setupKeyboardShortcuts();
+    this.setupAnnotationPanel();
   }
 
   private setupControlListeners() {
@@ -415,6 +418,12 @@ class App {
       bounds.extend(getAnnotationsBounds(this.control.getAnnotations())),
       { duration }
     );
+  }
+
+  private setupAnnotationPanel() {
+    this.annotationPanel = new AnnotationPanel({
+      control: this.control
+    });
   }
 
   private exposeGlobals() {

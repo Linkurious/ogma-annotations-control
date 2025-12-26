@@ -20,7 +20,7 @@
       <div id="app"></div>
     </div>
     <!-- SVG Export Popup -->
-    <div id="svg-popup" class="popup-backdrop" style="display: none;">
+    <div id="svg-popup" class="popup-backdrop" style="display: none">
       <div class="popup-content">
         <div class="popup-header">
           <h2>SVG Export Preview</h2>
@@ -47,7 +47,10 @@
       <button id="add-text" tooltip="Add text">
         <i class="icon-type"></i>
       </button>
-      <button id="add-polygon" tooltip="Add polygon (click points, Esc to finish)">
+      <button
+        id="add-polygon"
+        tooltip="Add polygon (click points, Esc to finish)"
+      >
         <i class="icon-pentagon"></i>
       </button>
       <span class="separator"></span>
@@ -80,6 +83,81 @@
       <button id="rotate-ccw" tooltip="rotate counter-clockwise">
         <i class="icon-rotate-ccw"></i>
       </button>
+    </div>
+    <!-- Side Panel for Annotation Options -->
+    <div id="annotation-panel" class="annotation-panel" style="display: none">
+      <div class="panel-header">
+        <h3>COLOR</h3>
+      </div>
+      <div class="panel-body">
+        <!-- Color circles -->
+        <div class="color-selector">
+          <button
+            class="color-circle color-circle-primary"
+            id="color-1"
+            data-color="#0099FF"
+          >
+            <div class="color-inner"></div>
+          </button>
+          <button class="color-circle" id="color-2" data-color="#FF7523">
+            <div class="color-inner"></div>
+          </button>
+          <button class="color-circle" id="color-3" data-color="#44AA99">
+            <div class="color-inner"></div>
+          </button>
+        </div>
+
+        <!-- Color picker container (hidden by default) -->
+        <div
+          id="color-picker-container"
+          class="color-picker-container"
+          style="display: none"
+        ></div>
+
+        <!-- Fill toggle -->
+        <div class="toggle-section">
+          <i class="icon-paint-bucket"></i>
+          <label class="toggle-switch">
+            <input type="checkbox" id="fill-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Size/Line type section -->
+        <div class="section-header">
+          <h3>SIZE</h3>
+        </div>
+
+        <!-- Line width slider -->
+        <div class="slider-section">
+          <input
+            type="range"
+            id="line-width-slider"
+            class="slider"
+            min="1"
+            max="100"
+            value="10"
+          />
+          <div class="slider-value">
+            <span id="line-width-value">10</span>
+          </div>
+        </div>
+
+        <!-- Line type section -->
+        <div class="section-header">
+          <h3>LINE TYPE</h3>
+        </div>
+
+        <!-- Line type buttons -->
+        <div class="linetype-section">
+          <button id="linetype-solid" class="linetype-button active">
+            <i class="icon-minus"></i>
+          </button>
+          <button id="linetype-dashed" class="linetype-button">
+            <i class="icon-separator-horizontal"></i>
+          </button>
+        </div>
+      </div>
     </div>
     <script type="module" src="/main.ts"></script>
   </body>
