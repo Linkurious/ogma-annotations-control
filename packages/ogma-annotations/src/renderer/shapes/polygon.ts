@@ -100,7 +100,9 @@ export function renderPolygon(
       polygonPath.setAttribute("fill", background);
     }
   }
-  if (strokeType) polygonPath.setAttribute("stroke-dasharray", strokeType);
+  if (strokeType === "dashed")
+    polygonPath.setAttribute("stroke-dasharray", "5,5");
+  else polygonPath.removeAttribute("stroke-dasharray");
 
   // Convert coordinates to smooth SVG path
   const coords = polygon.geometry.coordinates[0]; // Exterior ring

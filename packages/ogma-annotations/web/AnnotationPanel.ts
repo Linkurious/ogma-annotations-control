@@ -140,19 +140,19 @@ export class AnnotationPanel {
         <h3>${side}</h3>
       </div>
       <div class="direction-section">
-        <button class="direction-button ${ext === "none" ? "active" : ""}" data-end="${side}" data-style="none">
+        <button class="direction-button ${ext === "none" ? "active" : ""}" data-end="${side}" data-style="none" title="None">
           <i class="icon-x"></i>
         </button>
-        <button class="direction-button ${ext === "arrow" ? "active" : ""}" data-end="${side}" data-style="arrow">
+        <button class="direction-button ${ext === "arrow" ? "active" : ""}" data-end="${side}" data-style="arrow" title="Open Arrow">
           <i class="icon-arrow-${side === "tail" ? "left" : "right"}"></i>
         </button>
-        <button class="direction-button ${ext === "arrow-plain" ? "active" : ""}" data-end="${side}" data-style="arrow-plain" style="transform: rotate(${side === "tail" ? "180deg" : "0deg"})">
+        <button class="direction-button ${ext === "arrow-plain" ? "active" : ""}" data-end="${side}" data-style="arrow-plain" style="transform: rotate(${side === "tail" ? "180deg" : "0deg"})" title="Filled Arrow">
           <i class="icon-play"></i>
         </button>
-        <button class="direction-button ${ext === "halo-dot" ? "active" : ""}" data-end="${side}" data-style="halo-dot">
+        <button class="direction-button ${ext === "halo-dot" ? "active" : ""}" data-end="${side}" data-style="halo-dot" title="Halo Dot">
           <i class="icon-circle-dot"></i>
         </button>
-        <button class="direction-button ${ext === "dot" ? "active" : ""}" data-end="${side}" data-style="dot">
+        <button class="direction-button ${ext === "dot" ? "active" : ""}" data-end="${side}" data-style="dot" title="Dot">
           <i class="icon-dot"></i>
         </button>
       </div>`;
@@ -202,11 +202,11 @@ export class AnnotationPanel {
         <h3>LINE TYPE</h3>
       </div>
       <div class="linetype-section">
-        <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain">
-          <i class="icon-minus"></i>
+        <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain" title="Plain">
+          <i class="icon-circle"></i>
         </button>
-        <button class="linetype-button ${strokeType === "dashed" ? "active" : ""}" data-linetype="dashed">
-          <i class="icon-separator-horizontal"></i>
+        <button class="linetype-button ${strokeType === "dashed" ? "active" : ""}" data-linetype="dashed" title="Dashed">
+          <i class="icon-circle-dashed"></i>
         </button>
       </div>
     `;
@@ -312,11 +312,11 @@ export class AnnotationPanel {
         <h3>LINE TYPE</h3>
       </div>
       <div class="linetype-section">
-        <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain">
-          <i class="icon-minus"></i>
+        <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain" title="Plain">
+          <i class="icon-circle"></i>
         </button>
-        <button class="linetype-button ${strokeType === "dashed" ? "active" : ""}" data-linetype="dashed">
-          <i class="icon-separator-horizontal"></i>
+        <button class="linetype-button ${strokeType === "dashed" ? "active" : ""}" data-linetype="dashed" title="Dashed">
+          <i class="icon-circle-dashed"></i>
         </button>
       </div>
     `;
@@ -367,6 +367,7 @@ export class AnnotationPanel {
         const linetype = btn.dataset.linetype as "plain" | "dashed";
         linetypeButtons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
+        console.log("Updating arrow line type to", linetype);
         this.updateArrow({ strokeType: linetype });
       });
     });
@@ -427,6 +428,7 @@ export class AnnotationPanel {
         const linetype = btn.dataset.linetype as "plain" | "dashed";
         linetypeButtons.forEach((b) => b.classList.remove("active"));
         btn.classList.add("active");
+        console.log("Updating polygon line type to", linetype);
         this.updatePolygon({ strokeType: linetype });
       });
     });
