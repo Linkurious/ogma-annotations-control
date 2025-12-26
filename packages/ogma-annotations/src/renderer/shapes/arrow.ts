@@ -31,27 +31,22 @@ export function getArrowHeight(
 }
 
 /**
- * @function drawExt
- * @param point The extremity position
- * @param vec The arrow vector (end-start)
- * @param type The type of extremity
- * @param height The height of the arrow
+ * @function getExtremityOffset
+ * @param type The extremity type
+ * @param tipLength The length of arrow tips
+ * @param strokeWidth The stroke width
+ * @returns The offset distance from the endpoint
  */
-function drawExt(
-  point: Point,
-  vec: Point,
+function getExtremityOffset(
   type: Extremity | undefined,
-  height: number
-): string {
-  const delta = mul(invert(normalize(vec)), height);
-  if (!type || (type !== "arrow" && type !== "arrow-plain")) return "";
-  const p1 = add(point, rotateRadians(delta, Math.PI / 6));
-  const p2 = add(point, rotateRadians(delta, -Math.PI / 6));
-
-  const pt = `${point.x} ${point.y}`;
-  return `M ${p1.x} ${p1.y} L ${pt} ${p2.x} ${p2.y} ${
-    type === "arrow" ? "" : `${p1.x} ${p1.y}`
-  }`;
+  tipLength: number,
+  strokeWidth: number
+): number {
+  if (!type || type === "none") return 0;
+  if (type === "dot") return strokeWidth * 2;
+  if (type === "halo-dot") return strokeWidth * 4;
+  if (type === "arrow" || type === "arrow-plain") return strokeWidth;
+  return 0;
 }
 
 function createDom(elt: SVGGElement | undefined, id: Id): SVGGElement {
@@ -95,18 +90,22 @@ export function renderArrow(
   const lineGroup = createDom(chachedElement, arrow.id);
   const path = lineGroup.firstChild as SVGPathElement;
 
-  const filled = head === "arrow-plain" || tail === "arrow";
   const color = strokeColor || "none";
   path.setAttribute("stroke", color);
   path.setAttribute("stroke-width", `${zoom * strokeWidth}`);
-  path.setAttribute("fill", filled ? strokeColor || "" : "none");
+  path.setAttribute("fill", "none");
   path.setAttribute("stroke-linecap", "round");
   path.setAttribute("stroke-linejoin", "round");
 
-  const headD = drawExt(start, invert(vec), tail, tipLength);
-  const tailD = drawExt(end, vec, head, tipLength);
+  // Calculate shortened line endpoints to avoid overlap with arrow heads
+  const startOffset = getExtremityOffset(tail, tipLength, strokeWidth * zoom);
+  const endOffset = getExtremityOffset(head, tipLength, strokeWidth * zoom);
 
-  const d = headD + `M ${start.x} ${start.y} ${end.x} ${end.y}` + tailD;
+  const vecNorm = normalize(vec);
+  const adjustedStart = add(start, mul(vecNorm, startOffset));
+  const adjustedEnd = add(end, mul(vecNorm, -endOffset));
+
+  const d = `M ${adjustedStart.x} ${adjustedStart.y} L ${adjustedEnd.x} ${adjustedEnd.y}`;
   path.setAttribute("d", d);
 
   const endpointsGroup = lineGroup.children[1] as SVGGElement;
@@ -118,8 +117,26 @@ export function renderArrow(
     path.removeAttribute("stroke-dasharray");
   }
 
-  addExtremity(endpointsGroup, start, color, tail, strokeWidth, zoom);
-  addExtremity(endpointsGroup, end, color, head, strokeWidth, zoom);
+  addExtremity(
+    endpointsGroup,
+    start,
+    vec,
+    color,
+    tail,
+    strokeWidth,
+    zoom,
+    tipLength
+  );
+  addExtremity(
+    endpointsGroup,
+    end,
+    invert(vec),
+    color,
+    head,
+    strokeWidth,
+    zoom,
+    tipLength
+  );
   lineGroup.setAttribute(
     "transform",
     `rotate(${-state.rotation * (180 / Math.PI)})`
@@ -131,10 +148,12 @@ export function renderArrow(
 function addExtremity(
   lineGroup: SVGGElement,
   point: Point,
+  vec: Point,
   color: string,
   type: Extremity | undefined,
   strokeWidth: number,
-  zoom: number
+  zoom: number,
+  tipLength: number
 ) {
   if (type === "halo-dot")
     addDot(
@@ -146,6 +165,16 @@ function addExtremity(
     );
   if (type === "dot" || type === "halo-dot")
     addDot(lineGroup, point, color, 1, strokeWidth * zoom * 2);
+  if (type === "arrow" || type === "arrow-plain")
+    addArrowHead(
+      lineGroup,
+      point,
+      vec,
+      color,
+      type === "arrow-plain",
+      strokeWidth * zoom,
+      tipLength
+    );
 }
 
 function getHaloColor(color: string) {
@@ -167,4 +196,31 @@ function addDot(
   circle.setAttribute("fill-opacity", `${opacity}`);
   circle.setAttribute("fill", color);
   lineGroup.appendChild(circle);
+}
+
+function addArrowHead(
+  lineGroup: SVGGElement,
+  point: Point,
+  vec: Point,
+  color: string,
+  filled: boolean,
+  strokeWidth: number,
+  tipLength: number
+) {
+  const delta = mul(normalize(vec), tipLength);
+  const p1 = add(point, rotateRadians(delta, Math.PI / 6));
+  const p2 = add(point, rotateRadians(delta, -Math.PI / 6));
+
+  const path = createSVGElement<SVGPathElement>("path");
+  const pt = `${point.x} ${point.y}`;
+  const d = `M ${p1.x} ${p1.y} L ${pt} L ${p2.x} ${p2.y}${filled ? " Z" : ""}`;
+
+  path.setAttribute("d", d);
+  path.setAttribute("stroke", color);
+  path.setAttribute("stroke-width", `${strokeWidth}`);
+  path.setAttribute("fill", filled ? color : "none");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+
+  lineGroup.appendChild(path);
 }
