@@ -578,13 +578,16 @@ export class Control extends EventEmitter<FeatureEvents> {
     } = {}
   ): this {
     return this.enableDrawingMode((x, y) => {
-      if (options.offsetX === undefined && options.offsetY === undefined) {
+      let offsetX = options.offsetX;
+      let offsetY = options.offsetY;
+
+      if (offsetX === undefined && offsetY === undefined) {
         const bestPoint = findPlace(x, y, this.index, this.ogma);
-        options.offsetX = bestPoint.x;
-        options.offsetY = bestPoint.y;
+        offsetX = bestPoint.x;
+        offsetY = bestPoint.y;
       }
       const comment = createComment(x, y, "", options?.commentStyle);
-      this.startComment(x, y, comment, options);
+      this.startComment(x, y, comment, { ...options, offsetX, offsetY });
     });
   }
 

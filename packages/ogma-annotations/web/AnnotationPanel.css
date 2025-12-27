@@ -20,8 +20,8 @@
   margin: 0;
   font-size: 12px;
   font-weight: 400;
-  color: #3d3d3d;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .panel-body {
@@ -160,8 +160,8 @@ input:checked + .toggle-slider:before {
   margin: 0;
   font-size: 12px;
   font-weight: 400;
-  color: #1a1a1a;
   letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 /* Slider Section */

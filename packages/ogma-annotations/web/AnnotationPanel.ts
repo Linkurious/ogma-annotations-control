@@ -131,7 +131,11 @@ export class AnnotationPanel {
   }
 
   private renderColorSelector() {
-    return `<div class="color-selector">
+    return `
+      <div class="section-header">
+        <h3>Color</h3>
+      </div>
+      <div class="color-selector">
         <button class="color-circle color-circle-primary" data-index="0" data-color="${this.recentColors[0]}">
           <div class="color-inner"></div>
         </button>
@@ -141,6 +145,54 @@ export class AnnotationPanel {
         <button class="color-circle" data-index="2" data-color="${this.recentColors[2]}">
           <div class="color-inner"></div>
         </button>
+      </div>`;
+  }
+
+  private renderBackgroundSelector(currentBackground: string) {
+    const backgrounds = ["#f5f5f5", "#EDE6FF", "transparent"];
+    return `<div class="color-selector">
+        ${backgrounds
+          .map(
+            (bg) => `
+          <button class="color-circle ${bg === currentBackground ? "color-circle-primary" : ""}" data-background-color="${bg}">
+            <div class="color-inner" style="--circle-color: ${bg === "transparent" ? "white" : bg}; ${bg === "transparent" ? "border: 2px dashed #ccc;" : ""}"></div>
+          </button>
+        `
+          )
+          .join("")}
+      </div>`;
+  }
+
+  private renderFontSelector(currentFont: string) {
+    const fonts = [
+      { value: "sans-serif", label: "Sans Serif", icon: "icon-type" },
+      { value: "serif", label: "Serif", icon: "icon-italic" },
+      { value: "monospace", label: "Monospace", icon: "icon-code" }
+    ];
+
+    const selectedFont = fonts.find((f) => f.value === currentFont) || fonts[0];
+
+    return `<div class="extremity-wrapper" style="flex: none; width: 100%;">
+        <label>Font</label>
+        <div class="custom-select" data-type="font">
+          <div class="custom-select-trigger">
+            <i class="${selectedFont.icon}"></i>
+            <span>${selectedFont.label}</span>
+            <i class="icon-chevron-down custom-select-arrow"></i>
+          </div>
+          <div class="custom-select-options">
+            ${fonts
+              .map(
+                (font) => `
+              <div class="custom-select-option ${font.value === currentFont ? "selected" : ""}" data-value="${font.value}" title="${font.label}">
+                <i class="${font.icon}"></i>
+                <span>${font.label}</span>
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+        </div>
       </div>`;
   }
 
@@ -236,6 +288,9 @@ export class AnnotationPanel {
       text.properties.style?.strokeWidth || defaultTextStyle.strokeWidth;
     const strokeType =
       text.properties.style?.strokeType || defaultTextStyle.strokeType;
+    const background =
+      text.properties.style?.background || defaultTextStyle.background;
+    const font = text.properties.style?.font || defaultTextStyle.font;
 
     this.updateColorFromAnnotation(color!);
 
@@ -246,16 +301,14 @@ export class AnnotationPanel {
       <div class="section-header">
         <h3>Background</h3>
       </div>
-      <div class="color-selector">
-        <button class="color-circle" data-background-color="#f5f5f5">
-          <div class="color-inner" style="--circle-color: #f5f5f5;"></div>
-        </button>
-        <button class="color-circle" data-background-color="#EDE6FF">
-          <div class="color-inner" style="--circle-color: #EDE6FF;"></div>
-        </button>
-        <button class="color-circle" data-background-color="transparent">
-          <div class="color-inner" style="--circle-color: white; border: 2px dashed #ccc;"></div>
-        </button>
+      ${this.renderBackgroundSelector(background!)}
+
+      <!-- Font Selector -->
+      <div class="section-header">
+        <h3>Font</h3>
+      </div>
+      <div class="custom-select-section">
+        ${this.renderFontSelector(font!)}
       </div>
 
       <!-- Font Size -->
@@ -302,14 +355,11 @@ export class AnnotationPanel {
     this.panelBody.innerHTML = `
       ${this.renderColorSelector()}
 
-      <!-- Fill Toggle -->
-      <div class="toggle-section">
-        <i class="icon-paint-bucket"></i>
-        <label class="toggle-switch">
-          <input type="checkbox" id="fill-toggle" ${background !== "transparent" ? "checked" : ""}>
-          <span class="toggle-slider"></span>
-        </label>
+      <!-- Background Color -->
+      <div class="section-header">
+        <h3>Fill</h3>
       </div>
+      ${this.renderBackgroundSelector(background)}
 
       ${this.renderStrokeWidthSection(strokeWidth!)}
 
@@ -350,6 +400,7 @@ export class AnnotationPanel {
         ".custom-select-option"
       );
       const end = select.dataset.end as "head" | "tail";
+      const type = select.dataset.type;
 
       // Toggle dropdown
       trigger.addEventListener("click", (e) => {
@@ -365,7 +416,7 @@ export class AnnotationPanel {
       options.forEach((option) => {
         option.addEventListener("click", (e) => {
           e.stopPropagation();
-          const value = option.dataset.value as Extremity;
+          const value = option.dataset.value!;
 
           // Update selected state
           options.forEach((opt) => opt.classList.remove("selected"));
@@ -380,9 +431,14 @@ export class AnnotationPanel {
           // Close dropdown
           select.classList.remove("open");
 
-          // Update annotation
-          if (end === "head") this.updateArrow({ head: value });
-          else this.updateArrow({ tail: value });
+          // Update annotation based on selector type
+          if (type === "font") {
+            this.updateText({ font: value });
+          } else if (end === "head") {
+            this.updateArrow({ head: value as Extremity });
+          } else {
+            this.updateArrow({ tail: value as Extremity });
+          }
         });
       });
     });
@@ -409,6 +465,9 @@ export class AnnotationPanel {
       });
     });
 
+    // Font selector
+    this.setupCustomSelects();
+
     // Font size slider
     const fontSizeSlider =
       this.panelBody.querySelector<HTMLInputElement>("#font-size-slider")!;
@@ -425,13 +484,15 @@ export class AnnotationPanel {
   private bindPolygonEvents() {
     this.rebindColorCircles();
 
-    // Fill toggle
-    const fillToggle =
-      this.panelBody.querySelector<HTMLInputElement>("#fill-toggle")!;
-    fillToggle.addEventListener("change", () => {
-      const isFilled = fillToggle.checked;
-      const background = isFilled ? this.currentColor : "transparent";
-      this.updatePolygon({ background });
+    // Background color circles
+    const bgColorCircles = this.panelBody.querySelectorAll<HTMLButtonElement>(
+      "[data-background-color]"
+    );
+    bgColorCircles.forEach((circle) => {
+      circle.addEventListener("click", () => {
+        const bgColor = circle.dataset.backgroundColor!;
+        this.updatePolygon({ background: bgColor });
+      });
     });
 
     // Line width slider
