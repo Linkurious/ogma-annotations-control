@@ -46,14 +46,9 @@ export class AnnotationPanel {
 
     this.panel = document.getElementById("annotation-panel")!;
     this.panelBody = this.panel.querySelector(".panel-body")!;
-    this.colorCircles = [
-      document.getElementById("color-1")! as HTMLButtonElement,
-      document.getElementById("color-2")! as HTMLButtonElement,
-      document.getElementById("color-3")! as HTMLButtonElement
-    ];
+    this.colorCircles = [];
 
     this.setupControlListeners();
-    this.setupColorCircles();
     this.setupGlobalClickHandler();
   }
 
@@ -135,6 +130,20 @@ export class AnnotationPanel {
     }
   }
 
+  private renderColorSelector() {
+    return `<div class="color-selector">
+        <button class="color-circle color-circle-primary" data-index="0" data-color="${this.recentColors[0]}">
+          <div class="color-inner"></div>
+        </button>
+        <button class="color-circle" data-index="1" data-color="${this.recentColors[1]}">
+          <div class="color-inner"></div>
+        </button>
+        <button class="color-circle" data-index="2" data-color="${this.recentColors[2]}">
+          <div class="color-inner"></div>
+        </button>
+      </div>`;
+  }
+
   private renderStrokeWidthSection(strokeWidth: number) {
     return `<div class="section-header">
         <h3>Stroke width</h3>
@@ -198,18 +207,7 @@ export class AnnotationPanel {
     this.updateColorFromAnnotation(strokeColor!);
 
     this.panelBody.innerHTML = `
-      <!-- Color circles -->
-      <div class="color-selector">
-        <button class="color-circle color-circle-primary" data-index="0" data-color="${this.recentColors[0]}">
-          <div class="color-inner"></div>
-        </button>
-        <button class="color-circle" data-index="1" data-color="${this.recentColors[1]}">
-          <div class="color-inner"></div>
-        </button>
-        <button class="color-circle" data-index="2" data-color="${this.recentColors[2]}">
-          <div class="color-inner"></div>
-        </button>
-      </div>
+      ${this.renderColorSelector()}
 
       <!-- Arrow Extremities -->
       <div class="section-header">
@@ -224,17 +222,7 @@ export class AnnotationPanel {
       ${this.renderStrokeWidthSection(strokeWidth!)}
 
       <!-- Line Type -->
-      <div class="section-header">
-        <h3>Line type</h3>
-      </div>
-      <div class="linetype-section">
-        <button class="linetype-button ${strokeType === "plain" ? "active" : ""}" data-linetype="plain" title="Plain">
-          <i class="icon-circle"></i>
-        </button>
-        <button class="linetype-button ${strokeType === "dashed" ? "active" : ""}" data-linetype="dashed" title="Dashed">
-          <i class="icon-circle-dashed"></i>
-        </button>
-      </div>
+      ${this.renderLineTypeSection(strokeType || "plain")}
     `;
 
     this.bindArrowEvents();
@@ -252,18 +240,7 @@ export class AnnotationPanel {
     this.updateColorFromAnnotation(color!);
 
     this.panelBody.innerHTML = `
-      <!-- Color circles -->
-      <div class="color-selector">
-        <button class="color-circle color-circle-primary" data-index="0" data-color="${this.recentColors[0]}">
-          <div class="color-inner"></div>
-        </button>
-        <button class="color-circle" data-index="1" data-color="${this.recentColors[1]}">
-          <div class="color-inner"></div>
-        </button>
-        <button class="color-circle" data-index="2" data-color="${this.recentColors[2]}">
-          <div class="color-inner"></div>
-        </button>
-      </div>
+      ${this.renderColorSelector()}
 
       <!-- Background Color -->
       <div class="section-header">
@@ -323,18 +300,7 @@ export class AnnotationPanel {
     this.updateColorFromAnnotation(strokeColor);
 
     this.panelBody.innerHTML = `
-      <!-- Color circles -->
-      <div class="color-selector">
-        <button class="color-circle color-circle-primary" data-index="0" data-color="${this.recentColors[0]}">
-          <div class="color-inner"></div>
-        </button>
-        <button class="color-circle" data-index="1" data-color="${this.recentColors[1]}">
-          <div class="color-inner"></div>
-        </button>
-        <button class="color-circle" data-index="2" data-color="${this.recentColors[2]}">
-          <div class="color-inner"></div>
-        </button>
-      </div>
+      ${this.renderColorSelector()}
 
       <!-- Fill Toggle -->
       <div class="toggle-section">
@@ -347,7 +313,6 @@ export class AnnotationPanel {
 
       ${this.renderStrokeWidthSection(strokeWidth!)}
 
-      <!-- Line Type -->
       ${this.renderLineTypeSection(strokeType)}
     `;
 
