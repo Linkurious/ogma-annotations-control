@@ -2,6 +2,8 @@
 import Ogma from "@linkurious/ogma";
 import { Control, createCommentWithArrow } from "../src";
 
+const N = 100;
+
 // Sample sentences for comments
 const SENTENCES = [
   "This node represents a critical data point in the system.",
@@ -25,8 +27,6 @@ const SENTENCES = [
   "Important filtering stage.",
   "Core business logic component."
 ];
-
-const N = 200;
 
 // Generate graph data: N nodes in a chain
 function generateChainData(nodeCount: number) {

@@ -43,7 +43,7 @@ export class Shapes extends Renderer<SVGLayer> {
         rotation: state.rotation,
         zoom: state.zoom
       }),
-      this.layer.refresh,
+      this.throttleRender,
       {
         equalityFn: (a, b) => {
           const equal =
@@ -59,7 +59,7 @@ export class Shapes extends Renderer<SVGLayer> {
     );
   }
 
-  render = throttle((root: SVGSVGElement) => {
+  render = (root: SVGSVGElement) => {
     //const root = this.layer.element;
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
       this.store.getState();
@@ -149,7 +149,12 @@ export class Shapes extends Renderer<SVGLayer> {
 
     // Apply state classes after rendering
     this.applyStateClasses(annotationsRoot, hoveredFeature, selectedFeatures);
-  }, 16);
+  };
+
+  private throttleRender = throttle(
+    () => this.render(this.layer.element as unknown as SVGSVGElement),
+    8
+  );
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;
