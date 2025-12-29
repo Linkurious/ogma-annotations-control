@@ -119,10 +119,13 @@ for (let i = 0; i < N; i++) {
     sentence, // Comment text
     {
       commentStyle: {
-        color: "#2c3e50",
-        background: "#ecf0f1",
-        fontSize: 12,
-        iconColor: "#3498db"
+        width: 150,
+        style: {
+          strokeColor: "#2c3e50",
+          background: "#ecf0f1",
+          fontSize: 12,
+          iconColor: "#3498db"
+        }
       },
       arrowStyle: {
         strokeColor: "#3498db",

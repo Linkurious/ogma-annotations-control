@@ -25,7 +25,6 @@ export class Shapes extends Renderer<SVGLayer> {
   private shapesRoot: SVGGElement | null = null;
   private commentsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
-  private frame: number = 0;
 
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
@@ -59,11 +58,6 @@ export class Shapes extends Renderer<SVGLayer> {
       }
     );
   }
-
-  requestRender = (_: SVGSVGElement): void => {
-    cancelAnimationFrame(this.frame);
-    this.frame = requestAnimationFrame(this.render);
-  };
 
   render = throttle((root: SVGSVGElement) => {
     //const root = this.layer.element;
@@ -258,17 +252,17 @@ export class Shapes extends Renderer<SVGLayer> {
     return defs;
   }
 
-  private removeFeatures(featureIds: Set<Id>) {
-    for (const id of this.features.keys()) {
-      if (!featureIds.has(id)) {
-        const element = this.features.get(id);
-        if (element && element.parentNode) {
-          element.parentNode.removeChild(element);
-        }
-        this.features.delete(id);
-      }
-    }
-  }
+  // private removeFeatures(featureIds: Set<Id>) {
+  //   for (const id of this.features.keys()) {
+  //     if (!featureIds.has(id)) {
+  //       const element = this.features.get(id);
+  //       if (element && element.parentNode) {
+  //         element.parentNode.removeChild(element);
+  //       }
+  //       this.features.delete(id);
+  //     }
+  //   }
+  // }
 
   private applyStateClasses(
     root: SVGElement,
