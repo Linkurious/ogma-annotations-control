@@ -454,7 +454,7 @@ export function createCommentWithArrow(
       id: comment.id,
       side: SIDE_END,
       type: "comment" as const,
-      magnet: { x: commentX, y: commentY }
+      magnet: { x: 0, y: 0 }
     }
   };
 

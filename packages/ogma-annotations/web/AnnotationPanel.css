@@ -315,9 +315,6 @@ input:checked + .toggle-slider:before {
   user-select: none;
 }
 
-.custom-select-trigger:hover {
-}
-
 .custom-select-trigger i:first-child {
   font-size: 18px;
   flex-shrink: 0;
