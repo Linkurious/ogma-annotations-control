@@ -26,7 +26,7 @@ const SENTENCES = [
   "Core business logic component."
 ];
 
-const N = 5;
+const N = 200;
 
 // Generate graph data: N nodes in a chain
 function generateChainData(nodeCount: number) {

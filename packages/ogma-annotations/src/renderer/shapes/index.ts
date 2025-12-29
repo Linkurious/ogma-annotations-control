@@ -1,4 +1,4 @@
-import { SVGLayer, SVGDrawingFunction, Ogma } from "@linkurious/ogma";
+import { SVGLayer, Ogma } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { renderComment } from "./comment";
@@ -16,7 +16,7 @@ import {
   isPolygon,
   isText
 } from "../../types";
-import { createSVGElement } from "../../utils/utils";
+import { createSVGElement, throttle } from "../../utils/utils";
 import { Renderer } from "../base";
 
 export class Shapes extends Renderer<SVGLayer> {
@@ -25,6 +25,7 @@ export class Shapes extends Renderer<SVGLayer> {
   private shapesRoot: SVGGElement | null = null;
   private commentsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
+  private frame: number = 0;
 
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
@@ -59,7 +60,13 @@ export class Shapes extends Renderer<SVGLayer> {
     );
   }
 
-  render: SVGDrawingFunction = (root) => {
+  requestRender = (_: SVGSVGElement): void => {
+    cancelAnimationFrame(this.frame);
+    this.frame = requestAnimationFrame(this.render);
+  };
+
+  render = throttle((root: SVGSVGElement) => {
+    //const root = this.layer.element;
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
       this.store.getState();
 
@@ -93,8 +100,8 @@ export class Shapes extends Renderer<SVGLayer> {
     const viewportBounds = this.getViewportBounds();
 
     // delete features that are no longer present
-    const featureIds = new Set(Object.keys(features));
-    this.removeFeatures(featureIds);
+    //const featureIds = new Set(Object.keys(features));
+    //this.removeFeatures(featureIds);
 
     for (let feature of Object.values(features)) {
       if (liveUpdates[feature.id]) {
@@ -148,7 +155,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
     // Apply state classes after rendering
     this.applyStateClasses(annotationsRoot, hoveredFeature, selectedFeatures);
-  };
+  }, 16);
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;
