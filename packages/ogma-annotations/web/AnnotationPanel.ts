@@ -14,7 +14,8 @@ import {
   parseColor,
   Extremity,
   defaultArrowStyle,
-  defaultTextStyle
+  defaultTextStyle,
+  isBox
 } from "../src";
 import "./AnnotationPanel.css";
 
@@ -95,6 +96,8 @@ export class AnnotationPanel {
         else {
           if (this.mode === "arrow") {
             this.updateArrow({ strokeColor: this.currentColor });
+          } else if (this.mode === "text") {
+            this.updateText({ strokeColor: this.currentColor });
           }
         }
       });
@@ -121,7 +124,7 @@ export class AnnotationPanel {
     if (isArrow(annotation)) {
       this.mode = "arrow";
       this.renderArrowMode(annotation);
-    } else if (isText(annotation)) {
+    } else if (isText(annotation) || isBox(annotation)) {
       this.mode = "text";
       this.renderTextMode(annotation);
     } else if (isPolygon(annotation)) {
@@ -479,6 +482,15 @@ export class AnnotationPanel {
     });
 
     this.setupLineTypeButtons();
+
+    const lineWidthSlider =
+      this.panelBody.querySelector<HTMLInputElement>("#line-width-slider")!;
+    const lineWidthValue = this.panelBody.querySelector("#line-width-value")!;
+    lineWidthSlider.addEventListener("input", () => {
+      const value = parseInt(lineWidthSlider.value, 10);
+      lineWidthValue.textContent = value.toString();
+      this.updateText({ strokeWidth: value, strokeColor: this.currentColor });
+    });
   }
 
   private bindPolygonEvents() {
