@@ -203,3 +203,5 @@ console.log(
   `Average time per comment: ${((commentEndTime - commentStartTime) / N).toFixed(2)}ms`
 );
 console.log("================================");
+
+Object.assign(window, { ogma, control });

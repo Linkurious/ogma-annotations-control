@@ -28,7 +28,6 @@ type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
-const COMMIT_DELAY = 16; // ms
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -281,6 +280,7 @@ export class Links {
 
     const xyr = nodes.getAttributes(XYR_ATTRIBUTES) as XYR[];
     const state = this.store.getState();
+    const updates: Record<Id, DeepPartial<Arrow>> = {};
     for (let i = 0; i < ids.length; i++) {
       const nodeId = ids[i];
       const nodeLinks = this.nodeToLink.get(nodeId);
@@ -302,12 +302,12 @@ export class Links {
           this._isLinkedToCenter(link)
         );
         coordinates[link.side === SIDE_START ? 0 : 1] = snapPoint;
-        state.applyLiveUpdate(arrowId, {
+        updates[arrowId] = {
           ...arrow,
           geometry: {
             coordinates
           }
-        } as Arrow);
+        } as Arrow;
         this.updatedItems.add(arrowId);
         link.magnet = {
           x: snapPoint[0] - positionAndRadius.x,
@@ -316,21 +316,19 @@ export class Links {
         updateBbox(arrow);
       }
     }
-
-    this.debouncedCommit();
+    state.applyLiveUpdates(updates);
+    this.commit();
   }
 
-  private debouncedCommit = (() => {
-    // let timeout: ReturnType<typeof setTimeout>;
-    return () => {
-      //   clearTimeout(timeout);
-      //   timeout = setTimeout(() => {
-      const state = this.store.getState();
-      state.batchUpdate(() => state.commitLiveUpdates(this.updatedItems));
-      this.updatedItems.clear();
-      //}, COMMIT_DELAY);
-    };
-  })();
+  private commit = () => {
+    const state = this.store.getState();
+    state.batchUpdate(this.commitLiveUpdates);
+    this.updatedItems.clear();
+  };
+
+  private commitLiveUpdates = () => {
+    this.store.getState().commitLiveUpdates(this.updatedItems);
+  };
 
   update(linksByArrowId: LinksByArrowId = this.linksByArrowId) {
     const state = this.store.getState();
@@ -410,7 +408,7 @@ export class Links {
       this.updatedItems.add(arrow.id);
     });
     state.applyLiveUpdates(updates);
-    this.debouncedCommit();
+    this.commit();
   }
 
   private onAddArrow = (
