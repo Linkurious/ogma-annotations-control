@@ -10,7 +10,8 @@ import type {
   Link,
   Side,
   Text,
-  Annotation
+  Annotation,
+  DeepPartial
 } from "../types";
 import { isBox, isText, isPolygon, isComment, isArrow } from "../types";
 import {
@@ -27,7 +28,7 @@ type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
-const COMMIT_DELAY = 100; // ms
+const COMMIT_DELAY = 16; // ms
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -320,15 +321,14 @@ export class Links {
   }
 
   private debouncedCommit = (() => {
-    let timeout: ReturnType<typeof setTimeout>;
+    // let timeout: ReturnType<typeof setTimeout>;
     return () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => {
-        this.store.getState().batchUpdate(() => {
-          this.store.getState().commitLiveUpdates(this.updatedItems);
-        });
-        this.updatedItems.clear();
-      }, COMMIT_DELAY);
+      //   clearTimeout(timeout);
+      //   timeout = setTimeout(() => {
+      const state = this.store.getState();
+      state.batchUpdate(() => state.commitLiveUpdates(this.updatedItems));
+      this.updatedItems.clear();
+      //}, COMMIT_DELAY);
     };
   })();
 
@@ -343,6 +343,8 @@ export class Links {
       y: number;
       radius: number;
     }[];
+
+    const updates: Record<Id, DeepPartial<Arrow>> = {};
 
     linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
@@ -400,13 +402,14 @@ export class Links {
           );
         }
       }
-      state.applyLiveUpdate(arrow.id, {
+      updates[arrow.id] = {
         geometry: {
           coordinates: [startPoint, endPoint]
         }
-      } as Partial<Arrow>);
+      };
       this.updatedItems.add(arrow.id);
     });
+    state.applyLiveUpdates(updates);
     this.debouncedCommit();
   }
 

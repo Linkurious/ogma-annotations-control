@@ -14,7 +14,9 @@ import {
   EVT_SELECT,
   EVT_UNSELECT,
   EVT_UPDATE,
-  EVT_LINK
+  EVT_LINK,
+  SIDE_END,
+  TARGET_TYPES
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { ArrowHandler } from "./handlers/arrow";
@@ -50,7 +52,8 @@ import {
   isText,
   isAnnotationCollection,
   isComment,
-  DeepPartial
+  DeepPartial,
+  Side
 } from "./types";
 import { findPlace } from "./utils/place-finder";
 import { migrateBoxOrTextIfNeeded } from "./utils/utils";
@@ -1056,6 +1059,16 @@ export class Control extends EventEmitter<FeatureEvents> {
         ...annotation.geometry
       }
     } as Annotation);
+    return this;
+  }
+
+  public linkToNode(arrowId: Id, nodeId: Id, side: Side = SIDE_END): this {
+    const arrow = this.getAnnotation<Arrow>(arrowId);
+    if (!arrow) throw new Error(`Arrow with id ${arrowId} not found`);
+    this.links.add(arrow, side, nodeId, TARGET_TYPES.NODE, {
+      x: 0,
+      y: 0
+    });
     return this;
   }
 }

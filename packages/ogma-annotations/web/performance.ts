@@ -1,8 +1,8 @@
 /* eslint-disable no-console */
 import Ogma from "@linkurious/ogma";
-import { Control, createCommentWithArrow } from "../src";
+import { Control, createCommentWithArrow, darken } from "../src";
 
-const N = 100;
+const N = 300;
 
 // Sample sentences for comments
 const SENTENCES = [
@@ -128,17 +128,16 @@ for (let i = 0; i < N; i++) {
         }
       },
       arrowStyle: {
-        strokeColor: "#3498db",
+        strokeColor: darken("#3498db"),
         head: "arrow"
       }
     }
   );
-
-  console.log(comment, arrow);
-
   // Add both to the control
   control.add(comment);
   control.add(arrow);
+  // link arrow to the node
+  control.linkToNode(arrow.id, nodeId);
 
   createdComments++;
 

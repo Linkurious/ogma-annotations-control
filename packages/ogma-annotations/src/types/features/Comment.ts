@@ -8,7 +8,7 @@ import { Text, TextStyle, detectText } from "./Text";
 import {
   COMMENT_MODE_COLLAPSED,
   COMMENT_MODE_EXPANDED,
-  SIDE_END
+  SIDE_START
 } from "../../constants";
 import { Color } from "../colors";
 import { Point } from "../geometry";
@@ -364,9 +364,8 @@ export function calculateCommentZoomThreshold(
  */
 export function getCommentZoomThreshold(comment: Comment): number {
   const style = { ...defaultCommentStyle, ...comment.properties.style };
-  if (style.collapseZoomThreshold !== undefined) {
+  if (style.collapseZoomThreshold !== undefined)
     return style.collapseZoomThreshold;
-  }
   return calculateCommentZoomThreshold(comment);
 }
 
@@ -446,13 +445,13 @@ export function createCommentWithArrow(
     ...options?.arrowStyle
   };
 
-  const arrow = createArrow(targetX, targetY, commentX, commentY, arrowStyles);
+  const arrow = createArrow(commentX, commentY, targetX, targetY, arrowStyles);
 
   // Link the arrow's end to the comment
   arrow.properties.link = {
-    [SIDE_END]: {
+    [SIDE_START]: {
       id: comment.id,
-      side: SIDE_END,
+      side: SIDE_START,
       type: "comment" as const,
       magnet: { x: 0, y: 0 }
     }

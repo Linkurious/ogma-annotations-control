@@ -490,7 +490,7 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {
+  public snapToNodes(point: Point, nodes: NodeList): NodeSnap | null {
     const xyrs = nodes.getAttributes(["x", "y", "radius"]);
     for (let i = 0; i < xyrs.length; i++) {
       const xyr = xyrs[i];

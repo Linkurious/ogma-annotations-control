@@ -83,6 +83,8 @@ export class Shapes extends Renderer<SVGLayer> {
       root.appendChild(this.annotationsRoot);
     }
 
+    root.removeChild(this.annotationsRoot);
+
     const arrowsRoot = this.arrowsRoot!;
     const annotationsRoot = this.annotationsRoot!;
     const commentsRoot = this.commentsRoot!;
@@ -149,6 +151,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
     // Apply state classes after rendering
     this.applyStateClasses(annotationsRoot, hoveredFeature, selectedFeatures);
+    root.appendChild(annotationsRoot);
   };
 
   private throttleRender = throttle(

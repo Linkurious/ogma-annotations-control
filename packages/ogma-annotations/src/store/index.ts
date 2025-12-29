@@ -11,7 +11,8 @@ import {
   Id,
   isComment,
   isArrow,
-  Point
+  Point,
+  DeepPartial
 } from "../types";
 import { getAABB } from "../utils/geom";
 
@@ -118,6 +119,7 @@ export interface AnnotationState {
   // Live update actions (for dragging/resizing)
   startLiveUpdate: (ids: Id[]) => void;
   applyLiveUpdate: (id: Id, updates: Partial<Annotation>) => void;
+  applyLiveUpdates: (updates: Record<Id, DeepPartial<Annotation>>) => void;
   commitLiveUpdates: (ids?: Set<Id>) => void;
   cancelLiveUpdates: () => void;
 
@@ -303,6 +305,16 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
                 } as Annotation
               }
             }));
+          },
+
+          applyLiveUpdates: (updates) => {
+            set((state) => {
+              const newLiveUpdates = { ...state.liveUpdates };
+              for (const id in updates) {
+                newLiveUpdates[id] = updates[id] as Annotation;
+              }
+              return { liveUpdates: newLiveUpdates };
+            });
           },
 
           // Commit all live updates - single history entry!

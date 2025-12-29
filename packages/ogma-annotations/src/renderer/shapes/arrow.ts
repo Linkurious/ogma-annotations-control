@@ -109,11 +109,8 @@ export function renderArrow(
   const endpointsGroup = lineGroup.children[1] as SVGGElement;
   endpointsGroup.innerHTML = "";
 
-  if (strokeType === "dashed") {
-    path.setAttribute("stroke-dasharray", `5,10`);
-  } else {
-    path.removeAttribute("stroke-dasharray");
-  }
+  if (strokeType === "dashed") path.setAttribute("stroke-dasharray", `5,10`);
+  else path.removeAttribute("stroke-dasharray");
 
   addExtremity(
     endpointsGroup,
