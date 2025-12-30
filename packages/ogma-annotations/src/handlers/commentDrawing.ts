@@ -77,8 +77,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.store.getState().setSelectedFeatures([arrow.id]);
 
     // Start arrow drawing - ArrowHandler takes over
-    const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
-    this.arrowHandler.startDrawing(arrow.id, pos.x, pos.y);
+    this.arrowHandler.startDrawing(arrow.id, x, y);
   }
 
   private snapArrowStart(arrow: Arrow, x: number, y: number) {

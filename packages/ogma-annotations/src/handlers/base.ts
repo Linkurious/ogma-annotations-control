@@ -156,8 +156,8 @@ export abstract class Handler<
         win.addEventListener("mouseup", this.handleMouseUp, false);
         container.addEventListener("mousedown", this.handleMouseDown, true);
       }
-      const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
-      this.handleMouseMove({ clientX, clientY });
+      // const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
+      // this.handleMouseMove({ clientX, clientY });
     } else {
       // Guard against null container (e.g., in headless tests)
       const container: HTMLElement | null = this.ogma.getContainer();

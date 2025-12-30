@@ -201,10 +201,13 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       const side = this.hoveredHandle.type as Side;
       if (annotation.properties.link && annotation.properties.link[side]) {
         this.links.remove(annotation, side);
+        // Preserve the other side's link while removing this side
+        const updatedLink = { ...annotation.properties.link };
+        delete updatedLink[side];
         this.store.getState().applyLiveUpdate(annotation.id, {
           properties: {
             ...annotation.properties,
-            link: { [side]: undefined }
+            link: updatedLink
           }
         });
       }
@@ -247,19 +250,19 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     }
   }
 
-  public startDrawing(id: Id, clientX: number, clientY: number) {
+  public startDrawing(id: Id, x: number, y: number) {
     this.annotation = id;
     const annotation = this.getAnnotation()!;
     // ensure linking
-    this.snapDrawingStart(annotation, clientX, clientY);
-
-    const { x, y } = this.clientToCanvas({ clientX, clientY });
+    this.snapDrawingStart(annotation, x, y);
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;
     this.dragStartPoint = { x, y };
 
+    const clientPos = this.ogma.view.graphToScreenCoordinates({ x, y });
+
     // Start live update
-    this.onDragStart({ clientX, clientY });
+    this.onDragStart({ clientX: clientPos.x, clientY: clientPos.y });
   }
 
   public link(arrow: Arrow, target: Id | Node, side: Side) {

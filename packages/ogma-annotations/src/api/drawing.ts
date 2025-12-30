@@ -176,7 +176,11 @@ export class Drawing {
         offsetY = bestPoint.y;
       }
       const comment = createComment(x, y, "", options?.commentStyle);
-      this.startComment(x, y, comment, { ...options, offsetX, offsetY });
+      this.startComment(x, y, comment, {
+        ...options,
+        offsetX,
+        offsetY
+      });
     });
   }
 
@@ -218,7 +222,6 @@ export class Drawing {
       }
     };
     this.control.on(EVT_ADD, onCommentCreated);
-
     drawingHandler.startDrawing(comment.id, x, y);
     return this.control;
   }
