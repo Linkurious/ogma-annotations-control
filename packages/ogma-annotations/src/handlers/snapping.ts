@@ -15,7 +15,8 @@ const MAGNETS: Point[] = [
   { x: 0.5, y: 0 },
   { x: -0.5, y: 0.5 },
   { x: 0, y: 0.5 },
-  { x: 0.5, y: 0.5 }
+  { x: 0.5, y: 0.5 },
+  { x: 0, y: 0 } // center
 ];
 
 // Edge definitions in normalized coordinates: [x1, y1, x2, y2]
@@ -390,10 +391,10 @@ export class Snapping extends EventTarget {
       height /= zoom;
     }
 
-    for (const vec of MAGNETS) {
+    for (const magnet of MAGNETS) {
       // Calculate offset in local (box) coordinates
-      let offsetX = vec.x * width;
-      let offsetY = vec.y * height;
+      let offsetX = magnet.x * width;
+      let offsetY = magnet.y * height;
 
       // For texts (counter-rotated), rotate the offset to world coordinates
       if (!isBox(text)) {
@@ -410,7 +411,7 @@ export class Snapping extends EventTarget {
       return {
         point: { x: magnetPoint.x, y: magnetPoint.y },
         type: TARGET_TYPES.TEXT,
-        magnet: vec,
+        magnet,
         id: text.id
       };
     }

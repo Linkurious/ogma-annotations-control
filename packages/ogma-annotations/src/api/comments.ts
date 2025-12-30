@@ -17,7 +17,8 @@ export class CommentManager {
     if (!feature || !isComment(feature)) return;
 
     const comment = feature as Comment;
-    this.store.getState().updateFeature(id, {
+
+    this.store.getState().applyLiveUpdate(id, {
       properties: {
         ...comment.properties,
         mode: comment.properties.mode === "collapsed" ? "expanded" : "collapsed"

@@ -229,15 +229,29 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   private snapDrawingStart(annotation: Arrow, x: number, y: number) {
     const snap = this.snapping.snap({ x, y });
     if (snap) {
-      annotation.geometry.coordinates[0] = [snap.point.x, snap.point.y];
-      annotation.properties.link = {
-        start: {
-          side: SIDE_START,
-          id: snap.id,
-          type: snap.type,
-          magnet: snap.magnet
+      const update: Partial<Arrow> = {
+        geometry: {
+          ...annotation.geometry,
+          coordinates: [
+            [snap.point.x, snap.point.y],
+            annotation.geometry.coordinates[1]
+          ]
+        },
+        properties: {
+          ...annotation.properties,
+          link: {
+            start: {
+              side: SIDE_START,
+              id: snap.id,
+              type: snap.type,
+              magnet: snap.magnet
+            }
+          }
         }
       };
+      const state = this.store.getState();
+      state.applyLiveUpdate(annotation.id, update);
+      state.updateFeature(annotation.id, update);
       this.links.add(
         annotation,
         HandleType.START,
@@ -245,8 +259,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         snap.type,
         snap.magnet
       );
-      // no need to update live as we set the initial point directly
-      // no need to change clientX/Y as we already have the snapped point
     }
   }
 
