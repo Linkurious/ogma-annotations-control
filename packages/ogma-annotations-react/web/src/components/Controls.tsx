@@ -1,5 +1,3 @@
-import React from "react";
-import { Layer, useOgma } from "@linkurious/ogma-react";
 import type { Layer as LayerType } from "@linkurious/ogma";
 import {
   ArrowStyles,
@@ -7,14 +5,17 @@ import {
   isArrow,
   isText
 } from "@linkurious/ogma-annotations";
+// eslint-disable-next-line import/no-unresolved
 import "@linkurious/ogma-annotations/style.css";
+import { Layer, useOgma } from "@linkurious/ogma-react";
+import React from "react";
 import "./Controls.css";
 
 import { AddMenu } from "./AddMenu";
 import { ArrowSettings } from "./ArrowSettings";
+import { SvgExportPopup } from "./SvgExportPopup";
 import { TextSettings } from "./TextSettings";
 import { ViewControls } from "./ViewControls";
-import { SvgExportPopup } from "./SvgExportPopup";
 
 import {
   useAnnotationsContext,
@@ -29,9 +30,7 @@ const preventDefault = (
   if (evt.cancelable) evt.stopPropagation();
 };
 
-const useKeyboardShortcuts = (
-  onCenterView: () => void
-) => {
+const useKeyboardShortcuts = (onCenterView: () => void) => {
   const { cancelDrawing, remove, editor } = useAnnotationsContext();
 
   React.useEffect(() => {
@@ -81,6 +80,7 @@ export const Controls = ({
       setSvgContent(svg);
       setIsPopupOpen(true);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Failed to export SVG:", error);
     }
   }, [ogma]);
@@ -101,7 +101,6 @@ export const Controls = ({
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      console.log("Downloaded SVG");
     }
   }, [svgContent]);
 
@@ -142,7 +141,7 @@ export const Controls = ({
     <>
       {/* Bottom toolbar */}
       <Layer className="controls" ref={divRefCallback} index={100}>
-        <div className="container">
+        <div className="container" onMouseMove={stopEvent} onClick={stopEvent}>
           <AddMenu onSvgExport={handleSvgExport} />
         </div>
       </Layer>

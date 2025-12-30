@@ -1,5 +1,5 @@
 import React from "react";
-import { defaultColors } from "../../../src/constants";
+import { defaultColors } from "../../../src";
 import "./ColorPicker.css";
 
 type ColorPickerProps = {

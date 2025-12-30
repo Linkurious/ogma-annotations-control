@@ -1,12 +1,12 @@
+import { ArrowStyles } from "@linkurious/ogma-annotations";
+import React from "react";
 import { ButtonGroup } from "./ButtonGroup";
-import { DirectionNone } from "../../icons/direction-none";
-import { DirectionOne } from "../../icons/direction-one";
-import { DirectionBoth } from "../../icons/direction-both";
 import { ColorPicker } from "./ColorPicker";
 import { Slider } from "./Slider";
-import { ArrowStyles } from "@linkurious/ogma-annotations";
-import { interpolate, normalize } from "../../../src/utils";
-import { useAnnotationsContext } from "../../../src/AnnotationsContext";
+import { useAnnotationsContext, interpolate, normalize } from "../../../src";
+import { DirectionBoth } from "../../icons/direction-both";
+import { DirectionNone } from "../../icons/direction-none";
+import { DirectionOne } from "../../icons/direction-one";
 
 export const ArrowSettings = ({
   minThickness,

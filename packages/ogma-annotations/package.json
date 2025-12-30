@@ -7,10 +7,11 @@
   "module": "dist/index.mjs",
   "browser": "dist/index.js",
   "types": "dist/types/index.d.ts",
+  "style": "dist/ogma-annotations.css",
   "files": [
     "dist/*.mjs",
     "dist/*.js",
-    "dist/*.css",
+    "dist/**/*.css",
     "dist/types"
   ],
   "exports": {

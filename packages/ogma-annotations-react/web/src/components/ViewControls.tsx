@@ -1,6 +1,6 @@
-import React from "react";
 import { useOgma } from "@linkurious/ogma-react";
 import { RotateCw, RotateCcw, Minimize } from "lucide-react";
+import React from "react";
 import { useAnnotationsContext, getAnnotationsBounds } from "../../../src";
 
 import "../tooltip.css";
@@ -28,6 +28,7 @@ export const ViewControls = () => {
 
   const stopEvent = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
   }, []);
 
   React.useEffect(() => {

@@ -1,5 +1,5 @@
-import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
 import { resolve, dirname } from "path";
@@ -25,7 +25,7 @@ export default defineConfig({
   define: { "process.env": { NODE_ENV: "production" } },
   build: {
     lib: {
-      name: resolve(__dirname, "src/index.ts"),
+      name: "OgmaAnnotationsReact",
       fileName: (format) => `index.${format === "umd" ? "" : "m"}js`,
       entry: resolve(__dirname, "src/index.ts")
     },
@@ -34,6 +34,7 @@ export default defineConfig({
       external: [
         "@linkurious/ogma",
         "@linkurious/ogma-react",
+        "@linkurious/ogma-annotations",
         "react",
         "react-dom"
       ],

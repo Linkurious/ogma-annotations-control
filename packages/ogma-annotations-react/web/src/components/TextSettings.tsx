@@ -1,7 +1,6 @@
 import React from "react";
 import { ColorPicker } from "./ColorPicker";
-import { useAnnotationsContext } from "../../../src/AnnotationsContext";
-import { fontSizes, fonts } from "../../../src/constants";
+import { useAnnotationsContext, fontSizes, fonts } from "../../../src";
 
 const fontOptions = fonts.map((f) => ({ value: f, label: f }));
 const fontSizeOptions = fontSizes.map((v) => ({ value: `${v}`, label: v }));

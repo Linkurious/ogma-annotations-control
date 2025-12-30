@@ -1,9 +1,9 @@
-import React from "react";
-import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
 import { Ogma as OgmaLib, RawGraph } from "@linkurious/ogma";
 import { AnnotationCollection } from "@linkurious/ogma-annotations";
-import { AnnotationsContextProvider } from "../../src/AnnotationsContext";
+import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
+import React from "react";
 import { Controls } from "./components/Controls";
+import { AnnotationsContextProvider } from "../../src";
 
 import "./App.css";
 
@@ -23,12 +23,15 @@ export default function App() {
     React.useState<AnnotationCollection | null>(null);
 
   React.useEffect(() => {
-    Promise.all([loadGraph(), loadAnnotations()]).then(
-      ([graphData, annotationsData]) => {
+    Promise.all([loadGraph(), loadAnnotations()])
+      .then(([graphData, annotationsData]) => {
         setGraph(graphData);
-        setAnnotations(annotationsData);
-      }
-    );
+        return setAnnotations(annotationsData);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error("Failed to load graph or annotations:", error);
+      });
   }, []);
 
   if (!graph || !annotations) {

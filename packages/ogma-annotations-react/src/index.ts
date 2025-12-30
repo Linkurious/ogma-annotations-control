@@ -19,3 +19,9 @@ export {
   type CommentProps,
   getAnnotationsBounds
 } from "@linkurious/ogma-annotations";
+
+export {
+  type IAnnotationsContext,
+  useAnnotationsContext,
+  createAnnotationsContext
+} from "./types";

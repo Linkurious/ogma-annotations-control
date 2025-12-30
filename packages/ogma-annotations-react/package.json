@@ -32,8 +32,8 @@
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "docs:build": "typedoc && vite build -c web/vite.config.mts",
     "postdocs:build": "bash scripts/postdocs.sh",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts,tsx src",
+    "lint": "eslint src web --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts,tsx src web",
     "test:unit": "vitest run",
     "test": "npm run test:unit"
   },

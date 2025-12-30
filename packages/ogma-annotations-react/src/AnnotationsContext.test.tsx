@@ -1,8 +1,8 @@
-import React from "react";
-import { render, act } from "@testing-library/react";
-import { AnnotationsContextProvider } from "./AnnotationsContext";
-import { useOgma } from "@linkurious/ogma-react";
 import * as Annotations from "@linkurious/ogma-annotations";
+import { AnnotationCollection } from "@linkurious/ogma-annotations";
+import { useOgma } from "@linkurious/ogma-react";
+import { render, act } from "@testing-library/react";
+import React from "react";
 import {
   vi,
   describe,
@@ -13,7 +13,7 @@ import {
   Mock,
   MockedFunction
 } from "vitest";
-import { AnnotationCollection } from "@linkurious/ogma-annotations";
+import { AnnotationsContextProvider } from "./AnnotationsContext";
 
 vi.mock("@linkurious/ogma-react", () => ({
   useOgma: vi.fn()
@@ -170,7 +170,10 @@ describe("AnnotationsContextProvider", () => {
     });
 
     // The unselect event should be triggered (currentAnnotation set to null internally)
-    expect(mockEditor.on).toHaveBeenCalledWith("unselect", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith(
+      "unselect",
+      expect.any(Function)
+    );
   });
 
   it("should cleanup editor on unmount", () => {
@@ -231,7 +234,10 @@ describe("AnnotationsContextProvider", () => {
     );
 
     expect(mockEditor.on).toHaveBeenCalledWith("select", expect.any(Function));
-    expect(mockEditor.on).toHaveBeenCalledWith("unselect", expect.any(Function));
+    expect(mockEditor.on).toHaveBeenCalledWith(
+      "unselect",
+      expect.any(Function)
+    );
     expect(mockEditor.on).toHaveBeenCalledWith("add", expect.any(Function));
     expect(mockEditor.on).toHaveBeenCalledWith("remove", expect.any(Function));
     expect(mockEditor.on).toHaveBeenCalledWith("update", expect.any(Function));

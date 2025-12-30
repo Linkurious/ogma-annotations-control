@@ -1,9 +1,7 @@
-import React from "react";
-import { useAnnotationsContext } from "../../../src/AnnotationsContext";
-import { EVT_COMPLETE_DRAWING, EVT_CANCEL_DRAWING } from "@linkurious/ogma-annotations";
-import "../tooltip.css";
-import "./AddMenu.css";
-
+import {
+  EVT_COMPLETE_DRAWING,
+  EVT_CANCEL_DRAWING
+} from "@linkurious/ogma-annotations";
 import {
   Trash,
   Undo,
@@ -16,6 +14,10 @@ import {
   ArrowRight,
   Camera
 } from "lucide-react";
+import React from "react";
+import { useAnnotationsContext } from "../../../src";
+import "../tooltip.css";
+import "./AddMenu.css";
 
 interface AddMenuProps {
   onSvgExport: () => void;
@@ -131,6 +133,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
 
   const stopEvent = React.useCallback((evt: React.MouseEvent) => {
     evt.stopPropagation();
+    evt.preventDefault();
   }, []);
 
   const buttonSize = 16;
