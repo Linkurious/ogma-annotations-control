@@ -1,3 +1,10 @@
 import OgmaConfig from "@linkurious/eslint-config-ogma";
 
-export default OgmaConfig;
+export default [
+  ...OgmaConfig,
+  {
+    rules: {
+      "import/no-unresolved": "off"
+    }
+  }
+];

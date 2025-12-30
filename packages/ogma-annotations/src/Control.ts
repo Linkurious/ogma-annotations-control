@@ -1,10 +1,11 @@
-import type { Ogma } from "@linkurious/ogma";
-import { MouseButtonEvent } from "@linkurious/ogma";
+import { Node, type Ogma } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
-import { Position } from "geojson";
+import { CommentManager } from "./api/comments";
+import { Drawing } from "./api/drawing";
+import { HistoryManager } from "./api/history";
+import { SelectionManager } from "./api/selection";
+import { UpdateManager } from "./api/update";
 import {
-  COMMENT_MODE_COLLAPSED,
-  COMMENT_MODE_EXPANDED,
   DEFAULT_SEND_ICON,
   EVT_ADD,
   EVT_CANCEL_DRAWING,
@@ -15,20 +16,20 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE,
   EVT_LINK,
-  SIDE_END,
-  TARGET_TYPES
+  SIDE_END
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
-import { ArrowHandler } from "./handlers/arrow";
-import { CommentDrawingHandler } from "./handlers/commentDrawing";
 import { Links } from "./handlers/links";
-import { PolygonHandler } from "./handlers/polygon";
-import { TextHandler } from "./handlers/text";
+
 import { InteractionController } from "./interaction";
+
 import { Index } from "./interaction/spatialIndex";
+
 import { Handles } from "./renderer/handles";
 import { Shapes } from "./renderer/shapes";
+
 import { createStore } from "./store";
+
 import {
   Annotation,
   AnnotationCollection,
@@ -42,21 +43,9 @@ import {
   Id,
   Polygon,
   Text,
-  createArrow,
-  createBox,
-  createComment,
-  createPolygon,
-  createText,
-  isArrow,
-  isBox,
-  isText,
-  isAnnotationCollection,
-  isComment,
   DeepPartial,
   Side
 } from "./types";
-import { findPlace } from "./utils/place-finder";
-import { migrateBoxOrTextIfNeeded } from "./utils/utils";
 
 const defaultOptions: ControllerOptions = {
   detectMargin: 2,
@@ -88,11 +77,13 @@ export class Control extends EventEmitter<FeatureEvents> {
   // TODO: maybe links should be part of the store?
   private links: Links;
   private index: Index;
+  private drawing: Drawing;
 
-  // Track pending drawing listener to clean up on cancel
-  private pendingDrawingListener:
-    | (<T extends MouseButtonEvent<unknown, unknown>>(evt: T) => void)
-    | null = null;
+  // API managers
+  private selectionManager: SelectionManager;
+  private historyManager: HistoryManager;
+  private updateManager: UpdateManager;
+  private commentManager: CommentManager;
 
   constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
@@ -118,6 +109,22 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.links,
       this.interactions
     );
+
+    this.drawing = new Drawing(
+      this.ogma,
+      this.store,
+      this.editor,
+      this.interactions,
+      this.links,
+      this,
+      this.index
+    );
+
+    // Initialize API managers
+    this.selectionManager = new SelectionManager(this.store);
+    this.historyManager = new HistoryManager(this.store, this.links);
+    this.updateManager = new UpdateManager(this.store);
+    this.commentManager = new CommentManager(this.store);
 
     this.initializeRenderers();
     this.setupEvents();
@@ -197,65 +204,13 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store.getState().setZoom(zoom);
 
     // Auto-collapse/expand comments based on zoom threshold
-    this.updateCommentModesForZoom(zoom);
+    this.commentManager.updateCommentModesForZoom(zoom);
   };
 
   private onLayout = () => {
     // Update positions of all annotations after layout
     this.links.update();
   };
-
-  /**
-   * Update comment modes based on current zoom level
-   * Uses live updates to avoid creating undo/redo history entries
-   * @param zoom Current zoom level
-   */
-  private updateCommentModesForZoom(zoom: number) {
-    const state = this.store.getState();
-    const features = state.features;
-
-    Object.values(features).forEach((feature) => {
-      if (isComment(feature)) {
-        const comment = feature as Comment;
-
-        // Get threshold - uses explicit value if set, otherwise computes from dimensions
-        const threshold = this.getCommentZoomThreshold(comment);
-
-        // Determine target mode based on zoom
-        const targetMode =
-          zoom < threshold ? COMMENT_MODE_COLLAPSED : COMMENT_MODE_EXPANDED;
-
-        // Only update if mode needs to change
-        if (comment.properties.mode !== targetMode) {
-          // Use live updates to avoid history
-          state.applyLiveUpdate(comment.id, {
-            properties: {
-              ...comment.properties,
-              mode: targetMode
-            }
-          } as Partial<Comment>);
-        }
-      }
-    });
-  }
-
-  /**
-   * Get the effective zoom threshold for a comment
-   * Uses explicit threshold if set, otherwise calculates from dimensions
-   * @param comment Comment to get threshold for
-   * @returns Zoom threshold
-   */
-  private getCommentZoomThreshold(comment: Comment): number {
-    const style = { ...comment.properties.style };
-    if (style.collapseZoomThreshold !== undefined) {
-      return style.collapseZoomThreshold;
-    }
-    // Calculate based on dimensions: collapse when screen-space width < 80px
-    const minReadableWidth = 80;
-    const threshold = minReadableWidth / comment.properties.width;
-    // Clamp between reasonable bounds
-    return Math.max(0.1, Math.min(1.0, threshold));
-  }
 
   /**
    * Set the options for the controller
@@ -272,23 +227,16 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param annotation The annotation to add
    */
   public add(annotation: Annotation | AnnotationCollection): this {
-    if (isAnnotationCollection(annotation)) {
-      for (const feature of annotation.features) this.add(feature);
-    } else {
-      // Migrate old Polygon format to new Point format for Box/Text
-      const migrated = migrateBoxOrTextIfNeeded(annotation);
-      this.store.getState().addFeature(migrated);
-    }
+    this.updateManager.add(annotation);
     return this;
   }
+
   /**
    * Remove an annotation or an array of annotations from the controller
    * @param annotation The annotation(s) to remove
    */
   public remove(annotation: Annotation | AnnotationCollection): this {
-    if (isAnnotationCollection(annotation)) {
-      for (const feature of annotation.features) this.remove(feature);
-    } else this.store.getState().removeFeature(annotation.id);
+    this.updateManager.remove(annotation);
     return this;
   }
   /**
@@ -296,10 +244,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns true if undo was successful, false if no changes to undo
    */
   public undo(): boolean {
-    if (!this.canUndo()) return false;
-    this.store.temporal.getState().undo();
-    this.links.refresh();
-    return true;
+    return this.historyManager.undo();
   }
 
   /**
@@ -307,10 +252,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns true if redo was successful, false if no changes to redo
    */
   public redo(): boolean {
-    if (!this.canRedo()) return false;
-    this.store.temporal.getState().redo();
-    this.links.refresh();
-    return true;
+    return this.historyManager.redo();
   }
 
   /**
@@ -318,7 +260,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns true if undo is possible
    */
   public canUndo(): boolean {
-    return this.store.temporal.getState().pastStates.length > 0;
+    return this.historyManager.canUndo();
   }
 
   /**
@@ -326,14 +268,14 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns true if redo is possible
    */
   public canRedo(): boolean {
-    return this.store.temporal.getState().futureStates.length > 0;
+    return this.historyManager.canRedo();
   }
 
   /**
    * Clear the undo/redo history
    */
   public clearHistory() {
-    this.store.temporal.getState().clear();
+    this.historyManager.clearHistory();
   }
 
   /**
@@ -341,11 +283,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns A FeatureCollection containing all annotations
    */
   public getAnnotations(): AnnotationCollection {
-    const features = this.store.getState().features;
-    return {
-      type: "FeatureCollection",
-      features: Object.values(features)
-    };
+    return this.updateManager.getAnnotations();
   }
 
   /**
@@ -354,8 +292,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public select(annotations: Id | Id[]): this {
-    const ids = Array.isArray(annotations) ? annotations : [annotations];
-    this.store.getState().setSelectedFeatures(ids);
+    this.selectionManager.select(annotations);
     return this;
   }
 
@@ -365,16 +302,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public unselect(annotations?: Id | Id[]): this {
-    const ids = Array.isArray(annotations) ? annotations : [annotations];
-    if (annotations === undefined)
-      this.store.getState().setSelectedFeatures([]);
-    else {
-      const filter = new Set(ids);
-      const toSelect = Array.from(
-        this.store.getState().selectedFeatures
-      ).filter((id) => !filter.has(id));
-      this.store.getState().setSelectedFeatures(toSelect);
-    }
+    this.selectionManager.unselect(annotations);
     return this;
   }
 
@@ -383,37 +311,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public cancelDrawing() {
-    // Remove any pending drawing listener
-    if (this.pendingDrawingListener) {
-      this.ogma.events.off(this.pendingDrawingListener);
-      this.pendingDrawingListener = null;
-    }
-
+    this.drawing.cancelPendingDrawing();
     this.editor.getActiveHandler()?.cancelDrawing();
     this.emit(EVT_CANCEL_DRAWING);
-    return this;
-  }
-
-  /**
-   * Helper method to enable drawing mode with proper cleanup
-   * @private
-   */
-  private enableDrawingMode(
-    drawCallback: (x: number, y: number) => void
-  ): this {
-    this.unselect().cancelDrawing();
-
-    const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
-      // Remove the listener and clear reference
-      this.ogma.events.off(handler);
-      this.pendingDrawingListener = null;
-
-      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
-      drawCallback(x, y);
-    };
-
-    this.pendingDrawingListener = handler;
-    this.ogma.events.once("mousedown", handler);
     return this;
   }
 
@@ -443,10 +343,8 @@ export class Control extends EventEmitter<FeatureEvents> {
   public enableArrowDrawing(
     style?: Partial<Arrow["properties"]["style"]>
   ): this {
-    return this.enableDrawingMode((x, y) => {
-      const arrow = createArrow(x, y, x, y, style);
-      this.startArrow(x, y, arrow);
-    });
+    this.drawing.enableArrowDrawing(style);
+    return this;
   }
 
   /**
@@ -473,10 +371,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @see startText for low-level programmatic control
    */
   public enableTextDrawing(style?: Partial<Text["properties"]["style"]>): this {
-    return this.enableDrawingMode((x, y) => {
-      const text = createText(x, y, 0, 0, undefined, style);
-      this.startText(x, y, text);
-    });
+    this.drawing.enableTextDrawing(style);
+    return this;
   }
 
   /**
@@ -503,10 +399,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @see startBox for low-level programmatic control
    */
   public enableBoxDrawing(style?: Partial<Box["properties"]["style"]>): this {
-    return this.enableDrawingMode((x, y) => {
-      const box = createBox(x, y, 0, 0, style);
-      this.startBox(x, y, box);
-    });
+    this.drawing.enableBoxDrawing(style);
+    return this;
   }
 
   /**
@@ -535,10 +429,8 @@ export class Control extends EventEmitter<FeatureEvents> {
   public enablePolygonDrawing(
     style?: Partial<Polygon["properties"]["style"]>
   ): this {
-    return this.enableDrawingMode((x, y) => {
-      const polygon = createPolygon([[[x, y]]], { style });
-      this.startPolygon(x, y, polygon);
-    });
+    this.drawing.enablePolygonDrawing(style);
+    return this;
   }
 
   /**
@@ -580,18 +472,8 @@ export class Control extends EventEmitter<FeatureEvents> {
       arrowStyle?: Partial<ArrowProperties>;
     } = {}
   ): this {
-    return this.enableDrawingMode((x, y) => {
-      let offsetX = options.offsetX;
-      let offsetY = options.offsetY;
-
-      if (offsetX === undefined && offsetY === undefined) {
-        const bestPoint = findPlace(x, y, this.index, this.ogma);
-        offsetX = bestPoint.x;
-        offsetY = bestPoint.y;
-      }
-      const comment = createComment(x, y, "", options?.commentStyle);
-      this.startComment(x, y, comment, { ...options, offsetX, offsetY });
-    });
+    this.drawing.enableCommentDrawing(options);
+    return this;
   }
 
   /**
@@ -637,35 +519,7 @@ export class Control extends EventEmitter<FeatureEvents> {
       arrowStyle?: Partial<ArrowProperties>;
     }
   ): this {
-    // stop editing any current feature
-    if (this.editor.getActiveHandler())
-      this.editor.getActiveHandler()!.stopEditing();
-    this.cancelDrawing();
-
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: comment.id });
-
-    this.interactions.suppressClicksTemporarily(200);
-    // Create and use the comment drawing handler
-    const drawingHandler = new CommentDrawingHandler(
-      this.ogma,
-      this.store,
-      this.links,
-      this.editor.getSnapping(),
-      this.editor.getArrowHandler(),
-      comment,
-      options
-    );
-    const onCommentCreated = (evt: { id: Id }) => {
-      if (evt.id === comment.id) {
-        this.select(evt.id);
-        this.off(EVT_ADD, onCommentCreated);
-        (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
-      }
-    };
-    this.on(EVT_ADD, onCommentCreated);
-
-    drawingHandler.startDrawing(comment.id, x, y);
+    this.drawing.startComment(x, y, comment, options);
     return this;
   }
 
@@ -700,18 +554,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    * @see enableBoxDrawing for the recommended high-level API
    */
-  public startBox(x: number, y: number, box: Box = createBox(x, y)) {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: box.id });
-
-    // Add the box annotation
-    this.add(box);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(box.id);
-
-    // // Get the text handler (box uses the same handler as text)
-    const handler = this.editor.getActiveHandler()!;
-    return (handler as TextHandler).startDrawing(box.id, x, y);
+  public startBox(x: number, y: number, box?: Box) {
+    this.drawing.startBox(x, y, box);
+    return this;
   }
 
   /**
@@ -745,22 +590,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    * @see enableArrowDrawing for the recommended high-level API
    */
-  public startArrow(x: number, y: number, arrow: Arrow = createArrow(x, y)) {
-    // stop editing any current feature
-    if (this.editor.getActiveHandler())
-      this.editor.getActiveHandler()!.stopEditing();
-    this.cancelDrawing();
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: arrow.id });
-
-    // Add the arrow annotation
-    this.add(arrow);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(arrow.id);
-
-    // Get the arrow handler
-    const handler = this.editor.getActiveHandler()!;
-    return (handler as ArrowHandler).startDrawing(arrow.id, x, y);
+  public startArrow(x: number, y: number, arrow?: Arrow) {
+    this.drawing.startArrow(x, y, arrow);
+    return this;
   }
 
   /**
@@ -794,18 +626,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    * @see enableTextDrawing for the recommended high-level API
    */
-  public startText(x: number, y: number, text: Text = createText(x, y)) {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: text.id });
-
-    // Add the text annotation
-    this.add(text);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(text.id);
-
-    // Get the text handler
-    const handler = this.editor.getActiveHandler()!;
-    return (handler as TextHandler).startDrawing(text.id, x, y);
+  public startText(x: number, y: number, text?: Text) {
+    this.drawing.startText(x, y, text);
+    return this;
   }
 
   /**
@@ -840,17 +663,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @see enablePolygonDrawing for the recommended high-level API
    */
   public startPolygon(x: number, y: number, polygon: Polygon): this {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: polygon.id });
-
-    // Add the polygon annotation
-    this.add(polygon);
-    this.interactions.suppressClicksTemporarily(200);
-    this.select(polygon.id);
-
-    // Get the polygon handler
-    const handler = this.editor.getActiveHandler()!;
-    (handler as PolygonHandler).startDrawing(polygon.id, x, y);
+    this.drawing.startPolygon(x, y, polygon);
     return this;
   }
 
@@ -859,13 +672,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns A FeatureCollection of selected annotations
    */
   public getSelectedAnnotations(): AnnotationCollection {
-    const state = this.store.getState();
-    return {
-      type: "FeatureCollection",
-      features: Array.from(state.selectedFeatures).map(
-        (id) => state.features[id]
-      )
-    };
+    return this.selectionManager.getSelectedAnnotations();
   }
 
   /**
@@ -873,9 +680,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns The currently selected annotation, or null if none selected
    */
   public getSelected(): Annotation | null {
-    const state = this.store.getState();
-    const firstId = Array.from(state.selectedFeatures)[0];
-    return firstId ? state.features[firstId] : null;
+    return this.selectionManager.getSelected();
   }
 
   /**
@@ -884,7 +689,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns The annotation with the given id, or undefined if not found
    */
   public getAnnotation<T = Annotation>(id: Id): T | undefined {
-    return this.store.getState().getFeature(id) as T | undefined;
+    return this.updateManager.getAnnotation<T>(id);
   }
 
   /**
@@ -896,63 +701,17 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @returns this for chaining
    */
   public setScale(id: Id, scale: number, ox: number, oy: number): this {
-    const feature = this.store.getState().getFeature(id);
-    if (!feature) return this;
-
-    const state = this.store.getState();
-
-    if (isArrow(feature)) {
-      // Scale arrow coordinates around origin
-      const coords = feature.geometry.coordinates.map(([x, y]) => {
-        const dx = x - ox;
-        const dy = y - oy;
-        return [ox + dx * scale, oy + dy * scale] as Position;
-      });
-
-      state.updateFeature(id, {
-        geometry: {
-          ...feature.geometry,
-          coordinates: coords
-        }
-      } as Partial<Annotation>);
-    } else if (isText(feature) || isBox(feature)) {
-      // Scale text/box dimensions and position around origin
-      const [cx, cy] = feature.geometry.coordinates;
-      const dx = cx - ox;
-      const dy = cy - oy;
-      const newCx = ox + dx * scale;
-      const newCy = oy + dy * scale;
-
-      const newWidth = (feature.properties as Box["properties"]).width * scale;
-      const newHeight =
-        (feature.properties as Box["properties"]).height * scale;
-
-      state.updateFeature(id, {
-        properties: {
-          ...feature.properties,
-          width: newWidth,
-          height: newHeight
-        },
-        geometry: {
-          ...feature.geometry,
-          coordinates: [newCx, newCy]
-        }
-      } as Partial<Annotation>);
-    }
-
+    this.updateManager.setScale(id, scale, ox, oy);
     return this;
   }
 
-  toggleComment(id: Id): this {
-    const feature = this.store.getState().getFeature(id);
-    if (!feature || !isComment(feature)) return this;
-    const comment = feature as Comment;
-    this.store.getState().updateFeature(id, {
-      properties: {
-        ...comment.properties,
-        mode: comment.properties.mode === "collapsed" ? "expanded" : "collapsed"
-      }
-    } as Partial<Comment>);
+  /**
+   * Toggle a comment between collapsed and expanded mode
+   * @param id The id of the comment to toggle
+   * @returns this for chaining
+   */
+  public toggleComment(id: Id): this {
+    this.commentManager.toggleComment(id);
     return this;
   }
 
@@ -976,20 +735,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     id: Id,
     style: A["properties"]["style"]
   ): this {
-    const feature = this.store.getState().getFeature(id);
-    if (!feature) return this;
-
-    this.store.getState().updateFeature(id, {
-      id,
-      properties: {
-        ...feature.properties,
-        style: {
-          ...feature.properties.style,
-          ...style
-        }
-      }
-    } as A);
-
+    this.updateManager.updateStyle<A>(id, style);
     return this;
   }
 
@@ -1039,36 +785,32 @@ export class Control extends EventEmitter<FeatureEvents> {
   public update<A extends Annotation>(
     annotation: DeepPartial<A> & { id: Id }
   ): this {
-    const state = this.store.getState();
-    const feature = state.getFeature(annotation.id);
-    if (!feature) return this;
-
-    state.updateFeature(annotation.id, {
-      ...feature,
-      ...annotation,
-      properties: {
-        ...feature.properties,
-        ...annotation.properties,
-        style: {
-          ...feature.properties.style,
-          ...annotation.properties?.style
-        }
-      },
-      geometry: {
-        ...feature.geometry,
-        ...annotation.geometry
-      }
-    } as Annotation);
+    this.updateManager.update(annotation);
     return this;
   }
 
-  public linkToNode(arrowId: Id, nodeId: Id, side: Side = SIDE_END): this {
+  /**
+   * Attach an arrow to a node at the specified side
+   * @param arrowId
+   * @param targetNode
+   * @param side
+   */
+  public link(arrowId: Id, targetNode: Node, side: Side): this;
+  /**
+   * Attach an arrow to an annotation at the specified side
+   * @param arrowId
+   * @param target
+   * @param side
+   */
+  public link(arrowId: Id, target: Id, side: Side): this;
+  public link(arrowId: Id, target: Id | Node, side: Side = SIDE_END): this {
     const arrow = this.getAnnotation<Arrow>(arrowId);
     if (!arrow) throw new Error(`Arrow with id ${arrowId} not found`);
-    this.links.add(arrow, side, nodeId, TARGET_TYPES.NODE, {
-      x: 0,
-      y: 0
-    });
+    this.editor.getArrowHandler().link(arrow, target, side);
     return this;
+  }
+
+  public isDrawing(): boolean {
+    return this.drawing.isDrawing();
   }
 }

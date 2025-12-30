@@ -1,6 +1,10 @@
-import Ogma, { Point } from "@linkurious/ogma";
+import Ogma, { Node, Point } from "@linkurious/ogma";
 import { Handler } from "./base";
-import { canDetachArrowEnd, canDetachArrowStart } from "./commentHelpers";
+import {
+  canDetachArrowEnd,
+  canDetachArrowStart,
+  isCommentArrow
+} from "./commentHelpers";
 import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";
 import {
@@ -16,8 +20,18 @@ import {
   ClientMouseEvent,
   Id,
   Side,
-  detectArrow
+  Text,
+  detectArrow,
+  isBox,
+  isPolygon,
+  isText
 } from "../types";
+import {
+  getArrowSide,
+  getBoxCenter,
+  getPolygonCenter,
+  setArrowEndPoint
+} from "../utils/utils";
 
 enum HandleType {
   START = "start",
@@ -156,6 +170,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     const annotation = this.getAnnotation()!;
     const handle = this.hoveredHandle!;
     if (
+      (handle.type === HandleType.BODY && isCommentArrow(annotation)) ||
       (handle.type === HandleType.END && !canDetachArrowEnd(annotation)) ||
       (handle.type === HandleType.START && !canDetachArrowStart(annotation))
     ) {
@@ -245,5 +260,55 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     // Start live update
     this.onDragStart({ clientX, clientY });
+  }
+
+  public link(arrow: Arrow, target: Id | Node, side: Side) {
+    let extremity = getArrowSide(arrow, side);
+    const link = arrow.properties.link || {};
+    let snap: Snap | null = null;
+    if (target instanceof Node) {
+      // move the extremity to the node position
+      extremity = target.getPosition();
+      // find the snapping point to use
+      snap = this.snapping.snapToNodes(extremity, target.toList());
+    } else {
+      const other = this.store.getState().getFeature(target);
+      if (!other) {
+        throw new Error(`Annotation with id ${target} not found`);
+      }
+      if (isText(other) || isBox(other)) {
+        // move the extremity to the box/text center position
+        extremity = getBoxCenter(other);
+        // find snapping point to use
+        snap = this.snapping.snapToText(extremity, [other as Text]);
+      } else if (isPolygon(other)) {
+        // move the extremity to the polygon center position
+        extremity = getPolygonCenter(other);
+        // find snapping point to use
+        snap = this.snapping.snapToPolygon(extremity, [other]);
+        // find snapping point to use
+      } else {
+        throw new Error(
+          `Cannot link arrow to annotation of type ${other.properties.type}`
+        );
+      }
+    }
+    if (snap) {
+      link[side] = {
+        side,
+        id: snap.id,
+        type: snap.type,
+        magnet: snap.magnet
+      };
+      this.links.add(arrow, side, snap.id, snap.type, snap.magnet);
+      setArrowEndPoint(arrow, side, extremity.x, extremity.y);
+      this.store.getState().updateFeature(arrow.id, {
+        properties: { ...arrow.properties, link },
+        geometry: {
+          type: arrow.geometry.type,
+          coordinates: arrow.geometry.coordinates
+        }
+      });
+    }
   }
 }

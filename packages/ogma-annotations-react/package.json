@@ -20,7 +20,11 @@
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
-    "./umd": "./dist/index.js",
+    "./umd": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
     "./esm": "./dist/index.mjs"
   },
   "scripts": {
@@ -94,5 +98,8 @@
         }
       ]
     }
+  },
+  "dependencies": {
+    "react-day-picker": "9.13.0"
   }
 }

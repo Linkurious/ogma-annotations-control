@@ -143,7 +143,7 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private snapToText(point: Point, texts: Text[]): TextSnap | null {
+  public snapToText(point: Point, texts: Text[]): TextSnap | null {
     const { zoom } = this.store.getState();
     for (const text of texts) {
       const snap =
@@ -154,7 +154,7 @@ export class Snapping extends EventTarget {
     return null;
   }
 
-  private snapToPolygon(point: Point, polygons: Polygon[]): PolygonSnap | null {
+  public snapToPolygon(point: Point, polygons: Polygon[]): PolygonSnap | null {
     const magnetRadius = this.options.magnetRadius;
     const tension = 0.5; // Same as renderer
 

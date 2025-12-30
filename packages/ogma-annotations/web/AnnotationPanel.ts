@@ -1,4 +1,7 @@
-import { RgbaColor, RgbaColorPicker } from "vanilla-colorful/rgba-color-picker.js";
+import {
+  RgbaColor,
+  RgbaColorPicker
+} from "vanilla-colorful/rgba-color-picker.js";
 import {
   Control,
   Annotation,
@@ -26,7 +29,10 @@ interface AnnotationPanelOptions {
 const BACKGROUNDS = [
   { value: "#f5f5f5", style: "--circle-color: #f5f5f5;" },
   { value: "#EDE6FF", style: "--circle-color: #EDE6FF;" },
-  { value: "transparent", style: "--circle-color: white; border: 2px dashed #ccc;" }
+  {
+    value: "transparent",
+    style: "--circle-color: white; border: 2px dashed #ccc;"
+  }
 ];
 
 const FONTS = [
@@ -69,10 +75,16 @@ export class AnnotationPanel {
     this.control.on("select", (sel) => {
       if (sel.ids.length === 1) {
         const ann = this.control.getAnnotation(sel.ids[0]);
-        if (ann) {
+        if (!ann) return;
+        const showPanel = () => {
           this.setAnnotation(ann);
           this.show();
-        }
+        };
+        if (this.control.isDrawing()) {
+          this.control
+            .once("cancelDrawing", showPanel)
+            .once("completeDrawing", showPanel);
+        } else showPanel();
       } else this.hide();
     });
 
@@ -90,7 +102,9 @@ export class AnnotationPanel {
       ) {
         this.closeColorPicker();
       }
-      this.panelBody.querySelectorAll(".custom-select").forEach((s) => s.classList.remove("open"));
+      this.panelBody
+        .querySelectorAll(".custom-select")
+        .forEach((s) => s.classList.remove("open"));
     });
   }
 
@@ -111,14 +125,19 @@ export class AnnotationPanel {
 
   private renderArrow(arrow: Arrow) {
     const s = arrow.properties.style || {};
-    this.updateColorFromAnnotation(s.strokeColor || defaultArrowStyle.strokeColor!);
+    this.updateColorFromAnnotation(
+      s.strokeColor || defaultArrowStyle.strokeColor!
+    );
 
     this.panelBody.innerHTML = `
       ${this.section("Color", this.colorSelector())}
-      ${this.section("Extremities", `<div class="custom-select-section">
+      ${this.section(
+        "Extremities",
+        `<div class="custom-select-section">
         ${this.extremitySelector("head", arrow)}
         ${this.extremitySelector("tail", arrow)}
-      </div>`)}
+      </div>`
+      )}
       ${this.slider("Stroke width", "line-width", s.strokeWidth || defaultArrowStyle.strokeWidth!, 1, 20)}
       ${this.lineTypeButtons(s.strokeType || "plain")}
     `;
@@ -130,8 +149,12 @@ export class AnnotationPanel {
     const s = text.properties.style || {};
     this.updateColorFromAnnotation(s.color || defaultTextStyle.color!);
 
-    const fontSize = typeof s.fontSize === "number" ? s.fontSize :
-                     typeof defaultTextStyle.fontSize === "number" ? defaultTextStyle.fontSize : 18;
+    const fontSize =
+      typeof s.fontSize === "number"
+        ? s.fontSize
+        : typeof defaultTextStyle.fontSize === "number"
+          ? defaultTextStyle.fontSize
+          : 18;
 
     this.panelBody.innerHTML = `
       ${this.section("Color", this.colorSelector())}
@@ -165,31 +188,46 @@ export class AnnotationPanel {
   }
 
   private colorSelector() {
-    return `<div class="color-selector">${this.recentColors.map((c, i) => `
+    return `<div class="color-selector">${this.recentColors
+      .map(
+        (c, i) => `
       <button class="color-circle ${i === 0 ? "color-circle-primary" : ""}" data-index="${i}" data-color="${c}">
         <div class="color-inner"></div>
       </button>
-    `).join("")}</div>`;
+    `
+      )
+      .join("")}</div>`;
   }
 
   private backgroundSelector(current: string) {
-    return `<div class="color-selector">${BACKGROUNDS.map(({ value, style }) => `
+    return `<div class="color-selector">${BACKGROUNDS.map(
+      ({ value, style }) => `
       <button class="color-circle ${value === current ? "color-circle-primary" : ""}" data-background-color="${value}">
         <div class="color-inner" style="${style}"></div>
       </button>
-    `).join("")}</div>`;
+    `
+    ).join("")}</div>`;
   }
 
   private fontSelector(current: string) {
     const selected = FONTS.find((f) => f.value === current) || FONTS[0];
-    return this.dropdown("font", selected, FONTS.map((f) => ({ ...f, selected: f.value === current })));
+    return this.dropdown(
+      "font",
+      selected,
+      FONTS.map((f) => ({ ...f, selected: f.value === current }))
+    );
   }
 
   private extremitySelector(side: "head" | "tail", arrow: Arrow) {
     const ext = arrow.properties.style?.[side] || "none";
     const opts = EXTREMITY_OPTIONS.map((o) => ({
       ...o,
-      icon: o.value === "arrow" && side === "tail" ? "icon-arrow-left" : o.value === "arrow" ? "icon-arrow-right" : o.icon,
+      icon:
+        o.value === "arrow" && side === "tail"
+          ? "icon-arrow-left"
+          : o.value === "arrow"
+            ? "icon-arrow-right"
+            : o.icon,
       selected: o.value === ext,
       rotate: o.value === "arrow-plain" && side === "tail"
     }));
@@ -200,7 +238,13 @@ export class AnnotationPanel {
   private dropdown(
     type: string,
     selected: { icon: string; label: string; rotate?: boolean },
-    options: Array<{ value: string; label: string; icon: string; selected?: boolean; rotate?: boolean }>,
+    options: Array<{
+      value: string;
+      label: string;
+      icon: string;
+      selected?: boolean;
+      rotate?: boolean;
+    }>,
     extra = ""
   ) {
     return `<div class="custom-select" data-type="${type}" ${extra}>
@@ -209,94 +253,132 @@ export class AnnotationPanel {
         <span>${selected.label}</span>
         <i class="icon-chevron-down custom-select-arrow"></i>
       </div>
-      <div class="custom-select-options">${options.map((o) => `
+      <div class="custom-select-options">${options
+        .map(
+          (o) => `
         <div class="custom-select-option ${o.selected ? "selected" : ""}" data-value="${o.value}" title="${o.label}">
           <i class="${o.icon}" ${o.rotate ? 'style="transform: rotate(180deg)"' : ""}></i>
           <span>${o.label}</span>
         </div>
-      `).join("")}</div>
+      `
+        )
+        .join("")}</div>
     </div>`;
   }
 
-  private slider(title: string, id: string, value: number, min: number, max: number) {
-    return `${this.section(title, `<div class="slider-section">
+  private slider(
+    title: string,
+    id: string,
+    value: number,
+    min: number,
+    max: number
+  ) {
+    return `${this.section(
+      title,
+      `<div class="slider-section">
       <input type="range" id="${id}-slider" class="slider" min="${min}" max="${max}" value="${value}">
       <div class="slider-value"><span id="${id}-value">${value}</span></div>
-    </div>`)}`;
+    </div>`
+    )}`;
   }
 
   private lineTypeButtons(current: string) {
-    return `${this.section("Line type", `<div class="linetype-section">${LINE_TYPES.map(({ value, icon }) => `
+    return `${this.section(
+      "Line type",
+      `<div class="linetype-section">${LINE_TYPES.map(
+        ({ value, icon }) => `
       <button class="linetype-button ${current === value ? "active" : ""}" data-linetype="${value}" title="${value}">
         <i class="${icon}"></i>
       </button>
-    `).join("")}</div>`)}`;
+    `
+      ).join("")}</div>`
+    )}`;
   }
 
   // Event binding - unified for all modes
   private bind() {
     // Color circles
-    this.colorCircles = Array.from(this.panelBody.querySelectorAll<HTMLButtonElement>("[data-index]"));
+    this.colorCircles = Array.from(
+      this.panelBody.querySelectorAll<HTMLButtonElement>("[data-index]")
+    );
     this.colorCircles.forEach((circle, i) => {
       circle.addEventListener("click", (e) => {
         e.stopPropagation();
-        const wasActive = this.activeColorIndex === i && circle.classList.contains("color-circle-primary");
+        const wasActive =
+          this.activeColorIndex === i &&
+          circle.classList.contains("color-circle-primary");
         this.activeColorIndex = i;
         this.currentColor = this.recentColors[i];
         this.updateColorCircles();
 
         if (wasActive) this.toggleColorPicker(circle);
-        else if (this.mode === "arrow") this.updateStyle({ strokeColor: this.currentColor });
-        else if (this.mode === "text") this.updateStyle({ strokeColor: this.currentColor });
+        else if (this.mode === "arrow")
+          this.updateStyle({ strokeColor: this.currentColor });
+        else if (this.mode === "text")
+          this.updateStyle({ strokeColor: this.currentColor });
       });
     });
     this.updateColorCircles();
 
     // Background circles
-    this.panelBody.querySelectorAll<HTMLButtonElement>("[data-background-color]").forEach((c) => {
-      c.addEventListener("click", () => this.updateStyle({ background: c.dataset.backgroundColor! }));
-    });
+    this.panelBody
+      .querySelectorAll<HTMLButtonElement>("[data-background-color]")
+      .forEach((c) => {
+        c.addEventListener("click", () =>
+          this.updateStyle({ background: c.dataset.backgroundColor! })
+        );
+      });
 
     // Dropdowns (font & extremities)
-    this.panelBody.querySelectorAll<HTMLElement>(".custom-select").forEach((sel) => {
-      const trigger = sel.querySelector<HTMLElement>(".custom-select-trigger")!;
-      const options = sel.querySelectorAll<HTMLElement>(".custom-select-option");
+    this.panelBody
+      .querySelectorAll<HTMLElement>(".custom-select")
+      .forEach((sel) => {
+        const trigger = sel.querySelector<HTMLElement>(
+          ".custom-select-trigger"
+        )!;
+        const options = sel.querySelectorAll<HTMLElement>(
+          ".custom-select-option"
+        );
 
-      trigger.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.panelBody.querySelectorAll(".custom-select").forEach((s) => {
-          if (s !== sel) s.classList.remove("open");
-        });
-        sel.classList.toggle("open");
-      });
-
-      options.forEach((opt) => {
-        opt.addEventListener("click", (e) => {
+        trigger.addEventListener("click", (e) => {
           e.stopPropagation();
-          const value = opt.dataset.value!;
+          this.panelBody.querySelectorAll(".custom-select").forEach((s) => {
+            if (s !== sel) s.classList.remove("open");
+          });
+          sel.classList.toggle("open");
+        });
 
-          options.forEach((o) => o.classList.remove("selected"));
-          opt.classList.add("selected");
+        options.forEach((opt) => {
+          opt.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const value = opt.dataset.value!;
 
-          const icon = opt.querySelector("i")!.className;
-          const label = opt.querySelector("span")!.textContent;
-          trigger.querySelector("i")!.className = icon;
-          trigger.querySelector("span")!.textContent = label;
-          sel.classList.remove("open");
+            options.forEach((o) => o.classList.remove("selected"));
+            opt.classList.add("selected");
 
-          const type = sel.dataset.type;
-          const end = sel.dataset.end;
+            const icon = opt.querySelector("i")!.className;
+            const label = opt.querySelector("span")!.textContent;
+            trigger.querySelector("i")!.className = icon;
+            trigger.querySelector("span")!.textContent = label;
+            sel.classList.remove("open");
 
-          if (type === "font") this.updateStyle({ font: value });
-          else if (end === "head") this.updateStyle({ head: value as Extremity });
-          else if (end === "tail") this.updateStyle({ tail: value as Extremity });
+            const type = sel.dataset.type;
+            const end = sel.dataset.end;
+
+            if (type === "font") this.updateStyle({ font: value });
+            else if (end === "head")
+              this.updateStyle({ head: value as Extremity });
+            else if (end === "tail")
+              this.updateStyle({ tail: value as Extremity });
+          });
         });
       });
-    });
 
     // Sliders
     ["line-width", "font-size"].forEach((id) => {
-      const slider = this.panelBody.querySelector<HTMLInputElement>(`#${id}-slider`);
+      const slider = this.panelBody.querySelector<HTMLInputElement>(
+        `#${id}-slider`
+      );
       const display = this.panelBody.querySelector(`#${id}-value`);
       if (slider && display) {
         slider.addEventListener("input", () => {
@@ -317,14 +399,18 @@ export class AnnotationPanel {
     });
 
     // Line type buttons
-    this.panelBody.querySelectorAll<HTMLButtonElement>(".linetype-button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const type = btn.dataset.linetype as "plain" | "dashed";
-        this.panelBody.querySelectorAll(".linetype-button").forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        this.updateStyle({ strokeType: type });
+    this.panelBody
+      .querySelectorAll<HTMLButtonElement>(".linetype-button")
+      .forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const type = btn.dataset.linetype as "plain" | "dashed";
+          this.panelBody
+            .querySelectorAll(".linetype-button")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          this.updateStyle({ strokeType: type });
+        });
       });
-    });
   }
 
   // Color management
@@ -343,7 +429,10 @@ export class AnnotationPanel {
     this.colorCircles.forEach((circle, i) => {
       circle.setAttribute("data-color", this.recentColors[i]);
       circle.style.setProperty("--circle-color", this.recentColors[i]);
-      circle.classList.toggle("color-circle-primary", i === this.activeColorIndex);
+      circle.classList.toggle(
+        "color-circle-primary",
+        i === this.activeColorIndex
+      );
     });
   }
 
@@ -370,9 +459,12 @@ export class AnnotationPanel {
       this.recentColors[this.activeColorIndex] = this.currentColor;
       this.updateColorCircles();
 
-      if (this.mode === "arrow") this.updateStyle({ strokeColor: this.currentColor });
-      else if (this.mode === "text") this.updateStyle({ color: this.currentColor });
-      else if (this.mode === "polygon") this.updateStyle({ strokeColor: this.currentColor });
+      if (this.mode === "arrow")
+        this.updateStyle({ strokeColor: this.currentColor });
+      else if (this.mode === "text")
+        this.updateStyle({ color: this.currentColor });
+      else if (this.mode === "polygon")
+        this.updateStyle({ strokeColor: this.currentColor });
     });
   }
 

@@ -67,7 +67,6 @@ export const TARGET_TYPES = {
   BOX: "box" as const,
   COMMENT: "comment" as const,
   POLYGON: "polygon" as const,
-  COORDINATE: "coordinate" as const,
   ANNOTATION: "annotation" as const
 };
 

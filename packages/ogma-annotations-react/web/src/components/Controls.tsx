@@ -5,11 +5,12 @@ import {
   isArrow,
   isText
 } from "@linkurious/ogma-annotations";
-// eslint-disable-next-line import/no-unresolved
-import "@linkurious/ogma-annotations/style.css";
+//import "@linkurious/ogma-annotations/style.css";
 import { Layer, useOgma } from "@linkurious/ogma-react";
 import React from "react";
-import "./Controls.css";
+import "@linkurious/ogma-annotations/style.css";
+
+import "react-day-picker/style.css";
 
 import { AddMenu } from "./AddMenu";
 import { ArrowSettings } from "./ArrowSettings";

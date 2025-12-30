@@ -22,10 +22,23 @@
       "default": "./dist/index.mjs"
     },
     "./style.css": {
-      "import": "./dist/ogma-annotations.css",
-      "require": "./dist/ogma-annotations.css"
+      "style": {
+        "default": "./src/style.css"
+      },
+      "import": {
+        "types": "./src/style.d.ts",
+        "default": "./src/style.css"
+      },
+      "require": {
+        "types": "./src/style.d.ts",
+        "default": "./src/style.css"
+      }
     },
-    "./umd": "./dist/index.js",
+    "./umd": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
     "./esm": "./dist/index.mjs"
   },
   "scripts": {
