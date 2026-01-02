@@ -29,6 +29,8 @@ type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
+const COMMIT_DEBOUNCE_MS = 20;
+
 /**
  * Class that implements linking between annotation arrows and different items.
  * An arrow can be connected to a text or to a node. It supports double indexing
@@ -46,6 +48,7 @@ export class Links {
   private ogma: Ogma;
   private updatedItems = new Set<Id>();
   private onLinkCreated?: (arrow: Arrow, link: Link) => void;
+  private commitTimeout: ReturnType<typeof setTimeout> = 0;
 
   constructor(
     ogma: Ogma,
@@ -313,11 +316,11 @@ export class Links {
           x: snapPoint[0] - positionAndRadius.x,
           y: snapPoint[1] - positionAndRadius.y
         };
-        updateBbox(arrow);
+        updateBbox(updates[arrowId] as Arrow);
       }
     }
     state.applyLiveUpdates(updates);
-    this.commit();
+    this.requestCommit();
   }
 
   private commit = () => {
@@ -401,14 +404,22 @@ export class Links {
         }
       }
       updates[arrow.id] = {
+        properties: arrow.properties,
         geometry: {
           coordinates: [startPoint, endPoint]
         }
       };
+      updateBbox(updates[arrow.id] as Arrow);
       this.updatedItems.add(arrow.id);
     });
+
     state.applyLiveUpdates(updates);
-    this.commit();
+    this.requestCommit();
+  }
+
+  private requestCommit() {
+    clearTimeout(this.commitTimeout);
+    this.commitTimeout = setTimeout(this.commit, COMMIT_DEBOUNCE_MS);
   }
 
   private onAddArrow = (

@@ -48,7 +48,7 @@ export class CommentManager {
 
         // Only update if mode needs to change
         if (comment.properties.mode !== targetMode) {
-          // Use live updates to avoid history
+          //Use live updates to avoid history
           state.applyLiveUpdate(comment.id, {
             properties: {
               ...comment.properties,
