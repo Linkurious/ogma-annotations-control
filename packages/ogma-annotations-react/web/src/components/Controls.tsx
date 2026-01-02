@@ -9,6 +9,7 @@ import "@linkurious/ogma-annotations/style.css";
 import "./Controls.css";
 
 import { AddMenu } from "./AddMenu";
+import { JsonExportPopup } from "./JsonExportPopup";
 import { SvgExportPopup } from "./SvgExportPopup";
 import { ViewControls } from "./ViewControls";
 
@@ -60,26 +61,30 @@ export const Controls = ({
   defaultArrowStyle: defaultArrowStyleProp = {},
   defaultTextStyle: defaultTextStyleProp = {}
 }: ControlProps) => {
-  const { annotations } = useAnnotationsContext();
+  const { annotations, editor } = useAnnotationsContext();
   const ogma = useOgma();
 
   // SVG Export popup state
-  const [isPopupOpen, setIsPopupOpen] = React.useState(false);
+  const [isSvgPopupOpen, setIsSvgPopupOpen] = React.useState(false);
   const [svgContent, setSvgContent] = React.useState("");
+
+  // JSON Export popup state
+  const [isJsonPopupOpen, setIsJsonPopupOpen] = React.useState(false);
+  const [jsonContent, setJsonContent] = React.useState("");
 
   const handleSvgExport = React.useCallback(async () => {
     try {
       const svg = await ogma.export.svg({ clip: true, download: false });
       setSvgContent(svg);
-      setIsPopupOpen(true);
+      setIsSvgPopupOpen(true);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error("Failed to export SVG:", error);
     }
   }, [ogma]);
 
-  const handleClosePopup = React.useCallback(() => {
-    setIsPopupOpen(false);
+  const handleCloseSvgPopup = React.useCallback(() => {
+    setIsSvgPopupOpen(false);
     setSvgContent("");
   }, []);
 
@@ -96,6 +101,40 @@ export const Controls = ({
       URL.revokeObjectURL(url);
     }
   }, [svgContent]);
+
+  // JSON Export handlers
+  const handleJsonExport = React.useCallback(() => {
+    try {
+      const annotations = editor?.getAnnotations();
+      if (annotations) {
+        const jsonString = JSON.stringify(annotations, null, 2);
+        setJsonContent(jsonString);
+        setIsJsonPopupOpen(true);
+      }
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error("Failed to export JSON:", error);
+    }
+  }, [editor]);
+
+  const handleCloseJsonPopup = React.useCallback(() => {
+    setIsJsonPopupOpen(false);
+    setJsonContent("");
+  }, []);
+
+  const handleDownloadJson = React.useCallback(() => {
+    if (jsonContent) {
+      const blob = new Blob([jsonContent], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      document.body.appendChild(a);
+      a.setAttribute("href", url);
+      a.setAttribute("download", "annotations.json");
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+  }, [jsonContent]);
 
   // Center view callback
   const handleCenterView = React.useCallback(async () => {
@@ -135,26 +174,36 @@ export const Controls = ({
       {/* Bottom toolbar */}
       <Layer className="controls" ref={divRefCallback} index={100}>
         <div className="container" onMouseMove={stopEvent} onClick={stopEvent}>
-          <AddMenu onSvgExport={handleSvgExport} />
+          <AddMenu
+            onSvgExport={handleSvgExport}
+            onJsonExport={handleJsonExport}
+          />
         </div>
       </Layer>
-
       {/* Right side vertical toolbar for view controls */}
       <Layer className="view-controls-layer" index={100}>
         <div className="view-controls-container">
           <ViewControls />
         </div>
       </Layer>
-
       {/* SVG Export Popup - rendered at higher z-index */}
       <Layer className="svg-popup-layer" index={1000}>
         <SvgExportPopup
-          isOpen={isPopupOpen}
+          isOpen={isSvgPopupOpen}
           svgContent={svgContent}
-          onClose={handleClosePopup}
+          onClose={handleCloseSvgPopup}
           onDownload={handleDownloadSvg}
         />
       </Layer>
+      {/* JSON Export Popup - rendered at higher z-index */}
+      <Layer className="json-popup-layer" index={1000}>
+        <JsonExportPopup
+          isOpen={isJsonPopupOpen}
+          jsonContent={jsonContent}
+          onClose={handleCloseJsonPopup}
+          onDownload={handleDownloadJson}
+        />
+      </Layer>{" "}
     </>
   );
 };

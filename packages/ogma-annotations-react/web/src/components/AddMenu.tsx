@@ -21,11 +21,12 @@ import "./AddMenu.css";
 
 interface AddMenuProps {
   onSvgExport: () => void;
+  onJsonExport: () => void;
 }
 
 type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
 
-export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
+export const AddMenu = ({ onSvgExport, onJsonExport }: AddMenuProps) => {
   const { editor, canUndo, canRedo, undo, redo, remove } =
     useAnnotationsContext();
   const [activeMode, setActiveMode] = React.useState<DrawingMode>(null);
@@ -119,18 +120,6 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
     }
   }, [editor, remove]);
 
-  function save() {
-    // download the file
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(
-      new Blob([JSON.stringify(editor.getAnnotations(), null, 2)], {
-        type: "text/plain"
-      })
-    );
-    a.download = "annotations.json";
-    a.click();
-  }
-
   const stopEvent = React.useCallback((evt: React.MouseEvent) => {
     evt.stopPropagation();
     evt.preventDefault();
@@ -186,7 +175,7 @@ export const AddMenu = ({ onSvgExport }: AddMenuProps) => {
         <Trash width={buttonSize} height={buttonSize} />
       </button>
       <span className="separator"></span>
-      <button data-tooltip="Export annotations" onClick={() => save()}>
+      <button data-tooltip="Export annotations" onClick={onJsonExport}>
         <Download width={buttonSize} height={buttonSize} />
       </button>
       <button data-tooltip="Export SVG" onClick={onSvgExport}>
