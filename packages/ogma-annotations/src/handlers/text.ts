@@ -406,7 +406,10 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   protected onClick(_evt: ClientMouseEvent) {
-    if (isText(this.getAnnotation()!)) this.startEditingText();
+    const annotation = this.getAnnotation();
+    if (annotation && (isText(annotation) || isComment(annotation))) {
+      this.startEditingText();
+    }
   }
 
   public startEditingText() {

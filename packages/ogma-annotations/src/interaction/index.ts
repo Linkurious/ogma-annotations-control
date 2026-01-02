@@ -23,7 +23,10 @@ import { clientToContainerPosition } from "../utils/utils";
 function isOgmaContainerElement(
   element: EventTarget | null
 ): element is HTMLElement {
-  return element instanceof HTMLCanvasElement;
+  return (
+    element instanceof HTMLCanvasElement ||
+    element instanceof HTMLTextAreaElement
+  );
 }
 
 export class InteractionController extends EventTarget {
@@ -232,6 +235,7 @@ export class InteractionController extends EventTarget {
 
   private onMouseUp = (evt: MouseEvent) => {
     if (!isOgmaContainerElement(evt.target)) return;
+
     const state = this.store.getState();
 
     // Clear global mouse press state
