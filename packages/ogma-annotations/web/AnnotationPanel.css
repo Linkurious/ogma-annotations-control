@@ -8,7 +8,6 @@
   background: white;
   z-index: 100;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
-  padding: 5px 10px;
   border-radius: 10px;
 }
 
@@ -32,8 +31,6 @@
 .color-selector {
   display: flex;
   gap: 12px;
-  margin-bottom: 20px;
-  padding-left: 20px;
 }
 
 .color-circle {
@@ -95,7 +92,7 @@
   justify-content: center;
   gap: 12px;
   padding: 12px 0;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .toggle-label {
@@ -152,8 +149,7 @@ input:checked + .toggle-slider:before {
 
 /* Section Headers */
 .section-header {
-  margin-top: 20px;
-  margin-bottom: 15px;
+  margin-top: 10px;
 }
 
 .section-header h3 {
@@ -272,7 +268,6 @@ input:checked + .toggle-slider:before {
 
 /* Custom Select Section */
 .custom-select-section {
-  padding: 10px 0;
   display: flex;
   gap: 8px;
 }
