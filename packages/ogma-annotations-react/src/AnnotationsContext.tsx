@@ -25,7 +25,7 @@ import { AnnotationsContext, IAnnotationsContext } from "./types";
 import { mean } from "./utils";
 
 interface Props {
-  children: ReactElement;
+  children: ReactElement | ReactElement[];
   annotations?: AnnotationCollection;
 }
 

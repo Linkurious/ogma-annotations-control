@@ -1,10 +1,5 @@
 import type { Layer as LayerType } from "@linkurious/ogma";
-import {
-  ArrowStyles,
-  TextStyle,
-  isArrow,
-  isText
-} from "@linkurious/ogma-annotations";
+import { ArrowStyles, TextStyle } from "@linkurious/ogma-annotations";
 //import "@linkurious/ogma-annotations/style.css";
 import { Layer, useOgma } from "@linkurious/ogma-react";
 import React from "react";
@@ -14,9 +9,7 @@ import "@linkurious/ogma-annotations/style.css";
 import "./Controls.css";
 
 import { AddMenu } from "./AddMenu";
-import { ArrowSettings } from "./ArrowSettings";
 import { SvgExportPopup } from "./SvgExportPopup";
-import { TextSettings } from "./TextSettings";
 import { ViewControls } from "./ViewControls";
 
 import {
@@ -64,12 +57,10 @@ interface ControlProps {
 }
 
 export const Controls = ({
-  minThickness,
-  maxThickness,
   defaultArrowStyle: defaultArrowStyleProp = {},
   defaultTextStyle: defaultTextStyleProp = {}
 }: ControlProps) => {
-  const { currentAnnotation, annotations } = useAnnotationsContext();
+  const { annotations } = useAnnotationsContext();
   const ogma = useOgma();
 
   // SVG Export popup state
@@ -154,25 +145,6 @@ export const Controls = ({
           <ViewControls />
         </div>
       </Layer>
-
-      {/* Right side panel for settings */}
-      {currentAnnotation && (
-        <Layer className="side-panel" index={100}>
-          <div
-            className="side-panel-container"
-            onMouseDown={stopEvent}
-            onClick={stopEvent}
-          >
-            {isArrow(currentAnnotation) && (
-              <ArrowSettings
-                minThickness={minThickness}
-                maxThickness={maxThickness}
-              />
-            )}
-            {isText(currentAnnotation) && <TextSettings />}
-          </div>
-        </Layer>
-      )}
 
       {/* SVG Export Popup - rendered at higher z-index */}
       <Layer className="svg-popup-layer" index={1000}>

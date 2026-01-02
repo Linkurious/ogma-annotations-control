@@ -279,26 +279,57 @@ class App {
 
   private setupExportControl() {
     this.buttons.export.addEventListener("click", () => {
+      const popup = document.getElementById("json-popup")!;
+      const jsonPreview = document.getElementById("json-preview")!;
+      const closeBtn = popup.querySelector(".popup-close")!;
+      const downloadBtn = popup.querySelector(".popup-button")!;
+
       const annotations = this.control.getAnnotations();
       const dataStr =
         "data:text/json;charset=utf-8," +
         encodeURIComponent(JSON.stringify(annotations, null, 2));
-      const dl = document.createElement("a")!;
-      document.body.appendChild(dl);
-      dl.setAttribute("href", dataStr);
-      dl.setAttribute("download", "annotations.json");
-      dl.click();
-      dl.remove();
+      const url = dataStr;
 
-      console.log("Exported annotations:", annotations);
+      // Display JSON in popup
+      jsonPreview.textContent = JSON.stringify(annotations, null, 2);
+
+      // Show popup
+      popup.style.display = "flex";
+
+      // Close popup when clicking close button
+      closeBtn.addEventListener("click", () => {
+        popup.style.display = "none";
+        jsonPreview.textContent = "";
+      });
+
+      // Close popup when clicking backdrop
+      popup.addEventListener("click", (e) => {
+        if (e.target === popup) {
+          popup.style.display = "none";
+          jsonPreview.textContent = "";
+        }
+      });
+
+      console.log("Exported JSON", downloadBtn);
+      // Download JSON when clicking download button
+      downloadBtn.addEventListener("click", () => {
+        const dl = document.createElement("a")!;
+        document.body.appendChild(dl);
+        dl.setAttribute("href", url);
+        dl.setAttribute("download", "annotations.json");
+        dl.click();
+        dl.remove();
+
+        console.log("Downloaded JSON");
+      });
     });
   }
 
   private setupSvgExportControl() {
     const popup = document.getElementById("svg-popup")!;
     const svgPreview = document.getElementById("svg-preview")!;
-    const closeBtn = document.getElementById("popup-close")!;
-    const downloadBtn = document.getElementById("popup-download")!;
+    const closeBtn = popup.querySelector(".popup-close")!;
+    const downloadBtn = popup.querySelector(".popup-button")!;
 
     let currentSvg = "";
 

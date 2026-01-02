@@ -19,6 +19,13 @@ import {
 import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 
+// Type guard to check if event target is the Ogma container element
+function isOgmaContainerElement(
+  element: EventTarget | null
+): element is HTMLElement {
+  return element instanceof HTMLCanvasElement;
+}
+
 export class InteractionController extends EventTarget {
   private query = {
     minX: Infinity,
@@ -138,6 +145,7 @@ export class InteractionController extends EventTarget {
   }
 
   private onMouseMove = (evt: MouseEvent) => {
+    if (!isOgmaContainerElement(evt.target)) return;
     const screenPoint = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
@@ -182,7 +190,11 @@ export class InteractionController extends EventTarget {
   };
 
   private onMouseDown = (evt: MouseEvent) => {
-    if (Date.now() < this.suppressClickUntil) return;
+    if (
+      !isOgmaContainerElement(evt.target) ||
+      Date.now() < this.suppressClickUntil
+    )
+      return;
 
     const screenPoint = clientToContainerPosition(
       evt,
@@ -219,6 +231,7 @@ export class InteractionController extends EventTarget {
   };
 
   private onMouseUp = (evt: MouseEvent) => {
+    if (!isOgmaContainerElement(evt.target)) return;
     const state = this.store.getState();
 
     // Clear global mouse press state

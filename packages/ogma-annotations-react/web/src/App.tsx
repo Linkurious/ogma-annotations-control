@@ -3,6 +3,7 @@ import { AnnotationCollection } from "@linkurious/ogma-annotations";
 import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
 import React from "react";
 import { Controls } from "./components/Controls";
+import { AnnotationPanelController } from "./components/AnnotationPanelController";
 import { AnnotationsContextProvider } from "../../src";
 
 import "./App.css";
@@ -80,6 +81,7 @@ export default function App() {
               padding: 12
             }}
           />
+          <AnnotationPanelController />
         </AnnotationsContextProvider>
       </Ogma>
     </div>

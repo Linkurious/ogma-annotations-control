@@ -276,7 +276,7 @@ body {
 
 .popup-body {
   padding: 20px;
-  overflow: hidden;
+  overflow: auto;
   flex: 1;
   display: flex;
 }
