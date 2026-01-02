@@ -8,6 +8,7 @@ import {
 //import "@linkurious/ogma-annotations/style.css";
 import { Layer, useOgma } from "@linkurious/ogma-react";
 import React from "react";
+// eslint-disable-next-line import/no-unresolved
 import "@linkurious/ogma-annotations/style.css";
 
 import "./Controls.css";
