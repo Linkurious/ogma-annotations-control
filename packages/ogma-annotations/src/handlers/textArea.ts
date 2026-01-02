@@ -91,6 +91,7 @@ export class TextArea {
 
   private getPosition() {
     const annotation = this.getAnnotation();
+    if (!annotation) return { x: 0, y: 0 };
     const corner = getBoxPosition(
       annotation,
       annotation.properties.style?.fixedSize,
@@ -284,6 +285,7 @@ export class TextArea {
   }
 
   public update = () => {
+    if (!this.getAnnotation()) return;
     this.updateStyle();
     this.updatePosition();
     this.layer.setSize(this.getSize());

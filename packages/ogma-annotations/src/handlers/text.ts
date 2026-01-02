@@ -17,7 +17,8 @@ import {
   Text,
   isBox,
   Comment,
-  isComment
+  isComment,
+  isText
 } from "../types";
 import { getBoxCenter, getBoxSize } from "../utils/utils";
 import { dot, subtract } from "../utils/vec";
@@ -405,7 +406,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   protected onClick(_evt: ClientMouseEvent) {
-    this.startEditingText();
+    if (isText(this.getAnnotation()!)) this.startEditingText();
   }
 
   public startEditingText() {

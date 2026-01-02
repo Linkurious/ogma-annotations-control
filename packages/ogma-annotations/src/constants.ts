@@ -5,6 +5,7 @@ export const NONE = -1;
 export const EVT_DRAG = "dragging";
 export const EVT_DRAG_START = "dragstart";
 export const EVT_DRAG_END = "dragend";
+export const EVT_CLICK = "click";
 export const EVT_SELECT = "select";
 export const EVT_UNSELECT = "unselect";
 export const EVT_HOVER = "hover";

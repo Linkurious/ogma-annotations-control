@@ -10,7 +10,7 @@ import { Layer, useOgma } from "@linkurious/ogma-react";
 import React from "react";
 import "@linkurious/ogma-annotations/style.css";
 
-import "react-day-picker/style.css";
+import "./Controls.css";
 
 import { AddMenu } from "./AddMenu";
 import { ArrowSettings } from "./ArrowSettings";

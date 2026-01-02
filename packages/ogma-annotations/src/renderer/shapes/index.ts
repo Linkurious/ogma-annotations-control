@@ -96,8 +96,8 @@ export class Shapes extends Renderer<SVGLayer> {
     const viewportBounds = this.getViewportBounds();
 
     // delete features that are no longer present
-    //const featureIds = new Set(Object.keys(features));
-    //this.removeFeatures(featureIds);
+    const featureIds = new Set(Object.keys(features));
+    this.removeFeatures(featureIds);
 
     for (let feature of Object.values(features)) {
       if (liveUpdates[feature.id]) {
@@ -260,17 +260,17 @@ export class Shapes extends Renderer<SVGLayer> {
     return defs;
   }
 
-  // private removeFeatures(featureIds: Set<Id>) {
-  //   for (const id of this.features.keys()) {
-  //     if (!featureIds.has(id)) {
-  //       const element = this.features.get(id);
-  //       if (element && element.parentNode) {
-  //         element.parentNode.removeChild(element);
-  //       }
-  //       this.features.delete(id);
-  //     }
-  //   }
-  // }
+  private removeFeatures(featureIds: Set<Id>) {
+    for (const id of this.features.keys()) {
+      if (!featureIds.has(id)) {
+        const element = this.features.get(id);
+        if (element && element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+        this.features.delete(id);
+      }
+    }
+  }
 
   private applyStateClasses(
     root: SVGElement,

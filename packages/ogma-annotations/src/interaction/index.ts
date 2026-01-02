@@ -1,6 +1,6 @@
 import { Ogma } from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
-import { cursors } from "../constants";
+import { cursors, EVT_CLICK } from "../constants";
 import { Store } from "../store";
 import {
   Annotation,
@@ -19,7 +19,7 @@ import {
 import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 
-export class InteractionController {
+export class InteractionController extends EventTarget {
   private query = {
     minX: Infinity,
     minY: Infinity,
@@ -43,6 +43,7 @@ export class InteractionController {
     private store: Store,
     private index: Index
   ) {
+    super();
     const container = this.ogma.getContainer();
 
     // use native mousemove event to detect hover,
@@ -245,6 +246,9 @@ export class InteractionController {
         // Clicked empty space - clear selection
         state.clearSelection();
       }
+
+      // Dispatch click event for UI components to respond
+      this.dispatchEvent(new Event(EVT_CLICK));
     }
 
     this.mouseDownState = null;

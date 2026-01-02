@@ -8,7 +8,10 @@ import {
   EVT_UPDATE,
   EVT_CANCEL_DRAWING,
   EVT_HISTORY,
-  EVT_COMPLETE_DRAWING
+  EVT_COMPLETE_DRAWING,
+  EVT_DRAG_START,
+  EVT_DRAG_END,
+  EVT_CLICK
 } from "../constants";
 
 /** Event related to multiple annotation features */
@@ -77,4 +80,16 @@ export type FeatureEvents = {
    * @param evt Contains boolean flags for undo/redo availability
    */
   [EVT_HISTORY]: (evt: HistoryEvent) => void;
+  /**
+   * Event triggered when a drag operation starts on an annotation
+   */
+  [EVT_DRAG_START]: () => void;
+  /**
+   * Event triggered when a drag operation ends on an annotation
+   */
+  [EVT_DRAG_END]: () => void;
+  /**
+   * Event triggered when a click completes on an annotation (mouseup without drag)
+   */
+  [EVT_CLICK]: () => void;
 };

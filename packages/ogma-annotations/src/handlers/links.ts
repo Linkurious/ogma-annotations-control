@@ -29,7 +29,7 @@ type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
-const COMMIT_DEBOUNCE_MS = 20;
+const COMMIT_DEBOUNCE_MS = 1;
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -48,7 +48,7 @@ export class Links {
   private ogma: Ogma;
   private updatedItems = new Set<Id>();
   private onLinkCreated?: (arrow: Arrow, link: Link) => void;
-  private commitTimeout: ReturnType<typeof setTimeout> = 0;
+  private commitTimeout!: ReturnType<typeof setTimeout>;
 
   constructor(
     ogma: Ogma,

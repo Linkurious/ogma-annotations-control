@@ -272,6 +272,7 @@ class App {
 
   private setupDeleteControl() {
     this.buttons.delete.addEventListener("click", () => {
+      console.log(this.control.getSelectedAnnotations());
       this.control.remove(this.control.getSelectedAnnotations());
     });
   }

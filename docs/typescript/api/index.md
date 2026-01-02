@@ -81,6 +81,7 @@
 | [defaultTextStyle](variables/defaultTextStyle.md) | Default style configuration for text annotations. |
 | [EVT\_ADD](variables/EVT_ADD.md) | - |
 | [EVT\_CANCEL\_DRAWING](variables/EVT_CANCEL_DRAWING.md) | - |
+| [EVT\_CLICK](variables/EVT_CLICK.md) | - |
 | [EVT\_COMPLETE\_DRAWING](variables/EVT_COMPLETE_DRAWING.md) | - |
 | [EVT\_DRAG](variables/EVT_DRAG.md) | - |
 | [EVT\_DRAG\_END](variables/EVT_DRAG_END.md) | - |

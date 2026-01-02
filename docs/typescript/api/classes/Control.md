@@ -540,6 +540,80 @@ A FeatureCollection of selected annotations
 
 ***
 
+### isDrawing()
+
+```ts
+isDrawing(): boolean;
+```
+
+#### Returns
+
+`boolean`
+
+***
+
+### link()
+
+#### Call Signature
+
+```ts
+link(
+   arrowId, 
+   targetNode, 
+   side): this;
+```
+
+Attach an arrow to a node at the specified side
+
+##### Parameters
+
+###### arrowId
+
+[`Id`](../type-aliases/Id.md)
+
+###### targetNode
+
+`Node$1`
+
+###### side
+
+[`Side`](../type-aliases/Side.md)
+
+##### Returns
+
+`this`
+
+#### Call Signature
+
+```ts
+link(
+   arrowId, 
+   target, 
+   side): this;
+```
+
+Attach an arrow to an annotation at the specified side
+
+##### Parameters
+
+###### arrowId
+
+[`Id`](../type-aliases/Id.md)
+
+###### target
+
+[`Id`](../type-aliases/Id.md)
+
+###### side
+
+[`Side`](../type-aliases/Side.md)
+
+##### Returns
+
+`this`
+
+***
+
 ### listenerCount()
 
 ```ts
@@ -934,7 +1008,7 @@ this for chaining
 startArrow(
    x, 
    y, 
-   arrow): void;
+   arrow?): Control;
 ```
 
 **Advanced API:** Programmatically start drawing an arrow at specific coordinates.
@@ -964,15 +1038,15 @@ X coordinate for the arrow start
 
 Y coordinate for the arrow start
 
-##### arrow
+##### arrow?
 
-[`Arrow`](../interfaces/Arrow.md) = `...`
+[`Arrow`](../interfaces/Arrow.md)
 
 The arrow annotation to add (optional, will be created if not provided)
 
 #### Returns
 
-`void`
+`Control`
 
 this for chaining
 
@@ -1000,7 +1074,7 @@ enableArrowDrawing for the recommended high-level API
 startBox(
    x, 
    y, 
-   box): void;
+   box?): Control;
 ```
 
 **Advanced API:** Programmatically start drawing a box at specific coordinates.
@@ -1030,15 +1104,15 @@ X coordinate for the box origin
 
 Y coordinate for the box origin
 
-##### box
+##### box?
 
-[`Box`](../interfaces/Box.md) = `...`
+[`Box`](../interfaces/Box.md)
 
 The box annotation to add (optional, will be created if not provided)
 
 #### Returns
 
-`void`
+`Control`
 
 this for chaining
 
@@ -1219,7 +1293,7 @@ enablePolygonDrawing for the recommended high-level API
 startText(
    x, 
    y, 
-   text): void;
+   text?): Control;
 ```
 
 **Advanced API:** Programmatically start drawing a text annotation at specific coordinates.
@@ -1249,15 +1323,15 @@ X coordinate for the text
 
 Y coordinate for the text
 
-##### text
+##### text?
 
-[`Text`](../interfaces/Text.md) = `...`
+[`Text`](../interfaces/Text.md)
 
 The text annotation to add (optional, will be created if not provided)
 
 #### Returns
 
-`void`
+`Control`
 
 this for chaining
 
@@ -1285,15 +1359,21 @@ enableTextDrawing for the recommended high-level API
 toggleComment(id): this;
 ```
 
+Toggle a comment between collapsed and expanded mode
+
 #### Parameters
 
 ##### id
 
 [`Id`](../type-aliases/Id.md)
 
+The id of the comment to toggle
+
 #### Returns
 
 `this`
+
+this for chaining
 
 ***
 

@@ -60,6 +60,7 @@ export class AnnotationPanel {
   private panelBody: HTMLElement;
   private mode: AnnotationMode = null;
   private currentAnnotation: Annotation | null = null;
+  private pendingAnnotation: Annotation | null = null;
   private currentColor = "#0099FF";
   private recentColors = ["#0099FF", "#FF7523", "#44AA99"];
   private activeColorIndex = 0;
@@ -76,16 +77,52 @@ export class AnnotationPanel {
       if (sel.ids.length === 1) {
         const ann = this.control.getAnnotation(sel.ids[0]);
         if (!ann) return;
+
+        // Store as pending - don't show immediately in case of drag
+        this.pendingAnnotation = ann;
+
         const showPanel = () => {
-          this.setAnnotation(ann);
-          this.show();
+          if (this.pendingAnnotation) {
+            this.setAnnotation(this.pendingAnnotation);
+            this.show();
+            this.pendingAnnotation = null;
+          }
         };
+
         if (this.control.isDrawing()) {
           this.control
             .once("cancelDrawing", showPanel)
             .once("completeDrawing", showPanel);
-        } else showPanel();
-      } else this.hide();
+        }
+        // Don't show immediately - wait for potential drag or mouseup
+      } else {
+        this.pendingAnnotation = null;
+        this.hide();
+      }
+    });
+
+    // Show panel on click (mouseup without drag)
+    this.control.on("click", () => {
+      if (this.pendingAnnotation) {
+        this.setAnnotation(this.pendingAnnotation);
+        this.show();
+        this.pendingAnnotation = null;
+      }
+    });
+
+    // Show panel after drag ends (if there's a pending annotation)
+    this.control.on("dragend", () => {
+      if (this.pendingAnnotation) {
+        this.setAnnotation(this.pendingAnnotation);
+        this.show();
+        this.pendingAnnotation = null;
+      }
+    });
+
+    // Hide panel during drag
+    this.control.on("dragstart", () => {
+      this.pendingAnnotation = null;
+      this.hide();
     });
 
     this.control.on("unselect", this.hide);

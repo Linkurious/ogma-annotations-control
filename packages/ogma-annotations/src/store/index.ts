@@ -12,7 +12,8 @@ import {
   isComment,
   isArrow,
   Point,
-  DeepPartial
+  DeepPartial,
+  isText
 } from "../types";
 import { getAABB } from "../utils/geom";
 
@@ -206,30 +207,22 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               const feature = state.features[id];
               if (!feature) return state;
 
-              // If deleting a comment, also delete ALL its arrows
-              if (isComment(feature)) {
-                const arrowsToDelete: Id[] = [];
+              const { features, liveUpdates } = state;
+              const toDelete = new Set<Id>([id]);
 
+              // If deleting a comment, also delete ALL its arrows
+              if (isComment(feature) || isText(feature)) {
                 // Find all arrows pointing to/from this comment
-                Object.values(state.features).forEach((f) => {
+                Object.values(features).forEach((f) => {
                   if (isArrow(f)) {
                     if (
                       f.properties.link?.end?.id === id ||
                       f.properties.link?.start?.id === id
                     ) {
-                      arrowsToDelete.push(f.id);
+                      toDelete.add(f.id);
                     }
                   }
                 });
-
-                // Delete arrows and comment
-                const newFeatures = { ...state.features };
-                arrowsToDelete.forEach((arrowId) => {
-                  delete newFeatures[arrowId];
-                });
-                delete newFeatures[id];
-
-                return { features: newFeatures };
               }
 
               // If deleting an arrow that points to a comment, check if it's the last arrow
@@ -267,10 +260,17 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
                 }
               }
 
-              // Normal deletion for other features
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { [id]: _, ...rest } = state.features;
-              return { features: rest };
+              // Create copies BEFORE any deletions to preserve history correctly
+              const newFeatures = { ...features };
+              const newLiveUpdates = { ...liveUpdates };
+
+              // Delete all marked features from the copies
+              toDelete.forEach((deleteId) => {
+                delete newFeatures[deleteId];
+                delete newLiveUpdates[deleteId];
+              });
+
+              return { features: newFeatures, liveUpdates: newLiveUpdates };
             }),
 
           addFeature: (feature) =>

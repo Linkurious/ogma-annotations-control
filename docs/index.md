@@ -3,8 +3,9 @@ layout: home
 
 hero:
   name: "Ogma Annotations"
+  image: /graph-with-annotations.svg
   text: "Draw annotations on top of your Ogma graphs"
-  tagline: "A powerful TypeScript plugin with React integration for adding interactive arrows and text annotations to your graph visualizations"
+  tagline: "A powerful plugin with React integration for adding interactive annotations to your graph visualizations"
   actions:
     - theme: brand
       text: Get Started

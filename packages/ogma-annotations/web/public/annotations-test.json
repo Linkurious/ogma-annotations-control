@@ -242,7 +242,7 @@
       "type": "Feature",
       "properties": {
         "type": "comment",
-        "content": "This polygon needs review! 🎯",
+        "content": "This group needs review! 🎯",
         "mode": "expanded",
         "width": 200,
         "height": 80,

@@ -107,6 +107,7 @@ export abstract class Handler<
   }
 
   protected commitChange() {
+    if (!this.getAnnotation()) return;
     // Commit all live updates to create a single history entry
     this.store.getState().commitLiveUpdates();
   }

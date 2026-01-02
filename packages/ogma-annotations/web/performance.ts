@@ -137,7 +137,7 @@ for (let i = 0; i < N; i++) {
   control.add(comment);
   control.add(arrow);
   // link arrow to the node
-  control.linkToNode(arrow.id, nodeId);
+  control.link(arrow.id, ogma.getNode(nodeId)!, "end");
 
   createdComments++;
 

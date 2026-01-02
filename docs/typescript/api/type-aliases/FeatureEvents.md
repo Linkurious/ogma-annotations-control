@@ -42,6 +42,20 @@ Event trigerred when canceling drawing mode
 
 ***
 
+### click()
+
+```ts
+click: () => void;
+```
+
+Event triggered when a click completes on an annotation (mouseup without drag)
+
+#### Returns
+
+`void`
+
+***
+
 ### completeDrawing()
 
 ```ts
@@ -57,6 +71,34 @@ Event trigerred when completing a drawing operation
 [`FeatureEvent`](../interfaces/FeatureEvent.md)
 
 Contains the ID of the completed annotation
+
+#### Returns
+
+`void`
+
+***
+
+### dragend()
+
+```ts
+dragend: () => void;
+```
+
+Event triggered when a drag operation ends on an annotation
+
+#### Returns
+
+`void`
+
+***
+
+### dragstart()
+
+```ts
+dragstart: () => void;
+```
+
+Event triggered when a drag operation starts on an annotation
 
 #### Returns
 

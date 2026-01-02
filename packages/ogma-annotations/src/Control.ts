@@ -9,7 +9,10 @@ import {
   DEFAULT_SEND_ICON,
   EVT_ADD,
   EVT_CANCEL_DRAWING,
+  EVT_CLICK,
   EVT_COMPLETE_DRAWING,
+  EVT_DRAG_END,
+  EVT_DRAG_START,
   EVT_HISTORY,
   EVT_REMOVE,
   EVT_SELECT,
@@ -140,6 +143,16 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on("rotate", this.onRotate)
       .on("zoom", this.onZoom)
       .on("layoutEnd", this.onLayout);
+
+    // Forward drag events from editor to Control
+    this.editor.addEventListener(EVT_DRAG_START, () =>
+      this.emit(EVT_DRAG_START)
+    );
+    this.editor.addEventListener(EVT_DRAG_END, () => this.emit(EVT_DRAG_END));
+
+    // Forward click event from interaction controller
+    this.interactions.addEventListener(EVT_CLICK, () => this.emit(EVT_CLICK));
+
     this.store.temporal.subscribe((state) => {
       this.emit(EVT_HISTORY, {
         canUndo: state.pastStates.length > 0,
