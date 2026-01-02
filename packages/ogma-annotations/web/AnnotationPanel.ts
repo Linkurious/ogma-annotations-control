@@ -15,7 +15,8 @@ import {
   Extremity,
   defaultArrowStyle,
   defaultTextStyle,
-  isBox
+  isBox,
+  isComment
 } from "../src";
 import "./AnnotationPanel.css";
 
@@ -151,7 +152,11 @@ export class AnnotationPanel {
     if (isArrow(annotation)) {
       this.mode = "arrow";
       this.renderArrow(annotation);
-    } else if (isText(annotation) || isBox(annotation)) {
+    } else if (
+      isText(annotation) ||
+      isBox(annotation) ||
+      isComment(annotation)
+    ) {
       this.mode = "text";
       this.renderText(annotation as Text);
     } else if (isPolygon(annotation)) {
