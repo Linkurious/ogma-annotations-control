@@ -1,4 +1,4 @@
-import { Annotation, Arrow } from "@linkurious/ogma-annotations";
+import { Annotation } from "@linkurious/ogma-annotations";
 import React from "react";
 import { useAnnotationsContext } from "../../../../src";
 
