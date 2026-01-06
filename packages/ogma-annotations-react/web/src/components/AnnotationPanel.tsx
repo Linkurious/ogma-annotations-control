@@ -26,7 +26,7 @@ type AnnotationMode = "arrow" | "text" | "polygon" | null;
 
 interface AnnotationPanelProps {
   visible: boolean;
-  annotation: Annotation | null;
+  annotation: Annotation;
 }
 
 export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
@@ -58,7 +58,9 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
         defaultArrowStyle.strokeColor!
       );
     } else if (mode === "text") {
-      return annotation.properties.style?.color || defaultTextStyle.color!;
+      return (
+        (annotation as Text).properties.style?.color || defaultTextStyle.color!
+      );
     } else if (mode === "polygon") {
       return annotation.properties.style?.strokeColor || "#000000";
     }
@@ -81,7 +83,7 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
         />
         <ExtremityController annotation={arrow} />
         <SliderController
-          annotation={annotation}
+          annotation={annotation!}
           title="Stroke width"
           property="strokeWidth"
           value={strokeWidth}
@@ -89,7 +91,7 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
           max={20}
         />
         <LineTypeController
-          annotation={annotation}
+          annotation={annotation!}
           currentLineType={strokeType}
         />
       </>
@@ -118,12 +120,12 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
           initialColor={currentColor}
         />
         <BackgroundController
-          annotation={annotation}
+          annotation={annotation!}
           currentBackground={background}
         />
-        <FontController annotation={annotation} currentFont={font} />
+        <FontController annotation={annotation as Text} currentFont={font} />
         <SliderController
-          annotation={annotation}
+          annotation={annotation as Text}
           title="Font size"
           property="fontSize"
           value={fontSize}
@@ -131,7 +133,7 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
           max={72}
         />
         <SliderController
-          annotation={annotation}
+          annotation={annotation!}
           title="Stroke width"
           property="strokeWidth"
           value={strokeWidth}
@@ -141,7 +143,7 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
           currentColor={currentColor}
         />
         <LineTypeController
-          annotation={annotation}
+          annotation={annotation!}
           currentLineType={strokeType}
         />
       </>
@@ -158,16 +160,16 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
     return (
       <>
         <ColorController
-          annotation={annotation}
+          annotation={annotation!}
           mode="polygon"
           initialColor={currentColor}
         />
         <BackgroundController
-          annotation={annotation}
+          annotation={annotation!}
           currentBackground={background}
         />
         <SliderController
-          annotation={annotation}
+          annotation={annotation!}
           title="Stroke width"
           property="strokeWidth"
           value={strokeWidth}
@@ -175,7 +177,7 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
           max={20}
         />
         <LineTypeController
-          annotation={annotation}
+          annotation={annotation!}
           currentLineType={strokeType}
         />
       </>

@@ -1,4 +1,4 @@
-import { Arrow } from "@linkurious/ogma-annotations";
+import { Annotation, Arrow } from "@linkurious/ogma-annotations";
 import React from "react";
 import { useAnnotationsContext } from "../../../../src";
 
@@ -8,7 +8,7 @@ const LINE_TYPES = [
 ];
 
 interface LineTypeControllerProps {
-  annotation: Arrow;
+  annotation: Annotation;
   currentLineType: string;
 }
 

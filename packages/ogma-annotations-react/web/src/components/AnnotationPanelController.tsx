@@ -89,5 +89,5 @@ export const AnnotationPanelController: React.FC = () => {
     };
   }, [editor, pendingAnnotation]);
 
-  return <AnnotationPanel visible={visible} annotation={currentAnnotation} />;
+  return <AnnotationPanel visible={visible} annotation={currentAnnotation!} />;
 };

@@ -97,7 +97,8 @@
         {
           "allowConstantExport": true
         }
-      ]
+      ],
+      "import/no-unresolved": "off"
     }
   },
   "dependencies": {
