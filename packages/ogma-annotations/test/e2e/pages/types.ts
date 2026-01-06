@@ -1,4 +1,4 @@
-import Ogma, { OgmaParameters } from "@linkurious/ogma";
+import { Ogma, OgmaParameters } from "@linkurious/ogma";
 import { Control, createArrow } from "../../../src";
 
 export interface AugmentedWindow {

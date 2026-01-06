@@ -1,5 +1,5 @@
-import React, { useState } from "react";
 import { Extremity, Arrow } from "@linkurious/ogma-annotations";
+import React, { useState } from "react";
 import { useAnnotationsContext } from "../../../../src";
 
 const EXTREMITY_OPTIONS = [

@@ -2,8 +2,8 @@ import { Ogma as OgmaLib, RawGraph } from "@linkurious/ogma";
 import { AnnotationCollection } from "@linkurious/ogma-annotations";
 import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
 import React from "react";
-import { Controls } from "./components/Controls";
 import { AnnotationPanelController } from "./components/AnnotationPanelController";
+import { Controls } from "./components/Controls";
 import { AnnotationsContextProvider } from "../../src";
 
 import "./App.css";

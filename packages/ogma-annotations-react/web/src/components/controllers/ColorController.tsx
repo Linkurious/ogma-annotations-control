@@ -1,13 +1,13 @@
-import React, { useState, useRef, useEffect } from "react";
+import { Annotation, parseColor } from "@linkurious/ogma-annotations";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   RgbaColor,
   RgbaColorPicker
 } from "vanilla-colorful/rgba-color-picker.js";
-import { parseColor } from "@linkurious/ogma-annotations";
 import { useAnnotationsContext } from "../../../../src";
 
 interface ColorControllerProps {
-  annotation: any;
+  annotation: Annotation;
   mode: "arrow" | "text" | "polygon";
   initialColor: string;
 }
@@ -30,9 +30,34 @@ export const ColorController: React.FC<ColorControllerProps> = ({
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const colorPickerInstance = useRef<RgbaColorPicker | null>(null);
 
-  useEffect(() => {
-    updateColorFromAnnotation(initialColor);
-  }, [initialColor]);
+  const updateAnnotationColor = useCallback(
+    (color: string) => {
+      if (!annotation) return;
+
+      if (mode === "arrow") {
+        editor?.updateStyle(annotation.id, { strokeColor: color });
+      } else if (mode === "text") {
+        editor?.updateStyle(annotation.id, { color: color });
+      } else if (mode === "polygon") {
+        editor?.updateStyle(annotation.id, { strokeColor: color });
+      }
+    },
+    [annotation, editor, mode]
+  );
+
+  const updateColorFromAnnotation = useCallback(
+    (color: string) => {
+      if (!recentColors.includes(color)) {
+        const newColors = [color, ...recentColors.slice(0, 2)];
+        setRecentColors(newColors);
+        setActiveColorIndex(0);
+      } else {
+        setActiveColorIndex(recentColors.indexOf(color));
+      }
+      setCurrentColor(color);
+    },
+    [recentColors]
+  );
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -65,18 +90,15 @@ export const ColorController: React.FC<ColorControllerProps> = ({
       colorPickerInstance.current.color = parseColor(currentColor);
       colorPickerRef.current.appendChild(colorPickerInstance.current);
 
-      colorPickerInstance.current.addEventListener(
-        "color-changed",
-        (event: any) => {
-          const newColor = rgbaToString(event.detail.value);
-          setCurrentColor(newColor);
-          const newRecentColors = [...recentColors];
-          newRecentColors[activeColorIndex] = newColor;
-          setRecentColors(newRecentColors);
+      colorPickerInstance.current.addEventListener("color-changed", (event) => {
+        const newColor = rgbaToString(event.detail.value);
+        setCurrentColor(newColor);
+        const newRecentColors = [...recentColors];
+        newRecentColors[activeColorIndex] = newColor;
+        setRecentColors(newRecentColors);
 
-          updateAnnotationColor(newColor);
-        }
-      );
+        updateAnnotationColor(newColor);
+      });
     }
 
     if (
@@ -87,30 +109,18 @@ export const ColorController: React.FC<ColorControllerProps> = ({
       colorPickerRef.current.innerHTML = "";
       colorPickerInstance.current = null;
     }
-  }, [showColorPicker, currentColor, activeColorIndex, recentColors]);
+  }, [
+    showColorPicker,
+    currentColor,
+    activeColorIndex,
+    recentColors,
+    updateAnnotationColor,
+    updateColorFromAnnotation
+  ]);
 
-  const updateColorFromAnnotation = (color: string) => {
-    if (!recentColors.includes(color)) {
-      const newColors = [color, ...recentColors.slice(0, 2)];
-      setRecentColors(newColors);
-      setActiveColorIndex(0);
-    } else {
-      setActiveColorIndex(recentColors.indexOf(color));
-    }
-    setCurrentColor(color);
-  };
-
-  const updateAnnotationColor = (color: string) => {
-    if (!annotation) return;
-
-    if (mode === "arrow") {
-      editor?.updateStyle(annotation.id, { strokeColor: color });
-    } else if (mode === "text") {
-      editor?.updateStyle(annotation.id, { color: color });
-    } else if (mode === "polygon") {
-      editor?.updateStyle(annotation.id, { strokeColor: color });
-    }
-  };
+  useEffect(() => {
+    updateColorFromAnnotation(initialColor);
+  }, [initialColor, updateColorFromAnnotation]);
 
   const handleColorCircleClick = (index: number, event: React.MouseEvent) => {
     event.stopPropagation();

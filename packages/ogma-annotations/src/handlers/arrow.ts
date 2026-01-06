@@ -1,4 +1,4 @@
-import Ogma, { Node, Point } from "@linkurious/ogma";
+import { Ogma, type Node, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import {
   canDetachArrowEnd,

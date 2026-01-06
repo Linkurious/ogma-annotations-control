@@ -1,4 +1,3 @@
-import React, { useState, useEffect } from "react";
 import {
   Annotation,
   Arrow,
@@ -12,7 +11,7 @@ import {
   isBox,
   isComment
 } from "@linkurious/ogma-annotations";
-import { useAnnotationsContext } from "../../../src";
+import React, { useState, useEffect } from "react";
 import {
   ColorController,
   BackgroundController,
@@ -34,7 +33,6 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   visible,
   annotation
 }) => {
-  const { editor } = useAnnotationsContext();
   const [mode, setMode] = useState<AnnotationMode>(null);
 
   useEffect(() => {
@@ -191,8 +189,6 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   if (!visible || !annotation) {
     return null;
   }
-
-  console.log("Rendering AnnotationPanel for mode:", mode, annotation);
 
   return (
     <div

@@ -35,7 +35,7 @@ pnpm add @linkurious/ogma-annotations
 ### 1. Import the Library
 
 ```typescript
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Control } from "@linkurious/ogma-annotations";
 // CSS for styling the comment inputs and handles
 import "@linkurious/ogma-annotations/style.css";

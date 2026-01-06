@@ -1,4 +1,4 @@
-import Ogma, { Point } from "@linkurious/ogma";
+import { Ogma, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import { Links } from "./links";
 import {

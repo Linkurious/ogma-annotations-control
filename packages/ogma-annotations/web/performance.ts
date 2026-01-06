@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Control, createCommentWithArrow, darken } from "../src";
 
 const N = 300;

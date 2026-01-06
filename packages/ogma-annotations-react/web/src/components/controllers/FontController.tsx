@@ -1,3 +1,4 @@
+import { Comment, Text } from "@linkurious/ogma-annotations";
 import React, { useState } from "react";
 import { useAnnotationsContext } from "../../../../src";
 
@@ -8,7 +9,7 @@ const FONTS = [
 ];
 
 interface FontControllerProps {
-  annotation: any;
+  annotation: Comment | Text;
   currentFont: string;
 }
 

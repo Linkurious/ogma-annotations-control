@@ -1,4 +1,4 @@
-import Ogma, { Layer } from "@linkurious/ogma";
+import { Ogma, type Layer } from "@linkurious/ogma";
 import type { Store } from "../store";
 
 export abstract class Renderer<LayerType extends Layer = Layer> {

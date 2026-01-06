@@ -1,4 +1,4 @@
-import Ogma, { OgmaParameters } from "@linkurious/ogma";
+import { Ogma, OgmaParameters } from "@linkurious/ogma";
 import getPort from "get-port";
 import { chromium } from "playwright";
 import type { Browser, Page } from "playwright";

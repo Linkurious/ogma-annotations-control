@@ -49,11 +49,11 @@ Let's create your first annotation in just a few steps!
 First, import Ogma Annotations and create a Controller instance:
 
 ```typescript
-import Ogma from '@linkurious/ogma';
-import { Control } from '@linkurious/ogma-annotations';
+import { Ogma } from "@linkurious/ogma";
+import { Control } from "@linkurious/ogma-annotations";
 
 // Create your Ogma instance
-const ogma = new Ogma({ container: 'graph-container' });
+const ogma = new Ogma({ container: "graph-container" });
 
 // Create the annotations controller
 const controller = new Control(ogma);
@@ -66,20 +66,20 @@ The `Control` instance is your main entry point for managing all annotations.
 Now let's add an arrow and a text annotation:
 
 ```typescript
-import { createArrow, createText } from '@linkurious/ogma-annotations';
+import { createArrow, createText } from "@linkurious/ogma-annotations";
 
 // Create an arrow from (0, 0) to (100, 100)
 const arrow = createArrow(0, 0, 100, 100, {
-  stroke: '#ff6b6b',
+  stroke: "#ff6b6b",
   strokeWidth: 3,
-  ext: 'end' // Arrow head at the end
+  ext: "end" // Arrow head at the end
 });
 
 // Create a text annotation at (50, 50)
-const text = createText(50, 50, 'Hello Annotations!', {
-  color: '#2c3e50',
+const text = createText(50, 50, "Hello Annotations!", {
+  color: "#2c3e50",
   fontSize: 16,
-  background: '#ffffff',
+  background: "#ffffff",
   padding: 8
 });
 
@@ -97,45 +97,52 @@ The coordinates you provide are in **graph space**, not screen pixels. Use `ogma
 Here's a complete working example:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <style>
-    #graph-container { width: 800px; height: 600px; }
-  </style>
-</head>
-<body>
-  <div id="graph-container"></div>
+  <head>
+    <style>
+      #graph-container {
+        width: 800px;
+        height: 600px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="graph-container"></div>
 
-  <script type="module">
-    import Ogma from '@linkurious/ogma';
-    import { Control, createArrow, createText } from '@linkurious/ogma-annotations';
+    <script type="module">
+      import { Ogma } from "@linkurious/ogma";
+      import {
+        Control,
+        createArrow,
+        createText
+      } from "@linkurious/ogma-annotations";
 
-    const ogma = new Ogma({ container: 'graph-container' });
-    const controller = new Control(ogma);
+      const ogma = new Ogma({ container: "graph-container" });
+      const controller = new Control(ogma);
 
-    // Add some nodes to make it interesting
-    ogma.addNodes([
-      { id: 0, x: -100, y: 0 },
-      { id: 1, x: 100, y: 0 }
-    ]);
+      // Add some nodes to make it interesting
+      ogma.addNodes([
+        { id: 0, x: -100, y: 0 },
+        { id: 1, x: 100, y: 0 }
+      ]);
 
-    // Create arrow pointing from first to second node
-    const arrow = createArrow(-100, 0, 100, 0, {
-      stroke: '#ff6b6b',
-      strokeWidth: 3,
-      ext: 'end'
-    });
-    controller.add(arrow);
+      // Create arrow pointing from first to second node
+      const arrow = createArrow(-100, 0, 100, 0, {
+        stroke: "#ff6b6b",
+        strokeWidth: 3,
+        ext: "end"
+      });
+      controller.add(arrow);
 
-    // Add explanatory text
-    const text = createText(0, -50, 'Connection', {
-      color: '#2c3e50',
-      fontSize: 14
-    });
-    controller.add(text);
-  </script>
-</body>
+      // Add explanatory text
+      const text = createText(0, -50, "Connection", {
+        color: "#2c3e50",
+        fontSize: 14
+      });
+      controller.add(text);
+    </script>
+  </body>
 </html>
 ```
 
@@ -167,6 +174,7 @@ There are two types of annotations:
 - **Text**: A text label with optional background and styling
 
 Both types share some common properties:
+
 - Unique `id` for identification
 - Position in graph coordinates
 - Customizable styles
@@ -201,18 +209,18 @@ The controller emits events when annotations change:
 
 ```typescript
 // Listen for new annotations
-controller.on('add', (annotation) => {
-  console.log('Annotation added:', annotation);
+controller.on("add", (annotation) => {
+  console.log("Annotation added:", annotation);
 });
 
 // Listen for selection changes
-controller.on('select', (annotation) => {
-  console.log('Annotation selected:', annotation);
+controller.on("select", (annotation) => {
+  console.log("Annotation selected:", annotation);
 });
 
 // Listen for deletions
-controller.on('remove', (annotation) => {
-  console.log('Annotation removed:', annotation);
+controller.on("remove", (annotation) => {
+  console.log("Annotation removed:", annotation);
 });
 ```
 
@@ -221,22 +229,22 @@ controller.on('remove', (annotation) => {
 Want to let users create annotations by clicking and dragging? Use the `startArrow()` and `startText()` methods:
 
 ```typescript
-import { createArrow, isArrow } from '@linkurious/ogma-annotations';
+import { createArrow, isArrow } from "@linkurious/ogma-annotations";
 
 // Change cursor to indicate drawing mode
 const savedOptions = ogma.getOptions();
-ogma.setOptions({ cursor: { default: 'crosshair' } });
+ogma.setOptions({ cursor: { default: "crosshair" } });
 
 // Wait for user click
-ogma.events.once('click', (evt) => {
+ogma.events.once("click", (evt) => {
   // Convert click position to graph coordinates
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
 
   // Create an arrow at that position
   const annotation = createArrow(x, y, x, y, {
-    stroke: '#3498db',
+    stroke: "#3498db",
     strokeWidth: 2,
-    ext: 'end'
+    ext: "end"
   });
 
   // Start interactive creation (user drags to set endpoint)
@@ -245,7 +253,7 @@ ogma.events.once('click', (evt) => {
   }, 50);
 
   // Restore cursor when done
-  controller.once('add', () => {
+  controller.once("add", () => {
     ogma.setOptions(savedOptions);
   });
 });
@@ -260,6 +268,7 @@ Note the `setTimeout` - it's necessary to wait for the next frame before startin
 Now that you understand the basics, explore more advanced topics:
 
 ### For TypeScript/JavaScript Users:
+
 - [Installation & Setup](/typescript/installation) - Detailed setup instructions
 - [Controller Deep Dive](/typescript/core-concepts/controller) - Learn about all controller features
 - [Creating Annotations](/typescript/creating-annotations/programmatic) - Master both programmatic and interactive creation
@@ -267,12 +276,14 @@ Now that you understand the basics, explore more advanced topics:
 - [API Reference](/api/classes/Control) - Complete API documentation
 
 ### For React Users:
+
 - [React Installation](/react/installation) - Set up the React integration
 - [React Core Concepts](/react/core-concepts/provider) - Learn about the Context Provider and hooks
 - [Building UI Components](/react/ui-components/toolbar) - Create toolbars and style panels
 - [React Examples](/examples/react/simple-toolbar) - See complete React examples
 
 ### Examples & Inspiration:
+
 - [TypeScript Examples](/examples/typescript/basic) - Ready-to-use TypeScript examples
 - [React Examples](/examples/react/simple-toolbar) - Complete React component examples
 - [Live Demos](/demo/index.html) - Try the interactive demos

@@ -1,3 +1,4 @@
+import { Annotation } from "@linkurious/ogma-annotations";
 import React from "react";
 import { useAnnotationsContext } from "../../../../src";
 
@@ -11,7 +12,7 @@ const BACKGROUNDS = [
 ];
 
 interface BackgroundControllerProps {
-  annotation: any;
+  annotation: Annotation;
   currentBackground: string;
 }
 

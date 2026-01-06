@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
 import { Annotation, FeaturesEvent } from "@linkurious/ogma-annotations";
-import { useAnnotationsContext } from "../../../src";
+import React, { useState, useEffect } from "react";
 import { AnnotationPanel } from "./AnnotationPanel";
+import { useAnnotationsContext } from "../../../src";
 
 export const AnnotationPanelController: React.FC = () => {
   const { editor } = useAnnotationsContext();
@@ -66,7 +66,6 @@ export const AnnotationPanelController: React.FC = () => {
     };
 
     const handleUnselect = () => {
-      console.log("unselect");
       setVisible(false);
       setCurrentAnnotation(null);
     };

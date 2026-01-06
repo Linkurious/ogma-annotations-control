@@ -58,7 +58,7 @@ Annotations enhance graph visualizations by allowing you to:
 ::: code-group
 
 ```typescript [TypeScript]
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Control, createArrow, createText } from "@linkurious/ogma-annotations";
 
 const ogma = new Ogma({ container: "graph-container" });

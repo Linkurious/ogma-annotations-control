@@ -1,4 +1,4 @@
-import Ogma, { CanvasLayer } from "@linkurious/ogma";
+import { Ogma, CanvasLayer } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { Renderer } from "./base";
 import { LAYERS } from "../constants";

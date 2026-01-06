@@ -7,7 +7,7 @@ The **Controller** (implemented as the `Control` class) is the central managemen
 Every Ogma Annotations setup starts with creating a Controller instance:
 
 ```typescript
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Control } from "@linkurious/ogma-annotations";
 
 const ogma = new Ogma({ container: "graph-container" });
@@ -422,7 +422,7 @@ controller.on("add", (annotation) => {
 ### Complete Setup with Events
 
 ```typescript
-import Ogma from "@linkurious/ogma";
+import { Ogma } from "@linkurious/ogma";
 import { Control, createArrow, createText } from "@linkurious/ogma-annotations";
 
 // Initialize
