@@ -15,3 +15,4 @@ nodeJob {
   runBookeeping = true
 
   npmPackPaths = ['packages/ogma-annotations', 'packages/ogma-annotations-react']
+}
