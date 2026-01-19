@@ -56,8 +56,8 @@
   },
   "homepage": "https://github.com/Linkurious/ogma-annotations-control#readme",
   "workspaces": [
-    "packages/ogma-annotations",
-    "packages/ogma-annotations-react"
+    "packages/core",
+    "packages/react"
   ],
   "prettier": {
     "printWidth": 80,

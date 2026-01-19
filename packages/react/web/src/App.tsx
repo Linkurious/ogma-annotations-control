@@ -49,7 +49,7 @@ export default function App() {
           ogma.tools.brand.set(
             `<div class="brand">
               <a href="../react/">
-                <code>ogma-annotations-react</code></a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/ogma-annotations-react/web/">code</a>
+                <code>ogma-annotations-react</code></a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/react/web/">code</a>
             </div>`,
             {
               position: "top-left",

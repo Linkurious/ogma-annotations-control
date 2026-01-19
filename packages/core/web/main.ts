@@ -35,7 +35,7 @@ class App {
       `<div class="brand">
         <a href="../api/">
           <code>ogma-annotations</code>
-        </a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/ogma-annotations/web/">code</a>
+        </a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/core/web/">code</a>
       </div>`,
       {
         position: "top-left",
