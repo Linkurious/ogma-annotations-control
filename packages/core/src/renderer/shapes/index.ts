@@ -29,12 +29,8 @@ export class Shapes extends Renderer<SVGLayer> {
   private isExporting: boolean = false;
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
-    ogma.events.on('viewExportStart', () => {
-      this.isExporting = true;
-    })
-    ogma.events.on('afterImageExport', () => {
-      this.isExporting = false;
-    });
+    ogma.events.on('viewExportStart', this.onExportStart);
+    ogma.events.on('afterImageExport', this.onExportEnd);
     this.layer = this.ogma.layers.addSVGLayer(
       {
         draw: this.render
@@ -315,9 +311,17 @@ export class Shapes extends Renderer<SVGLayer> {
     this.layer.refresh();
   };
 
+  private onExportStart = () => {
+    this.isExporting = true;
+  }
+  private onExportEnd = () => {
+    this.isExporting = false;
+  }
   public destroy(): void {
     this.features.clear();
     this.layer.destroy();
+    this.ogma.events.off(this.onExportStart);
+    this.ogma.events.off(this.onExportEnd);
     super.destroy();
   }
 }
