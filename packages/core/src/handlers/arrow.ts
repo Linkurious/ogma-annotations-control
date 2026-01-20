@@ -65,12 +65,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     const startDistance = Math.sqrt(
       Math.pow(mousePoint.x - startPoint[0], 2) +
-        Math.pow(mousePoint.y - startPoint[1], 2)
+      Math.pow(mousePoint.y - startPoint[1], 2)
     );
 
     const endDistance = Math.sqrt(
       Math.pow(mousePoint.x - endPoint[0], 2) +
-        Math.pow(mousePoint.y - endPoint[1], 2)
+      Math.pow(mousePoint.y - endPoint[1], 2)
     );
 
     if (startDistance < margin)

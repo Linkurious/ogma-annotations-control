@@ -2,9 +2,7 @@
   --handle-width: 2px;
   --point-handle-width: calc(3 * var(--handle-width));
   --point-handle-border: 2px;
-  --point-handle-total: calc(
-    var(--point-handle-width) + var(--point-handle-border)
-  );
+  --point-handle-total: calc(var(--point-handle-width) + var(--point-handle-border));
   --handle-color: #38e;
   --handle-background: #fff;
   --active-color: #1a70e5;
@@ -37,7 +35,8 @@ svg text {
 .ogma-annotation-text-editor textarea {
   outline: none;
   padding: 0;
-  padding-right: 32px; /* Space for send button */
+  padding-right: 32px;
+  /* Space for send button */
   margin: 0;
   border: 0;
   width: 100%;
@@ -171,15 +170,19 @@ svg text {
   width: var(--point-handle-width);
   height: var(--point-handle-width);
 }
+
 .point-handle.top-left {
   transform: translate(-55%, -55%);
 }
+
 .point-handle.top-right {
   transform: translate(-45%, -55%);
 }
+
 .point-handle.bottom-left {
   transform: translate(-55%, -45%);
 }
+
 .point-handle.bottom-right {
   transform: translate(-45%, -45%);
 }
@@ -203,20 +206,23 @@ svg text {
 .point-handle.bottom-right {
   top: 100%;
 }
+
 .point-handle.top-left,
 .point-handle.top-right {
   top: 0;
 }
+
 .point-handle.bottom-left,
 .point-handle.top-left {
   left: 0;
 }
+
 .point-handle.bottom-right,
 .point-handle.top-right {
   left: 100%;
 }
 
-.arrow-handle > .handle {
+.arrow-handle>.handle {
   height: var(--point-handle-width);
   width: var(--point-handle-width);
   border-radius: 50%;
@@ -224,13 +230,13 @@ svg text {
   transform: translate(-50%, -50%);
 }
 
-.arrow-handle > .line {
+.arrow-handle>.line {
   height: var(--handle-width);
   border-radius: 0;
   cursor: move;
 }
 
-.arrow-handle > .point {
+.arrow-handle>.point {
   background-color: var(--handle-background);
   border: 2px solid var(--handle-color);
 }
@@ -251,7 +257,7 @@ svg text {
   cursor: pointer;
 }
 
-.annotation-text:hover > rect {
+.annotation-text:hover>rect {
   stroke: var(--handle-color);
 }
 
@@ -284,6 +290,12 @@ svg text {
     opacity 0.25s ease-in-out,
     scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: scale, opacity;
+}
+
+/* Disable transitions when comment was not visible */
+.comment-no-transition .comment-icon,
+.comment-no-transition .comment-box {
+  transition: none;
 }
 
 /* Collapsed state: icon visible, box hidden */

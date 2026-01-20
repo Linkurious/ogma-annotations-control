@@ -25,6 +25,7 @@ export class Shapes extends Renderer<SVGLayer> {
   private shapesRoot: SVGGElement | null = null;
   private commentsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
+  private visibleFeatures = new Set<Id>();
 
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
@@ -98,7 +99,7 @@ export class Shapes extends Renderer<SVGLayer> {
     // delete features that are no longer present
     const featureIds = new Set(Object.keys(features));
     this.removeFeatures(featureIds);
-
+    const visibleFeatures = new Set<Id>();
     for (let feature of Object.values(features)) {
       if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
@@ -106,7 +107,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
       // Skip features outside viewport
       if (!this.isFeatureVisible(feature, viewportBounds)) continue;
-
+      visibleFeatures.add(feature.id);
       let existingElement = this.features.get(feature.id);
       if (isBox(feature))
         existingElement = renderBox(
@@ -127,7 +128,8 @@ export class Shapes extends Renderer<SVGLayer> {
           commentsRoot,
           feature,
           existingElement,
-          state
+          state,
+          this.visibleFeatures.has(feature.id)
         );
       else if (isPolygon(feature)) {
         existingElement = renderPolygon(
@@ -152,6 +154,8 @@ export class Shapes extends Renderer<SVGLayer> {
     // Apply state classes after rendering
     this.applyStateClasses(annotationsRoot, hoveredFeature, selectedFeatures);
     root.appendChild(annotationsRoot);
+    this.visibleFeatures.clear();
+    this.visibleFeatures = visibleFeatures;
   };
 
   private throttleRender = throttle(

@@ -114,7 +114,8 @@ export function renderComment(
   root: SVGElement,
   annotation: Comment,
   cachedElement: SVGGElement | undefined,
-  state: AnnotationState
+  state: AnnotationState,
+  wasVisible: boolean
 ): SVGGElement {
   const mode = annotation.properties.mode;
 
@@ -145,6 +146,13 @@ export function renderComment(
   // Render both states
   renderCollapsedIcon(iconGroup, annotation, state);
   renderExpandedBox(boxGroup, annotation, state);
+
+  // Disable transitions if the comment was not visible (e.g., just came into view)
+  if (!wasVisible) {
+    g.classList.add("comment-no-transition");
+  } else {
+    g.classList.remove("comment-no-transition");
+  }
 
   // Update the mode class to trigger CSS transitions
   if (

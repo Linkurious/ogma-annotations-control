@@ -20,6 +20,7 @@ import {
   getBoxSize,
   getPolygonBounds,
   getPolygonCenter,
+  throttle,
   updateBbox
 } from "../utils/utils";
 import { add, mul, subtract } from "../utils/vec";
@@ -62,7 +63,7 @@ export class Links {
     this.store.subscribe((state) => state.features, this.onAddArrow);
     this.store.subscribe(
       (state) => ({ zoom: state.zoom, rotation: state.rotation }),
-      this.refresh,
+      this.throttledRefresh,
       {
         equalityFn: (a, b) => a.zoom === b.zoom && a.rotation === b.rotation
       }
@@ -260,6 +261,8 @@ export class Links {
 
     if (linksToUpdate.size > 0) this.update(linksToUpdate);
   };
+
+  private throttledRefresh = throttle(() => this.refresh(), 20);
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
     // debounce to next tick to get the real coordinates
