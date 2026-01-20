@@ -5,6 +5,52 @@ import { Comment, Text, defaultCommentStyle } from "../../types";
 import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
 
 /**
+ * Returns the comment-related CSS styles to embed in the SVG defs
+ */
+export function getCommentDefs(): SVGStyleElement {
+  const style = createSVGElement<SVGStyleElement>("style");
+  style.textContent = `
+    /* Comment Animation Styles */
+    .comment-icon,
+    .comment-box {
+      transition:
+        opacity 0.25s ease-in-out,
+        scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: scale, opacity;
+    }
+
+    /* Disable transitions when comment was not visible */
+    .comment-no-transition .comment-icon,
+    .comment-no-transition .comment-box {
+      transition: none;
+    }
+
+    /* Collapsed state: icon visible, box hidden */
+    .comment-collapsed .comment-icon {
+      opacity: 1;
+      scale: 1;
+    }
+
+    .comment-collapsed .comment-box {
+      opacity: 0;
+      scale: 0.5;
+    }
+
+    /* Expanded state: box visible, icon hidden */
+    .comment-expanded .comment-icon {
+      opacity: 0;
+      scale: 0.5;
+    }
+
+    .comment-expanded .comment-box {
+      opacity: 1;
+      scale: 1;
+    }
+  `;
+  return style;
+}
+
+/**
  * Render or update the collapsed icon within its group
  */
 function renderCollapsedIcon(
@@ -115,7 +161,7 @@ export function renderComment(
   annotation: Comment,
   cachedElement: SVGGElement | undefined,
   state: AnnotationState,
-  wasVisible: boolean
+  wasVisible: boolean,
 ): SVGGElement {
   const mode = annotation.properties.mode;
 
@@ -168,6 +214,7 @@ export function renderComment(
     g.classList.add("comment-expanded");
     g.classList.remove("comment-collapsed");
   }
+
 
   // Apply screen-aligned transform to the container
   const position = getBoxCenter(annotation);

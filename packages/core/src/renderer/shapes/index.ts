@@ -1,7 +1,7 @@
-import { SVGLayer, Ogma } from "@linkurious/ogma";
+import { SVGLayer, Ogma, View } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
-import { renderComment } from "./comment";
+import { getCommentDefs, renderComment } from "./comment";
 import { renderPolygon } from "./polygon";
 import { renderText } from "./text";
 import { LAYERS } from "../../constants";
@@ -129,7 +129,7 @@ export class Shapes extends Renderer<SVGLayer> {
           feature,
           existingElement,
           state,
-          this.visibleFeatures.has(feature.id)
+          this.visibleFeatures.has(feature.id),
         );
       else if (isPolygon(feature)) {
         existingElement = renderPolygon(
@@ -205,6 +205,9 @@ export class Shapes extends Renderer<SVGLayer> {
   private getDefs(): SVGDefsElement {
     // Add filter definitions
     const defs = createSVGElement<SVGDefsElement>("defs");
+
+    // Add comment styles
+    defs.appendChild(getCommentDefs());
 
     // Soft drop shadow filter
     // Figma box-shadow: 0px 1px 4px 0px #00000026
