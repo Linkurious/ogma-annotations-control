@@ -26,9 +26,15 @@ export class Shapes extends Renderer<SVGLayer> {
   private commentsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
   private visibleFeatures = new Set<Id>();
-
+  private isExporting: boolean = false;
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
+    ogma.events.on('viewExportStart', () => {
+      this.isExporting = true;
+    })
+    ogma.events.on('afterImageExport', () => {
+      this.isExporting = false;
+    });
     this.layer = this.ogma.layers.addSVGLayer(
       {
         draw: this.render
@@ -106,7 +112,7 @@ export class Shapes extends Renderer<SVGLayer> {
       }
 
       // Skip features outside viewport
-      if (!this.isFeatureVisible(feature, viewportBounds)) continue;
+      if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds)) continue;
       visibleFeatures.add(feature.id);
       let existingElement = this.features.get(feature.id);
       if (isBox(feature))
