@@ -7,7 +7,6 @@ export type EdgeSnap = {
   point: Point;
   id: EdgeId;
   magnet: Point;
-  t: number;
   type: typeof TARGET_TYPES.EDGE;
 };
 
@@ -131,13 +130,10 @@ export function snapToEdges(
 
     if (result && result.distance < closestDist) {
       closestDist = result.distance;
-      // Get the normal at this point for the magnet direction
-      const normal = geometry.getNormalOnEdge(edge, result.t);
       closestSnap = {
         point: result.point,
         id: edge.getId(),
-        magnet: normal,
-        t: result.t,
+        magnet: { x: result.t, y: 0 },
         type: TARGET_TYPES.EDGE
       };
     }
