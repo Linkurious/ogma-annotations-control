@@ -1,7 +1,6 @@
 import { COMMENT_MODE_COLLAPSED, COMMENT_MODE_EXPANDED } from "../constants";
 import { Store } from "../store";
 import { Comment, Id, isComment } from "../types";
-import { throttle } from "../utils/utils";
 
 /**
  * Manages comment-specific functionality including zoom-based auto-collapse
@@ -52,6 +51,7 @@ export class CommentManager {
 
         // Only update if mode needs to change
         if (comment.properties.mode === targetMode) return;
+        // @ts-expect-error live update
         updates[comment.id] = {
           properties: {
             ...comment.properties,

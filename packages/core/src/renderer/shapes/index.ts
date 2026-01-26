@@ -1,4 +1,4 @@
-import { SVGLayer, Ogma, View } from "@linkurious/ogma";
+import { SVGLayer, Ogma } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { getCommentDefs, renderComment } from "./comment";
