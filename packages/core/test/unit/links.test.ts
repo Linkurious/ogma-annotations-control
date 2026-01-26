@@ -38,6 +38,34 @@ describe("Links", () => {
     expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
   });
 
+  // Add a link between an arrow and an edge
+  it("should add a link between an arrow and an edge", () => {
+    const ogma = createOgma();
+    // Add nodes and edge first
+    ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
+    ogma.addNode({ id: "node2", attributes: { x: 100, y: 100 } });
+    ogma.addEdge({ id: "edge1", source: "node1", target: "node2" });
+
+    const links = new Links(ogma, mockStore);
+    const arrow = createArrow();
+    const arrowId = arrow.id;
+    const side = "start";
+    const targetId = "edge1";
+    const magnet = { x: 0.5, y: 0 }; // t parameter for edge position (0.5 = middle)
+
+    links.add(arrow, side, targetId, "edge", magnet);
+
+    const linkId = links["linksByArrowId"].get(arrowId)?.[side];
+    expect(linkId).toBeDefined();
+    const link = links["links"].get(linkId!);
+    expect(link).toBeDefined();
+    expect(link?.arrow).toBe(arrowId);
+    expect(link?.target).toBe(targetId);
+    expect(link?.targetType).toBe("edge");
+    expect(link?.side).toBe(side);
+    expect(link?.magnet).toEqual(magnet);
+  });
+
   // Add a link between an arrow and a text
   it("should add a link between an arrow and a text", () => {
     const ogma = createOgma();
