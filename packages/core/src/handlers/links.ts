@@ -1,4 +1,4 @@
-import type { Node, NodeId, EdgeId, NodeList, Ogma, Point } from "@linkurious/ogma";
+import type { Node, NodeId, EdgeId, NodeList, Ogma, Point, EdgeList, Edge, EdgesEvent } from "@linkurious/ogma";
 import { geometry } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
@@ -74,6 +74,7 @@ export class Links {
     this.ogma.events
       // @ts-expect-error private event
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
+      .on(['addEdges', 'removeEdges'], this.onAddRemoveEdges)
       .on("viewChanged", this.refresh);
   }
 
@@ -227,15 +228,13 @@ export class Links {
     elements,
     updatedAttributes
   }: {
-    elements: Node | NodeList;
+    elements: Node | NodeList | Edge | EdgeList;
     updatedAttributes: string[];
   }) => {
     const attributesSet = new Set(updatedAttributes);
-    if (
-      !elements.isNode ||
-      (!attributesSet.has("x") &&
-        !attributesSet.has("y") &&
-        !attributesSet.has("radius"))
+    if (!elements.isNode || (!attributesSet.has("x") &&
+      !attributesSet.has("y") &&
+      !attributesSet.has("radius"))
     )
       return;
     this.requestUpdateFromNodePositions(elements.toList() as NodeList);
@@ -355,6 +354,28 @@ export class Links {
     }
 
     this.requestCommit();
+  }
+
+  private onAddRemoveEdges = (event: EdgesEvent<unknown, unknown>) => {
+    const edges = event.edges;
+    if (!edges.size || !this.edgeToLink.size) return;
+    const links: LinksByArrowId = new Map();
+    // Also update arrows linked to edges connected to these nodes
+    const edgeLinksToUpdate: LinksByArrowId = new Map();
+    edges.getParallelEdges().getId().forEach((edgeId) => {
+      const edgeLinks = this.edgeToLink.get(edgeId);
+      if (!edgeLinks) return;
+      edgeLinks.forEach((linkId) => {
+        const link = this.links.get(linkId);
+        if (!link) return;
+        const arrowId = link.arrow;
+        links.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        edgeLinksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+      });
+    });
+    // Update edge links using the general update method
+    if (edgeLinksToUpdate.size === 0) return;
+    this.update(edgeLinksToUpdate);
   }
 
   private commit = () => {
