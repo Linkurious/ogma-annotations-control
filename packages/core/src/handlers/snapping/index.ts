@@ -6,12 +6,14 @@ import { Text, Polygon, isBox, isText, isPolygon } from "../../types";
 import { snapToPolygon, PolygonSnap } from "./polygon";
 import { snapToText, TextSnap, MAGNETS } from "./text";
 import { snapToNodes, NodeSnap } from "./node";
+import { snapToEdges, EdgeSnap } from "./edge";
 
 export type { TextSnap } from "./text";
 export type { PolygonSnap } from "./polygon";
 export type { NodeSnap } from "./node";
+export type { EdgeSnap } from "./edge";
 
-export type Snap = TextSnap | PolygonSnap | NodeSnap;
+export type Snap = TextSnap | PolygonSnap | NodeSnap | EdgeSnap;
 
 type SnappingOptions = {
   /**
@@ -65,15 +67,18 @@ export class Snapping extends EventTarget {
     const texts = features.filter((a) => isText(a) || isBox(a)) as Text[];
     const polygons = features.filter((a) => isPolygon(a)) as Polygon[];
 
-    const nodes = this.ogma.view.getElementsInside(
+    const { nodes, edges } = this.ogma.view.getElementsInside(
       snapWindow.minX,
       snapWindow.minY,
       snapWindow.maxX,
       snapWindow.maxY
-    ).nodes;
+    );
 
     const snapToNodeResult = this.snapToNodes(point, nodes);
     if (snapToNodeResult) return snapToNodeResult;
+
+    const snapToEdgeResult = this.snapToEdges(point, edges);
+    if (snapToEdgeResult) return snapToEdgeResult;
 
     const snapToTextResult = this.snapToText(point, texts);
     if (snapToTextResult) return snapToTextResult;
@@ -95,6 +100,13 @@ export class Snapping extends EventTarget {
 
   public snapToNodes(point: Point, nodes: Parameters<typeof snapToNodes>[1]): NodeSnap | null {
     return snapToNodes(point, nodes, this.options.detectMargin);
+  }
+
+  public snapToEdges(
+    point: Point,
+    edges: Parameters<typeof snapToEdges>[1],
+  ): EdgeSnap | null {
+    return snapToEdges(point, edges, this.options.magnetRadius);
   }
 
   public getHoveredNode(): Node | null {

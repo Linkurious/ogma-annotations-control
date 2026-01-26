@@ -68,7 +68,8 @@ export const TARGET_TYPES = {
   BOX: "box" as const,
   COMMENT: "comment" as const,
   POLYGON: "polygon" as const,
-  ANNOTATION: "annotation" as const
+  ANNOTATION: "annotation" as const,
+  EDGE: "edge" as const
 };
 
 /** Default send button icon (paper plane) */
