@@ -162,7 +162,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private throttleRender = throttle(
     () => this.render(this.layer.element as unknown as SVGSVGElement),
-    8
+    16
   );
 
   private getViewportBounds(): Bounds {
