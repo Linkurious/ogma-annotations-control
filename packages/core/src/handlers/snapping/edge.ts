@@ -1,4 +1,4 @@
-import type { Point, EdgeList, EdgeId, } from "@linkurious/ogma";
+import type { Point, EdgeList, EdgeId } from "@linkurious/ogma";
 import { geometry } from "@linkurious/ogma";
 import { TARGET_TYPES } from "../../constants";
 import { subtract, length } from "../../utils/vec";
@@ -74,7 +74,10 @@ function findClosestPointOnLine(
   // Project point onto line, clamped to [0, 1]
   const t = Math.max(
     0,
-    Math.min(1, ((point.x - source.x) * dx + (point.y - source.y) * dy) / lengthSq)
+    Math.min(
+      1,
+      ((point.x - source.x) * dx + (point.y - source.y) * dy) / lengthSq
+    )
   );
 
   const closestPoint = {
@@ -92,17 +95,17 @@ function findClosestPointOnLine(
 export function snapToEdges(
   point: Point,
   edges: EdgeList,
-  magnetRadius: number,
+  magnetRadius: number
 ): EdgeSnap | null {
   let closestSnap: EdgeSnap | null = null;
   let closestDist = magnetRadius;
-  // @ts-expect-error curvatures exist
-  const curvatures = edges.getAttribute("curvature") as number[];
+  // @ts-expect-error curvatures exist is a private readonly attribute
+  const curvatures = edges.getAttribute("curvature") as readonly number[];
   const extremitiesList = edges.getExtremities();
   const positions = extremitiesList.getPosition();
   for (let i = 0; i < edges.size; i++) {
     const edge = edges.get(i);
-    const curvature = curvatures[i]
+    const curvature = curvatures[i];
     const source = positions[2 * i];
     const target = positions[2 * i + 1];
 
@@ -120,12 +123,7 @@ export function snapToEdges(
         target.y,
         curvature
       );
-      result = findClosestPointOnQuadraticCurve(
-        point,
-        source,
-        target,
-        cp,
-      );
+      result = findClosestPointOnQuadraticCurve(point, source, target, cp);
     }
 
     if (result && result.distance < closestDist) {

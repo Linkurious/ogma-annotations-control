@@ -7,7 +7,7 @@ import { Comment, Id, isComment } from "../types";
  */
 export class CommentManager {
   private previousZoom: number = -1;
-  constructor(private store: Store) { }
+  constructor(private store: Store) {}
 
   /**
    * Toggle a comment between collapsed and expanded mode
@@ -37,7 +37,7 @@ export class CommentManager {
     this.previousZoom = zoom;
     const state = this.store.getState();
     const features = state.features;
-    const updates = {};
+    const updates: Record<Id, Partial<Comment>> = {};
     Object.values(features).forEach((feature) => {
       if (isComment(feature)) {
         const comment = feature as Comment;
@@ -51,7 +51,6 @@ export class CommentManager {
 
         // Only update if mode needs to change
         if (comment.properties.mode === targetMode) return;
-        // @ts-expect-error live update
         updates[comment.id] = {
           properties: {
             ...comment.properties,
