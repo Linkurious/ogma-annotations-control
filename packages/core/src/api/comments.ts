@@ -1,14 +1,13 @@
 import { COMMENT_MODE_COLLAPSED, COMMENT_MODE_EXPANDED } from "../constants";
 import { Store } from "../store";
 import { Comment, Id, isComment } from "../types";
-import { throttle } from "../utils/utils";
 
 /**
  * Manages comment-specific functionality including zoom-based auto-collapse
  */
 export class CommentManager {
   private previousZoom: number = -1;
-  constructor(private store: Store) { }
+  constructor(private store: Store) {}
 
   /**
    * Toggle a comment between collapsed and expanded mode
@@ -38,7 +37,7 @@ export class CommentManager {
     this.previousZoom = zoom;
     const state = this.store.getState();
     const features = state.features;
-    const updates = {};
+    const updates: Record<Id, Partial<Comment>> = {};
     Object.values(features).forEach((feature) => {
       if (isComment(feature)) {
         const comment = feature as Comment;

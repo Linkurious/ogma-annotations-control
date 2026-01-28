@@ -460,7 +460,6 @@ class App {
   }
 
   private exposeGlobals() {
-    // @ts-ignore
     Object.assign(window, {
       Ogma,
       Control,

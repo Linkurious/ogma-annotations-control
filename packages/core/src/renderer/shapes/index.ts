@@ -1,4 +1,4 @@
-import { SVGLayer, Ogma, View } from "@linkurious/ogma";
+import { SVGLayer, Ogma } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { getCommentDefs, renderComment } from "./comment";
@@ -162,7 +162,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private throttleRender = throttle(
     () => this.render(this.layer.element as unknown as SVGSVGElement),
-    8
+    16
   );
 
   private getViewportBounds(): Bounds {
