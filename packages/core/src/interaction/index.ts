@@ -78,6 +78,10 @@ export class InteractionController extends EventTarget {
         passive: true,
         capture: true
       });
+      container.addEventListener("wheel", this.onWheel, {
+        passive: false,
+        capture: true
+      });
     }
   }
 
@@ -269,6 +273,34 @@ export class InteractionController extends EventTarget {
     }
 
     this.mouseDownState = null;
+  };
+
+  private onWheel = (evt: WheelEvent) => {
+    // Check if we're over a scrollable comment
+    const screenPoint = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
+    const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
+    const annotation = this.detect(x, y);
+
+    if (!annotation || !isComment(annotation)) return;
+    const maxHeight = annotation.properties.maxHeight;
+    const height = annotation.properties.height;
+
+    // Check if comment has scrollable content
+    if (!maxHeight || height <= maxHeight) return;
+    // Find the comment's div element and scroll it
+    const container = this.ogma.getContainer();
+    const commentGroup = container?.querySelector(
+      `[data-annotation="${annotation.id}"] .comment-box foreignObject div`
+    ) as HTMLDivElement | null;
+
+    if (commentGroup) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      commentGroup.scrollTop += evt.deltaY;
+    }
   };
 
   private setCursor(cursor: Cursor) {

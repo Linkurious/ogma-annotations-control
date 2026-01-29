@@ -49,6 +49,24 @@ svg text {
   overflow: hidden;
 }
 
+/* Textarea scrollbar styling */
+.ogma-annotation-text-editor textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ogma-annotation-text-editor textarea::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ogma-annotation-text-editor textarea::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.ogma-annotation-text-editor textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
 /* Send Button Styles */
 .ogma-send-button {
   position: absolute;

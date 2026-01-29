@@ -66,6 +66,9 @@ export interface CommentProps extends AnnotationProps {
   /** Height (auto-grows with content, pixels) */
   height: number;
 
+  /** Maximum height before scrolling (default: undefined = no limit) */
+  maxHeight?: number;
+
   /** Optional metadata */
   author?: string;
 
@@ -182,6 +185,7 @@ export const defaultCommentOptions: Partial<CommentProps> = {
   mode: "expanded",
   width: 200,
   height: 60, // Initial height, will auto-grow
+  maxHeight: 480,
   style: defaultCommentStyle
 };
 
@@ -213,6 +217,7 @@ export function createComment(
     mode: options?.mode ?? defaultCommentOptions.mode!,
     width: options?.width ?? defaultCommentOptions.width!,
     height: options?.height ?? defaultCommentOptions.height!,
+    maxHeight: options?.maxHeight ?? defaultCommentOptions.maxHeight,
     author: options?.author,
     timestamp: options?.timestamp,
     style: {

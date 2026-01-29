@@ -2,7 +2,7 @@ import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
 import { Id, Text, defaultTextStyle } from "../types";
-import { getBoxPosition, getBoxSize } from "../utils/utils";
+import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
   private layer: Overlay;
@@ -60,6 +60,7 @@ export class TextArea {
     this.textarea.addEventListener("input", this.onInput);
     this.textarea.addEventListener("keyup", this.onKeyup);
     this.textarea.addEventListener("keydown", this.onKeydown);
+    this.textarea.addEventListener("wheel", this.onWheel);
     this.updateStyle();
     this.updatePosition();
     this.textarea.focus();
@@ -92,15 +93,31 @@ export class TextArea {
   private getPosition() {
     const annotation = this.getAnnotation();
     if (!annotation) return { x: 0, y: 0 };
-    const corner = getBoxPosition(
-      annotation,
-      annotation.properties.style?.fixedSize,
-      this.store.getState().zoom
-    );
+
+    const fixedSize = annotation.properties.style?.fixedSize || false;
+    const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+    const zoom = this.store.getState().zoom;
     const borderWidth = getBorderWidth(annotation);
+
+    // Get center coordinates (in graph space)
+    const [cx, cy] = annotation.geometry.coordinates as [number, number];
+
+    // Dimensions in graph space
+    const width = annotation.properties.width;
+    let height = annotation.properties.height;
+
+    // Cap height at maxHeight for position calculation (in graph space)
+    if (maxHeight) {
+      height = Math.min(height, maxHeight);
+    }
+
+    // For fixed-size, scale position to screen space
+    const scale = fixedSize ? 1 / zoom : 1;
+
+    // Calculate top-left corner from center
     return {
-      x: corner.x + borderWidth,
-      y: corner.y + borderWidth
+      x: cx - (width * scale) / 2 + borderWidth * scale,
+      y: cy - (height * scale) / 2 + borderWidth * scale
     };
   }
 
@@ -108,16 +125,25 @@ export class TextArea {
     const annotation = this.getAnnotation();
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation);
-    //const padding = annotation.properties.style?.padding || 0;
     const fixedSize = annotation.properties.style?.fixedSize || false;
+    const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
     const zoom = this.store.getState().zoom;
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;
 
+    let height = (size.height - borderWidth * 2) * effectiveScale;
+
+    // Cap height at maxHeight if set (scaled for fixed-size)
+    if (maxHeight) {
+      console.log("Applying maxHeight", maxHeight);
+      const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
+      height = Math.min(height, scaledMaxHeight);
+    }
+
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
-      height: (size.height - borderWidth * 2) * effectiveScale
+      height
     };
   }
 
@@ -157,7 +183,10 @@ export class TextArea {
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
-      textAreaStyle.overflow = "hidden"; // Hide scrollbars
+      const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+      // Enable scrolling if maxHeight is set, otherwise hide overflow
+      textAreaStyle.overflowY = maxHeight ? "auto" : "hidden";
+      textAreaStyle.overflowX = "hidden";
       textAreaStyle.resize = "none"; // Disable manual resize
     }
 
@@ -196,6 +225,11 @@ export class TextArea {
     evt.stopPropagation();
   };
 
+  private onWheel = (evt: WheelEvent) => {
+    // Stop wheel events from propagating to Ogma (prevents zoom while scrolling)
+    evt.stopPropagation();
+  };
+
   private updateContent() {
     const annotation = this.getAnnotation();
 
@@ -223,11 +257,26 @@ export class TextArea {
       newHeight = Math.max(minHeight, requiredHeight);
 
       // Adjust center position to grow downward only (keep top edge fixed)
-      const heightDelta = newHeight - annotation.properties.height;
+      // But stop moving once maxHeight is reached
+      const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+      const oldHeight = annotation.properties.height;
+      const heightDelta = newHeight - oldHeight;
+
       if (Math.abs(heightDelta) > 1) {
         const [cx, cy] = annotation.geometry.coordinates as [number, number];
-        // Move center down by half the height increase to keep top edge fixed
-        newCoordinates = [cx, cy + heightDelta];
+
+        // Only adjust center for growth up to maxHeight
+        if (maxHeight && oldHeight >= maxHeight) {
+          // Already at or past maxHeight - don't move center
+          newCoordinates = [cx, cy];
+        } else if (maxHeight && newHeight > maxHeight) {
+          // Growing past maxHeight - only move for the portion up to maxHeight
+          const effectiveDelta = maxHeight - oldHeight;
+          newCoordinates = [cx, cy + effectiveDelta / 2];
+        } else {
+          // Normal growth below maxHeight
+          newCoordinates = [cx, cy + heightDelta / 2];
+        }
       }
     }
 

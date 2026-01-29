@@ -53,7 +53,14 @@ export abstract class Handler<
   };
 
   handleMouseDown = (evt: MouseEvent): void => {
-    if (!this.isActive() || this.dragging || !this.hoveredHandle) return;
+    if (!this.isActive() || this.dragging) return;
+
+    // Detect handle if not already set (e.g., when clicking without moving)
+    if (!this.hoveredHandle) {
+      this.detectHandle(evt, this.ogma.view.getZoom());
+    }
+
+    if (!this.hoveredHandle) return;
 
     evt.preventDefault();
     evt.stopPropagation();
