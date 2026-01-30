@@ -138,7 +138,6 @@ export class TextArea {
 
     // Cap height at maxHeight if set (scaled for fixed-size)
     if (maxHeight) {
-      console.log("Applying maxHeight", maxHeight);
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
