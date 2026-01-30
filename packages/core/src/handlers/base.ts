@@ -30,6 +30,9 @@ export abstract class Handler<
   }
 
   handleMouseMove = (evt: ClientMouseEvent): void => {
+    // Don't intercept events on textarea - let it handle text selection
+    if ((evt as MouseEvent).target instanceof HTMLTextAreaElement) return;
+
     // compute the distance between the mouse and the edges of te box
     if (!this.isActive()) return;
 
@@ -53,6 +56,9 @@ export abstract class Handler<
   };
 
   handleMouseDown = (evt: MouseEvent): void => {
+    // Don't intercept events on textarea - let it handle text selection
+    if (evt.target instanceof HTMLTextAreaElement) return;
+
     if (!this.isActive() || this.dragging) return;
 
     // Detect handle if not already set (e.g., when clicking without moving)
