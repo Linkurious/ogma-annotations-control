@@ -3,19 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css"
-    />
+    <link href="fonts/lucide.css" rel="stylesheet" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100;0,300;0,400;0,500;1,400;1,500;1,700&display=swap"
       rel="stylesheet"
     />
-    <title>Omga Annotations</title>
-    <script type="module" crossorigin src="./assets/index-BYHkqvq8.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BmzDywzb.css">
+    <title>Ogma Annotations</title>
+    <script type="module" crossorigin src="./assets/index-CCjQkRBx.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-onKW1RmU.css">
   </head>
 
   <body>
@@ -23,13 +20,90 @@
       <div class="left"></div>
       <div id="app"></div>
     </div>
-    <div id="controls">
+    <!-- SVG Export Popup -->
+    <div id="svg-popup" class="popup-backdrop" style="display: none">
+      <div class="popup-content">
+        <div class="popup-header">
+          <h2>SVG Export Preview</h2>
+          <button id="popup-close" class="popup-close">&times;</button>
+        </div>
+        <div class="popup-body">
+          <div id="svg-preview"></div>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-button">Download SVG</button>
+        </div>
+      </div>
+    </div>
+    <div id="json-popup" class="popup-backdrop" style="display: none">
+      <div class="popup-content">
+        <div class="popup-header">
+          <h2>JSON Export Preview</h2>
+          <button id="popup-close" class="popup-close">&times;</button>
+        </div>
+        <div class="popup-body">
+          <pre><code id="json-preview"></code></pre>
+        </div>
+        <div class="popup-footer">
+          <button class="popup-button">Download JSON</button>
+        </div>
+      </div>
+    </div>
+    <div id="controls" class="control-bar">
       <button id="add-arrow" tooltip="Add arrow">
-        <i class="iconoir-arrow-right"></i>
+        <i class="icon-arrow-right"></i>
+      </button>
+      <button id="add-comment" tooltip="Add comment">
+        <i class="icon-message-square"></i>
+      </button>
+      <button id="add-box" tooltip="Add box">
+        <i class="icon-rectangle-horizontal"></i>
       </button>
       <button id="add-text" tooltip="Add text">
-        <i class="iconoir-text"></i>
+        <i class="icon-type"></i>
       </button>
+      <button
+        id="add-polygon"
+        tooltip="Add polygon (click points, Esc to finish)"
+      >
+        <i class="icon-pentagon"></i>
+      </button>
+      <span class="separator"></span>
+      <button id="undo" tooltip="Undo">
+        <i class="icon-undo"></i>
+      </button>
+      <button id="redo" tooltip="Redo">
+        <i class="icon-redo"></i>
+      </button>
+      <span class="separator"></span>
+      <button id="delete" tooltip="Delete selected" disabled>
+        <i class="icon-trash"></i>
+      </button>
+      <span class="separator"></span>
+      <button id="export" tooltip="Export annotations">
+        <i class="icon-download"></i>
+      </button>
+      <button id="export-svg" tooltip="Export SVG">
+        <i class="icon-camera"></i>
+      </button>
+    </div>
+    <div class="control-bar vertical" id="vis-controls">
+      <button id="center-view" tooltip="Center view">
+        <i class="icon-minimize"></i>
+      </button>
+      <span class="separator"></span>
+      <button id="rotate-cw" tooltip="rotate clockwise">
+        <i class="icon-rotate-cw"></i>
+      </button>
+      <button id="rotate-ccw" tooltip="rotate counter-clockwise">
+        <i class="icon-rotate-ccw"></i>
+      </button>
+    </div>
+    <!-- Side Panel for Annotation Options -->
+    <div id="annotation-panel" class="annotation-panel" style="display: none">
+      <div class="panel-body">
+        <!-- Content will be dynamically rendered when an annotation is selected -->
+      </div>
     </div>
   </body>
 </html>
