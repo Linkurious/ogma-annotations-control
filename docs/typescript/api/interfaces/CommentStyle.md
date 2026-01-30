@@ -126,6 +126,16 @@ Icon to display when collapsed (default: "💬")
 
 ***
 
+### maxHeight?
+
+```ts
+optional maxHeight: number;
+```
+
+Maximum height before scrolling (default: 480px, undefined = no limit)
+
+***
+
 ### minHeight?
 
 ```ts
