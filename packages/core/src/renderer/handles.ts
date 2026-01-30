@@ -367,7 +367,7 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.closePath();
   }
 
-  // @ts-expect-error debug method
+  // @ts-expect-error Debug method
   private renderCenterPoint(
     feature: Text | Box,
     ctx: CanvasRenderingContext2D
