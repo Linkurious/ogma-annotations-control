@@ -1,7 +1,7 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
-import { Id, Text, defaultTextStyle } from "../types";
+import { Id, Text, defaultTextStyle, CommentStyle } from "../types";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -94,8 +94,9 @@ export class TextArea {
     const annotation = this.getAnnotation();
     if (!annotation) return { x: 0, y: 0 };
 
-    const fixedSize = annotation.properties.style?.fixedSize || false;
-    const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+    const style = annotation.properties.style as CommentStyle | undefined;
+    const fixedSize = style?.fixedSize || false;
+    const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
     const borderWidth = getBorderWidth(annotation);
 
@@ -125,8 +126,9 @@ export class TextArea {
     const annotation = this.getAnnotation();
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation);
-    const fixedSize = annotation.properties.style?.fixedSize || false;
-    const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+    const style = annotation.properties.style as CommentStyle | undefined;
+    const fixedSize = style?.fixedSize || false;
+    const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
 
     // Scale size inversely with zoom for fixed-size text
@@ -183,7 +185,7 @@ export class TextArea {
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
-      const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+      const maxHeight = (annotation.properties.style as CommentStyle | undefined)?.maxHeight;
       // Enable scrolling if maxHeight is set, otherwise hide overflow
       textAreaStyle.overflowY = maxHeight ? "auto" : "hidden";
       textAreaStyle.overflowX = "hidden";
@@ -258,7 +260,7 @@ export class TextArea {
 
       // Adjust center position to grow downward only (keep top edge fixed)
       // But stop moving once maxHeight is reached
-      const maxHeight = (annotation.properties as { maxHeight?: number })?.maxHeight;
+      const maxHeight = (annotation.properties.style as CommentStyle | undefined)?.maxHeight;
       const oldHeight = annotation.properties.height;
       const heightDelta = newHeight - oldHeight;
 

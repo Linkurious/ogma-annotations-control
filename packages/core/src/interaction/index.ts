@@ -287,7 +287,7 @@ export class InteractionController extends EventTarget {
     const annotation = this.detect(x, y);
 
     if (!annotation || !isComment(annotation)) return;
-    const maxHeight = annotation.properties.maxHeight;
+    const maxHeight = annotation.properties.style?.maxHeight;
     const height = annotation.properties.height;
 
     // Check if comment has scrollable content

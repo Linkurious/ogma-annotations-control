@@ -213,9 +213,9 @@ function renderExpandedBox(
     color = "#333",
     borderRadius = 4,
     strokeColor = "#DDD",
-    strokeWidth = 1
+    strokeWidth = 1,
+    maxHeight
   } = style;
-  const maxHeight = comment.properties.maxHeight;
 
   const maxWidth = comment.properties.width;
   const content = comment.properties.content || "";
