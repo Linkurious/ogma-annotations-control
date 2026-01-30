@@ -1,8 +1,74 @@
-import { renderText } from "./text";
-import { COMMENT_MODE_COLLAPSED } from "../../constants";
+import { COMMENT_MODE_COLLAPSED, TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
-import { Comment, Text, defaultCommentStyle } from "../../types";
+import { Comment, defaultCommentStyle } from "../../types";
 import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
+
+// Canvas context for measuring text
+let measureContext: CanvasRenderingContext2D | null = null;
+
+function getMeasureContext(): CanvasRenderingContext2D {
+  if (!measureContext) {
+    const canvas = document.createElement("canvas");
+    measureContext = canvas.getContext("2d")!;
+  }
+  return measureContext;
+}
+
+/**
+ * Measure the width needed for text content
+ * Returns the maximum width of all lines (natural width before wrapping)
+ */
+function measureTextWidth(
+  content: string,
+  font: string,
+  fontSize: number,
+  maxWidth: number,
+  padding: number
+): number {
+  if (!content || content.length === 0) {
+    return 60; // Minimum width for empty content
+  }
+
+  const ctx = getMeasureContext();
+  ctx.font = `${fontSize}px ${font}`;
+
+  // Split by explicit line breaks and measure each line
+  const lines = content.split("\n");
+  let maxLineWidth = 0;
+
+  for (const line of lines) {
+    if (line.length === 0) continue;
+
+    // For each line, we need to consider word wrapping
+    // Measure words and simulate wrapping
+    const words = line.split(/\s+/);
+    let currentLineWidth = 0;
+    const spaceWidth = ctx.measureText(" ").width;
+    const availableWidth = maxWidth - padding * 2;
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      const wordWidth = ctx.measureText(word).width;
+
+      if (currentLineWidth === 0) {
+        currentLineWidth = wordWidth;
+      } else if (currentLineWidth + spaceWidth + wordWidth <= availableWidth) {
+        currentLineWidth += spaceWidth + wordWidth;
+      } else {
+        // Word wraps to next line
+        maxLineWidth = Math.max(maxLineWidth, currentLineWidth);
+        currentLineWidth = wordWidth;
+      }
+    }
+    maxLineWidth = Math.max(maxLineWidth, currentLineWidth);
+  }
+
+  // Add padding and a small buffer
+  const neededWidth = maxLineWidth + padding * 2 + 4;
+
+  // Return the minimum of needed width and maxWidth
+  return Math.min(neededWidth, maxWidth);
+}
 
 /**
  * Returns the comment-related CSS styles to embed in the SVG defs
@@ -45,6 +111,24 @@ export function getCommentDefs(): SVGStyleElement {
     .comment-expanded .comment-box {
       opacity: 1;
       scale: 1;
+    }
+
+    /* Comment scrollbar styling */
+    .comment-box foreignObject div::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .comment-box foreignObject div::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .comment-box foreignObject div::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 3px;
+    }
+
+    .comment-box foreignObject div::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.3);
     }
   `;
   return style;
@@ -111,42 +195,121 @@ function renderCollapsedIcon(
 
 /**
  * Render or update the expanded box within its group
- * Reuses text rendering logic
+ * Supports:
+ * - Shrinking width if text content is short
+ * - MaxHeight with scrolling via foreignObject
  */
 function renderExpandedBox(
   boxGroup: SVGGElement,
   comment: Comment,
   state: AnnotationState
 ): void {
-  // Convert comment to text annotation for rendering
-  const asText: Text = {
-    ...comment,
-    properties: {
-      type: "text",
-      content: comment.properties.content,
-      width: comment.properties.width,
-      height: comment.properties.height,
-      style: {
-        ...comment.properties.style,
-        fixedSize: true // Comments always have fixed size
-      }
-    }
-  };
+  const style = { ...defaultCommentStyle, ...comment.properties.style };
+  const {
+    font = "Arial, sans-serif",
+    fontSize = 12,
+    padding = 8,
+    background = "#FFFACD",
+    color = "#333",
+    borderRadius = 4,
+    strokeColor = "#DDD",
+    strokeWidth = 1,
+    maxHeight
+  } = style;
 
-  // Create a temporary container for text rendering
-  const tempContainer = createSVGElement<SVGGElement>("g");
+  const maxWidth = comment.properties.width;
+  const content = comment.properties.content || "";
 
-  // Reuse text renderer to render the box and content
-  const renderedG = renderText(tempContainer, asText, undefined, state);
+  // Calculate actual width needed based on content
+  const actualWidth = measureTextWidth(
+    content,
+    font,
+    typeof fontSize === "number" ? fontSize : parseFloat(fontSize),
+    maxWidth,
+    padding
+  );
 
-  // Clear and populate the boxGroup with the rendered content
+  // Calculate height - use maxHeight if set
+  const contentHeight = comment.properties.height;
+  const displayHeight = maxHeight ? Math.min(contentHeight, maxHeight) : contentHeight;
+  const needsScroll = maxHeight ? contentHeight > maxHeight : false;
+
+  // Clear existing content
   boxGroup.innerHTML = "";
-  while (renderedG.firstChild) {
-    boxGroup.appendChild(renderedG.firstChild);
+
+  // We use center-based positioning
+  const x = -actualWidth / 2;
+  const y = -displayHeight / 2;
+
+  // Create background rect
+  const rect = createSVGElement<SVGRectElement>("rect");
+  rect.setAttribute("x", `${x}`);
+  rect.setAttribute("y", `${y}`);
+  rect.setAttribute("width", `${actualWidth}`);
+  rect.setAttribute("height", `${displayHeight}`);
+  rect.setAttribute("rx", `${borderRadius}`);
+  rect.setAttribute("ry", `${borderRadius}`);
+  rect.setAttribute("fill", state.hoveredFeature === comment.id ? brighten(background) : background);
+  if (strokeWidth && strokeWidth > 0) {
+    rect.setAttribute("stroke", strokeColor || "#DDD");
+    rect.setAttribute("stroke-width", `${strokeWidth}`);
   }
+  boxGroup.appendChild(rect);
+
+  // Use foreignObject for text content (supports scrolling)
+  const foreignObject = createSVGElement<SVGForeignObjectElement>("foreignObject");
+  foreignObject.setAttribute("x", `${x}`);
+  foreignObject.setAttribute("y", `${y}`);
+  foreignObject.setAttribute("width", `${actualWidth}`);
+  foreignObject.setAttribute("height", `${displayHeight}`);
+  foreignObject.style.pointerEvents = "none"; // Let clicks pass through to rect
+
+  // Create the HTML content div
+  const div = document.createElement("div");
+  div.style.width = "100%";
+  div.style.height = "100%";
+  div.style.padding = `${padding}px`;
+  div.style.boxSizing = "border-box";
+  div.style.fontFamily = font;
+  div.style.fontSize = `${fontSize}px`;
+  div.style.lineHeight = `${(typeof fontSize === "number" ? fontSize : parseFloat(fontSize)) * TEXT_LINE_HEIGHT}px`;
+  div.style.color = color;
+  div.style.overflowY = needsScroll ? "auto" : "hidden";
+  div.style.overflowX = "hidden";
+  div.style.overflowWrap = "break-word";
+  div.style.whiteSpace = "pre-wrap";
+  div.style.pointerEvents = "none"; // Let clicks pass through to rect
+
+  // Convert content to HTML (handle line breaks and links)
+  div.innerHTML = formatContent(content);
+
+  foreignObject.appendChild(div);
+  boxGroup.appendChild(foreignObject);
 
   // Add drop shadow for comments
   boxGroup.setAttribute("filter", "url(#softShadow)");
+}
+
+/**
+ * Format text content for HTML display
+ * Handles line breaks and converts URLs to clickable links
+ */
+function formatContent(content: string): string {
+  if (!content) return "";
+
+  // Escape HTML
+  let html = content
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // Convert URLs to links
+  html = html.replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" style="color: #38e; text-decoration: none;">$1</a>'
+  );
+
+  return html;
 }
 
 /**

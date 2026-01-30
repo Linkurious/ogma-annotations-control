@@ -20,13 +20,12 @@ import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 
 // Type guard to check if event target is the Ogma container element
+// Note: HTMLTextAreaElement is intentionally excluded - textarea events should be
+// handled natively by the textarea (for text selection, scrolling, etc.)
 function isOgmaContainerElement(
   element: EventTarget | null
 ): element is HTMLElement {
-  return (
-    element instanceof HTMLCanvasElement ||
-    element instanceof HTMLTextAreaElement
-  );
+  return element instanceof HTMLCanvasElement;
 }
 
 export class InteractionController extends EventTarget {
@@ -76,6 +75,10 @@ export class InteractionController extends EventTarget {
       });
       container.addEventListener("mouseup", this.onMouseUp, {
         passive: true,
+        capture: true
+      });
+      container.addEventListener("wheel", this.onWheel, {
+        passive: false,
         capture: true
       });
     }
@@ -269,6 +272,37 @@ export class InteractionController extends EventTarget {
     }
 
     this.mouseDownState = null;
+  };
+
+  private onWheel = (evt: WheelEvent) => {
+    // Don't intercept wheel events on textarea - let it handle its own scrolling
+    if (evt.target instanceof HTMLTextAreaElement) return;
+
+    // Check if we're over a scrollable comment
+    const screenPoint = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
+    const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
+    const annotation = this.detect(x, y);
+
+    if (!annotation || !isComment(annotation)) return;
+    const maxHeight = annotation.properties.style?.maxHeight;
+    const height = annotation.properties.height;
+
+    // Check if comment has scrollable content
+    if (!maxHeight || height <= maxHeight) return;
+    // Find the comment's div element and scroll it
+    const container = this.ogma.getContainer();
+    const commentGroup = container?.querySelector(
+      `[data-annotation="${annotation.id}"] .comment-box foreignObject div`
+    ) as HTMLDivElement | null;
+
+    if (commentGroup) {
+      evt.stopPropagation();
+      evt.preventDefault();
+      commentGroup.scrollTop += evt.deltaY;
+    }
   };
 
   private setCursor(cursor: Cursor) {

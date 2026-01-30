@@ -30,6 +30,8 @@ export interface CommentStyle extends TextStyle {
   // Size properties
   /** Minimum height (default: 60px) */
   minHeight?: number;
+  /** Maximum height before scrolling (default: 480px, undefined = no limit) */
+  maxHeight?: number;
   /** Size when collapsed (default: 32px) */
   iconSize?: number;
   /** Zoom threshold below which comment auto-collapses (default: 0.5) */
@@ -147,6 +149,7 @@ export const defaultCommentStyle: CommentStyle = {
 
   // Size properties
   minHeight: 60,
+  maxHeight: 480,
   iconSize: 32,
   // collapseZoomThreshold is undefined by default, so it auto-calculates from dimensions
 

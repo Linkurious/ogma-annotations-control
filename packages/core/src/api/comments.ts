@@ -51,6 +51,7 @@ export class CommentManager {
 
         // Only update if mode needs to change
         if (comment.properties.mode === targetMode) return;
+        // @ts-expect-error live update
         updates[comment.id] = {
           properties: {
             ...comment.properties,

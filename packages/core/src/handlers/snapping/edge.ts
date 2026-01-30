@@ -1,4 +1,4 @@
-import type { Point, EdgeList, EdgeId } from "@linkurious/ogma";
+import type { Point, EdgeList, EdgeId, } from "@linkurious/ogma";
 import { geometry } from "@linkurious/ogma";
 import { TARGET_TYPES } from "../../constants";
 import { subtract, length } from "../../utils/vec";
@@ -123,7 +123,12 @@ export function snapToEdges(
         target.y,
         curvature
       );
-      result = findClosestPointOnQuadraticCurve(point, source, target, cp);
+      result = findClosestPointOnQuadraticCurve(
+        point,
+        source,
+        target,
+        cp,
+      );
     }
 
     if (result && result.distance < closestDist) {
