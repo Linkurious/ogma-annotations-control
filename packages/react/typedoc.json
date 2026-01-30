@@ -1,0 +1,12 @@
+{
+  "entryPoints": ["./src/index.ts"],
+  "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
+  "readme": "Readme.md",
+  "indexFormat": "table",
+  "useCodeBlocks": true,
+  "disableSources": true,
+  "tsconfig": "./tsconfig-build.json",
+  "out": "../../docs/react/api",
+  "docsRoot": "./",
+  "sidebar": { "pretty": true }
+}

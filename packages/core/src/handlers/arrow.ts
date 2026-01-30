@@ -1,0 +1,329 @@
+import { Ogma, Node, type Point } from "@linkurious/ogma";
+import { Handler } from "./base";
+import {
+  canDetachArrowEnd,
+  canDetachArrowStart,
+  isCommentArrow
+} from "./commentHelpers";
+import { Links } from "./links";
+import { Snap, Snapping } from "./snapping";
+import {
+  EVT_DRAG,
+  SIDE_START,
+  cursors,
+  handleDetectionThreshold
+} from "../constants";
+import { Store } from "../store";
+import {
+  Arrow,
+  ArrowProperties,
+  ClientMouseEvent,
+  Id,
+  Side,
+  Text,
+  detectArrow,
+  isBox,
+  isPolygon,
+  isText
+} from "../types";
+import {
+  getArrowSide,
+  getBoxCenter,
+  getPolygonCenter,
+  setArrowEndPoint
+} from "../utils/utils";
+
+enum HandleType {
+  START = "start",
+  END = "end",
+  BODY = "body"
+}
+
+type Handle = {
+  type: HandleType;
+  point: Point;
+};
+
+export class ArrowHandler extends Handler<Arrow, Handle> {
+  private snapping: Snapping;
+  private links: Links;
+  private snap: Snap | null = null;
+
+  constructor(ogma: Ogma, store: Store, snapping: Snapping, links: Links) {
+    super(ogma, store);
+    this.snapping = snapping;
+    this.links = links;
+  }
+
+  protected detectHandle(evt: MouseEvent) {
+    const annotation = this.getAnnotation()!;
+    const mousePoint = this.clientToCanvas(evt);
+    const margin = handleDetectionThreshold; // Larger margin for easier arrow endpoint selection
+
+    const startPoint = annotation.geometry.coordinates[0];
+    const endPoint = annotation.geometry.coordinates[1];
+
+    const startDistance = Math.sqrt(
+      Math.pow(mousePoint.x - startPoint[0], 2) +
+      Math.pow(mousePoint.y - startPoint[1], 2)
+    );
+
+    const endDistance = Math.sqrt(
+      Math.pow(mousePoint.x - endPoint[0], 2) +
+      Math.pow(mousePoint.y - endPoint[1], 2)
+    );
+
+    if (startDistance < margin)
+      this.grabHandle(HandleType.START, startPoint[0], startPoint[1]);
+    else if (endDistance < margin)
+      this.grabHandle(HandleType.END, endPoint[0], endPoint[1]);
+    else {
+      // on the line?
+      if (detectArrow(annotation, mousePoint, margin)) {
+        this.setCursor(cursors.grab);
+        this.hoveredHandle = {
+          type: HandleType.BODY,
+          point: mousePoint
+        };
+        this.store.setState({ hoveredHandle: 2 });
+      } else {
+        this.store.setState({ hoveredHandle: -1 });
+        this.hoveredHandle = undefined;
+      }
+    }
+  }
+
+  private grabHandle(type: HandleType, x: number, y: number) {
+    this.hoveredHandle = { type, point: { x, y } };
+    this.store.setState({ hoveredHandle: type === HandleType.START ? 0 : 1 });
+    this.setCursor(cursors.move);
+  }
+
+  protected onDrag(evt: MouseEvent) {
+    if (!(this.dragStartPoint || !this.hoveredHandle) || !this.isActive())
+      return;
+
+    evt.stopPropagation();
+    evt.stopImmediatePropagation();
+
+    const mousePoint = this.clientToCanvas(evt);
+    const handle = this.hoveredHandle!;
+    const annotation = this.getAnnotation()!;
+    this.snap = this.snapping.snap(mousePoint);
+    const point = this.snap?.point || mousePoint;
+    const link = annotation.properties.link || {};
+
+    // Create updated coordinates
+    const newCoordinates = [...annotation.geometry.coordinates];
+    if (handle.type === HandleType.START) {
+      newCoordinates[0] = [point.x, point.y];
+      if (this.snap) {
+        link.start = {
+          side: handle.type,
+          id: this.snap.id,
+          type: this.snap.type,
+          magnet: this.snap.magnet
+        };
+      }
+    } else if (handle.type === HandleType.END) {
+      newCoordinates[1] = [point.x, point.y];
+      if (this.snap) {
+        link.end = {
+          side: handle.type,
+          id: this.snap.id,
+          type: this.snap.type,
+          magnet: this.snap.magnet
+        };
+      }
+    } else if (handle.type === HandleType.BODY) {
+      // translate both points
+      const dx = point.x - handle.point.x;
+      const dy = point.y - handle.point.y;
+      const start = annotation.geometry.coordinates[0];
+      const end = annotation.geometry.coordinates[1];
+      newCoordinates[0] = [start[0] + dx, start[1] + dy];
+      newCoordinates[1] = [end[0] + dx, end[1] + dy];
+    }
+
+    // Apply live update to store instead of direct mutation
+    this.store.getState().applyLiveUpdate(annotation.id, {
+      id: annotation.id,
+      properties: { ...annotation.properties, link } as ArrowProperties,
+      geometry: {
+        type: annotation.geometry.type,
+        coordinates: newCoordinates
+      }
+    });
+
+    this.dispatchEvent(
+      new CustomEvent(EVT_DRAG, {
+        detail: {
+          point,
+          annotation: this.annotation,
+          handle
+        }
+      })
+    );
+  }
+  protected onDragStart(evt: ClientMouseEvent) {
+    if (!super.onDragStart(evt)) return false;
+    const annotation = this.getAnnotation()!;
+    const handle = this.hoveredHandle!;
+    if (
+      (handle.type === HandleType.BODY && isCommentArrow(annotation)) ||
+      (handle.type === HandleType.END && !canDetachArrowEnd(annotation)) ||
+      (handle.type === HandleType.START && !canDetachArrowStart(annotation))
+    ) {
+      this.clearDragState();
+      return false;
+    }
+    // Start live update tracking for this annotation
+    this.store.getState().startLiveUpdate([this.annotation!]);
+    return true;
+  }
+
+  protected onDragEnd(evt: ClientMouseEvent) {
+    if (!super.onDragEnd(evt)) return false;
+
+    // Handle snapping if applicable
+    if (this.snap && this.hoveredHandle) {
+      const handle = this.hoveredHandle;
+      if (handle.type !== HandleType.BODY)
+        this.links.add(
+          this.getAnnotation()!,
+          handle.type,
+          this.snap.id,
+          this.snap.type,
+          this.snap.magnet
+        );
+    } else if (this.snap === null && this.hoveredHandle) {
+      const annotation = this.getAnnotation()!;
+      const side = this.hoveredHandle.type as Side;
+      if (annotation.properties.link && annotation.properties.link[side]) {
+        this.links.remove(annotation, side);
+        // Preserve the other side's link while removing this side
+        const updatedLink = { ...annotation.properties.link };
+        delete updatedLink[side];
+        this.store.getState().applyLiveUpdate(annotation.id, {
+          properties: {
+            ...annotation.properties,
+            link: updatedLink
+          }
+        });
+      }
+    }
+
+    // Clear drawing flag BEFORE committing so the commit creates a history entry
+    const state = this.store.getState();
+    if (state.drawingFeature === this.annotation) {
+      this.store.setState({ drawingFeature: null });
+    }
+
+    this.commitChange();
+    this.clearDragState();
+
+    this.snap = null;
+    return true;
+  }
+
+  private snapDrawingStart(annotation: Arrow, x: number, y: number) {
+    const snap = this.snapping.snap({ x, y });
+    if (snap) {
+      const update: Partial<Arrow> = {
+        geometry: {
+          ...annotation.geometry,
+          coordinates: [
+            [snap.point.x, snap.point.y],
+            annotation.geometry.coordinates[1]
+          ]
+        },
+        properties: {
+          ...annotation.properties,
+          link: {
+            start: {
+              side: SIDE_START,
+              id: snap.id,
+              type: snap.type,
+              magnet: snap.magnet
+            }
+          }
+        }
+      };
+      const state = this.store.getState();
+      state.applyLiveUpdate(annotation.id, update);
+      state.updateFeature(annotation.id, update);
+      this.links.add(
+        annotation,
+        HandleType.START,
+        snap.id,
+        snap.type,
+        snap.magnet
+      );
+    }
+  }
+
+  public startDrawing(id: Id, x: number, y: number) {
+    this.annotation = id;
+    const annotation = this.getAnnotation()!;
+    // ensure linking
+    this.snapDrawingStart(annotation, x, y);
+    this.grabHandle(HandleType.END, x, y);
+    this.dragging = true;
+    this.dragStartPoint = { x, y };
+
+    const clientPos = this.ogma.view.graphToScreenCoordinates({ x, y });
+
+    // Start live update
+    this.onDragStart({ clientX: clientPos.x, clientY: clientPos.y });
+  }
+
+  public link(arrow: Arrow, target: Id | Node, side: Side) {
+    let extremity = getArrowSide(arrow, side);
+    const link = arrow.properties.link || {};
+    let snap: Snap | null = null;
+    if (target instanceof Node) {
+      // move the extremity to the node position
+      extremity = target.getPosition();
+      // find the snapping point to use
+      snap = this.snapping.snapToNodes(extremity, target.toList());
+    } else {
+      const other = this.store.getState().getFeature(target);
+      if (!other) {
+        throw new Error(`Annotation with id ${target} not found`);
+      }
+      if (isText(other) || isBox(other)) {
+        // move the extremity to the box/text center position
+        extremity = getBoxCenter(other);
+        // find snapping point to use
+        snap = this.snapping.snapToText(extremity, [other as Text]);
+      } else if (isPolygon(other)) {
+        // move the extremity to the polygon center position
+        extremity = getPolygonCenter(other);
+        // find snapping point to use
+        snap = this.snapping.snapToPolygon(extremity, [other]);
+        // find snapping point to use
+      } else {
+        throw new Error(
+          `Cannot link arrow to annotation of type ${other.properties.type}`
+        );
+      }
+    }
+    if (snap) {
+      link[side] = {
+        side,
+        id: snap.id,
+        type: snap.type,
+        magnet: snap.magnet
+      };
+      this.links.add(arrow, side, snap.id, snap.type, snap.magnet);
+      setArrowEndPoint(arrow, side, extremity.x, extremity.y);
+      this.store.getState().updateFeature(arrow.id, {
+        properties: { ...arrow.properties, link },
+        geometry: {
+          type: arrow.geometry.type,
+          coordinates: arrow.geometry.coordinates
+        }
+      });
+    }
+  }
+}

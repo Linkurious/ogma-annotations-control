@@ -1,0 +1,724 @@
+[
+  {
+    "text": "Core",
+    "collapsed": false,
+    "items": [
+      {
+        "text": "Control",
+        "link": "/../../docs/typescript/api/classes/Control.md",
+        "category": "Classes"
+      },
+      {
+        "text": "Events",
+        "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "select",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#select"
+          },
+          {
+            "text": "unselect",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#unselect"
+          },
+          {
+            "text": "add",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#add"
+          },
+          {
+            "text": "remove",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#remove"
+          },
+          {
+            "text": "update",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#update"
+          },
+          {
+            "text": "link",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#link"
+          },
+          {
+            "text": "cancelDrawing",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#cancelDrawing"
+          },
+          {
+            "text": "completeDrawing",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#completeDrawing"
+          },
+          {
+            "text": "history",
+            "link": "/../../docs/typescript/api/type-aliases/FeatureEvents.md#history"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Feature Types",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Arrow",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Arrow",
+            "link": "/../../docs/typescript/api/interfaces/Arrow.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "ArrowProperties",
+            "link": "/../../docs/typescript/api/interfaces/ArrowProperties.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "ArrowStyles",
+            "link": "/../../docs/typescript/api/interfaces/ArrowStyles.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "createArrow",
+            "link": "/../../docs/typescript/api/functions/createArrow.md",
+            "category": "Functions"
+          }
+        ]
+      },
+      {
+        "text": "Text",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Text",
+            "link": "/../../docs/typescript/api/interfaces/Text.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "TextProperties",
+            "link": "/../../docs/typescript/api/interfaces/TextProperties.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "TextStyle",
+            "link": "/../../docs/typescript/api/interfaces/TextStyle.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "createText",
+            "link": "/../../docs/typescript/api/functions/createText.md",
+            "category": "Functions"
+          }
+        ]
+      },
+      {
+        "text": "Box",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Box",
+            "link": "/../../docs/typescript/api/interfaces/Box.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "BoxProperties",
+            "link": "/../../docs/typescript/api/interfaces/BoxProperties.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "BoxStyle",
+            "link": "/../../docs/typescript/api/interfaces/BoxStyle.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "createBox",
+            "link": "/../../docs/typescript/api/functions/createBox.md",
+            "category": "Functions"
+          }
+        ]
+      },
+      {
+        "text": "Polygon",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Polygon",
+            "link": "/../../docs/typescript/api/interfaces/Polygon.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "PolygonProperties",
+            "link": "/../../docs/typescript/api/interfaces/PolygonProperties.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "PolygonStyle",
+            "link": "/../../docs/typescript/api/interfaces/PolygonStyle.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "createPolygon",
+            "link": "/../../docs/typescript/api/functions/createPolygon.md",
+            "category": "Functions"
+          }
+        ]
+      },
+      {
+        "text": "Comment",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Comment",
+            "link": "/../../docs/typescript/api/interfaces/Comment.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "CommentProps",
+            "link": "/../../docs/typescript/api/interfaces/CommentProps.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "CommentStyle",
+            "link": "/../../docs/typescript/api/interfaces/CommentStyle.md",
+            "category": "Interfaces"
+          },
+          {
+            "text": "createComment",
+            "link": "/../../docs/typescript/api/functions/createComment.md",
+            "category": "Functions"
+          },
+          {
+            "text": "createCommentWithArrow",
+            "link": "/../../docs/typescript/api/functions/createCommentWithArrow.md",
+            "category": "Functions"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Core Interfaces",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Annotation",
+        "link": "/../../docs/typescript/api/type-aliases/Annotation.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "AnnotationCollection",
+        "link": "/../../docs/typescript/api/interfaces/AnnotationCollection.md",
+        "category": "Interfaces"
+      },
+      {
+        "text": "AnnotationFeature",
+        "link": "/../../docs/typescript/api/interfaces/AnnotationFeature.md",
+        "category": "Interfaces"
+      },
+      {
+        "text": "AnnotationProps",
+        "link": "/../../docs/typescript/api/interfaces/AnnotationProps.md",
+        "category": "Interfaces"
+      },
+      {
+        "text": "AnnotationType",
+        "link": "/../../docs/typescript/api/type-aliases/AnnotationType.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "Link",
+        "link": "/../../docs/typescript/api/interfaces/Link.md",
+        "category": "Interfaces"
+      },
+      {
+        "text": "AnnotationOptions",
+        "link": "/../../docs/typescript/api/type-aliases/AnnotationOptions.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "ControllerOptions",
+        "link": "/../../docs/typescript/api/type-aliases/ControllerOptions.md",
+        "category": "Type Aliases"
+      }
+    ]
+  },
+  {
+    "text": "Styling & Visual",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Colors",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Color",
+            "link": "/../../docs/typescript/api/type-aliases/Color.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "HexColor",
+            "link": "/../../docs/typescript/api/type-aliases/HexColor.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "RgbColor",
+            "link": "/../../docs/typescript/api/type-aliases/RgbColor.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "RgbaColor",
+            "link": "/../../docs/typescript/api/type-aliases/RgbaColor.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "asColor",
+            "link": "/../../docs/typescript/api/functions/asColor.md",
+            "category": "Functions"
+          },
+          {
+            "text": "asHexColor",
+            "link": "/../../docs/typescript/api/functions/asHexColor.md",
+            "category": "Functions"
+          },
+          {
+            "text": "asRgbColor",
+            "link": "/../../docs/typescript/api/functions/asRgbColor.md",
+            "category": "Functions"
+          },
+          {
+            "text": "asRgbaColor",
+            "link": "/../../docs/typescript/api/functions/asRgbaColor.md",
+            "category": "Functions"
+          },
+          {
+            "text": "colorToRgba",
+            "link": "/../../docs/typescript/api/functions/colorToRgba.md",
+            "category": "Functions"
+          },
+          {
+            "text": "hexToRgba",
+            "link": "/../../docs/typescript/api/functions/hexToRgba.md",
+            "category": "Functions"
+          },
+          {
+            "text": "hexShortToLong",
+            "link": "/../../docs/typescript/api/functions/hexShortToLong.md",
+            "category": "Functions"
+          },
+          {
+            "text": "rgbToRgba",
+            "link": "/../../docs/typescript/api/functions/rgbToRgba.md",
+            "category": "Functions"
+          },
+          {
+            "text": "adjustColorBrightness",
+            "link": "/../../docs/typescript/api/functions/adjustColorBrightness.md",
+            "category": "Functions"
+          },
+          {
+            "text": "brighten",
+            "link": "/../../docs/typescript/api/functions/brighten.md",
+            "category": "Functions"
+          },
+          {
+            "text": "darken",
+            "link": "/../../docs/typescript/api/functions/darken.md",
+            "category": "Functions"
+          }
+        ]
+      },
+      {
+        "text": "Stroke",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "Stroke",
+            "link": "/../../docs/typescript/api/type-aliases/Stroke.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "StrokeStyle",
+            "link": "/../../docs/typescript/api/type-aliases/StrokeStyle.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "StrokeOptions",
+            "link": "/../../docs/typescript/api/type-aliases/StrokeOptions.md",
+            "category": "Type Aliases"
+          },
+          {
+            "text": "Extremity",
+            "link": "/../../docs/typescript/api/type-aliases/Extremity.md",
+            "category": "Type Aliases"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Geometry & Math",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Point",
+        "link": "/../../docs/typescript/api/type-aliases/Point.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "Bounds",
+        "link": "/../../docs/typescript/api/type-aliases/Bounds.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "Side",
+        "link": "/../../docs/typescript/api/type-aliases/Side.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "getBoxPosition",
+        "link": "/../../docs/typescript/api/functions/getBoxPosition.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getBoxSize",
+        "link": "/../../docs/typescript/api/functions/getBoxSize.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getBoxCenter",
+        "link": "/../../docs/typescript/api/functions/getBoxCenter.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getBbox",
+        "link": "/../../docs/typescript/api/functions/getBbox.md",
+        "category": "Functions"
+      },
+      {
+        "text": "setBbox",
+        "link": "/../../docs/typescript/api/functions/setBbox.md",
+        "category": "Functions"
+      },
+      {
+        "text": "updateBbox",
+        "link": "/../../docs/typescript/api/functions/updateBbox.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getPolygonBounds",
+        "link": "/../../docs/typescript/api/functions/getPolygonBounds.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getPolygonCenter",
+        "link": "/../../docs/typescript/api/functions/getPolygonCenter.md",
+        "category": "Functions"
+      },
+      {
+        "text": "scaleGeometry",
+        "link": "/../../docs/typescript/api/functions/scaleGeometry.md",
+        "category": "Functions"
+      },
+      {
+        "text": "scalePolygon",
+        "link": "/../../docs/typescript/api/functions/scalePolygon.md",
+        "category": "Functions"
+      },
+      {
+        "text": "simplifyPolygon",
+        "link": "/../../docs/typescript/api/functions/simplifyPolygon.md",
+        "category": "Functions"
+      },
+      {
+        "text": "translatePolygon",
+        "link": "/../../docs/typescript/api/functions/translatePolygon.md",
+        "category": "Functions"
+      },
+      {
+        "text": "updatePolygonBbox",
+        "link": "/../../docs/typescript/api/functions/updatePolygonBbox.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getAnnotationsBounds",
+        "link": "/../../docs/typescript/api/functions/getAnnotationsBounds.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getCoordinates",
+        "link": "/../../docs/typescript/api/functions/getCoordinates.md",
+        "category": "Functions"
+      }
+    ]
+  },
+  {
+    "text": "Arrow Utilities",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "getArrowStart",
+        "link": "/../../docs/typescript/api/functions/getArrowStart.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getArrowEnd",
+        "link": "/../../docs/typescript/api/functions/getArrowEnd.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getArrowEndPoints",
+        "link": "/../../docs/typescript/api/functions/getArrowEndPoints.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getArrowSide",
+        "link": "/../../docs/typescript/api/functions/getArrowSide.md",
+        "category": "Functions"
+      },
+      {
+        "text": "setArrowStart",
+        "link": "/../../docs/typescript/api/functions/setArrowStart.md",
+        "category": "Functions"
+      },
+      {
+        "text": "setArrowEnd",
+        "link": "/../../docs/typescript/api/functions/setArrowEnd.md",
+        "category": "Functions"
+      },
+      {
+        "text": "setArrowEndPoint",
+        "link": "/../../docs/typescript/api/functions/setArrowEndPoint.md",
+        "category": "Functions"
+      },
+      {
+        "text": "canDetachArrowStart",
+        "link": "/../../docs/typescript/api/functions/canDetachArrowStart.md",
+        "category": "Functions"
+      },
+      {
+        "text": "canDetachArrowEnd",
+        "link": "/../../docs/typescript/api/functions/canDetachArrowEnd.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getAttachmentPointOnNode",
+        "link": "/../../docs/typescript/api/functions/getAttachmentPointOnNode.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isCommentArrow",
+        "link": "/../../docs/typescript/api/functions/isCommentArrow.md",
+        "category": "Functions"
+      }
+    ]
+  },
+  {
+    "text": "Comment Utilities",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "getCommentPosition",
+        "link": "/../../docs/typescript/api/functions/getCommentPosition.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getCommentSize",
+        "link": "/../../docs/typescript/api/functions/getCommentSize.md",
+        "category": "Functions"
+      },
+      {
+        "text": "getCommentZoomThreshold",
+        "link": "/../../docs/typescript/api/functions/getCommentZoomThreshold.md",
+        "category": "Functions"
+      },
+      {
+        "text": "calculateCommentZoomThreshold",
+        "link": "/../../docs/typescript/api/functions/calculateCommentZoomThreshold.md",
+        "category": "Functions"
+      },
+      {
+        "text": "toggleCommentMode",
+        "link": "/../../docs/typescript/api/functions/toggleCommentMode.md",
+        "category": "Functions"
+      }
+    ]
+  },
+  {
+    "text": "Type Guards",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "isArrow",
+        "link": "/../../docs/typescript/api/functions/isArrow.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isText",
+        "link": "/../../docs/typescript/api/functions/isText.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isBox",
+        "link": "/../../docs/typescript/api/functions/isBox.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isPolygon",
+        "link": "/../../docs/typescript/api/functions/isPolygon.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isComment",
+        "link": "/../../docs/typescript/api/functions/isComment.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isAnnotationCollection",
+        "link": "/../../docs/typescript/api/functions/isAnnotationCollection.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isColor",
+        "link": "/../../docs/typescript/api/functions/isColor.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isHexColor",
+        "link": "/../../docs/typescript/api/functions/isHexColor.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isRgbColor",
+        "link": "/../../docs/typescript/api/functions/isRgbColor.md",
+        "category": "Functions"
+      },
+      {
+        "text": "isRgbaColor",
+        "link": "/../../docs/typescript/api/functions/isRgbaColor.md",
+        "category": "Functions"
+      }
+    ]
+  },
+  {
+    "text": "Defaults & Constants",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "Default Styles",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "defaultArrowStyle",
+            "link": "/../../docs/typescript/api/variables/defaultArrowStyle.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultArrowOptions",
+            "link": "/../../docs/typescript/api/variables/defaultArrowOptions.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultTextStyle",
+            "link": "/../../docs/typescript/api/variables/defaultTextStyle.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultTextOptions",
+            "link": "/../../docs/typescript/api/variables/defaultTextOptions.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultBoxStyle",
+            "link": "/../../docs/typescript/api/variables/defaultBoxStyle.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultBoxOptions",
+            "link": "/../../docs/typescript/api/variables/defaultBoxOptions.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultPolygonStyle",
+            "link": "/../../docs/typescript/api/variables/defaultPolygonStyle.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultPolygonProperties",
+            "link": "/../../docs/typescript/api/variables/defaultPolygonProperties.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultCommentStyle",
+            "link": "/../../docs/typescript/api/variables/defaultCommentStyle.md",
+            "category": "Variables"
+          },
+          {
+            "text": "defaultCommentOptions",
+            "link": "/../../docs/typescript/api/variables/defaultCommentOptions.md",
+            "category": "Variables"
+          }
+        ]
+      },
+      {
+        "text": "Constants",
+        "collapsed": true,
+        "items": [
+          {
+            "text": "DEFAULT_SEND_ICON",
+            "link": "/../../docs/typescript/api/variables/DEFAULT_SEND_ICON.md",
+            "category": "Variables"
+          },
+          {
+            "text": "TEXT_LINE_HEIGHT",
+            "link": "/../../docs/typescript/api/variables/TEXT_LINE_HEIGHT.md",
+            "category": "Variables"
+          },
+          {
+            "text": "SIDE_START",
+            "link": "/../../docs/typescript/api/variables/SIDE_START.md",
+            "category": "Variables"
+          },
+          {
+            "text": "SIDE_END",
+            "link": "/../../docs/typescript/api/variables/SIDE_END.md",
+            "category": "Variables"
+          },
+          {
+            "text": "TargetType",
+            "link": "/../../docs/typescript/api/type-aliases/TargetType.md",
+            "category": "Type Aliases"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "text": "Utilities",
+    "collapsed": true,
+    "items": [
+      {
+        "text": "clientToContainerPosition",
+        "link": "/../../docs/typescript/api/functions/clientToContainerPosition.md",
+        "category": "Functions"
+      },
+      {
+        "text": "AnnotationGetter",
+        "link": "/../../docs/typescript/api/type-aliases/AnnotationGetter.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "ClientMouseEvent",
+        "link": "/../../docs/typescript/api/type-aliases/ClientMouseEvent.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "ExportedLink",
+        "link": "/../../docs/typescript/api/type-aliases/ExportedLink.md",
+        "category": "Type Aliases"
+      },
+      {
+        "text": "Id",
+        "link": "/../../docs/typescript/api/type-aliases/Id.md",
+        "category": "Type Aliases"
+      }
+    ]
+  }
+]
