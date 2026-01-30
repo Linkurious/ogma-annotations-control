@@ -1,0 +1,47 @@
+:root {
+  --brand: #4999f7;
+  --brand-darker: #337fdd;
+  --font: "IBM Plex Sans", sans-serif;
+}
+
+.App {
+  text-align: center;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  overflow: hidden;
+  font-family: "IBM Plex Sans", sans-serif;
+}
+
+.App > div {
+  width: 100vw;
+  height: 100vh;
+}
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+}
+
+.brand {
+  font-size: 11px;
+  padding: 5px;
+  margin: 0;
+  font-family: var(--font);
+  border-radius: 5px;
+}
+
+.brand a {
+  color: var(--brad);
+}
+
+.brand a:hover {
+  color: var(--brand-darker);
+}
+
+.brand:hover {
+  background: #f9f9f9;
+}

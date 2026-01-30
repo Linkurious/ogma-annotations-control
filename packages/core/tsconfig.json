@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "outDir": "./dist",
+    "useDefineForClassFields": true,
+    "module": "es2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "moduleResolution": "Node",
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": false,
+    "esModuleInterop": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true
+  },
+  "include": ["./src/**/*", "./web/**/*.ts"],
+  "exclude": ["./src/ControlOld.ts", "./src/Editor_old/**/*"]
+}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/iconoir-icons/iconoir@main/css/iconoir.css" />
+  <title>text annotations</title>
+  <style>
+    #graph-container {
+      width: 512px;
+      height: 512px;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="graph-container"></div>
+    <button title="Add arrow" id="add-arrow">
+      <i class="iconoir-arrow-right"></i>
+    </button>
+    <button title="Add text" id="add-text">
+      <i class="iconoir-text"></i>
+    </button>
+  </div>
+  <script type="module" src="/index.ts"></script>
+</body>
+
+</html>

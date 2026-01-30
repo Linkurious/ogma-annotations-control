@@ -1,0 +1,187 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 2,
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3A03CF",
+          "strokeWidth": 2,
+          "head": "arrow"
+        },
+        "link": {
+          "start": {
+            "id": 0,
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": 0.5,
+              "y": 1
+            }
+          },
+          "end": {
+            "id": "n0",
+            "side": "end",
+            "type": "node",
+            "magnet": {
+              "x": -3.190897184338244,
+              "y": 8.898312363505827
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [611.4601173101091, -181.18423691001794],
+          [50.33367527801032, -13.814162348264347]
+        ]
+      }
+    },
+    {
+      "id": "AOuuvtINge5RglzHJKGSY",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#E31D5B",
+          "strokeWidth": 2,
+          "head": "none",
+          "tail": "none"
+        },
+        "link": {
+          "start": {
+            "id": "XrBBIyHBBWN_GRk_3UiKO",
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": 1,
+              "y": 0.5
+            }
+          },
+          "end": {
+            "id": "n0",
+            "side": "end",
+            "type": "node",
+            "magnet": {
+              "x": -61.31075845619375,
+              "y": 10.577029299225533
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-367.29500436295564, 104.5992036935667],
+          [-59.42498177867539, 23.67884329601754]
+        ]
+      }
+    },
+    {
+      "id": "3dFfclX5npDSqZ9-tWuVo",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3A03CF",
+          "strokeWidth": 2,
+          "head": "halo-dot"
+        },
+        "link": {
+          "end": {
+            "id": "n32",
+            "side": "end",
+            "type": "node",
+            "magnet": {
+              "x": 241.13486569101863,
+              "y": 106.67847222038867
+            }
+          },
+          "start": {
+            "id": 0,
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": 0.5,
+              "y": 1
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [611.4601173101091, -181.18423691001794],
+          [241.13486569101863, 106.67847222038867]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 0,
+      "properties": {
+        "type": "text",
+        "content": "Another annotation",
+        "style": {
+          "font": "IBM Plex Sans",
+          "fontSize": 52,
+          "color": "#3A03CF",
+          "background": "#EDE6FF",
+          "strokeWidth": 0,
+          "strokeType": "plain",
+          "borderRadius": 8,
+          "padding": 16
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [411.46011731010924, -331.18423691001794],
+            [811.4601173101091, -331.18423691001794],
+            [811.4601173101091, -181.18423691001794],
+            [411.46011731010924, -181.18423691001794],
+            [411.46011731010924, -331.18423691001794]
+          ]
+        ]
+      }
+    },
+    {
+      "id": "XrBBIyHBBWN_GRk_3UiKO",
+      "type": "Feature",
+      "properties": {
+        "type": "text",
+        "content": "Annotation",
+        "style": {
+          "font": "IBM Plex Sans",
+          "fontSize": 22,
+          "color": "#E31D5B",
+          "background": "#FAEDF7",
+          "strokeWidth": 0,
+          "strokeColor": "#000",
+          "strokeType": "plain",
+          "padding": 12,
+          "borderRadius": 10
+        }
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-582.0334429503564, 63.48936747751024],
+            [-367.29500436295564, 63.48936747751024],
+            [-367.29500436295564, 145.70903990962313],
+            [-582.0334429503564, 145.70903990962313],
+            [-582.0334429503564, 63.48936747751024]
+          ]
+        ]
+      }
+    }
+  ]
+}

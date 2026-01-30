@@ -1,0 +1,85 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": 2,
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3b3",
+          "strokeWidth": 2,
+          "head": "arrow-plain",
+          "tail": "none"
+        },
+        "link": {
+          "end": {
+            "id": "n0",
+            "side": "end",
+            "type": "node",
+            "magnet": {
+              "x": 5.050129380397267,
+              "y": 3.193041958648245
+            }
+          },
+          "start": {
+            "id": 0,
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": 0.5,
+              "y": 1
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -110.88098481999998,
+            -244.93592493
+          ],
+          [
+            18.4631517379579,
+            9.452452392176536
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": 0,
+      "properties": {
+        "type": "text",
+        "content": "Another annotation",
+        "width": 400,
+        "height": 150,
+        "style": {
+          "font": "Helvetica",
+          "fontSize": "52",
+          "color": "black",
+          "background": "rgba(255, 255, 255, 0.5)",
+          "strokeWidth": 1,
+          "strokeColor": "#000",
+          "strokeType": "plain",
+          "padding": 12
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -110.88098482,
+          -319.93592493
+        ],
+        "bbox": [
+          -310.88098482,
+          -394.93592493,
+          89.11901518000002,
+          -244.93592493
+        ]
+      }
+    }
+  ]
+}

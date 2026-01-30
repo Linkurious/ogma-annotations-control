@@ -1,4 +1,4 @@
-@Library('linkurious-shared@feature/JSL-182')_
+@Library('linkurious-shared')_
 
 nodeJob {
   // General
@@ -13,4 +13,6 @@ nodeJob {
   createGitTag = true
   gitTagPrefix = 'v'
   runBookeeping = true
+
+  npmPackPaths = ['packages/ogma-annotations', 'packages/ogma-annotations-react']
 }

@@ -1,0 +1,194 @@
+import Textbox from "@borgar/textbox";
+import { renderBox } from "./box";
+import { TEXT_LINE_HEIGHT } from "../../constants";
+import { AnnotationState } from "../../store";
+import { Box, Text, defaultTextStyle } from "../../types";
+import {
+  brighten,
+  createSVGElement,
+  getBoxCenter,
+  getTextSize
+} from "../../utils/utils";
+
+export function renderText(
+  root: SVGElement,
+  annotation: Text,
+  cachedElement: SVGGElement | undefined,
+  state: AnnotationState
+) {
+  const { width, height } = getTextSize(annotation);
+
+  // TODO: edited element is rendered in DOM
+  //if (id === this.selectedId) continue;
+
+  const {
+    color = defaultTextStyle.color,
+    strokeColor = defaultTextStyle.strokeColor,
+    strokeWidth = defaultTextStyle.strokeWidth,
+    strokeType = defaultTextStyle.strokeType,
+    background = defaultTextStyle.background,
+    borderRadius = defaultTextStyle.borderRadius,
+    fixedSize = defaultTextStyle.fixedSize
+  } = annotation.properties.style || defaultTextStyle;
+
+  const g = renderBox(root, annotation as unknown as Box, cachedElement, state);
+  g.setAttribute("data-annotation-type", annotation.properties.type);
+  g.classList.add("annotation-text");
+  g.setAttribute("fill", `${color}`);
+
+  let child = g.firstChild;
+  while (child) {
+    const next = child.nextSibling;
+    if (child.nodeType === 1 && (child as Element).tagName !== "rect") {
+      g.removeChild(child);
+    }
+    child = next;
+  }
+  // rect is used for background and stroke
+  let rect = g.firstChild as SVGRectElement;
+  if (!rect) {
+    rect = createSVGElement<SVGRectElement>("rect");
+    g.appendChild(rect);
+  }
+
+  // we use the center of the box as the rotation point
+  const x = -width / 2;
+  const y = -height / 2;
+
+  if (borderRadius) {
+    rect.setAttribute("rx", `${borderRadius}`);
+    rect.setAttribute("ry", `${borderRadius}`);
+  }
+
+  if (strokeType && strokeType !== "none") {
+    rect.setAttribute("stroke", strokeColor || "black");
+    rect.setAttribute("stroke-width", `${strokeWidth}`);
+    if (strokeType === "dashed") rect.setAttribute("stroke-dasharray", `5,5`);
+  }
+
+  if (background && background.length) {
+    if (state.hoveredFeature === annotation.id) {
+      rect.setAttribute("fill", brighten(background));
+    } else {
+      rect.setAttribute("fill", background);
+    }
+  }
+
+  rect.setAttribute("width", `${width}`);
+  rect.setAttribute("height", `${height}`);
+  const position = getBoxCenter(annotation);
+  rect.setAttribute("x", `${x}`);
+  rect.setAttribute("y", `${y}`);
+
+  drawContent(annotation, g, x, y);
+
+  // get the SVG transform matrix to rotate the box around its center:
+  // When fixedSize is true, apply invZoom to maintain constant screen size
+  g.setAttribute(
+    "transform",
+    state.getScreenAlignedTransform(position.x, position.y, !fixedSize)
+  );
+
+  root.appendChild(g);
+  return g;
+}
+
+const removeEllipsis = (str: string) => str.replace(/…$/, "");
+const getText = (e: Element) => e.children[0].innerHTML;
+
+/**
+ * @function draw
+ * @param annotation the annotation to draw
+ * @param g the group in which the text should be drawn
+ */
+function drawContent(
+  annotation: Text,
+  parent: SVGGElement,
+  x: number = 0,
+  y: number = 0
+) {
+  // make sure text does not overflow
+  const { width, height } = getTextSize(annotation);
+  const {
+    fontSize = defaultTextStyle.fontSize,
+    font = defaultTextStyle.font,
+    padding = 0
+  } = annotation.properties.style || {};
+
+  if (width === height && width === 0) return;
+
+  // Use 1.2 line-height for better readability (20% more than font size)
+  const lineHeight = parseFloat(fontSize!.toString()) * TEXT_LINE_HEIGHT;
+
+  const box = new Textbox({
+    font: `${fontSize}px/${lineHeight}px ${font}`.replace(/(px)+/g, "px"),
+    width: width - padding * 2,
+    height: height - padding,
+    align: "left",
+    valign: "top",
+    x: 0,
+    overflow: "ellipsis",
+    parser: Textbox.htmlparser,
+    createElement: Textbox.createElement
+  });
+  box.overflowWrap("break-word");
+
+  const content = annotation.properties.content || "";
+  if (content.length === 0) return;
+
+  const lines = box.linebreak(content.replaceAll("\n", "<br>"));
+
+  // mistake in textbox types:
+  const text = lines.svg() as unknown as SVGTextElement;
+  const children = [...text.children];
+
+  // remove extra blank lines
+  // let index = 0;
+  // const toRemove: number[] = [];
+  // content.split("\n").forEach((l) => {
+  //   let query = l;
+  //   while (query.length && index < children.length) {
+  //     if (children[index].innerHTML === "&nbsp;") {
+  //       if (!query.startsWith("\n")) toRemove.push(index);
+  //       index++;
+  //       break;
+  //     }
+  //     const text = removeEllipsis(getText(children[index]));
+  //     if (query.startsWith(text)) query = query.slice(text.length).trim();
+  //     index++;
+  //   }
+  // });
+
+  // replace spans with links:
+  const matches = content.match(/(https?:\/\/.*)/gm);
+  const links = matches ? matches.map((match) => match.split(" ")[0]) : [];
+  links.forEach((l) => {
+    let query = l;
+    const toReplace: typeof children = [];
+    while (query.length > 0) {
+      const start = children.find(
+        (e) =>
+          !!e.children[0] &&
+          e.children[0].tagName === "tspan" &&
+          query.startsWith(removeEllipsis(getText(e)))
+      );
+      if (!start) break;
+      toReplace.push(start);
+      const length = removeEllipsis(start.children[0].innerHTML).length;
+      if (!length) break;
+      query = query.slice(length);
+    }
+    toReplace.forEach((e) => {
+      const link = document.createElementNS("http://www.w3.org/2000/svg", "a");
+      link.setAttribute("href", l);
+      link.setAttribute("target", "_blank");
+      link.innerHTML = getText(e);
+      e.children[0].innerHTML = "";
+      e.children[0].appendChild(link);
+    });
+  });
+
+  text.setAttribute("transform", `translate(${x + padding}, ${y + padding})`);
+
+  parent.appendChild(text);
+}
