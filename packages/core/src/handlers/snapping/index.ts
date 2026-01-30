@@ -1,12 +1,13 @@
 import type { Ogma, Node, Point } from "@linkurious/ogma";
+import { snapToEdges, EdgeSnap } from "./edge";
+import { snapToNodes, NodeSnap } from "./node";
+import { snapToPolygon, PolygonSnap } from "./polygon";
+import { snapToText, TextSnap, MAGNETS } from "./text";
+
 import { Index } from "../../interaction/spatialIndex";
 import { Store } from "../../store";
 import { Text, Polygon, isBox, isText, isPolygon } from "../../types";
 
-import { snapToPolygon, PolygonSnap } from "./polygon";
-import { snapToText, TextSnap, MAGNETS } from "./text";
-import { snapToNodes, NodeSnap } from "./node";
-import { snapToEdges, EdgeSnap } from "./edge";
 
 export type { TextSnap } from "./text";
 export type { PolygonSnap } from "./polygon";
