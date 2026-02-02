@@ -14,5 +14,5 @@ nodeJob {
   gitTagPrefix = 'v'
   runBookeeping = true
 
-  npmPackPaths = ['packages/ogma-annotations', 'packages/ogma-annotations-react']
+  npmPackPaths = ['packages/core', 'packages/react']
 }
