@@ -309,7 +309,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
 
           applyLiveUpdates: (updates) => {
             set((state) => {
-              const newLiveUpdates = state.liveUpdates;
+              const newLiveUpdates = { ...state.liveUpdates };
               for (const id in updates) {
                 newLiveUpdates[id] = updates[id] as Annotation;
               }
