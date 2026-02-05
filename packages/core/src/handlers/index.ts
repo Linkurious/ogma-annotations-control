@@ -10,6 +10,8 @@ import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
 
+export { handleDrag } from "./dragging";
+
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<AnnotationType, Handler<Annotation, unknown>>();
   private activeHandler?: Handler<Annotation, unknown>;

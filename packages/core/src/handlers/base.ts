@@ -65,18 +65,9 @@ export abstract class Handler<
     if (!this.hoveredHandle) {
       this.detectHandle(evt, this.ogma.view.getZoom());
     }
-
-    if (!this.hoveredHandle) return;
-
-    evt.preventDefault();
-    evt.stopPropagation();
-
-    // start resizing
-
-    this.dragStartPoint = this.clientToCanvas(evt);
-    this.onDragStart(evt);
-    this.dispatchEvent(new Event(EVT_DRAG_START));
-    this.disablePanning();
+    // if (!this.hoveredHandle) return;
+    // evt.preventDefault();
+    // evt.stopPropagation();
   };
 
   protected disablePanning = () => {
@@ -95,8 +86,10 @@ export abstract class Handler<
   };
 
   handleMouseUp = (evt: MouseEvent): void => {
-    if (!this.isActive() || !this.dragging) return;
-
+    if (!this.isActive()) return;
+    if (!this.dragging) {
+      return;
+    }
     this.restorePanning();
     this.onDragEnd(evt);
     this.dispatchEvent(new Event(EVT_DRAG_END));
@@ -138,6 +131,9 @@ export abstract class Handler<
     this.dispatchEvent(new Event(EVT_DRAG));
   }
 
+  protected onClick(_evt: ClientMouseEvent): void {
+    // To be implemented by subclasses if needed
+  }
   protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
     this.dragging = true;
@@ -186,8 +182,17 @@ export abstract class Handler<
     }
   }
 
-  getAnnotation(): T | undefined {
-    return this.store.getState().getFeature(this.annotation!) as T;
+  getAnnotation(withLiveUpdates?: boolean): T | undefined {
+    const state = this.store.getState();
+    const annotation = state.getFeature(this.annotation!);
+    if (!withLiveUpdates) {
+      return annotation as T | undefined;
+    }
+    const liveUpdates = state.liveUpdates[this.annotation!];
+    if (annotation && liveUpdates) {
+      return { ...annotation, ...liveUpdates } as T;
+    }
+    return annotation as T | undefined;
   }
 
   protected setCursor(cursor: Cursor) {

@@ -1,5 +1,6 @@
 import { Ogma, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { handleDrag } from "./dragging";
 import { Links } from "./links";
 import {
   cursors,
@@ -13,7 +14,6 @@ import { ClientMouseEvent, Id, Polygon } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
 import {
   simplifyPolygon,
-  translatePolygon,
   updatePolygonBbox
 } from "../utils/polygon";
 import { updateBbox } from "../utils/utils";
@@ -103,9 +103,9 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
         type: HandleType.BODY,
         point: mousePoint
       };
-      this.store.setState({ hoveredHandle: -1 });
+      this.store.setState({ hoveredHandle: -1, hoveredFeature: this.annotation });
     } else {
-      this.store.setState({ hoveredHandle: -1 });
+      this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
       this.hoveredHandle = undefined;
     }
   }
@@ -122,7 +122,7 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       point: { x, y },
       vertexIndex
     };
-    this.store.setState({ hoveredHandle: vertexIndex ?? 0 });
+    this.store.setState({ hoveredHandle: vertexIndex ?? 0, hoveredFeature: this.annotation });
   }
 
   handleMouseDown = (evt: MouseEvent): void => {
@@ -237,14 +237,8 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
     if (!polygon) return;
 
     if (this.hoveredHandle.type === HandleType.BODY) {
-      // Move entire polygon
-      const translatedPolygon = translatePolygon(polygon, dx, dy);
-
-      // Apply live update
-      this.store.getState().applyLiveUpdate(polygon.id, translatedPolygon);
-
-      // Update linked arrows
-      this.links.updateLinkedArrowsDuringDrag(polygon.id, { x: dx, y: dy });
+      // Move entire polygon using handleDrag
+      handleDrag(this.store, this.links, polygon.id, { x: dx, y: dy });
     } else if (
       this.hoveredHandle.type === HandleType.VERTEX &&
       this.hoveredHandle.vertexIndex !== undefined

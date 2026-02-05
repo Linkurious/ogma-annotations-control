@@ -82,7 +82,9 @@ export class Links {
    * Called by handlers during drag operations to update linked arrows
    * This method applies live updates directly without causing recursion
    */
-  public updateLinkedArrowsDuringDrag(annotationId: Id, displacement: Point) {
+  public updateLinkedArrowsDuringDrag(annotationId: Id, displacement: Point,
+    liveUpdates?: Record<Id, DeepPartial<Annotation>>
+  ) {
     const state = this.store.getState();
     const annotation = state.getFeature(annotationId) as Text;
     if (!annotation) return;
@@ -112,10 +114,15 @@ export class Links {
           return [...coord];
         })
       };
-
-      state.applyLiveUpdate(arrow.id, {
-        geometry: updatedGeometry
-      } as Partial<Arrow>);
+      if (liveUpdates) {
+        liveUpdates[arrow.id] = {
+          geometry: updatedGeometry
+        } as Partial<Arrow>;
+      } else {
+        state.applyLiveUpdate(arrow.id, {
+          geometry: updatedGeometry
+        } as Partial<Arrow>);
+      }
       this.updatedItems.add(arrow.id);
     }
   }

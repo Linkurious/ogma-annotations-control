@@ -3,12 +3,13 @@ import { Handler } from "./base";
 import {
   canDetachArrowEnd,
   canDetachArrowStart,
-  isCommentArrow
 } from "./commentHelpers";
+import { handleDrag } from "./dragging";
 import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";
 import {
   EVT_DRAG,
+  SIDE_END,
   SIDE_START,
   cursors,
   handleDetectionThreshold
@@ -80,14 +81,17 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     else {
       // on the line?
       if (detectArrow(annotation, mousePoint, margin)) {
+        // console.log("BODY");
         this.setCursor(cursors.grab);
         this.hoveredHandle = {
           type: HandleType.BODY,
           point: mousePoint
         };
-        this.store.setState({ hoveredHandle: 2 });
+        this.store.setState({ hoveredHandle: 2, hoveredFeature: this.annotation });
       } else {
-        this.store.setState({ hoveredHandle: -1 });
+        // console.log("NONE");
+        // this.setCursor(cursors.default);
+        this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
         this.hoveredHandle = undefined;
       }
     }
@@ -95,7 +99,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
   private grabHandle(type: HandleType, x: number, y: number) {
     this.hoveredHandle = { type, point: { x, y } };
-    this.store.setState({ hoveredHandle: type === HandleType.START ? 0 : 1 });
+    this.store.setState({ hoveredHandle: type === HandleType.START ? 0 : 1, hoveredFeature: this.annotation });
     this.setCursor(cursors.move);
   }
 
@@ -106,16 +110,30 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
-    const mousePoint = this.clientToCanvas(evt);
     const handle = this.hoveredHandle!;
     const annotation = this.getAnnotation()!;
+    const link = annotation.properties.link || {};
+    const mousePoint = this.clientToCanvas(evt);
     this.snap = this.snapping.snap(mousePoint);
     const point = this.snap?.point || mousePoint;
-    const link = annotation.properties.link || {};
-
+    const event = new CustomEvent(EVT_DRAG, {
+      detail: {
+        point,
+        annotation: this.annotation,
+        handle
+      }
+    });
     // Create updated coordinates
     const newCoordinates = [...annotation.geometry.coordinates];
-    if (handle.type === HandleType.START) {
+    if (handle.type === HandleType.BODY) {
+      const dx = point.x - handle.point.x;
+      const dy = point.y - handle.point.y;
+      // Move arrow body and connected annotations
+      handleDrag(this.store, this.links, annotation.id, { x: dx, y: dy }, true);
+      this.dispatchEvent(event);
+      return;
+    }
+    else if (handle.type === HandleType.START) {
       newCoordinates[0] = [point.x, point.y];
       if (this.snap) {
         link.start = {
@@ -135,14 +153,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
           magnet: this.snap.magnet
         };
       }
-    } else if (handle.type === HandleType.BODY) {
-      // translate both points
-      const dx = point.x - handle.point.x;
-      const dy = point.y - handle.point.y;
-      const start = annotation.geometry.coordinates[0];
-      const end = annotation.geometry.coordinates[1];
-      newCoordinates[0] = [start[0] + dx, start[1] + dy];
-      newCoordinates[1] = [end[0] + dx, end[1] + dy];
     }
 
     // Apply live update to store instead of direct mutation
@@ -155,22 +165,13 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       }
     });
 
-    this.dispatchEvent(
-      new CustomEvent(EVT_DRAG, {
-        detail: {
-          point,
-          annotation: this.annotation,
-          handle
-        }
-      })
-    );
+    this.dispatchEvent(event);
   }
   protected onDragStart(evt: ClientMouseEvent) {
     if (!super.onDragStart(evt)) return false;
     const annotation = this.getAnnotation()!;
     const handle = this.hoveredHandle!;
     if (
-      (handle.type === HandleType.BODY && isCommentArrow(annotation)) ||
       (handle.type === HandleType.END && !canDetachArrowEnd(annotation)) ||
       (handle.type === HandleType.START && !canDetachArrowStart(annotation))
     ) {
@@ -184,32 +185,72 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
   protected onDragEnd(evt: ClientMouseEvent) {
     if (!super.onDragEnd(evt)) return false;
-
-    // Handle snapping if applicable
-    if (this.snap && this.hoveredHandle) {
-      const handle = this.hoveredHandle;
-      if (handle.type !== HandleType.BODY)
-        this.links.add(
-          this.getAnnotation()!,
-          handle.type,
-          this.snap.id,
-          this.snap.type,
-          this.snap.magnet
-        );
-    } else if (this.snap === null && this.hoveredHandle) {
-      const annotation = this.getAnnotation()!;
-      const side = this.hoveredHandle.type as Side;
-      if (annotation.properties.link && annotation.properties.link[side]) {
-        this.links.remove(annotation, side);
-        // Preserve the other side's link while removing this side
-        const updatedLink = { ...annotation.properties.link };
-        delete updatedLink[side];
-        this.store.getState().applyLiveUpdate(annotation.id, {
-          properties: {
-            ...annotation.properties,
-            link: updatedLink
+    const annotation = this.getAnnotation(true) as Arrow;
+    // const annotation = this.getAnnotation()!;
+    if (this.hoveredHandle) {
+      const coordinates = annotation.geometry.coordinates;
+      if (this.hoveredHandle.type === HandleType.BODY) {
+        const snapStart = this.snapping.snap(
+          {
+            x: coordinates[0][0],
+            y: coordinates[0][1]
           }
-        });
+        );
+        const snapEnd = this.snapping.snap(
+          {
+            x: coordinates[1][0],
+            y: coordinates[1][1]
+          }
+        );
+        if (snapStart) {
+          this.links.add(
+            annotation,
+            HandleType.START,
+            snapStart.id,
+            snapStart.type,
+            snapStart.magnet
+          );
+        } else if (annotation.properties.link?.start?.type !== 'comment'
+        ) {
+          this.links.remove(annotation, SIDE_START);
+        }
+        if (snapEnd) {
+          this.links.add(
+            annotation,
+            HandleType.END,
+            snapEnd.id,
+            snapEnd.type,
+            snapEnd.magnet
+          );
+        }
+        else if (annotation.properties.link?.end?.type !== 'comment') {
+          this.links.remove(annotation, SIDE_END);
+        }
+      }
+      else if (this.snap) {
+        const handle = this.hoveredHandle;
+        if (handle.type !== HandleType.BODY)
+          this.links.add(
+            annotation,
+            handle.type,
+            this.snap.id,
+            this.snap.type,
+            this.snap.magnet
+          );
+      } else if (this.snap === null) {
+        const side = this.hoveredHandle.type as Side;
+        if (annotation.properties.link && annotation.properties.link[side]) {
+          this.links.remove(annotation, side);
+          // Preserve the other side's link while removing this side
+          const updatedLink = { ...annotation.properties.link };
+          delete updatedLink[side];
+          this.store.getState().applyLiveUpdate(annotation.id, {
+            properties: {
+              ...annotation.properties,
+              link: updatedLink
+            }
+          });
+        }
       }
     }
 
