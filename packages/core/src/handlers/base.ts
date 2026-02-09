@@ -131,8 +131,7 @@ export abstract class Handler<
     this.dispatchEvent(new Event(EVT_DRAG));
   }
 
-  protected onClick(_evt: ClientMouseEvent): void {
-    // To be implemented by subclasses if needed
+  protected onClick= (_evt: MouseEvent): void => {
   }
   protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
@@ -165,6 +164,7 @@ export abstract class Handler<
         win.addEventListener("mousemove", this.handleMouseMove);
         win.addEventListener("mouseup", this.handleMouseUp, false);
         container.addEventListener("mousedown", this.handleMouseDown, true);
+        win.addEventListener("click", this.onClick as EventListener, true);
       }
       // const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
       // this.handleMouseMove({ clientX, clientY });
@@ -176,6 +176,7 @@ export abstract class Handler<
         win.removeEventListener("mousemove", this.handleMouseMove);
         win.removeEventListener("mouseup", this.handleMouseUp);
         container.removeEventListener("mousedown", this.handleMouseDown);
+        win.removeEventListener("click", this.onClick as EventListener);
       }
       this.clearDragState();
       this.setCursor(cursors.default);

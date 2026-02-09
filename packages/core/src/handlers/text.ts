@@ -387,7 +387,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     return true;
   }
 
-  protected onClick(_evt: ClientMouseEvent) {
+  protected onClick = (_evt: ClientMouseEvent) => {
     const annotation = this.getAnnotation();
     if (!annotation) return;
     if (isComment(annotation)
