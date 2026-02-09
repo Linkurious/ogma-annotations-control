@@ -47,7 +47,8 @@ import {
   Polygon,
   Text,
   DeepPartial,
-  Side
+  Side,
+  ClickEvent
 } from "./types";
 import { Snapping } from "./handlers/snapping";
 
@@ -152,13 +153,21 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on("layoutEnd", this.onLayout);
 
     // Forward drag events from editor to Control
-    this.editor.addEventListener(EVT_DRAG_START, () =>
-      this.emit(EVT_DRAG_START)
+    this.editor.addEventListener(EVT_DRAG_START, (evt) =>
+      this.emit(EVT_DRAG_START, {
+        id: (evt as CustomEvent).detail.id,
+        position: (evt as CustomEvent).detail.position
+      })
     );
-    this.editor.addEventListener(EVT_DRAG_END, () => this.emit(EVT_DRAG_END));
+    this.editor.addEventListener(EVT_DRAG_END, (evt) => this.emit(EVT_DRAG_END, {
+      id: (evt as CustomEvent).detail.id,
+      position: (evt as CustomEvent).detail.position
+    }));
 
     // Forward click event from interaction controller
-    this.interactions.addEventListener(EVT_CLICK, () => this.emit(EVT_CLICK));
+    this.interactions.addEventListener(EVT_CLICK, ((evt: CustomEvent<ClickEvent>) => this.emit(EVT_CLICK, {
+      id: evt.detail.id, position: evt.detail.position
+    })) as unknown as EventListener);
 
     this.store.temporal.subscribe((state) => {
       this.emit(EVT_HISTORY, {

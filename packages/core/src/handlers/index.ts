@@ -8,6 +8,7 @@ import { TextHandler } from "./text";
 import { InteractionController } from "../interaction/index";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
+import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
 
 export { handleDrag } from "./dragging";
 
@@ -44,17 +45,27 @@ export class AnnotationEditor extends EventTarget {
     );
 
     this.handlers.forEach((handler) => {
-      handler.addEventListener("dragstart", () => {
-        this.dispatchEvent(new Event("dragstart"));
+      handler.addEventListener("dragstart", ((evt: CustomEvent) => {
+        this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
+          detail: {
+            ...evt.detail
+          }
+        })
+        );
         this.store.setState({ isDragging: true });
         this.interaction.setMode("edit");
-      });
-      handler.addEventListener("dragend", () => {
-        this.dispatchEvent(new Event("dragend"));
+      }) as unknown as EventListener);
+      handler.addEventListener("dragend", ((evt: CustomEvent) => {
+        this.dispatchEvent(new CustomEvent(EVT_DRAG_END, {
+          detail: {
+            ...evt.detail
+          }
+        })
+        );
         this.store.setState({ isDragging: false });
         // Suppress clicks briefly after drag ends to prevent accidental deselection
         this.interaction.suppressClicksTemporarily();
-      });
+      }) as unknown as EventListener);
     });
     this.store.subscribe(
       (state) => state.selectedFeatures,

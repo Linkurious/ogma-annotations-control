@@ -45,7 +45,15 @@ export abstract class Handler<
       if (this.hoveredHandle) {
         this.dragStartPoint = state.mousePressPoint;
         this.onDragStart(evt);
-        this.dispatchEvent(new Event(EVT_DRAG_START));
+        this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
+          detail: {
+            id: this.annotation,
+            position: {
+              x: evt.clientX,
+              y: evt.clientY
+            }
+          }
+        }));
         this.disablePanning();
         return;
       }
@@ -92,7 +100,15 @@ export abstract class Handler<
     }
     this.restorePanning();
     this.onDragEnd(evt);
-    this.dispatchEvent(new Event(EVT_DRAG_END));
+    this.dispatchEvent(new CustomEvent(EVT_DRAG_END, {
+      detail: {
+        id: this.annotation,
+        position: {
+          x: evt.clientX,
+          y: evt.clientY
+        }
+      }
+    }));
   };
 
   cancelEdit() {
@@ -131,7 +147,7 @@ export abstract class Handler<
     this.dispatchEvent(new Event(EVT_DRAG));
   }
 
-  protected onClick= (_evt: MouseEvent): void => {
+  protected onClick = (_evt: MouseEvent): void => {
   }
   protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;

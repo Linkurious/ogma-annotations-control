@@ -135,7 +135,15 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
 
     this.dragStartPoint = this.clientToCanvas(evt);
     this.onDragStart(evt);
-    this.dispatchEvent(new Event(EVT_DRAG_START));
+    this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
+      detail: {
+        id: this.annotation,
+        position: {
+          x: evt.clientX,
+          y: evt.clientY
+        }
+      }
+    }));
     this.disablePanning();
   };
 

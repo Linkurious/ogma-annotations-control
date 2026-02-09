@@ -268,7 +268,14 @@ export class InteractionController extends EventTarget {
       }
 
       // Dispatch click event for UI components to respond
-      this.dispatchEvent(new Event(EVT_CLICK));
+      this.dispatchEvent(new CustomEvent(EVT_CLICK, {
+        detail: {
+          id: annotation?.id ?? null, position: {
+            x: evt.clientX,
+            y: evt.clientY
+          }
+        }
+      }));
     }
 
     this.mouseDownState = null;
