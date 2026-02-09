@@ -65,8 +65,7 @@ export class Shapes extends Renderer<SVGLayer> {
   render = (root: SVGSVGElement) => {
     //const root = this.layer.element;
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
-      this.store.getState();
-
+    this.store.getState();
     // Initialize persistent container groups on first render
     if (!this.annotationsRoot || !root.contains(this.annotationsRoot)) {
       // Clear root only on first render
@@ -162,7 +161,8 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private throttleRender = throttle(
     () => this.render(this.layer.element as unknown as SVGSVGElement),
-    16
+    16,
+    true
   );
 
   private getViewportBounds(): Bounds {

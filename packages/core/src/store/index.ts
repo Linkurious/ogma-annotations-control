@@ -273,13 +273,14 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               return { features: newFeatures, liveUpdates: newLiveUpdates };
             }),
 
-          addFeature: (feature) =>
-            set((state) => ({
+          addFeature: (feature) => {
+            return set((state) => ({
               features: {
                 ...state.features,
                 [feature.id]: feature as Annotation
               }
-            })),
+            }))
+          },
 
           // Start live update - snapshot current state
           startLiveUpdate: (ids) => {

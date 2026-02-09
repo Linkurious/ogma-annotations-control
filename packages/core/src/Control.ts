@@ -206,20 +206,19 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store.subscribe(
       (state) => state.features,
       (curr, prev) => {
-        if (prev) {
-          // Check for added features
-          for (const id of Object.keys(curr)) {
-            if (!prev[id]) {
-              this.emit(EVT_ADD, { id });
-            } else if (prev[id] !== curr[id]) {
-              // Feature was updated (reference changed)
-              this.emit(EVT_UPDATE, curr[id]);
-            }
+        // Check for added features
+        for (const id of Object.keys(curr)) {
+          if (!prev[id]) {
+            this.emit(EVT_ADD, { id });
+          } else if (prev[id] !== curr[id]) {
+            // Feature was updated (reference changed)
+            this.emit(EVT_UPDATE, curr[id]);
           }
-          // Check for removed features
-          for (const id of Object.keys(prev)) {
-            if (!curr[id]) this.emit(EVT_REMOVE, { id });
-          }
+        }
+        // Check for removed features
+        for (const id of Object.keys(prev)) {
+          if (curr[id]) continue;
+          this.emit(EVT_REMOVE, { id });
         }
       }
     );
