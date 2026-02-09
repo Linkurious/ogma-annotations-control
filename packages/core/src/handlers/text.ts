@@ -211,7 +211,6 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   onDrag(evt: MouseEvent) {
     if (!this.dragStartPoint || !this.hoveredHandle || !this.isActive()) return;
-
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
@@ -242,6 +241,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     if (updatedFeature) {
       // Apply live update for corner/edge handles (resize operations)
       this.store.getState().applyLiveUpdate(annotation.id, updatedFeature);
+      this.links.updateLinkedArrowsDuringDrag(annotation.id, delta);
       if (this.textEditor) this.textEditor.update();
     }
 

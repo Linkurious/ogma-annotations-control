@@ -49,6 +49,7 @@ import {
   DeepPartial,
   Side
 } from "./types";
+import { Snapping } from "./handlers/snapping";
 
 const defaultOptions: ControllerOptions = {
   detectMargin: 2,
@@ -81,6 +82,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private links: Links;
   private index: Index;
   private drawing: Drawing;
+  private snapping: Snapping;
 
   // API managers
   private selectionManager: SelectionManager;
@@ -88,7 +90,8 @@ export class Control extends EventEmitter<FeatureEvents> {
   private updateManager: UpdateManager;
   private commentManager: CommentManager;
 
-  constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
+  constructor(ogma: Ogma,
+    options: Partial<ControllerOptions> = {}) {
     super();
     this.ogma = ogma;
 
@@ -97,7 +100,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store = createStore(mergedOptions);
     this.index = new Index(this.store);
 
-    this.links = new Links(this.ogma, this.store, (arrow, link) => {
+    this.snapping = new Snapping(this.ogma, {
+      detectMargin: options.detectMargin === undefined ? 10 : options.detectMargin,
+      magnetRadius: options.magnetRadius === undefined ? 10 : options.magnetRadius,
+    }, this.index, this.store);
+    this.links = new Links(this.ogma, this.snapping, this.store, (arrow, link) => {
       this.emit(EVT_LINK, { arrow, link });
     });
     this.interactions = new InteractionController(
@@ -108,7 +115,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.editor = new AnnotationEditor(
       this.ogma,
       this.store,
-      this.index,
+      this.snapping,
       this.links,
       this.interactions
     );

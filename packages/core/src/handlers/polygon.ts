@@ -16,7 +16,7 @@ import {
   simplifyPolygon,
   updatePolygonBbox
 } from "../utils/polygon";
-import { updateBbox } from "../utils/utils";
+import { updateBbox, updateTextBbox } from "../utils/utils";
 
 enum HandleType {
   VERTEX = "vertex",
@@ -273,9 +273,9 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       };
 
       updatePolygonBbox(updatedPolygon);
-
       // Apply live update
       this.store.getState().applyLiveUpdate(polygon.id, updatedPolygon);
+      this.links.snapLinkedArrowsDuringDrag(polygon.id);
     }
 
     this.dispatchEvent(new Event(EVT_DRAG));
