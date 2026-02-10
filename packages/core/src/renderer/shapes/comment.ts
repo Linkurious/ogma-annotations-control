@@ -97,12 +97,23 @@ export function getCommentDefs(): SVGStyleElement {
   const style = createSVGElement<SVGStyleElement>("style");
   style.textContent = `
     /* Comment Animation Styles */
-    .comment-icon,
+    .comment-icon {
+      transition:
+        opacity 0.25s ease-in-out,
+        scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: scale, opacity;
+    }
+
     .comment-box {
       transition:
         opacity 0.25s ease-in-out,
         scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: scale, opacity;
+    }
+
+    .comment-box rect,
+    .comment-box foreignObject {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Disable transitions when comment was not visible */
@@ -254,7 +265,10 @@ function renderExpandedBox(
   const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
 
   // Calculate actual width needed based on content (+ extra for inline button)
-  const actualWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding) + extraWidth;
+  // When selected, use full maxWidth; otherwise use content width
+  const contentWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding);
+  const isSelected = state.selectedFeatures.has(comment.id);
+  const actualWidth = isSelected ? maxWidth : (contentWidth + extraWidth);
 
   // Calculate height
   const storedHeight = comment.properties.height;

@@ -2,7 +2,6 @@ import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
 import { Id, Text, defaultTextStyle, CommentStyle } from "../types";
-import { measureTextWidth, isSingleLineContent } from "../renderer/shapes/comment";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -71,26 +70,6 @@ export class TextArea {
     this.updatePosition();
     this.textarea.focus();
 
-    // Animate from content width to full width for fixed-size (comments)
-    const fixedSize = annotationData.properties.style?.fixedSize;
-    if (fixedSize) {
-      const editorEl = this.layer.element as HTMLElement;
-      const contentWidth = this.getContentWidth(annotationData);
-      const fullWidth = annotationData.properties.width;
-      // Start at content width, centered via left offset
-      editorEl.style.width = `${contentWidth}px`;
-      editorEl.style.left = `${(fullWidth - contentWidth) / 2}px`;
-      // Force layout so the browser registers the initial state
-      editorEl.getBoundingClientRect();
-      // Animate to full width, no offset
-      editorEl.classList.add("animate-width");
-      editorEl.style.width = `${fullWidth}px`;
-      editorEl.style.left = "0px";
-      editorEl.addEventListener("transitionend", () => {
-        editorEl.classList.remove("animate-width");
-      }, { once: true });
-    }
-
     this.unsubscribe = this.store.subscribe(
       (state) => ({
         rotation: state.rotation,
@@ -117,19 +96,6 @@ export class TextArea {
       ...this.store.getState().getFeature(this.annotation) as Text,
       ...state.liveUpdates[this.annotation] as Text
     };
-  }
-
-  private getContentWidth(annotation: Text): number {
-    const style = { ...defaultTextStyle, ...annotation.properties.style } as CommentStyle;
-    const {
-      font = "Arial, sans-serif",
-      fontSize = 12,
-      padding = 0
-    } = style;
-    const maxWidth = annotation.properties.width;
-    const content = this.textarea ? this.textarea.value : (annotation.properties.content || "");
-    const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
-    return measureTextWidth(content, font, numericFontSize, maxWidth, padding);
   }
 
   private getPosition() {
@@ -171,6 +137,8 @@ export class TextArea {
     const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
+    const state = this.store.getState();
+    const showSendButton = state.options?.showSendButton ?? true;
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;
@@ -182,10 +150,10 @@ export class TextArea {
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
-
+    const buttonHeight = showSendButton ? 28 : 0;
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
-      height
+      height: height + buttonHeight * effectiveScale
     };
   }
 
@@ -203,6 +171,7 @@ export class TextArea {
       fixedSize = defaultTextStyle.fixedSize
     } = annotation.properties.style || defaultTextStyle;
     const textArea = this.textarea;
+    const editorEl = this.layer.element as HTMLElement;
     const zoom = this.store.getState().zoom;
 
     // Scale font size inversely with zoom for fixed-size text
@@ -210,23 +179,32 @@ export class TextArea {
     const scaledFontSize = parseFloat(fontSize!.toString()) * effectiveScale;
     const scaledPadding = padding * effectiveScale;
 
-    const textAreaStyle = textArea.style;
+    // Style the parent container
+    const editorStyle = editorEl.style;
+    editorStyle.display = "flex";
+    editorStyle.flexDirection = "column";
+    editorStyle.boxSizing = "border-box";
+    editorStyle.background = background || "transparent";
+    editorStyle.borderRadius = `${borderRadius}px`;
+    editorStyle.padding = `${scaledPadding}px`;
+    editorStyle.transformOrigin = "center";
+    editorStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
 
+    // Style the textarea
+    const textAreaStyle = textArea.style;
     textAreaStyle.font = `${scaledFontSize} ${font}`;
     textAreaStyle.fontFamily = font || "sans-serif";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
-    textAreaStyle.padding = `${scaledPadding}px`;
-    // Extra right padding when send button is on the same line
-    if (this.sendButton && fixedSize && this.isSingleLine()) {
-      const buttonSpace = 28 * effectiveScale; // 24px button + 4px gap
-      textAreaStyle.paddingRight = `${Math.max(scaledPadding, buttonSpace)}px`;
-    }
     textAreaStyle.lineHeight = `${scaledFontSize * TEXT_LINE_HEIGHT}px`;
-
+    textAreaStyle.padding = "0";
+    textAreaStyle.border = "none";
+    textAreaStyle.outline = "none";
     textAreaStyle.boxSizing = "border-box";
     textAreaStyle.color = color || "black";
-    textAreaStyle.background = background || "transparent";
-    textAreaStyle.borderRadius = `${borderRadius}px`;
+    textAreaStyle.background = "transparent";
+    textAreaStyle.flex = "1";
+    textAreaStyle.minHeight = "0";
+    textAreaStyle.resize = "none";
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
@@ -234,33 +212,6 @@ export class TextArea {
       // Enable scrolling if maxHeight is set, otherwise hide overflow
       textAreaStyle.overflowY = maxHeight ? "auto" : "hidden";
       textAreaStyle.overflowX = "hidden";
-      textAreaStyle.resize = "none"; // Disable manual resize
-    }
-
-    // transform origin at center
-    textAreaStyle.transformOrigin = "center";
-    textAreaStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
-
-    // Scale send button with zoom (same as textarea for fixed-size)
-    if (this.sendButton) {
-      const buttonScale = fixedSize ? 1 / zoom : 1;
-      this.sendButton.style.transform = `scale(${buttonScale})`;
-
-      if (fixedSize && this.isSingleLine()) {
-        // Position vertically aligned with the text line
-        const scaledPad = scaledPadding;
-        const lineHeight = scaledFontSize * TEXT_LINE_HEIGHT;
-        const textCenterFromTop = scaledPad + lineHeight / 2;
-        const buttonTop = textCenterFromTop - 12 * buttonScale;
-        this.sendButton.style.top = `${Math.max(0, buttonTop)}px`;
-        this.sendButton.style.bottom = "auto";
-        this.sendButton.style.transformOrigin = "top right";
-      } else {
-        // Position at bottom-right
-        this.sendButton.style.top = "";
-        this.sendButton.style.bottom = "4px";
-        this.sendButton.style.transformOrigin = "bottom right";
-      }
     }
   }
 
@@ -316,17 +267,9 @@ export class TextArea {
         (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
 
       // Get minimum height from style (default to 50px if not specified)
-      // For single-line content, use a tighter min height that fits just one line
-      const styleMinHeight =
+      const minHeight =
         (annotation.properties.style as { minHeight?: number })?.minHeight ||
         50;
-      const singleLine = this.isSingleLine();
-      const pad = (annotation.properties.style as CommentStyle)?.padding || 0;
-      const fs = parseFloat(
-        ((annotation.properties.style as CommentStyle)?.fontSize || 12).toString()
-      );
-      const singleLineMinHeight = fs * TEXT_LINE_HEIGHT + pad * 2;
-      const minHeight = singleLine ? Math.min(styleMinHeight, singleLineMinHeight) : styleMinHeight;
       newHeight = Math.max(minHeight, requiredHeight);
 
       // Adjust center position to grow downward only (keep top edge fixed)
@@ -393,24 +336,6 @@ export class TextArea {
     this.textarea.blur();
     this.onSendHandler();
   };
-
-  private isSingleLine(): boolean {
-    const content = this.textarea.value;
-    if (content.includes("\n")) return false;
-
-    const annotation = this.getAnnotation();
-    if (!annotation) return true;
-
-    const style = annotation.properties.style as CommentStyle | undefined;
-    const font = style?.font || "Arial, sans-serif";
-    const fontSize = typeof style?.fontSize === "number"
-      ? style.fontSize
-      : parseFloat(style?.fontSize || "12");
-    const padding = style?.padding || 0;
-    const maxWidth = annotation.properties.width;
-
-    return isSingleLineContent(content, font, fontSize, maxWidth, padding);
-  }
 
   private updateSendButtonState() {
     if (!this.sendButton) return;

@@ -19,7 +19,8 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE,
   EVT_LINK,
-  SIDE_END
+  SIDE_END,
+  DEFAULT_EDIT_ICON
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { Links } from "./handlers/links";
@@ -59,6 +60,8 @@ const defaultOptions: ControllerOptions = {
   textPlaceholder: "Type here",
   showSendButton: true,
   sendButtonIcon: DEFAULT_SEND_ICON,
+  showEditButton: true,
+  editButtonIcon: DEFAULT_EDIT_ICON,
   minArrowHeight: 20,
   maxArrowHeight: 30
 };
