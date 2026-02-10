@@ -245,7 +245,8 @@ function renderExpandedBox(
   boxGroup: SVGGElement,
   comment: Comment,
   state: AnnotationState,
-  extraWidth: number = 0
+  extraWidth: number = 0,
+  showEditBtn: boolean = false
 ): void {
   const style = { ...defaultCommentStyle, ...comment.properties.style };
   const {
@@ -279,6 +280,10 @@ function renderExpandedBox(
   const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
   const needsScroll = !singleLine && maxHeight ? storedHeight > maxHeight : false;
 
+  // Add extra height for edit button if shown (24px button + 4px margin)
+  const buttonHeight = 0 ; //showEditBtn ? 28 : 0;
+  const totalDisplayHeight = displayHeight + buttonHeight;
+
   // Clear existing content
   boxGroup.innerHTML = "";
 
@@ -291,7 +296,7 @@ function renderExpandedBox(
   rect.setAttribute("x", `${x}`);
   rect.setAttribute("y", `${y}`);
   rect.setAttribute("width", `${actualWidth}`);
-  rect.setAttribute("height", `${displayHeight}`);
+  rect.setAttribute("height", `${totalDisplayHeight}`);
   rect.setAttribute("rx", `${borderRadius}`);
   rect.setAttribute("ry", `${borderRadius}`);
   rect.setAttribute("fill", state.hoveredFeature === comment.id ? brighten(background) : background);
@@ -306,7 +311,7 @@ function renderExpandedBox(
   foreignObject.setAttribute("x", `${x}`);
   foreignObject.setAttribute("y", `${y}`);
   foreignObject.setAttribute("width", `${actualWidth}`);
-  foreignObject.setAttribute("height", `${displayHeight}`);
+  foreignObject.setAttribute("height", `${totalDisplayHeight}`);
   foreignObject.style.pointerEvents = "none"; // Let clicks pass through to rect
 
   // Create the HTML content div
@@ -324,104 +329,30 @@ function renderExpandedBox(
   div.style.overflowWrap = "break-word";
   div.style.whiteSpace = "pre-wrap";
   div.style.pointerEvents = "none"; // Let clicks pass through to rect
+  div.style.display = "flex";
+  div.style.flexDirection = "column";
+  div.style.position = "relative";
 
-  // Convert content to HTML (handle line breaks and links)
-  div.innerHTML = formatContent(content);
+  // Create text content container
+  const textDiv = document.createElement("div");
+  textDiv.style.flex = "1";
+  textDiv.innerHTML = formatContent(content);
+  div.appendChild(textDiv);
+
+  // Add edit button if needed
+  if (showEditBtn) {
+    const buttonDiv = document.createElement("div");
+    buttonDiv.classList.add("ogma-send-button");
+    buttonDiv.style.pointerEvents = "auto";
+    buttonDiv.innerHTML = state.options.editButtonIcon;
+    div.appendChild(buttonDiv);
+  }
 
   foreignObject.appendChild(div);
   boxGroup.appendChild(foreignObject);
 
   // Add drop shadow for comments
   boxGroup.setAttribute("filter", "url(#softShadow)");
-}
-
-/**
- * Render an edit button overlay on the expanded comment box
- * Shown when the comment is selected but not being edited
- */
-function renderEditButton(
-  boxGroup: SVGGElement,
-  comment: Comment,
-  state: AnnotationState,
-  extraWidth: number = 0
-): void {
-  const style = { ...defaultCommentStyle, ...comment.properties.style };
-  const {
-    font = "Arial, sans-serif",
-    fontSize = 12,
-    padding = 8,
-    maxHeight
-  } = style;
-
-  const maxWidth = comment.properties.width;
-  const content = comment.properties.content || "";
-  const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
-
-  const actualWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding) + extraWidth;
-
-  const storedHeight = comment.properties.height;
-  const singleLine = isSingleLineContent(content, font, numericFontSize, maxWidth, padding);
-  const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
-  const effectiveHeight = singleLine ? Math.min(storedHeight, singleLineHeight) : storedHeight;
-  const cappedStoredHeight = maxHeight ? Math.min(storedHeight, maxHeight) : storedHeight;
-  const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
-
-  const topY = -cappedStoredHeight / 2;
-
-  const buttonSize = 24;
-  const margin = 4;
-
-  // Position at right side of the box
-  const bx = actualWidth / 2 - buttonSize - margin;
-  let by: number;
-
-  if (singleLine) {
-    // Vertically align with the text line
-    const lineHeight = numericFontSize * TEXT_LINE_HEIGHT;
-    by = topY + padding + lineHeight / 2 - buttonSize / 2;
-  } else {
-    // Position at bottom-right
-    by = topY + displayHeight - buttonSize - margin;
-  }
-
-  const editBtn = createSVGElement<SVGGElement>("g");
-  editBtn.classList.add("comment-edit-button");
-
-  // Background rect
-  const bg = createSVGElement<SVGRectElement>("rect");
-  bg.setAttribute("x", `${bx}`);
-  bg.setAttribute("y", `${by}`);
-  bg.setAttribute("width", `${buttonSize}`);
-  bg.setAttribute("height", `${buttonSize}`);
-  bg.setAttribute("rx", "4");
-  bg.setAttribute("fill", "rgba(255,255,255,0.9)");
-  bg.setAttribute("stroke", "#CCC");
-  bg.setAttribute("stroke-width", "1");
-  bg.setAttribute("cursor", "pointer");
-  editBtn.appendChild(bg);
-
-  // Icon via foreignObject (pointer-events disabled so rect underneath handles cursor)
-  const fo = createSVGElement<SVGForeignObjectElement>("foreignObject");
-  fo.setAttribute("x", `${bx}`);
-  fo.setAttribute("y", `${by}`);
-  fo.setAttribute("width", `${buttonSize}`);
-  fo.setAttribute("height", `${buttonSize}`);
-  fo.style.pointerEvents = "none";
-  const iconDiv = document.createElement("div");
-  iconDiv.style.width = "100%";
-  iconDiv.style.height = "100%";
-  iconDiv.style.display = "flex";
-  iconDiv.style.alignItems = "center";
-  iconDiv.style.justifyContent = "center";
-  iconDiv.style.padding = "4px";
-  iconDiv.style.boxSizing = "border-box";
-  iconDiv.style.color = "#666";
-  iconDiv.innerHTML = state.options.editButtonIcon;
-
-  fo.appendChild(iconDiv);
-  editBtn.appendChild(fo);
-
-  boxGroup.appendChild(editBtn);
 }
 
 /**
@@ -506,12 +437,7 @@ export function renderComment(
 
   // Render both states
   renderCollapsedIcon(iconGroup, annotation, state);
-  renderExpandedBox(boxGroup, annotation, state, extraWidth);
-
-  // Show edit button when selected but not editing
-  if (showEditBtn) {
-    renderEditButton(boxGroup, annotation, state, extraWidth);
-  }
+  renderExpandedBox(boxGroup, annotation, state, extraWidth, showEditBtn);
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
   if (!wasVisible) {

@@ -29,6 +29,7 @@ svg text {
 .ogma-annotation-text-editor {
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 4px;
   position: relative;
   width: 100%;

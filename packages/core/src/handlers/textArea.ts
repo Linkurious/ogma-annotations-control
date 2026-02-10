@@ -23,7 +23,6 @@ export class TextArea {
     const state = this.store.getState();
     const showSendButton = state.options?.showSendButton ?? true;
     const sendButtonIcon = state.options?.sendButtonIcon || "";
-    const editButtonIcon = state.options?.editButtonIcon || "";
     const placeholderText = state.options?.textPlaceholder || "Enter text";
 
     this.layer = this.ogma.layers.addOverlay(
@@ -150,10 +149,13 @@ export class TextArea {
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
-    const buttonHeight = showSendButton ? 28 : 0;
+    // Button is scaled inversely (1/effectiveScale) to maintain screen size
+    // So its layout space is: 28px * (1/effectiveScale)
+    const buttonScale = 1 / effectiveScale;
+    const buttonHeight = showSendButton ? 28 * buttonScale : 0;
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
-      height: height + buttonHeight * effectiveScale
+      height: height + buttonHeight
     };
   }
 
@@ -181,8 +183,9 @@ export class TextArea {
 
     // Style the parent container
     const editorStyle = editorEl.style;
-    editorStyle.display = "flex";
-    editorStyle.flexDirection = "column";
+    editorStyle.display = "grid";
+    editorStyle.gridTemplateRows = "1fr auto";
+    editorStyle.gap = "4px";
     editorStyle.boxSizing = "border-box";
     editorStyle.background = background || "transparent";
     editorStyle.borderRadius = `${borderRadius}px`;
@@ -205,6 +208,14 @@ export class TextArea {
     textAreaStyle.flex = "1";
     textAreaStyle.minHeight = "0";
     textAreaStyle.resize = "none";
+
+    // Scale button inversely to maintain same screen size regardless of zoom
+    if (this.sendButton) {
+      // For fixed-size, button needs to be scaled by 1/effectiveScale to maintain screen size
+      const buttonScale = effectiveScale;
+      this.sendButton.style.transform = `scale(${buttonScale})`;
+      this.sendButton.style.transformOrigin = "top left";
+    }
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
