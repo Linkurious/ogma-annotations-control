@@ -130,6 +130,17 @@ export function getCommentDefs(): SVGStyleElement {
     .comment-box foreignObject div::-webkit-scrollbar-thumb:hover {
       background: rgba(0, 0, 0, 0.3);
     }
+
+    /* Edit button on selected comment */
+    .comment-edit-button {
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.15s ease-in-out;
+    }
+
+    .comment-edit-button:hover {
+      opacity: 1;
+    }
   `;
   return style;
 }
@@ -291,6 +302,84 @@ function renderExpandedBox(
 }
 
 /**
+ * Render an edit button overlay on the expanded comment box
+ * Shown when the comment is selected but not being edited
+ */
+function renderEditButton(
+  boxGroup: SVGGElement,
+  comment: Comment,
+  state: AnnotationState
+): void {
+  const style = { ...defaultCommentStyle, ...comment.properties.style };
+  const {
+    font = "Arial, sans-serif",
+    fontSize = 12,
+    padding = 8,
+    maxHeight
+  } = style;
+
+  const maxWidth = comment.properties.width;
+  const content = comment.properties.content || "";
+
+  const actualWidth = measureTextWidth(
+    content,
+    font,
+    typeof fontSize === "number" ? fontSize : parseFloat(fontSize),
+    maxWidth,
+    padding
+  );
+
+  const contentHeight = comment.properties.height;
+  const displayHeight = maxHeight ? Math.min(contentHeight, maxHeight) : contentHeight;
+
+  const buttonSize = 24;
+  const margin = 4;
+
+  // Position at bottom-right of the box (center-based coordinates)
+  const bx = actualWidth / 2 - buttonSize - margin;
+  const by = displayHeight / 2 - buttonSize - margin;
+
+  const editBtn = createSVGElement<SVGGElement>("g");
+  editBtn.classList.add("comment-edit-button");
+
+  // Background rect
+  const bg = createSVGElement<SVGRectElement>("rect");
+  bg.setAttribute("x", `${bx}`);
+  bg.setAttribute("y", `${by}`);
+  bg.setAttribute("width", `${buttonSize}`);
+  bg.setAttribute("height", `${buttonSize}`);
+  bg.setAttribute("rx", "4");
+  bg.setAttribute("fill", "rgba(255,255,255,0.9)");
+  bg.setAttribute("stroke", "#CCC");
+  bg.setAttribute("stroke-width", "1");
+  bg.setAttribute("cursor", "pointer");
+  editBtn.appendChild(bg);
+
+  // Icon via foreignObject (pointer-events disabled so rect underneath handles cursor)
+  const fo = createSVGElement<SVGForeignObjectElement>("foreignObject");
+  fo.setAttribute("x", `${bx}`);
+  fo.setAttribute("y", `${by}`);
+  fo.setAttribute("width", `${buttonSize}`);
+  fo.setAttribute("height", `${buttonSize}`);
+  fo.style.pointerEvents = "none";
+  const iconDiv = document.createElement("div");
+  iconDiv.style.width = "100%";
+  iconDiv.style.height = "100%";
+  iconDiv.style.display = "flex";
+  iconDiv.style.alignItems = "center";
+  iconDiv.style.justifyContent = "center";
+  iconDiv.style.padding = "4px";
+  iconDiv.style.boxSizing = "border-box";
+  iconDiv.style.color = "#666";
+  iconDiv.innerHTML = state.options.editButtonIcon;
+
+  fo.appendChild(iconDiv);
+  editBtn.appendChild(fo);
+
+  boxGroup.appendChild(editBtn);
+}
+
+/**
  * Format text content for HTML display
  * Handles line breaks and converts URLs to clickable links
  */
@@ -355,6 +444,16 @@ export function renderComment(
   // Render both states
   renderCollapsedIcon(iconGroup, annotation, state);
   renderExpandedBox(boxGroup, annotation, state);
+
+  // Show edit button when selected but not editing
+  if (
+    mode !== COMMENT_MODE_COLLAPSED &&
+    state.selectedFeatures.has(annotation.id) &&
+    state.editingFeature !== annotation.id &&
+    state.options.showEditButton
+  ) {
+    renderEditButton(boxGroup, annotation, state);
+  }
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
   if (!wasVisible) {

@@ -31,10 +31,21 @@ export type ControllerOptions = {
   showSendButton: boolean;
 
   /**
+   * Show edit button in text editor
+   */
+  showEditButton: boolean;
+
+  /**
    * SVG icon for the send button in text editor
    * Should be a complete SVG string (e.g., '<svg>...</svg>')
    */
   sendButtonIcon: string;
+
+  /**
+   * SVG icon for the edit button in text editor
+   * Should be a complete SVG string (e.g., '<svg>...</svg>')
+   */
+  editButtonIcon: string;
 
   /**
    * Minimum height of the arrow in units

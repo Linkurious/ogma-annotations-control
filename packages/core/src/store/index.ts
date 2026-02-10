@@ -3,7 +3,7 @@ import { Position } from "geojson";
 import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
-import { DEFAULT_SEND_ICON } from "../constants";
+import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
 import {
   Annotation,
   Bounds,
@@ -107,7 +107,9 @@ export interface AnnotationState {
   // Controller options (for accessing in handlers)
   options: {
     showSendButton: boolean;
+    showEditButton: boolean;
     sendButtonIcon: string;
+    editButtonIcon: string;
     minArrowHeight: number;
     maxArrowHeight: number;
     detectMargin: number;
@@ -191,6 +193,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           options: {
             showSendButton: initialOptions?.showSendButton ?? true,
             sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
+            showEditButton: initialOptions?.showEditButton ?? true,
+            editButtonIcon: initialOptions?.editButtonIcon ?? DEFAULT_EDIT_ICON,
             minArrowHeight: initialOptions?.minArrowHeight ?? 20,
             maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
             detectMargin: initialOptions?.detectMargin ?? 2,

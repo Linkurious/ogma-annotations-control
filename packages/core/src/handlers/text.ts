@@ -100,6 +100,7 @@ const cornerCursors: Cursor[] = [
 export class TextHandler extends Handler<Text | Comment, Handle> {
   private links: Links;
   private textEditor: TextArea | null = null;
+  private justActivated: boolean = false;
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -381,7 +382,6 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   protected onDragStart(evt: ClientMouseEvent) {
     if (!super.onDragStart(evt)) return false;
-    debugger;
 
     this.stopEditingText();
     // Start live update tracking for this annotation
@@ -402,9 +402,15 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
         }
       });
       this.ogma.view.afterNextFrame();
+      this.justActivated = false;
       return;
     }
     if (!this.store.getState().selectedFeatures.has(annotation.id)) {
+      return;
+    }
+    // For comments: first click selects, second click enters edit mode
+    if (isComment(annotation) && this.justActivated) {
+      this.justActivated = false;
       return;
     }
     if (annotation && (isText(annotation) || isComment(annotation))) {
@@ -510,6 +516,9 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   public setAnnotation(annotation: Text | Comment | null): void {
+    if (annotation && isComment(annotation)) {
+      this.justActivated = true;
+    }
     super.setAnnotation(annotation);
     // if it's a collapsed comment, expand it
     if (
