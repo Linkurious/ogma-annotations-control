@@ -414,6 +414,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   public startEditingText() {
     if (this.textEditor === null) {
+      this.store.setState({ editingFeature: this.annotation });
       this.textEditor = new TextArea(
         this.ogma,
         this.store,
@@ -487,6 +488,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       this.textEditor.destroy();
     }
     this.textEditor = null;
+    this.store.setState({ editingFeature: null });
   };
 
   public startDrawing(id: Id, x: number, y: number) {

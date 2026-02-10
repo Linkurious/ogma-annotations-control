@@ -89,6 +89,7 @@ export interface AnnotationState {
   lastChangedFeatures: Id[];
   drawingFeature: Id | null;
   drawingPoints: Position[] | null;
+  editingFeature: Id | null;
 
   // Mouse press state for drag detection
   mousePressed: boolean;
@@ -175,6 +176,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           lastChangedFeatures: [],
           drawingFeature: null,
           drawingPoints: null,
+          editingFeature: null,
           mousePressed: false,
           mousePressPoint: null,
           rotation: 0,

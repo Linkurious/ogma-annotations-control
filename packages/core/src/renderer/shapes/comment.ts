@@ -386,6 +386,9 @@ export function renderComment(
     state.getScreenAlignedTransform(position.x, position.y, false)
   );
 
+  // Hide the entire SVG group while the textarea editor is active
+  g.style.visibility = state.editingFeature === annotation.id ? "hidden" : "";
+
   // Append to root if not already present
   if (!g.parentNode || g.parentNode !== root) {
     root.appendChild(g);
