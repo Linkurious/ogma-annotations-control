@@ -60,7 +60,11 @@ export class TextArea {
     this.textarea.addEventListener("input", this.onInput);
     this.textarea.addEventListener("keyup", this.onKeyup);
     this.textarea.addEventListener("keydown", this.onKeydown);
-    this.textarea.addEventListener("wheel", this.onWheel);
+    this.textarea.addEventListener("wheel", this.onMouseEvent);
+    this.textarea.addEventListener("mouseup", this.onMouseEvent);
+    this.textarea.addEventListener("mousedown", this.onMouseEvent);
+    this.textarea.addEventListener("click", this.onMouseEvent);
+    this.textarea.addEventListener("drag", this.onMouseEvent);
     this.updateStyle();
     this.updatePosition();
     this.textarea.focus();
@@ -226,8 +230,8 @@ export class TextArea {
     evt.stopPropagation();
   };
 
-  private onWheel = (evt: WheelEvent) => {
-    // Stop wheel events from propagating to Ogma (prevents zoom while scrolling)
+  private onMouseEvent = (evt: WheelEvent| MouseEvent) => {
+    // Stop mouse events from propagating to Ogma (prevents zoom while scrolling for instance)
     evt.stopPropagation();
   };
 
@@ -323,10 +327,6 @@ export class TextArea {
     this.onSendHandler();
   };
 
-  // private onMouseUp = (evt: MouseEvent) => {
-  //   // Prevent textarea from losing focus when clicking the send button
-  //   evt.stopPropagation();
-  // };
   private updateSendButtonState() {
     if (!this.sendButton) return;
 

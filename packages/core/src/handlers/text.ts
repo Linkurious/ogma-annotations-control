@@ -381,6 +381,8 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   protected onDragStart(evt: ClientMouseEvent) {
     if (!super.onDragStart(evt)) return false;
+    debugger;
+
     this.stopEditingText();
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
