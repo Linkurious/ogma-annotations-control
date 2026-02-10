@@ -244,7 +244,11 @@ export class TextArea {
     const isFixedSize = annotation.properties.style?.fixedSize;
 
     if (isFixedSize) {
+      // Temporarily collapse height so scrollHeight reflects actual content
+      const prevHeight = this.textarea.style.height;
+      this.textarea.style.height = '0px';
       const textareaScrollHeight = this.textarea.scrollHeight;
+      this.textarea.style.height = prevHeight;
       const borderWidth = getBorderWidth(annotation);
       const zoom = this.store.getState().zoom;
 
@@ -270,16 +274,15 @@ export class TextArea {
       if (Math.abs(heightDelta) > 1) {
         const [cx, cy] = annotation.geometry.coordinates as [number, number];
 
-        // Only adjust center for growth up to maxHeight
-        if (maxHeight && oldHeight >= maxHeight) {
-          // Already at or past maxHeight - don't move center
-          newCoordinates = [cx, cy];
-        } else if (maxHeight && newHeight > maxHeight) {
-          // Growing past maxHeight - only move for the portion up to maxHeight
+        if (maxHeight && newHeight > maxHeight) {
+          // Clamp to maxHeight, only adjust center for the portion up to maxHeight
           const effectiveDelta = maxHeight - oldHeight;
-          newCoordinates = [cx, cy + effectiveDelta / 2];
+          newHeight = maxHeight;
+          if (Math.abs(effectiveDelta) > 1) {
+            newCoordinates = [cx, cy + effectiveDelta / 2];
+          }
         } else {
-          // Normal growth below maxHeight
+          // Normal growth or shrink (below maxHeight)
           newCoordinates = [cx, cy + heightDelta / 2];
         }
       }
