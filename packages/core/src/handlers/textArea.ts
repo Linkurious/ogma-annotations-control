@@ -2,7 +2,7 @@ import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
 import { Id, Text, defaultTextStyle, CommentStyle } from "../types";
-import { measureTextWidth } from "../renderer/shapes/comment";
+import { measureTextWidth, isSingleLineContent } from "../renderer/shapes/comment";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -216,6 +216,11 @@ export class TextArea {
     textAreaStyle.fontFamily = font || "sans-serif";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
     textAreaStyle.padding = `${scaledPadding}px`;
+    // Extra right padding when send button is on the same line
+    if (this.sendButton && fixedSize && this.isSingleLine()) {
+      const buttonSpace = 28 * effectiveScale; // 24px button + 4px gap
+      textAreaStyle.paddingRight = `${Math.max(scaledPadding, buttonSpace)}px`;
+    }
     textAreaStyle.lineHeight = `${scaledFontSize * TEXT_LINE_HEIGHT}px`;
 
     textAreaStyle.boxSizing = "border-box";
@@ -240,7 +245,22 @@ export class TextArea {
     if (this.sendButton) {
       const buttonScale = fixedSize ? 1 / zoom : 1;
       this.sendButton.style.transform = `scale(${buttonScale})`;
-      this.sendButton.style.transformOrigin = "bottom right";
+
+      if (fixedSize && this.isSingleLine()) {
+        // Position vertically aligned with the text line
+        const scaledPad = scaledPadding;
+        const lineHeight = scaledFontSize * TEXT_LINE_HEIGHT;
+        const textCenterFromTop = scaledPad + lineHeight / 2;
+        const buttonTop = textCenterFromTop - 12 * buttonScale;
+        this.sendButton.style.top = `${Math.max(0, buttonTop)}px`;
+        this.sendButton.style.bottom = "auto";
+        this.sendButton.style.transformOrigin = "top right";
+      } else {
+        // Position at bottom-right
+        this.sendButton.style.top = "";
+        this.sendButton.style.bottom = "4px";
+        this.sendButton.style.transformOrigin = "bottom right";
+      }
     }
   }
 
@@ -296,10 +316,17 @@ export class TextArea {
         (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
 
       // Get minimum height from style (default to 50px if not specified)
-      // For Comments, minHeight is in CommentStyle; for Text annotations it doesn't exist
-      const minHeight =
+      // For single-line content, use a tighter min height that fits just one line
+      const styleMinHeight =
         (annotation.properties.style as { minHeight?: number })?.minHeight ||
         50;
+      const singleLine = this.isSingleLine();
+      const pad = (annotation.properties.style as CommentStyle)?.padding || 0;
+      const fs = parseFloat(
+        ((annotation.properties.style as CommentStyle)?.fontSize || 12).toString()
+      );
+      const singleLineMinHeight = fs * TEXT_LINE_HEIGHT + pad * 2;
+      const minHeight = singleLine ? Math.min(styleMinHeight, singleLineMinHeight) : styleMinHeight;
       newHeight = Math.max(minHeight, requiredHeight);
 
       // Adjust center position to grow downward only (keep top edge fixed)
@@ -366,6 +393,24 @@ export class TextArea {
     this.textarea.blur();
     this.onSendHandler();
   };
+
+  private isSingleLine(): boolean {
+    const content = this.textarea.value;
+    if (content.includes("\n")) return false;
+
+    const annotation = this.getAnnotation();
+    if (!annotation) return true;
+
+    const style = annotation.properties.style as CommentStyle | undefined;
+    const font = style?.font || "Arial, sans-serif";
+    const fontSize = typeof style?.fontSize === "number"
+      ? style.fontSize
+      : parseFloat(style?.fontSize || "12");
+    const padding = style?.padding || 0;
+    const maxWidth = annotation.properties.width;
+
+    return isSingleLineContent(content, font, fontSize, maxWidth, padding);
+  }
 
   private updateSendButtonState() {
     if (!this.sendButton) return;

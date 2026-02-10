@@ -15,6 +15,26 @@ function getMeasureContext(): CanvasRenderingContext2D {
 }
 
 /**
+ * Check if content fits in a single line (no wrapping, no line breaks)
+ */
+export function isSingleLineContent(
+  content: string,
+  font: string,
+  fontSize: number,
+  maxWidth: number,
+  padding: number
+): boolean {
+  if (!content || content.length === 0) return true;
+  if (content.includes("\n")) return false;
+
+  const ctx = getMeasureContext();
+  ctx.font = `${fontSize}px ${font}`;
+  const textWidth = ctx.measureText(content).width;
+  const availableWidth = maxWidth - padding * 2;
+  return textWidth <= availableWidth;
+}
+
+/**
  * Measure the width needed for text content
  * Returns the maximum width of all lines (natural width before wrapping)
  */
@@ -213,7 +233,8 @@ function renderCollapsedIcon(
 function renderExpandedBox(
   boxGroup: SVGGElement,
   comment: Comment,
-  state: AnnotationState
+  state: AnnotationState,
+  extraWidth: number = 0
 ): void {
   const style = { ...defaultCommentStyle, ...comment.properties.style };
   const {
@@ -230,27 +251,26 @@ function renderExpandedBox(
 
   const maxWidth = comment.properties.width;
   const content = comment.properties.content || "";
+  const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
 
-  // Calculate actual width needed based on content
-  const actualWidth = measureTextWidth(
-    content,
-    font,
-    typeof fontSize === "number" ? fontSize : parseFloat(fontSize),
-    maxWidth,
-    padding
-  );
+  // Calculate actual width needed based on content (+ extra for inline button)
+  const actualWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding) + extraWidth;
 
-  // Calculate height - use maxHeight if set
-  const contentHeight = comment.properties.height;
-  const displayHeight = maxHeight ? Math.min(contentHeight, maxHeight) : contentHeight;
-  const needsScroll = maxHeight ? contentHeight > maxHeight : false;
+  // Calculate height
+  const storedHeight = comment.properties.height;
+  const singleLine = isSingleLineContent(content, font, numericFontSize, maxWidth, padding);
+  const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
+  const effectiveHeight = singleLine ? Math.min(storedHeight, singleLineHeight) : storedHeight;
+  const cappedStoredHeight = maxHeight ? Math.min(storedHeight, maxHeight) : storedHeight;
+  const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
+  const needsScroll = !singleLine && maxHeight ? storedHeight > maxHeight : false;
 
   // Clear existing content
   boxGroup.innerHTML = "";
 
-  // We use center-based positioning
+  // Keep top edge aligned with the stored height center
   const x = -actualWidth / 2;
-  const y = -displayHeight / 2;
+  const y = -cappedStoredHeight / 2;
 
   // Create background rect
   const rect = createSVGElement<SVGRectElement>("rect");
@@ -308,7 +328,8 @@ function renderExpandedBox(
 function renderEditButton(
   boxGroup: SVGGElement,
   comment: Comment,
-  state: AnnotationState
+  state: AnnotationState,
+  extraWidth: number = 0
 ): void {
   const style = { ...defaultCommentStyle, ...comment.properties.style };
   const {
@@ -320,24 +341,34 @@ function renderEditButton(
 
   const maxWidth = comment.properties.width;
   const content = comment.properties.content || "";
+  const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
 
-  const actualWidth = measureTextWidth(
-    content,
-    font,
-    typeof fontSize === "number" ? fontSize : parseFloat(fontSize),
-    maxWidth,
-    padding
-  );
+  const actualWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding) + extraWidth;
 
-  const contentHeight = comment.properties.height;
-  const displayHeight = maxHeight ? Math.min(contentHeight, maxHeight) : contentHeight;
+  const storedHeight = comment.properties.height;
+  const singleLine = isSingleLineContent(content, font, numericFontSize, maxWidth, padding);
+  const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
+  const effectiveHeight = singleLine ? Math.min(storedHeight, singleLineHeight) : storedHeight;
+  const cappedStoredHeight = maxHeight ? Math.min(storedHeight, maxHeight) : storedHeight;
+  const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
+
+  const topY = -cappedStoredHeight / 2;
 
   const buttonSize = 24;
   const margin = 4;
 
-  // Position at bottom-right of the box (center-based coordinates)
+  // Position at right side of the box
   const bx = actualWidth / 2 - buttonSize - margin;
-  const by = displayHeight / 2 - buttonSize - margin;
+  let by: number;
+
+  if (singleLine) {
+    // Vertically align with the text line
+    const lineHeight = numericFontSize * TEXT_LINE_HEIGHT;
+    by = topY + padding + lineHeight / 2 - buttonSize / 2;
+  } else {
+    // Position at bottom-right
+    by = topY + displayHeight - buttonSize - margin;
+  }
 
   const editBtn = createSVGElement<SVGGElement>("g");
   editBtn.classList.add("comment-edit-button");
@@ -441,18 +472,31 @@ export function renderComment(
     g.appendChild(boxGroup);
   }
 
-  // Render both states
-  renderCollapsedIcon(iconGroup, annotation, state);
-  renderExpandedBox(boxGroup, annotation, state);
-
-  // Show edit button when selected but not editing
-  if (
+  // Determine if edit button will be shown
+  const showEditBtn =
     mode !== COMMENT_MODE_COLLAPSED &&
     state.selectedFeatures.has(annotation.id) &&
     state.editingFeature !== annotation.id &&
-    state.options.showEditButton
-  ) {
-    renderEditButton(boxGroup, annotation, state);
+    state.options.showEditButton;
+
+  // Compute extra width for inline edit button on single-line comments
+  let extraWidth = 0;
+  if (showEditBtn) {
+    const cStyle = { ...defaultCommentStyle, ...annotation.properties.style };
+    const content = annotation.properties.content || "";
+    const numFS = typeof cStyle.fontSize === "number" ? cStyle.fontSize : parseFloat((cStyle.fontSize || "12").toString());
+    if (isSingleLineContent(content, cStyle.font || "Arial, sans-serif", numFS, annotation.properties.width, cStyle.padding || 8)) {
+      extraWidth = 32; // buttonSize (24) + margins (4*2)
+    }
+  }
+
+  // Render both states
+  renderCollapsedIcon(iconGroup, annotation, state);
+  renderExpandedBox(boxGroup, annotation, state, extraWidth);
+
+  // Show edit button when selected but not editing
+  if (showEditBtn) {
+    renderEditButton(boxGroup, annotation, state, extraWidth);
   }
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
