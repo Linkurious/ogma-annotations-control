@@ -3,113 +3,66 @@
   "features": [
     {
       "type": "Feature",
+      "id": 0,
+      "properties": {
+        "type": "text",
+        "content": "This is a cluster",
+        "style": {
+          "font": "IBM Plex Sans",
+          "fontSize": 52,
+          "color": "#2D00A6",
+          "background": "#EDE6FF",
+          "strokeWidth": 0,
+          "borderRadius": 8,
+          "padding": 12,
+          "strokeType": "plain"
+        },
+        "width": 391.77239151983304,
+        "height": 86.92166831871981
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -859.7850861774493,
+          -356.74430552470324
+        ],
+        "bbox": [
+          -1055.6712819373658,
+          -400.20513968406317,
+          -663.8988904175328,
+          -313.28347136534336
+        ]
+      }
+    },
+    {
+      "type": "Feature",
       "id": 2,
       "properties": {
         "type": "arrow",
         "style": {
-          "strokeType": "plain",
-          "strokeColor": "#3A03CF",
-          "strokeWidth": 2,
-          "head": "arrow"
-        },
-        "link": {
-          "start": {
-            "id": 0,
-            "side": "start",
-            "type": "text",
-            "magnet": {
-              "x": 0.5,
-              "y": 1
-            }
-          },
-          "end": {
-            "id": "n0",
-            "side": "end",
-            "type": "node",
-            "magnet": {
-              "x": -3.190897184338244,
-              "y": 8.898312363505827
-            }
-          }
-        }
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [611.4601173101091, -181.18423691001794],
-          [50.33367527801032, -13.814162348264347]
-        ]
-      }
-    },
-    {
-      "id": "AOuuvtINge5RglzHJKGSY",
-      "type": "Feature",
-      "properties": {
-        "type": "arrow",
-        "style": {
-          "strokeType": "plain",
-          "strokeColor": "#E31D5B",
-          "strokeWidth": 2,
-          "head": "none",
+          "strokeType": "dashed",
+          "strokeColor": "#2D00A6",
+          "strokeWidth": 4,
+          "head": "halo-dot",
           "tail": "none"
         },
         "link": {
           "start": {
-            "id": "XrBBIyHBBWN_GRk_3UiKO",
-            "side": "start",
-            "type": "text",
-            "magnet": {
-              "x": 1,
-              "y": 0.5
-            }
-          },
-          "end": {
-            "id": "n0",
-            "side": "end",
-            "type": "node",
-            "magnet": {
-              "x": -61.31075845619375,
-              "y": 10.577029299225533
-            }
-          }
-        }
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [-367.29500436295564, 104.5992036935667],
-          [-59.42498177867539, 23.67884329601754]
-        ]
-      }
-    },
-    {
-      "id": "3dFfclX5npDSqZ9-tWuVo",
-      "type": "Feature",
-      "properties": {
-        "type": "arrow",
-        "style": {
-          "strokeType": "plain",
-          "strokeColor": "#3A03CF",
-          "strokeWidth": 2,
-          "head": "halo-dot"
-        },
-        "link": {
-          "end": {
-            "id": "n32",
-            "side": "end",
-            "type": "node",
-            "magnet": {
-              "x": 241.13486569101863,
-              "y": 106.67847222038867
-            }
-          },
-          "start": {
             "id": 0,
             "side": "start",
             "type": "text",
             "magnet": {
               "x": 0.5,
-              "y": 1
+              "y": 0
+            }
+          },
+          "end": {
+            "id": "n14",
+            "side": "end",
+            "type": "node",
+            "magnet": {
+              "x": 0,
+              "y": 0
             }
           }
         }
@@ -117,69 +70,488 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [611.4601173101091, -181.18423691001794],
-          [241.13486569101863, 106.67847222038867]
+          [
+            -663.8988904175328,
+            -356.74430552470324
+          ],
+          [
+            114.92802889931836,
+            -199.54522879595044
+          ]
+        ],
+        "bbox": [
+          -663.8988904175328,
+          -356.74430552470324,
+          114.92802889931836,
+          -199.54522879595044
         ]
       }
     },
     {
+      "id": "_ehl9o_Yw7ubR17UConfe",
       "type": "Feature",
-      "id": 0,
       "properties": {
-        "type": "text",
-        "content": "Another annotation",
+        "type": "arrow",
         "style": {
-          "font": "IBM Plex Sans",
-          "fontSize": 52,
-          "color": "#3A03CF",
-          "background": "#EDE6FF",
-          "strokeWidth": 0,
           "strokeType": "plain",
-          "borderRadius": 8,
-          "padding": 16
+          "strokeColor": "#e8346d",
+          "strokeWidth": 5,
+          "head": "halo-dot",
+          "tail": "none"
+        },
+        "link": {
+          "end": {
+            "id": "1",
+            "side": "end",
+            "type": "node",
+            "magnet": {
+              "x": -503.6878974740729,
+              "y": 348.9457782965114
+            }
+          },
+          "start": {
+            "id": "yHia09RukDxkVI5Jb50ze",
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": -0.5,
+              "y": 0
+            }
+          }
         }
       },
       "geometry": {
-        "type": "Polygon",
         "coordinates": [
           [
-            [411.46011731010924, -331.18423691001794],
-            [811.4601173101091, -331.18423691001794],
-            [811.4601173101091, -181.18423691001794],
-            [411.46011731010924, -181.18423691001794],
-            [411.46011731010924, -331.18423691001794]
+            -218.36092453704242,
+            154.70746915316062
+          ],
+          [
+            -507.64343710858014,
+            367.56243054487464
           ]
+        ],
+        "bbox": [
+          -507.64343710858014,
+          154.70746915316062,
+          -218.36092453704242,
+          367.56243054487464
         ]
       }
     },
     {
-      "id": "XrBBIyHBBWN_GRk_3UiKO",
+      "id": "rHX86vJ2-0tp6MahHTlGF",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#e8346d",
+          "strokeWidth": 5,
+          "head": "halo-dot",
+          "tail": "none"
+        },
+        "link": {
+          "start": {
+            "id": "yHia09RukDxkVI5Jb50ze",
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": 0,
+              "y": -0.5
+            }
+          }
+        }
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            419.4711670339215,
+            37.18569582413521
+          ],
+          [
+            600.7101245300414,
+            -22.25256552534996
+          ]
+        ],
+        "bbox": [
+          419.4711670339215,
+          -22.25256552534996,
+          600.7101245300414,
+          37.18569582413521
+        ]
+      }
+    },
+    {
+      "id": "yHia09RukDxkVI5Jb50ze",
       "type": "Feature",
       "properties": {
         "type": "text",
-        "content": "Annotation",
+        "content": "This is another one",
         "style": {
+          "fixedSize": true,
           "font": "IBM Plex Sans",
           "fontSize": 22,
           "color": "#E31D5B",
-          "background": "#FAEDF7",
+          "background": "rgba(227, 52, 109, 0.1)",
           "strokeWidth": 0,
           "strokeColor": "#000",
           "strokeType": "plain",
           "padding": 12,
           "borderRadius": 10
+        },
+        "width": 417.24657766277335,
+        "height": 76.87847377140076
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          419.4711670339215,
+          154.70746915316062
+        ],
+        "bbox": [
+          210.84787820253484,
+          116.26823226746023,
+          628.0944558653082,
+          193.146706038861
+        ]
+      }
+    },
+    {
+      "id": "XrBVIyHBBWN_GRk_3UiKO",
+      "type": "Feature",
+      "properties": {
+        "type": "box",
+        "style": {
+          "background": "rgba(227, 52, 109, 0.1)",
+          "strokeWidth": 1,
+          "strokeColor": "rgba(227, 52, 109, 0.8)",
+          "strokeType": "plain",
+          "borderRadius": 10
+        },
+        "width": 214.73843858740076,
+        "height": 82.21967243211289
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -237.12093861162748,
+          246.8617210910017
+        ],
+        "bbox": [
+          -344.49015790532786,
+          205.75188487494526,
+          -129.7517193179271,
+          287.97155730705816
+        ]
+      }
+    },
+    {
+      "id": "polygon-example-1",
+      "type": "Feature",
+      "properties": {
+        "type": "polygon",
+        "style": {
+          "background": "rgba(45, 0, 166, 0.15)",
+          "strokeWidth": 3,
+          "strokeColor": "#2D00A6",
+          "strokeType": "plain"
         }
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [
           [
-            [-582.0334429503564, 63.48936747751024],
-            [-367.29500436295564, 63.48936747751024],
-            [-367.29500436295564, 145.70903990962313],
-            [-582.0334429503564, 145.70903990962313],
-            [-582.0334429503564, 63.48936747751024]
+            [
+              -496.4803268368612,
+              -537.3774816604374
+            ],
+            [
+              -396.4803268368612,
+              -587.3774816604374
+            ],
+            [
+              -296.4803268368612,
+              -557.3774816604374
+            ],
+            [
+              -246.4803268368612,
+              -487.3774816604374
+            ],
+            [
+              -352.2245156759366,
+              -460.25762692126455
+            ],
+            [
+              -396.4803268368612,
+              -427.3774816604374
+            ],
+            [
+              -496.4803268368612,
+              -537.3774816604374
+            ]
           ]
+        ],
+        "bbox": [
+          -496.4803268368612,
+          -587.3774816604374,
+          -246.4803268368612,
+          -427.3774816604374
+        ]
+      }
+    },
+    {
+      "id": "8BpK8JU1yJhRUJugBPovy",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3A03CF",
+          "strokeWidth": 2,
+          "head": "halo-dot",
+          "tail": "none"
+        },
+        "link": {
+          "start": {
+            "id": "HjMIgeau2eevyRijPUerA",
+            "side": "start",
+            "type": "comment",
+            "magnet": {
+              "x": 0,
+              "y": 0.5
+            }
+          },
+          "end": {
+            "id": 2,
+            "side": "end",
+            "type": "edge",
+            "magnet": {
+              "x": 0.43172459439978766,
+              "y": 0
+            }
+          }
+        }
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            139.4620892162373,
+            25.475134563598004
+          ],
+          [
+            -269.9906657443542,
+            11.269748111244864
+          ]
+        ],
+        "bbox": [
+          -269.9906657443542,
+          11.269748111244864,
+          139.4620892162373,
+          25.475134563598004
+        ]
+      }
+    },
+    {
+      "id": "HjMIgeau2eevyRijPUerA",
+      "type": "Feature",
+      "properties": {
+        "type": "comment",
+        "content": "Coucou",
+        "mode": "collapsed",
+        "width": 200,
+        "height": 60,
+        "style": {
+          "background": "#EDE6FF",
+          "padding": 8,
+          "borderRadius": 4,
+          "strokeColor": "#DDD",
+          "strokeWidth": 1,
+          "strokeType": "plain",
+          "iconColor": "#FFCB2F",
+          "iconSymbol": "💬",
+          "iconBorderColor": "#aaa",
+          "iconBorderWidth": 2,
+          "minHeight": 60,
+          "maxHeight": 480,
+          "iconSize": 32,
+          "color": "#3A03CF",
+          "font": "IBM Plex Sans",
+          "fontSize": 16,
+          "showSendButton": true,
+          "autoGrow": true,
+          "fixedSize": true
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          139.4620892162373,
+          9.475134563598004
+        ],
+        "bbox": [
+          39.4620892162373,
+          -20.524865436401996,
+          239.4620892162373,
+          39.475134563598004
+        ]
+      }
+    },
+    {
+      "id": "bzox4elagh1BQkcRa3sgh",
+      "type": "Feature",
+      "properties": {
+        "type": "box",
+        "width": 307.4976564714004,
+        "height": 391.36065369087316,
+        "style": {
+          "background": "#EDE6FF",
+          "strokeWidth": 0,
+          "borderRadius": 8,
+          "padding": 12,
+          "strokeType": "plain"
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -859.9614182944385,
+          506.6590810634515
+        ],
+        "bbox": [
+          -1013.7102465301388,
+          310.9787542180149,
+          -706.2125900587383,
+          702.339407908888
+        ]
+      }
+    },
+    {
+      "id": "tuUod38ve1Mp8CpCqzfRW",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3A03CF",
+          "strokeWidth": 2,
+          "head": "arrow",
+          "tail": "none"
+        },
+        "link": {
+          "start": {
+            "id": "bzox4elagh1BQkcRa3sgh",
+            "side": "start",
+            "type": "text",
+            "magnet": {
+              "x": 0.5,
+              "y": 0.257142857142857
+            }
+          },
+          "end": {
+            "id": "yHia09RukDxkVI5Jb50ze",
+            "side": "end",
+            "type": "text",
+            "magnet": {
+              "x": -0.5,
+              "y": 0.1671927537773341
+            }
+          }
+        }
+      },
+      "geometry": {
+        "coordinates": [
+          [
+            -706.2125900587383,
+            607.2946777268188
+          ],
+          [
+            -218.36092453704242,
+            194.00504697651144
+          ]
+        ],
+        "bbox": [
+          -706.2125900587383,
+          194.00504697651144,
+          -218.36092453704242,
+          607.2946777268188
+        ]
+      }
+    },
+    {
+      "id": "W23Zp6VgKOObY1_ZDHKlB",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3A03CF",
+          "strokeWidth": 2,
+          "head": "arrow",
+          "tail": "none"
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -359.5809069228413,
+            594.8766375619739
+          ],
+          [
+            -359.5809069228413,
+            594.8766375619739
+          ]
+        ],
+        "bbox": [
+          -359.5809069228413,
+          594.8766375619739,
+          -359.5809069228413,
+          594.8766375619739
+        ]
+      }
+    },
+    {
+      "id": "GTVSJKNey7IuQW67pEhbP",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeType": "plain",
+          "strokeColor": "#3A03CF",
+          "strokeWidth": 2,
+          "head": "arrow",
+          "tail": "none"
+        },
+        "link": {
+          "end": {
+            "id": "polygon-example-1",
+            "side": "end",
+            "type": "polygon",
+            "magnet": {
+              "x": 0.5770232446436985,
+              "y": 0.7944990921198304
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -262.70583506643095,
+            702.5794661501535
+          ],
+          [
+            -352.2245156759366,
+            -460.25762692126455
+          ]
+        ],
+        "bbox": [
+          -352.2245156759366,
+          -460.25762692126455,
+          -262.70583506643095,
+          702.5794661501535
         ]
       }
     }
