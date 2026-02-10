@@ -2,6 +2,7 @@ import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
 import { Id, Text, defaultTextStyle, CommentStyle } from "../types";
+import { measureTextWidth } from "../renderer/shapes/comment";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -23,6 +24,7 @@ export class TextArea {
     const state = this.store.getState();
     const showSendButton = state.options?.showSendButton ?? true;
     const sendButtonIcon = state.options?.sendButtonIcon || "";
+    const editButtonIcon = state.options?.editButtonIcon || "";
     const placeholderText = state.options?.textPlaceholder || "Enter text";
 
     this.layer = this.ogma.layers.addOverlay(
@@ -69,6 +71,26 @@ export class TextArea {
     this.updatePosition();
     this.textarea.focus();
 
+    // Animate from content width to full width for fixed-size (comments)
+    const fixedSize = annotationData.properties.style?.fixedSize;
+    if (fixedSize) {
+      const editorEl = this.layer.element as HTMLElement;
+      const contentWidth = this.getContentWidth(annotationData);
+      const fullWidth = annotationData.properties.width;
+      // Start at content width, centered via left offset
+      editorEl.style.width = `${contentWidth}px`;
+      editorEl.style.left = `${(fullWidth - contentWidth) / 2}px`;
+      // Force layout so the browser registers the initial state
+      editorEl.getBoundingClientRect();
+      // Animate to full width, no offset
+      editorEl.classList.add("animate-width");
+      editorEl.style.width = `${fullWidth}px`;
+      editorEl.style.left = "0px";
+      editorEl.addEventListener("transitionend", () => {
+        editorEl.classList.remove("animate-width");
+      }, { once: true });
+    }
+
     this.unsubscribe = this.store.subscribe(
       (state) => ({
         rotation: state.rotation,
@@ -89,9 +111,25 @@ export class TextArea {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
-      return this.store.getState().getFeature(this.annotation) as Text;
+      // return this.store.getState().getFeature(this.annotation) as Text;
     }
-    return state.liveUpdates[this.annotation] as Text;
+    return {
+      ...this.store.getState().getFeature(this.annotation) as Text,
+      ...state.liveUpdates[this.annotation] as Text
+    };
+  }
+
+  private getContentWidth(annotation: Text): number {
+    const style = { ...defaultTextStyle, ...annotation.properties.style } as CommentStyle;
+    const {
+      font = "Arial, sans-serif",
+      fontSize = 12,
+      padding = 0
+    } = style;
+    const maxWidth = annotation.properties.width;
+    const content = this.textarea ? this.textarea.value : (annotation.properties.content || "");
+    const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
+    return measureTextWidth(content, font, numericFontSize, maxWidth, padding);
   }
 
   private getPosition() {
@@ -107,7 +145,6 @@ export class TextArea {
     // Get center coordinates (in graph space)
     const [cx, cy] = annotation.geometry.coordinates as [number, number];
 
-    // Dimensions in graph space
     const width = annotation.properties.width;
     let height = annotation.properties.height;
 

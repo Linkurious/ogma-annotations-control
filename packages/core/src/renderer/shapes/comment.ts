@@ -18,7 +18,7 @@ function getMeasureContext(): CanvasRenderingContext2D {
  * Measure the width needed for text content
  * Returns the maximum width of all lines (natural width before wrapping)
  */
-function measureTextWidth(
+export function measureTextWidth(
   content: string,
   font: string,
   fontSize: number,
