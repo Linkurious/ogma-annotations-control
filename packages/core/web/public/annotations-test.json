@@ -22,14 +22,9 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          -859.7850861774493,
-          -356.74430552470324
-        ],
+        "coordinates": [-859.7850861774493, -356.74430552470324],
         "bbox": [
-          -1055.6712819373658,
-          -400.20513968406317,
-          -663.8988904175328,
+          -1055.6712819373658, -400.20513968406317, -663.8988904175328,
           -313.28347136534336
         ]
       }
@@ -70,19 +65,11 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [
-            -663.8988904175328,
-            -356.74430552470324
-          ],
-          [
-            114.92802889931836,
-            -199.54522879595044
-          ]
+          [-663.8988904175328, -356.74430552470324],
+          [114.92802889931836, -199.54522879595044]
         ],
         "bbox": [
-          -663.8988904175328,
-          -356.74430552470324,
-          114.92802889931836,
+          -663.8988904175328, -356.74430552470324, 114.92802889931836,
           -199.54522879595044
         ]
       }
@@ -121,20 +108,13 @@
         }
       },
       "geometry": {
+        "type": "LineString",
         "coordinates": [
-          [
-            -27.818679460146825,
-            154.70746915316062
-          ],
-          [
-            -507.64343710858014,
-            367.56243054487464
-          ]
+          [449.3915147379241, 357.84228464032805],
+          [-507.64343710858014, 367.56243054487464]
         ],
         "bbox": [
-          -507.64343710858014,
-          154.70746915316062,
-          -27.818679460146825,
+          -507.64343710858014, 357.84228464032805, 449.3915147379241,
           367.56243054487464
         ]
       }
@@ -164,21 +144,14 @@
         }
       },
       "geometry": {
+        "type": "LineString",
         "coordinates": [
-          [
-            419.4711670339215,
-            72.29346608445167
-          ],
-          [
-            600.7101245300414,
-            -22.25256552534996
-          ]
+          [658.0148035693109, 319.40304775462766],
+          [600.7101245300414, -22.25256552534996]
         ],
         "bbox": [
-          419.4711670339215,
-          -22.25256552534996,
-          600.7101245300414,
-          72.29346608445167
+          600.7101245300414, -22.25256552534996, 658.0148035693109,
+          319.40304775462766
         ]
       }
     },
@@ -205,15 +178,10 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          419.4711670339215,
-          154.70746915316062
-        ],
+        "coordinates": [658.0148035693109, 357.84228464032805],
         "bbox": [
-          210.84787820253484,
-          116.26823226746023,
-          628.0944558653082,
-          193.146706038861
+          449.3915147379242, 319.40304775462766, 866.6380924006976,
+          396.2815215260284
         ]
       }
     },
@@ -234,15 +202,10 @@
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          -237.12093861162748,
-          246.8617210910017
-        ],
+        "coordinates": [-174.66422365665602, 104.5992036935667],
         "bbox": [
-          -344.49015790532786,
-          205.75188487494526,
-          -129.7517193179271,
-          287.97155730705816
+          -282.0334429503564, 63.48936747751024, -67.29500436295564,
+          145.70903990962313
         ]
       }
     },
@@ -262,265 +225,58 @@
         "type": "Polygon",
         "coordinates": [
           [
-            [
-              -496.4803268368612,
-              -537.3774816604374
-            ],
-            [
-              -396.4803268368612,
-              -587.3774816604374
-            ],
-            [
-              -296.4803268368612,
-              -557.3774816604374
-            ],
-            [
-              -246.4803268368612,
-              -487.3774816604374
-            ],
-            [
-              -352.2245156759366,
-              -460.25762692126455
-            ],
-            [
-              -396.4803268368612,
-              -427.3774816604374
-            ],
-            [
-              -496.4803268368612,
-              -537.3774816604374
-            ]
+            [-400, -100],
+            [-300, -150],
+            [-200, -120],
+            [-150, -50],
+            [-200, 20],
+            [-300, 10],
+            [-400, -100]
           ]
         ],
-        "bbox": [
-          -496.4803268368612,
-          -587.3774816604374,
-          -246.4803268368612,
-          -427.3774816604374
-        ]
+        "bbox": [-400, -150, -150, 20]
       }
     },
     {
-      "id": "8BpK8JU1yJhRUJugBPovy",
-      "type": "Feature",
-      "properties": {
-        "type": "arrow",
-        "style": {
-          "strokeType": "plain",
-          "strokeColor": "#3A03CF",
-          "strokeWidth": 2,
-          "head": "halo-dot",
-          "tail": "none"
-        },
-        "link": {
-          "start": {
-            "id": "HjMIgeau2eevyRijPUerA",
-            "side": "start",
-            "type": "comment",
-            "magnet": {
-              "x": 0,
-              "y": 0.5
-            }
-          },
-          "end": {
-            "id": 2,
-            "side": "end",
-            "type": "edge",
-            "magnet": {
-              "x": 0.43172459439978766,
-              "y": 0
-            }
-          }
-        }
-      },
-      "geometry": {
-        "coordinates": [
-          [
-            139.4620892162373,
-            25.475134563598004
-          ],
-          [
-            -269.9906657443542,
-            11.269748111244864
-          ]
-        ],
-        "bbox": [
-          -269.9906657443542,
-          11.269748111244864,
-          139.4620892162373,
-          25.475134563598004
-        ]
-      }
-    },
-    {
-      "id": "HjMIgeau2eevyRijPUerA",
+      "id": "comment-example-1",
       "type": "Feature",
       "properties": {
         "type": "comment",
-        "content": "Coucou",
+        "content": "This group needs review! 🎯",
         "mode": "expanded",
         "width": 200,
-        "height": 60,
+        "height": 80,
         "style": {
-          "background": "#EDE6FF",
-          "padding": 8,
-          "borderRadius": 4,
-          "strokeColor": "#DDD",
-          "strokeWidth": 1,
-          "strokeType": "plain",
-          "iconColor": "#FFCB2F",
-          "iconSymbol": "💬",
-          "iconBorderColor": "#aaa",
-          "iconBorderWidth": 2,
           "minHeight": 60,
-          "maxHeight": 480,
           "iconSize": 32,
-          "color": "#3A03CF",
+          "background": "#FFF",
+          "strokeColor": "#DDD",
+          "strokeWidth": 0,
+          "strokeType": "plain",
+          "borderRadius": 4,
+          "color": "#333",
           "font": "IBM Plex Sans",
-          "fontSize": 16,
-          "showSendButton": true,
-          "autoGrow": true,
+          "fontSize": 14,
+          "padding": 8,
+          "iconColor": "#FFD700",
+          "iconSymbol": "💬",
           "fixedSize": true
         }
       },
       "geometry": {
         "type": "Point",
-        "coordinates": [
-          139.4620892162373,
-          9.475134563598004
-        ],
-        "bbox": [
-          39.4620892162373,
-          -20.524865436401996,
-          239.4620892162373,
-          39.475134563598004
-        ]
+        "coordinates": [-650, -80]
       }
     },
     {
-      "id": "bzox4elagh1BQkcRa3sgh",
-      "type": "Feature",
-      "properties": {
-        "type": "box",
-        "width": 307.4976564714004,
-        "height": 391.36065369087316,
-        "style": {
-          "background": "#EDE6FF",
-          "strokeWidth": 0,
-          "borderRadius": 8,
-          "padding": 12,
-          "strokeType": "plain"
-        }
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -859.9614182944385,
-          506.6590810634515
-        ],
-        "bbox": [
-          -1013.7102465301388,
-          310.9787542180149,
-          -706.2125900587383,
-          702.339407908888
-        ]
-      }
-    },
-    {
-      "id": "tuUod38ve1Mp8CpCqzfRW",
+      "id": "comment-arrow-1",
       "type": "Feature",
       "properties": {
         "type": "arrow",
         "style": {
-          "strokeType": "plain",
-          "strokeColor": "#3A03CF",
+          "strokeColor": "#2D00A6",
           "strokeWidth": 2,
-          "head": "arrow",
-          "tail": "none"
-        },
-        "link": {
-          "start": {
-            "id": "bzox4elagh1BQkcRa3sgh",
-            "side": "start",
-            "type": "text",
-            "magnet": {
-              "x": 0.5,
-              "y": 0.257142857142857
-            }
-          },
-          "end": {
-            "id": "yHia09RukDxkVI5Jb50ze",
-            "side": "end",
-            "type": "text",
-            "magnet": {
-              "x": -0.5,
-              "y": 0.1671927537773341
-            }
-          }
-        }
-      },
-      "geometry": {
-        "coordinates": [
-          [
-            -706.2125900587383,
-            607.2946777268188
-          ],
-          [
-            -27.818679460146825,
-            182.26551739890283
-          ]
-        ],
-        "bbox": [
-          -706.2125900587383,
-          182.26551739890283,
-          -27.818679460146825,
-          607.2946777268188
-        ]
-      }
-    },
-    {
-      "id": "W23Zp6VgKOObY1_ZDHKlB",
-      "type": "Feature",
-      "properties": {
-        "type": "arrow",
-        "style": {
-          "strokeType": "plain",
-          "strokeColor": "#3A03CF",
-          "strokeWidth": 2,
-          "head": "arrow",
-          "tail": "none"
-        }
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -359.5809069228413,
-            594.8766375619739
-          ],
-          [
-            -359.5809069228413,
-            594.8766375619739
-          ]
-        ],
-        "bbox": [
-          -359.5809069228413,
-          594.8766375619739,
-          -359.5809069228413,
-          594.8766375619739
-        ]
-      }
-    },
-    {
-      "id": "soCKwUW-PgjcY24FtUMPB",
-      "type": "Feature",
-      "properties": {
-        "type": "arrow",
-        "style": {
-          "strokeType": "plain",
-          "strokeColor": "#3A03CF",
-          "strokeWidth": 2,
-          "head": "arrow",
+          "head": "halo-dot",
           "tail": "none"
         },
         "link": {
@@ -529,8 +285,17 @@
             "side": "end",
             "type": "polygon",
             "magnet": {
-              "x": 0.7421596204005655,
-              "y": 0.7359033899045258
+              "x": -300,
+              "y": -100
+            }
+          },
+          "start": {
+            "id": "comment-example-1",
+            "side": "start",
+            "type": "comment",
+            "magnet": {
+              "x": 0.5,
+              "y": 0
             }
           }
         }
@@ -538,20 +303,75 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [
-            -173.052275038243,
-            454.1223067868767
-          ],
-          [
-            -310.9404217367198,
-            -469.6329392757133
-          ]
-        ],
-        "bbox": [
-          -310.9404217367198,
-          -469.6329392757133,
-          -173.052275038243,
-          454.1223067868767
+          [-450, -120],
+          [-300, -100]
+        ]
+      }
+    },
+    {
+      "id": "comment-collapsed-example",
+      "type": "Feature",
+      "properties": {
+        "type": "comment",
+        "content": "Quick note",
+        "mode": "collapsed",
+        "width": 200,
+        "height": 60,
+        "style": {
+          "minHeight": 60,
+          "iconSize": 32,
+          "padding": 8,
+          "color": "#333",
+          "font": "IBM Plex Sans",
+          "iconColor": "#FFCB2F",
+          "iconSymbol": "💬",
+          "iconBorderColor": "#909090",
+          "iconBorderWidth": 1,
+          "fixedSize": true
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-100, -150]
+      }
+    },
+    {
+      "id": "comment-arrow-2",
+      "type": "Feature",
+      "properties": {
+        "type": "arrow",
+        "style": {
+          "strokeColor": "#2D00A6",
+          "strokeWidth": 2,
+          "head": "halo-dot",
+          "tail": "none"
+        },
+        "link": {
+          "end": {
+            "id": "polygon-example-1",
+            "side": "end",
+            "type": "polygon",
+            "magnet": {
+              "x": -200,
+              "y": -50
+            }
+          },
+          "start": {
+            "id": "comment-collapsed-example",
+            "side": "start",
+            "type": "comment",
+            "magnet": {
+              "x": 0,
+              "y": 0
+            }
+          }
+        }
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [-200, -50],
+          [-100, -80]
         ]
       }
     }
