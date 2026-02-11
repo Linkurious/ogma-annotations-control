@@ -33,9 +33,9 @@ export class BrowserSession {
       ...options
     });
     this.browser = await chromium.launch({
-      headless,
+      headless: false,
       devtools: false,
-      slowMo: 100
+      slowMo: 250
     });
     this.page = await this.browser.newPage();
     await this.page.goto(`http://localhost:${this.port}`);

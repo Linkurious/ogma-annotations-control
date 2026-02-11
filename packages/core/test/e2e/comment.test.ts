@@ -58,7 +58,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
       // Far from any node or edge (off-diagonal from the n1-n2 edge)
-      return ogma.view.graphToScreenCoordinates({ x: 100, y: -80 });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
     });
 
     await drawComment(session, pos);
