@@ -1,7 +1,7 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
-import { Id, Text, defaultTextStyle, CommentStyle } from "../types";
+import { Id, Text, defaultTextStyle, CommentStyle, isComment } from "../types";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -21,7 +21,7 @@ export class TextArea {
     const size = this.getSize();
     const annotationData = this.getAnnotation()!;
     const state = this.store.getState();
-    const showSendButton = state.options?.showSendButton ?? true;
+    const showSendButton = isComment(annotationData) && (state.options?.showSendButton ?? true);
     const sendButtonIcon = state.options?.sendButtonIcon || "";
     const placeholderText = state.options?.textPlaceholder || "Enter text";
 
@@ -136,7 +136,7 @@ export class TextArea {
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
     const state = this.store.getState();
-    const showSendButton = state.options?.showSendButton ?? true;
+    const showSendButton = isComment(annotation) && (state.options?.showSendButton ?? true);
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;

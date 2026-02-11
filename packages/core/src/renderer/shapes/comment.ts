@@ -276,7 +276,6 @@ function renderExpandedBox(
   const singleLine = isSingleLineContent(content, font, numericFontSize, maxWidth, padding);
   const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
   const effectiveHeight = singleLine ? Math.min(storedHeight, singleLineHeight) : storedHeight;
-  const cappedStoredHeight = maxHeight ? Math.min(storedHeight, maxHeight) : storedHeight;
   const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
   const needsScroll = !singleLine && maxHeight ? storedHeight > maxHeight : false;
 
@@ -287,9 +286,9 @@ function renderExpandedBox(
   // Clear existing content
   boxGroup.innerHTML = "";
 
-  // Keep top edge aligned with the stored height center
+  // Center the box at (0,0) to align with the collapsed icon
   const x = -actualWidth / 2;
-  const y = -cappedStoredHeight / 2;
+  const y = -totalDisplayHeight / 2;
 
   // Create background rect
   const rect = createSVGElement<SVGRectElement>("rect");
@@ -452,16 +451,10 @@ export function renderComment(
   }
 
   // Update the mode class to trigger CSS transitions
-  if (
-    mode === COMMENT_MODE_COLLAPSED &&
-    !g.classList.contains("comment-collapsed")
-  ) {
+  if (mode === COMMENT_MODE_COLLAPSED) {
     g.classList.add("comment-collapsed");
     g.classList.remove("comment-expanded");
-  } else if (
-    mode !== COMMENT_MODE_COLLAPSED &&
-    g.classList.contains("comment-collapsed")
-  ) {
+  } else {
     g.classList.add("comment-expanded");
     g.classList.remove("comment-collapsed");
   }

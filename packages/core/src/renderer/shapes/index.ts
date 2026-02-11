@@ -43,6 +43,7 @@ export class Shapes extends Renderer<SVGLayer> {
         liveUpdates: state.liveUpdates,
         hoveredFeature: state.hoveredFeature,
         selectedFeatures: state.selectedFeatures,
+        editingFeature: state.editingFeature,
         rotation: state.rotation,
         zoom: state.zoom
       }),
@@ -54,6 +55,7 @@ export class Shapes extends Renderer<SVGLayer> {
             a.liveUpdates === b.liveUpdates &&
             a.hoveredFeature === b.hoveredFeature &&
             a.selectedFeatures === b.selectedFeatures &&
+            a.editingFeature === b.editingFeature &&
             a.rotation === b.rotation &&
             a.zoom === b.zoom;
           return equal;
