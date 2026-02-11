@@ -508,6 +508,19 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
+   * Place a pre-created annotation by moving it with the cursor.
+   * The annotation follows the mouse until the user clicks to place it.
+   * Press Escape to cancel.
+   *
+   * @param annotation The text or box annotation to place
+   * @returns this for chaining
+   */
+  public enablePlacement(annotation: Text | Box): this {
+    this.drawing.enablePlacement(annotation);
+    return this;
+  }
+
+  /**
    * **Advanced API:** Programmatically start drawing a comment at specific coordinates.
    *
    * This is a low-level method that gives you full control over the drawing process.

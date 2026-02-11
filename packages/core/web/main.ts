@@ -3,10 +3,10 @@
 
 import { Ogma } from "@linkurious/ogma";
 import { AnnotationPanel } from "./AnnotationPanel";
-import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
+import { Control, AnnotationCollection, getAnnotationsBounds, createText } from "../src";
 
-interface ND {}
-interface ED {}
+interface ND { }
+interface ED { }
 
 class App {
   private ogma: Ogma<ND, ED>;
@@ -15,7 +15,7 @@ class App {
   private annotationPanel: AnnotationPanel | null = null;
   private buttons: {
     addArrow: HTMLButtonElement;
-    addText: HTMLButtonElement;
+    addStickyNote: HTMLButtonElement;
     addBox: HTMLButtonElement;
     addPolygon: HTMLButtonElement;
     addComment: HTMLButtonElement;
@@ -50,7 +50,7 @@ class App {
 
     this.buttons = {
       addArrow: document.getElementById("add-arrow")! as HTMLButtonElement,
-      addText: document.getElementById("add-text")! as HTMLButtonElement,
+      addStickyNote: document.getElementById("add-sticky-note")! as HTMLButtonElement,
       addBox: document.getElementById("add-box")! as HTMLButtonElement,
       addPolygon: document.getElementById("add-polygon")! as HTMLButtonElement,
       addComment: document.getElementById("add-comment")! as HTMLButtonElement,
@@ -127,10 +127,10 @@ class App {
 
   private setupDrawingTools() {
     this.setupArrowTool();
-    this.setupTextTool();
     this.setupBoxTool();
     this.setupPolygonTool();
     this.setupCommentTool();
+    this.setupStickyNote();
   }
 
   private setupArrowTool() {
@@ -155,25 +155,28 @@ class App {
     });
   }
 
-  private setupTextTool() {
-    this.buttons.addText.addEventListener("click", () => {
-      if (this.buttons.addText.disabled) return;
+  private setupStickyNote() {
+    this.buttons.addStickyNote.addEventListener("click", (evt) => {
+      if (this.buttons.addStickyNote.disabled) return;
       this.clearAllActiveButtons();
-      this.buttons.addText.disabled = true;
-      this.buttons.addText.classList.add("active");
-
-      this.control.enableTextDrawing({
+      this.buttons.addStickyNote.disabled = true;
+      this.buttons.addStickyNote.classList.add("active");
+      const w = 150;
+      const point = this.ogma.view.screenToGraphCoordinates({ x: evt.clientX, y: evt.clientY});
+      const text = createText(point.x- w/2, point.y-w/2, w, w, "Post it", {
         font: "IBM Plex Sans",
-        fontSize: 24,
+        fontSize: 14,
         color: "#3A03CF",
         background: "#EDE6FF",
-        borderRadius: 8,
+        borderRadius: 0,
+        boxShadow: 'box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.15)',
         padding: 12
       });
+      this.control.enablePlacement(text);
 
       const done = () => {
-        this.buttons.addText.disabled = false;
-        this.buttons.addText.classList.remove("active");
+        this.buttons.addStickyNote.disabled = false;
+        this.buttons.addStickyNote.classList.remove("active");
       };
 
       this.control.once("completeDrawing", done).once("cancelDrawing", done);
@@ -431,7 +434,6 @@ class App {
   private clearAllActiveButtons() {
     [
       this.buttons.addArrow,
-      this.buttons.addText,
       this.buttons.addBox,
       this.buttons.addPolygon
     ].forEach((btn) => {
