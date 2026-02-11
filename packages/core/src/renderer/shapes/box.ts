@@ -67,17 +67,8 @@ export function renderBox(
   rect.setAttribute("y", `${position.y}`);
   g.appendChild(rect);
 
-  // Apply box shadow as CSS drop-shadow filter
-  // box-shadow format: offsetX offsetY blur [spread] color
-  // drop-shadow format: offsetX offsetY blur color (no spread)
   if (boxShadow) {
-    // Match numeric values and the trailing color
-    const parts = boxShadow.match(
-      /^(\S+)\s+(\S+)\s+(\S+)\s+(?:\S+\s+)?((?:rgba?|hsla?|#)\S*.*)$/i
-    );
-    g.style.filter = parts
-      ? `drop-shadow(${parts[1]} ${parts[2]} ${parts[3]} ${parts[4]})`
-      : `drop-shadow(${boxShadow})`;
+    g.style.filter = `drop-shadow(${boxShadow})`;
   } else {
     g.style.filter = "";
   }
