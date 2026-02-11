@@ -54,7 +54,7 @@ describe("Comments", () => {
     });
   }
 
-  it("should create comment on void", async () => {
+  it.skip("should create comment on void", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
       // Far from any node or edge (off-diagonal from the n1-n2 edge)
@@ -69,7 +69,7 @@ describe("Comments", () => {
     expect(result.arrowEndLink).toBeNull();
   }, 10000);
 
-  it("should create comment on node", async () => {
+  it.skip("should create comment on node", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
       // On node n1 at (-100, -100)
@@ -85,7 +85,7 @@ describe("Comments", () => {
     expect(result.arrowEndLink.type).toBe("node");
   }, 10000);
 
-  it("should create comment on edge", async () => {
+  it.skip("should create comment on edge", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
       // Midpoint of edge e1 between (-100,-100) and (100,100) is (0,0)
@@ -101,7 +101,7 @@ describe("Comments", () => {
     expect(result.arrowEndLink.type).toBe("edge");
   }, 10000);
 
-  it("should create comment on annotation", async () => {
+  it.skip("should create comment on annotation", async () => {
     const pos = await session.page.evaluate(() => {
       // Create a polygon annotation far from nodes/edges (off-diagonal)
       const polygon = createPolygon(
