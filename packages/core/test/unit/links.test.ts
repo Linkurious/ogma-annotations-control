@@ -3,11 +3,13 @@ import { createOgma } from "./utils";
 import { AnnotationCollection, Arrow, Control, createArrow } from "../../src";
 import { Links } from "../../src/handlers/links";
 import { Store } from "../../src/store";
+import { Snapping } from "../../src/handlers/snapping";
 import LoadLinksMissing from "../fixtures/load-links-missing.json";
 import LoadLinksData from "../fixtures/load-links.json";
 
 describe("Links", () => {
   let mockStore: Store;
+  let mockSnapping: Snapping;
 
   beforeEach(() => {
     mockStore = {
@@ -17,6 +19,8 @@ describe("Links", () => {
         getFeature: (_id: string) => undefined
       }))
     } as unknown as Store;
+    
+    mockSnapping = {} as unknown as Snapping;
   });
 
   // Add a link between an arrow and a node
@@ -25,7 +29,7 @@ describe("Links", () => {
     // Add node first
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -46,7 +50,7 @@ describe("Links", () => {
     ogma.addNode({ id: "node2", attributes: { x: 100, y: 100 } });
     ogma.addEdge({ id: "edge1", source: "node1", target: "node2" });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -69,7 +73,7 @@ describe("Links", () => {
   // Add a link between an arrow and a text
   it("should add a link between an arrow and a text", () => {
     const ogma = createOgma();
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -94,7 +98,7 @@ describe("Links", () => {
     const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow: Arrow = createArrow();
     const arrowId = arrow.id;
     const side = "start";
@@ -111,7 +115,7 @@ describe("Links", () => {
   // Remove a non-existing link
   it("should not throw an error when removing a non-existing link", () => {
     const ogma = createOgma();
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
 
@@ -123,7 +127,7 @@ describe("Links", () => {
     const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow: Arrow = createArrow();
     const otherArrow = createArrow();
     const side = "start";
@@ -139,7 +143,7 @@ describe("Links", () => {
     const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
@@ -153,7 +157,7 @@ describe("Links", () => {
     const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow: Arrow = createArrow();
     const side = "start";
     const targetId = "node1";
@@ -173,7 +177,7 @@ describe("Links", () => {
     const ogma = createOgma();
     ogma.addNode({ id: "node1", attributes: { x: 0, y: 0 } });
 
-    const links = new Links(ogma, mockStore);
+    const links = new Links(ogma, mockSnapping, mockStore);
     const arrow: Arrow = createArrow();
     const targetId1 = "node1";
     const targetId2 = "text1";

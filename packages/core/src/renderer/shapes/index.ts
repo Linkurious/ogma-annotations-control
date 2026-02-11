@@ -66,6 +66,8 @@ export class Shapes extends Renderer<SVGLayer> {
 
   render = (root: SVGSVGElement) => {
     //const root = this.layer.element;
+    if (!root) return; // Guard against null root
+    
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
     this.store.getState();
     // Initialize persistent container groups on first render
@@ -169,7 +171,18 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;
-    const { width, height } = ogma.view.getSize();
+    let viewSize;
+    try {
+      viewSize = ogma.view.getSize();
+    } catch {
+      // Guard against errors during cleanup
+      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    }
+    // Guard against null view during cleanup
+    if (!viewSize) {
+      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    }
+    const { width, height } = viewSize;
     const margin = 1.5;
 
     // Convert all four screen corners to graph coordinates to account for rotation
