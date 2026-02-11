@@ -89,7 +89,6 @@ export class TextArea {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
-      // return this.store.getState().getFeature(this.annotation) as Text;
     }
     return {
       ...this.store.getState().getFeature(this.annotation) as Text,

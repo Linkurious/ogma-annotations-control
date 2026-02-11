@@ -73,9 +73,6 @@ export abstract class Handler<
     if (!this.hoveredHandle) {
       this.detectHandle(evt, this.ogma.view.getZoom());
     }
-    // if (!this.hoveredHandle) return;
-    // evt.preventDefault();
-    // evt.stopPropagation();
   };
 
   protected disablePanning = () => {
@@ -182,8 +179,6 @@ export abstract class Handler<
         container.addEventListener("mousedown", this.handleMouseDown, true);
         win.addEventListener("click", this.onClick as EventListener, true);
       }
-      // const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
-      // this.handleMouseMove({ clientX, clientY });
     } else {
       // Guard against null container (e.g., in headless tests)
       const container: HTMLElement | null = this.ogma.getContainer();

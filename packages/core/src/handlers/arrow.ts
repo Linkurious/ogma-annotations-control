@@ -81,7 +81,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     else {
       // on the line?
       if (detectArrow(annotation, mousePoint, margin)) {
-        // console.log("BODY");
         this.setCursor(cursors.grab);
         this.hoveredHandle = {
           type: HandleType.BODY,
@@ -89,8 +88,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         };
         this.store.setState({ hoveredHandle: 2, hoveredFeature: this.annotation });
       } else {
-        // console.log("NONE");
-        // this.setCursor(cursors.default);
         this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
         this.hoveredHandle = undefined;
       }
@@ -186,7 +183,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   protected onDragEnd(evt: ClientMouseEvent) {
     if (!super.onDragEnd(evt)) return false;
     const annotation = this.getAnnotation(true) as Arrow;
-    // const annotation = this.getAnnotation()!;
     if (this.hoveredHandle) {
       const coordinates = annotation.geometry.coordinates;
       if (this.hoveredHandle.type === HandleType.BODY) {
