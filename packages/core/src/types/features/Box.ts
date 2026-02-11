@@ -16,6 +16,8 @@ export interface BoxStyle extends StrokeOptions {
   borderRadius?: number;
   /** if true, the box scales with zoom. Default is true */
   scaled?: boolean;
+  /** box shadow in CSS format, e.g. "0px 4px 6px rgba(0, 0, 0, 0.1)" */
+  boxShadow?: string;
 }
 
 /** Properties specific to box annotations. */
@@ -32,7 +34,7 @@ export interface BoxProperties extends AnnotationProps {
 /**
  * Box annotation feature
  */
-export interface Box extends AnnotationFeature<GeoJSONPoint, BoxProperties> {}
+export interface Box extends AnnotationFeature<GeoJSONPoint, BoxProperties> { }
 
 export const isBox = (
   a: AnnotationFeature<Geometry, AnnotationProps>
@@ -80,6 +82,7 @@ export const defaultBoxStyle: BoxStyle = {
   background: "#f5f5f5",
   strokeWidth: 0,
   borderRadius: 8,
+  boxShadow: "",
   padding: 16,
   strokeType: "plain"
 };

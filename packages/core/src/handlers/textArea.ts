@@ -15,7 +15,7 @@ export class TextArea {
     private ogma: Ogma,
     private store: Store,
     private annotation: Id,
-    private onSendHandler: () => void = () => {}
+    private onSendHandler: () => void = () => { }
   ) {
     const position = this.getPosition();
     const size = this.getSize();
@@ -29,12 +29,11 @@ export class TextArea {
       {
         element: `<div class="ogma-annotation-text-editor">
           <textarea wrap="on" name="annotation-text--input" spellcheck="false" placeholder="${placeholderText}"></textarea>
-          ${
-            showSendButton
-              ? `<button class="ogma-send-button" type="button" title="Send">
+          ${showSendButton
+            ? `<button class="ogma-send-button" type="button" title="Send">
             <span class="ogma-send-button-icon">${sendButtonIcon}</span>
           </button>`
-              : ""
+            : ""
           }
         </div>`,
         position,
@@ -90,10 +89,12 @@ export class TextArea {
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
     }
-    return {
-      ...this.store.getState().getFeature(this.annotation) as Text,
-      ...state.liveUpdates[this.annotation] as Text
-    };
+    const annotation = state.getFeature(this.annotation!);
+    const liveUpdates = state.liveUpdates[this.annotation!];
+    if (annotation && liveUpdates) {
+      return { ...annotation, ...liveUpdates };
+    }
+    return annotation;
   }
 
   private getPosition() {
@@ -257,7 +258,7 @@ export class TextArea {
     evt.stopPropagation();
   };
 
-  private onMouseEvent = (evt: WheelEvent| MouseEvent) => {
+  private onMouseEvent = (evt: WheelEvent | MouseEvent) => {
     // Stop mouse events from propagating to Ogma (prevents zoom while scrolling for instance)
     evt.stopPropagation();
   };

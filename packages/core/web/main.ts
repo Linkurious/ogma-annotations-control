@@ -169,7 +169,7 @@ class App {
         color: "#3A03CF",
         background: "#EDE6FF",
         borderRadius: 0,
-        boxShadow: 'box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.15)',
+        boxShadow: '0 1px 4px 0 rgba(0, 0, 0, 0.15)',
         padding: 12
       });
       this.control.enablePlacement(text);
@@ -192,6 +192,7 @@ class App {
 
       this.control.enableBoxDrawing({
         background: "#EDE6FF",
+        boxShadow: "0 1px 4px 0 rgba(0, 0, 0, 0.15)",
         borderRadius: 8,
         padding: 12
       });
