@@ -149,10 +149,8 @@ export class TextArea {
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
-    // Button is scaled inversely (1/effectiveScale) to maintain screen size
-    // So its layout space is: 28px * (1/effectiveScale)
-    const buttonScale = 1 / effectiveScale;
-    const buttonHeight = showSendButton ? 28 * buttonScale : 0;
+    // Button is sized via width/height at 24*effectiveScale, plus 4px gap
+    const buttonHeight = showSendButton ? 28 * effectiveScale : 0;
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
       height: height + buttonHeight
@@ -185,10 +183,9 @@ export class TextArea {
     const editorStyle = editorEl.style;
     editorStyle.display = "grid";
     editorStyle.gridTemplateRows = "1fr auto";
-    editorStyle.gap = "4px";
     editorStyle.boxSizing = "border-box";
     editorStyle.background = background || "transparent";
-    editorStyle.borderRadius = `${borderRadius}px`;
+    editorStyle.borderRadius = `${(borderRadius || 0) * effectiveScale}px`;
     editorStyle.padding = `${scaledPadding}px`;
     editorStyle.transformOrigin = "center";
     editorStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
@@ -209,19 +206,31 @@ export class TextArea {
     textAreaStyle.minHeight = "0";
     textAreaStyle.resize = "none";
 
-    // Scale button inversely to maintain same screen size regardless of zoom
+    // Scale button via width/height to maintain same screen size regardless of zoom
+    // (transform: scale() doesn't affect layout, causing a gap in the grid)
     if (this.sendButton) {
-      // For fixed-size, button needs to be scaled by 1/effectiveScale to maintain screen size
-      const buttonScale = effectiveScale;
-      this.sendButton.style.transform = `scale(${buttonScale})`;
-      this.sendButton.style.transformOrigin = "top left";
+      const buttonSize = 24 * effectiveScale;
+      const buttonPadding = 4 * effectiveScale;
+      this.sendButton.style.width = `${buttonSize}px`;
+      this.sendButton.style.height = `${buttonSize}px`;
+      this.sendButton.style.padding = `${buttonPadding}px`;
+      this.sendButton.style.transform = "";
+      const icon = this.sendButton.querySelector(
+        ".ogma-send-button-icon"
+      ) as HTMLElement;
+      if (icon) {
+        const iconSize = 16 * effectiveScale;
+        icon.style.width = `${iconSize}px`;
+        icon.style.height = `${iconSize}px`;
+      }
     }
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
       const maxHeight = (annotation.properties.style as CommentStyle | undefined)?.maxHeight;
-      // Enable scrolling if maxHeight is set, otherwise hide overflow
-      textAreaStyle.overflowY = maxHeight ? "auto" : "hidden";
+      // Enable scrolling only when content has reached maxHeight
+      const needsScroll = maxHeight && annotation.properties.height >= maxHeight;
+      textAreaStyle.overflowY = needsScroll ? "auto" : "hidden";
       textAreaStyle.overflowX = "hidden";
     }
   }

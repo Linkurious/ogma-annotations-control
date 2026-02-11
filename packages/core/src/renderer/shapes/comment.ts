@@ -280,8 +280,8 @@ function renderExpandedBox(
   const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
   const needsScroll = !singleLine && maxHeight ? storedHeight > maxHeight : false;
 
-  // Add extra height for edit button if shown (24px button + 4px margin)
-  const buttonHeight = 0 ; //showEditBtn ? 28 : 0;
+  // Add extra height for edit button if shown (24px button + 4px gap)
+  const buttonHeight = showEditBtn ? 28 : 0;
   const totalDisplayHeight = displayHeight + buttonHeight;
 
   // Clear existing content
@@ -336,15 +336,20 @@ function renderExpandedBox(
   // Create text content container
   const textDiv = document.createElement("div");
   textDiv.style.flex = "1";
+  textDiv.style.minHeight = "0";
+  textDiv.style.overflowY = needsScroll ? "auto" : "hidden";
   textDiv.innerHTML = formatContent(content);
   div.appendChild(textDiv);
 
-  // Add edit button if needed
+  // Add edit button if needed (same structure as the send button)
   if (showEditBtn) {
     const buttonDiv = document.createElement("div");
     buttonDiv.classList.add("ogma-send-button");
     buttonDiv.style.pointerEvents = "auto";
-    buttonDiv.innerHTML = state.options.editButtonIcon;
+    const iconSpan = document.createElement("span");
+    iconSpan.classList.add("ogma-send-button-icon");
+    iconSpan.innerHTML = state.options.editButtonIcon;
+    buttonDiv.appendChild(iconSpan);
     div.appendChild(buttonDiv);
   }
 
