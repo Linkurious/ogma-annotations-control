@@ -248,7 +248,7 @@ export class Drawing {
 
     const cleanup = () => {
       container.removeEventListener("mousemove", onMouseMove);
-      this.ogma.events.off(onMouseDown as any);
+      this.ogma.events.off(onMouseDown);
       document.removeEventListener("keydown", onKeyDown);
       this.placementCleanup = null;
     };

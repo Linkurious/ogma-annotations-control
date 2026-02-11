@@ -16,7 +16,7 @@ import {
   simplifyPolygon,
   updatePolygonBbox
 } from "../utils/polygon";
-import { updateBbox, updateTextBbox } from "../utils/utils";
+import { updateBbox } from "../utils/utils";
 
 enum HandleType {
   VERTEX = "vertex",

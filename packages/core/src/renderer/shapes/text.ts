@@ -28,7 +28,6 @@ export function renderText(
     strokeType = defaultTextStyle.strokeType,
     background = defaultTextStyle.background,
     borderRadius = defaultTextStyle.borderRadius,
-    boxShadow = defaultTextStyle.boxShadow,
     fixedSize = defaultTextStyle.fixedSize
   } = annotation.properties.style || defaultTextStyle;
 
