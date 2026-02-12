@@ -24,6 +24,7 @@ import {
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { Links } from "./handlers/links";
+import { Snapping } from "./handlers/snapping";
 
 import { InteractionController } from "./interaction";
 
@@ -51,7 +52,6 @@ import {
   Side,
   ClickEvent
 } from "./types";
-import { Snapping } from "./handlers/snapping";
 
 const defaultOptions: ControllerOptions = {
   detectMargin: 2,

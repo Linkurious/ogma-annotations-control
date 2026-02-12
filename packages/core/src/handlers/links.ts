@@ -2,6 +2,7 @@ import type { Node, NodeId, EdgeId, NodeList, Ogma, Point, EdgeList, Edge, Edges
 import { geometry } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
+import { Snapping } from "./snapping";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
 import { Store } from "../store";
 import type {
@@ -25,7 +26,6 @@ import {
   updateBbox
 } from "../utils/utils";
 import { add, mul, subtract } from "../utils/vec";
-import { Snapping } from "./snapping";
 
 type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;

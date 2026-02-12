@@ -84,7 +84,7 @@ export class TextArea {
     );
   }
 
-  private getAnnotation() {
+  private getAnnotation(): Text | undefined {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
@@ -92,13 +92,13 @@ export class TextArea {
     const annotation = state.getFeature(this.annotation!);
     const liveUpdates = state.liveUpdates[this.annotation!];
     if (annotation && liveUpdates) {
-      return { ...annotation, ...liveUpdates };
+      return { ...annotation, ...liveUpdates } as Text;
     }
-    return annotation;
+    return annotation as Text | undefined;
   }
 
   private getPosition() {
-    const annotation = this.getAnnotation();
+    const annotation = this.getAnnotation() as Text | undefined;
     if (!annotation) return { x: 0, y: 0 };
 
     const style = annotation.properties.style as CommentStyle | undefined;
@@ -130,6 +130,7 @@ export class TextArea {
 
   private getSize() {
     const annotation = this.getAnnotation();
+    if (!annotation) return { width: 0, height: 0 };
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation);
     const style = annotation.properties.style as CommentStyle | undefined;
@@ -265,7 +266,7 @@ export class TextArea {
 
   private updateContent() {
     const annotation = this.getAnnotation();
-
+    if (!annotation) return;
     // Calculate new height if this is a fixed-size text box (auto-grow)
     let newHeight = annotation.properties.height;
     let newCoordinates = annotation.geometry.coordinates;
