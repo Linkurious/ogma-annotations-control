@@ -1,4 +1,5 @@
 import type { Point } from "@linkurious/ogma";
+import { Links } from "./links";
 import { TARGET_TYPES } from "../constants";
 import { Store } from "../store";
 import type {
@@ -13,7 +14,6 @@ import type {
 } from "../types";
 import { isArrow, isBox, isComment, isPolygon, isText } from "../types";
 import { getBoxCenter } from "../utils/utils";
-import { Links } from "./links";
 
 /**
  * Handles dragging of annotations and their linked elements.

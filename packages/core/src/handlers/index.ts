@@ -5,10 +5,10 @@ import { Links } from "./links";
 import { PolygonHandler } from "./polygon";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
+import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
 import { InteractionController } from "../interaction/index";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
-import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
 
 export { handleDrag } from "./dragging";
 
