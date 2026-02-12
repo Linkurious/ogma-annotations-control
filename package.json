@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-control",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A tool to draw texts and arrows on top of Ogma",
   "type": "module",
   "scripts": {
