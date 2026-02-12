@@ -34,7 +34,7 @@ export default defineConfig({
       light: "https://doc.linkurious.com/ogma/latest/logo-white.svg",
       dark: "https://doc.linkurious.com/ogma/latest/logo.svg"
     },
-    siteTitle: false, // Hide title text, show only logo
+    siteTitle: "annotations", // Hide title text, show only logo
     nav: [
       {
         text: "API",

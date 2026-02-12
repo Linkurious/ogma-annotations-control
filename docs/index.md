@@ -125,10 +125,3 @@ function App() {
 - **Need inspiration?** Browse the [Examples](/examples/typescript/basic) for common use cases and patterns
 
 </div>
-
-<!--
-TODO - Alex: Add visual assets
-- [ ] Hero image showing graph with annotations (replace text-only hero)
-- [ ] Feature section icons (replace emoji with proper icons)
-- [ ] Demo GIF or video showing annotation creation
--->
