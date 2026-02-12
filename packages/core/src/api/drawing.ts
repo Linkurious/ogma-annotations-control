@@ -46,6 +46,9 @@ export class Drawing {
     | (<T extends MouseButtonEvent<unknown, unknown>>(evt: T) => void)
     | null = null;
 
+  // Track placement mode listeners for cleanup
+  private placementCleanup: (() => void) | null = null;
+
   constructor(
     ogma: Ogma,
     store: Store,
@@ -73,6 +76,11 @@ export class Drawing {
     if (this.pendingDrawingListener) {
       this.ogma.events.off(this.pendingDrawingListener);
       this.pendingDrawingListener = null;
+    }
+    // Clean up placement mode
+    if (this.placementCleanup) {
+      this.placementCleanup();
+      this.placementCleanup = null;
     }
   }
 
@@ -182,6 +190,75 @@ export class Drawing {
         offsetY
       });
     });
+  }
+
+  /**
+   * Place a pre-created annotation by moving it with the cursor.
+   * The annotation follows the mouse until the user clicks to place it.
+   * Press Escape to cancel.
+   */
+  public enablePlacement(annotation: Text | Box): Control {
+    this.control.unselect().cancelDrawing();
+
+    // Add the annotation and mark as being drawn
+    this.store.setState({ drawingFeature: annotation.id });
+    this.control.add(annotation);
+
+    const container = this.ogma.getContainer();
+    if (!container) return this.control;
+
+    const onMouseMove = (evt: MouseEvent) => {
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const w = annotation.properties.width;
+      const h = annotation.properties.height;
+      this.store.getState().applyLiveUpdate(annotation.id, {
+        geometry: {
+          ...annotation.geometry,
+          coordinates: [x, y],
+          bbox: [x - w / 2, y - h / 2, x + w / 2, y + h / 2]
+        }
+      } as Partial<Text>);
+    };
+
+    const onMouseDown = (evt: MouseButtonEvent<unknown, unknown>) => {
+      cleanup();
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const w = annotation.properties.width;
+      const h = annotation.properties.height;
+      // Commit final position
+      this.store.getState().updateFeature(annotation.id, {
+        geometry: {
+          ...annotation.geometry,
+          coordinates: [x, y],
+          bbox: [x - w / 2, y - h / 2, x + w / 2, y + h / 2]
+        }
+      } as Partial<Text>);
+      this.store.setState({ drawingFeature: null });
+      this.interactions.suppressClicksTemporarily(200);
+      this.control.select(annotation.id);
+    };
+
+    const onKeyDown = (evt: KeyboardEvent) => {
+      if (evt.key === "Escape") {
+        cleanup();
+        this.control.remove(annotation);
+        this.store.setState({ drawingFeature: null });
+      }
+    };
+
+    const cleanup = () => {
+      container.removeEventListener("mousemove", onMouseMove);
+      this.ogma.events.off(onMouseDown);
+      document.removeEventListener("keydown", onKeyDown);
+      this.placementCleanup = null;
+    };
+
+    container.addEventListener("mousemove", onMouseMove, { passive: true });
+    this.ogma.events.once("mousedown", onMouseDown);
+    document.addEventListener("keydown", onKeyDown);
+    this.placementCleanup = cleanup;
+
+    return this.control;
   }
 
   public startComment(

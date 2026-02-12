@@ -3,7 +3,7 @@ import { Position } from "geojson";
 import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
-import { DEFAULT_SEND_ICON } from "../constants";
+import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
 import {
   Annotation,
   Bounds,
@@ -89,6 +89,7 @@ export interface AnnotationState {
   lastChangedFeatures: Id[];
   drawingFeature: Id | null;
   drawingPoints: Position[] | null;
+  editingFeature: Id | null;
 
   // Mouse press state for drag detection
   mousePressed: boolean;
@@ -106,7 +107,9 @@ export interface AnnotationState {
   // Controller options (for accessing in handlers)
   options: {
     showSendButton: boolean;
+    showEditButton: boolean;
     sendButtonIcon: string;
+    editButtonIcon: string;
     minArrowHeight: number;
     maxArrowHeight: number;
     detectMargin: number;
@@ -175,6 +178,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           lastChangedFeatures: [],
           drawingFeature: null,
           drawingPoints: null,
+          editingFeature: null,
           mousePressed: false,
           mousePressPoint: null,
           rotation: 0,
@@ -189,6 +193,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           options: {
             showSendButton: initialOptions?.showSendButton ?? true,
             sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
+            showEditButton: initialOptions?.showEditButton ?? true,
+            editButtonIcon: initialOptions?.editButtonIcon ?? DEFAULT_EDIT_ICON,
             minArrowHeight: initialOptions?.minArrowHeight ?? 20,
             maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
             detectMargin: initialOptions?.detectMargin ?? 2,
@@ -273,13 +279,14 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               return { features: newFeatures, liveUpdates: newLiveUpdates };
             }),
 
-          addFeature: (feature) =>
-            set((state) => ({
+          addFeature: (feature) => {
+            return set((state) => ({
               features: {
                 ...state.features,
                 [feature.id]: feature as Annotation
               }
-            })),
+            }))
+          },
 
           // Start live update - snapshot current state
           startLiveUpdate: (ids) => {
@@ -309,7 +316,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
 
           applyLiveUpdates: (updates) => {
             set((state) => {
-              const newLiveUpdates = state.liveUpdates;
+              const newLiveUpdates = { ...state.liveUpdates };
               for (const id in updates) {
                 newLiveUpdates[id] = updates[id] as Annotation;
               }

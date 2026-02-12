@@ -6,9 +6,11 @@ import { PolygonHandler } from "./polygon";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
 import { InteractionController } from "../interaction/index";
-import { Index } from "../interaction/spatialIndex";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
+import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
+
+export { handleDrag } from "./dragging";
 
 export class AnnotationEditor extends EventTarget {
   private handlers = new Map<AnnotationType, Handler<Annotation, unknown>>();
@@ -21,20 +23,15 @@ export class AnnotationEditor extends EventTarget {
   constructor(
     ogma: Ogma,
     store: Store,
-    index: Index,
+    snapping: Snapping,
     links: Links,
     interactions: InteractionController
   ) {
     super();
     this.ogma = ogma;
     this.store = store;
+    this.snapping = snapping;
     this.interaction = interactions;
-    this.snapping = new Snapping(
-      ogma,
-      { detectMargin: 10, magnetRadius: 10 },
-      index,
-      store
-    );
     this.handlers.set("box", new TextHandler(this.ogma, this.store, links));
     this.handlers.set("text", new TextHandler(this.ogma, this.store, links));
     this.handlers.set("comment", new TextHandler(this.ogma, this.store, links)); // Comments use same handler as text
@@ -48,17 +45,27 @@ export class AnnotationEditor extends EventTarget {
     );
 
     this.handlers.forEach((handler) => {
-      handler.addEventListener("dragstart", () => {
-        this.dispatchEvent(new Event("dragstart"));
+      handler.addEventListener("dragstart", ((evt: CustomEvent) => {
+        this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
+          detail: {
+            ...evt.detail
+          }
+        })
+        );
         this.store.setState({ isDragging: true });
         this.interaction.setMode("edit");
-      });
-      handler.addEventListener("dragend", () => {
-        this.dispatchEvent(new Event("dragend"));
+      }) as unknown as EventListener);
+      handler.addEventListener("dragend", ((evt: CustomEvent) => {
+        this.dispatchEvent(new CustomEvent(EVT_DRAG_END, {
+          detail: {
+            ...evt.detail
+          }
+        })
+        );
         this.store.setState({ isDragging: false });
         // Suppress clicks briefly after drag ends to prevent accidental deselection
         this.interaction.suppressClicksTemporarily();
-      });
+      }) as unknown as EventListener);
     });
     this.store.subscribe(
       (state) => state.selectedFeatures,

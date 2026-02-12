@@ -35,7 +35,7 @@ export function renderBox(
   const size = getBoxSize(annotation);
 
   const g = createDom(cachedElement, id, annotation.properties.type);
-  const { strokeColor, strokeWidth, strokeType, background, borderRadius } =
+  const { strokeColor, strokeWidth, strokeType, background, borderRadius, boxShadow } =
     annotation.properties.style || defaultBoxStyle;
   g.classList.add("annotation-box");
   g.setAttribute("fill", `${background || "transparent"}`);
@@ -66,6 +66,12 @@ export function renderBox(
   rect.setAttribute("x", `${position.x}`);
   rect.setAttribute("y", `${position.y}`);
   g.appendChild(rect);
+
+  if (boxShadow) {
+    g.style.filter = `drop-shadow(${boxShadow})`;
+  } else {
+    g.style.filter = "";
+  }
 
   g.setAttribute("transform", state.getRotationTransform(0, 0));
   g.classList.add(className);
