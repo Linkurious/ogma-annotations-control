@@ -9,7 +9,6 @@ import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
 import { InteractionController } from "../interaction/index";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
-
 export { handleDrag } from "./dragging";
 
 export class AnnotationEditor extends EventTarget {
