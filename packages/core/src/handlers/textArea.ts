@@ -1,7 +1,7 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
-import { Id, Text, defaultTextStyle, CommentStyle } from "../types";
+import { Id, Text, defaultTextStyle, CommentStyle, isComment } from "../types";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -15,13 +15,13 @@ export class TextArea {
     private ogma: Ogma,
     private store: Store,
     private annotation: Id,
-    private onSendHandler: () => void = () => {}
+    private onSendHandler: () => void = () => { }
   ) {
     const position = this.getPosition();
     const size = this.getSize();
     const annotationData = this.getAnnotation()!;
     const state = this.store.getState();
-    const showSendButton = state.options?.showSendButton ?? true;
+    const showSendButton = isComment(annotationData) && (state.options?.showSendButton ?? true);
     const sendButtonIcon = state.options?.sendButtonIcon || "";
     const placeholderText = state.options?.textPlaceholder || "Enter text";
 
@@ -29,12 +29,11 @@ export class TextArea {
       {
         element: `<div class="ogma-annotation-text-editor">
           <textarea wrap="on" name="annotation-text--input" spellcheck="false" placeholder="${placeholderText}"></textarea>
-          ${
-            showSendButton
-              ? `<button class="ogma-send-button" type="button" title="Send">
+          ${showSendButton
+            ? `<button class="ogma-send-button" type="button" title="Send">
             <span class="ogma-send-button-icon">${sendButtonIcon}</span>
           </button>`
-              : ""
+            : ""
           }
         </div>`,
         position,
@@ -60,7 +59,11 @@ export class TextArea {
     this.textarea.addEventListener("input", this.onInput);
     this.textarea.addEventListener("keyup", this.onKeyup);
     this.textarea.addEventListener("keydown", this.onKeydown);
-    this.textarea.addEventListener("wheel", this.onWheel);
+    this.textarea.addEventListener("wheel", this.onMouseEvent);
+    this.textarea.addEventListener("mouseup", this.onMouseEvent);
+    this.textarea.addEventListener("mousedown", this.onMouseEvent);
+    this.textarea.addEventListener("click", this.onMouseEvent);
+    this.textarea.addEventListener("drag", this.onMouseEvent);
     this.updateStyle();
     this.updatePosition();
     this.textarea.focus();
@@ -81,17 +84,21 @@ export class TextArea {
     );
   }
 
-  private getAnnotation() {
+  private getAnnotation(): Text | undefined {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
-      return this.store.getState().getFeature(this.annotation) as Text;
     }
-    return state.liveUpdates[this.annotation] as Text;
+    const annotation = state.getFeature(this.annotation!);
+    const liveUpdates = state.liveUpdates[this.annotation!];
+    if (annotation && liveUpdates) {
+      return { ...annotation, ...liveUpdates } as Text;
+    }
+    return annotation as Text | undefined;
   }
 
   private getPosition() {
-    const annotation = this.getAnnotation();
+    const annotation = this.getAnnotation() as Text | undefined;
     if (!annotation) return { x: 0, y: 0 };
 
     const style = annotation.properties.style as CommentStyle | undefined;
@@ -103,7 +110,6 @@ export class TextArea {
     // Get center coordinates (in graph space)
     const [cx, cy] = annotation.geometry.coordinates as [number, number];
 
-    // Dimensions in graph space
     const width = annotation.properties.width;
     let height = annotation.properties.height;
 
@@ -124,12 +130,15 @@ export class TextArea {
 
   private getSize() {
     const annotation = this.getAnnotation();
+    if (!annotation) return { width: 0, height: 0 };
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation);
     const style = annotation.properties.style as CommentStyle | undefined;
     const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
+    const state = this.store.getState();
+    const showSendButton = isComment(annotation) && (state.options?.showSendButton ?? true);
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;
@@ -141,10 +150,11 @@ export class TextArea {
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
-
+    // Button is sized via width/height at 24*effectiveScale, plus 4px gap
+    const buttonHeight = showSendButton ? 28 * effectiveScale : 0;
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
-      height
+      height: height + buttonHeight
     };
   }
 
@@ -162,6 +172,7 @@ export class TextArea {
       fixedSize = defaultTextStyle.fixedSize
     } = annotation.properties.style || defaultTextStyle;
     const textArea = this.textarea;
+    const editorEl = this.layer.element as HTMLElement;
     const zoom = this.store.getState().zoom;
 
     // Scale font size inversely with zoom for fixed-size text
@@ -169,37 +180,59 @@ export class TextArea {
     const scaledFontSize = parseFloat(fontSize!.toString()) * effectiveScale;
     const scaledPadding = padding * effectiveScale;
 
-    const textAreaStyle = textArea.style;
+    // Style the parent container
+    const editorStyle = editorEl.style;
+    editorStyle.display = "grid";
+    editorStyle.gridTemplateRows = "1fr auto";
+    editorStyle.boxSizing = "border-box";
+    editorStyle.background = background || "transparent";
+    editorStyle.borderRadius = `${(borderRadius || 0) * effectiveScale}px`;
+    editorStyle.padding = `${scaledPadding}px`;
+    editorStyle.transformOrigin = "center";
+    editorStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
 
+    // Style the textarea
+    const textAreaStyle = textArea.style;
     textAreaStyle.font = `${scaledFontSize} ${font}`;
     textAreaStyle.fontFamily = font || "sans-serif";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
-    textAreaStyle.padding = `${scaledPadding}px`;
     textAreaStyle.lineHeight = `${scaledFontSize * TEXT_LINE_HEIGHT}px`;
-
+    textAreaStyle.padding = "0";
+    textAreaStyle.border = "none";
+    textAreaStyle.outline = "none";
     textAreaStyle.boxSizing = "border-box";
     textAreaStyle.color = color || "black";
-    textAreaStyle.background = background || "transparent";
-    textAreaStyle.borderRadius = `${borderRadius}px`;
+    textAreaStyle.background = "transparent";
+    textAreaStyle.flex = "1";
+    textAreaStyle.minHeight = "0";
+    textAreaStyle.resize = "none";
+
+    // Scale button via width/height to maintain same screen size regardless of zoom
+    // (transform: scale() doesn't affect layout, causing a gap in the grid)
+    if (this.sendButton) {
+      const buttonSize = 24 * effectiveScale;
+      const buttonPadding = 4 * effectiveScale;
+      this.sendButton.style.width = `${buttonSize}px`;
+      this.sendButton.style.height = `${buttonSize}px`;
+      this.sendButton.style.padding = `${buttonPadding}px`;
+      this.sendButton.style.transform = "";
+      const icon = this.sendButton.querySelector(
+        ".ogma-send-button-icon"
+      ) as HTMLElement;
+      if (icon) {
+        const iconSize = 16 * effectiveScale;
+        icon.style.width = `${iconSize}px`;
+        icon.style.height = `${iconSize}px`;
+      }
+    }
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
       const maxHeight = (annotation.properties.style as CommentStyle | undefined)?.maxHeight;
-      // Enable scrolling if maxHeight is set, otherwise hide overflow
-      textAreaStyle.overflowY = maxHeight ? "auto" : "hidden";
+      // Enable scrolling only when content has reached maxHeight
+      const needsScroll = maxHeight && annotation.properties.height >= maxHeight;
+      textAreaStyle.overflowY = needsScroll ? "auto" : "hidden";
       textAreaStyle.overflowX = "hidden";
-      textAreaStyle.resize = "none"; // Disable manual resize
-    }
-
-    // transform origin at center
-    textAreaStyle.transformOrigin = "center";
-    textAreaStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
-
-    // Scale send button with zoom (same as textarea for fixed-size)
-    if (this.sendButton) {
-      const buttonScale = fixedSize ? 1 / zoom : 1;
-      this.sendButton.style.transform = `scale(${buttonScale})`;
-      this.sendButton.style.transformOrigin = "bottom right";
     }
   }
 
@@ -226,21 +259,25 @@ export class TextArea {
     evt.stopPropagation();
   };
 
-  private onWheel = (evt: WheelEvent) => {
-    // Stop wheel events from propagating to Ogma (prevents zoom while scrolling)
+  private onMouseEvent = (evt: WheelEvent | MouseEvent) => {
+    // Stop mouse events from propagating to Ogma (prevents zoom while scrolling for instance)
     evt.stopPropagation();
   };
 
   private updateContent() {
     const annotation = this.getAnnotation();
-
+    if (!annotation) return;
     // Calculate new height if this is a fixed-size text box (auto-grow)
     let newHeight = annotation.properties.height;
     let newCoordinates = annotation.geometry.coordinates;
     const isFixedSize = annotation.properties.style?.fixedSize;
 
     if (isFixedSize) {
+      // Temporarily collapse height so scrollHeight reflects actual content
+      const prevHeight = this.textarea.style.height;
+      this.textarea.style.height = '0px';
       const textareaScrollHeight = this.textarea.scrollHeight;
+      this.textarea.style.height = prevHeight;
       const borderWidth = getBorderWidth(annotation);
       const zoom = this.store.getState().zoom;
 
@@ -251,7 +288,6 @@ export class TextArea {
         (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
 
       // Get minimum height from style (default to 50px if not specified)
-      // For Comments, minHeight is in CommentStyle; for Text annotations it doesn't exist
       const minHeight =
         (annotation.properties.style as { minHeight?: number })?.minHeight ||
         50;
@@ -266,16 +302,15 @@ export class TextArea {
       if (Math.abs(heightDelta) > 1) {
         const [cx, cy] = annotation.geometry.coordinates as [number, number];
 
-        // Only adjust center for growth up to maxHeight
-        if (maxHeight && oldHeight >= maxHeight) {
-          // Already at or past maxHeight - don't move center
-          newCoordinates = [cx, cy];
-        } else if (maxHeight && newHeight > maxHeight) {
-          // Growing past maxHeight - only move for the portion up to maxHeight
+        if (maxHeight && newHeight > maxHeight) {
+          // Clamp to maxHeight, only adjust center for the portion up to maxHeight
           const effectiveDelta = maxHeight - oldHeight;
-          newCoordinates = [cx, cy + effectiveDelta / 2];
+          newHeight = maxHeight;
+          if (Math.abs(effectiveDelta) > 1) {
+            newCoordinates = [cx, cy + effectiveDelta / 2];
+          }
         } else {
-          // Normal growth below maxHeight
+          // Normal growth or shrink (below maxHeight)
           newCoordinates = [cx, cy + heightDelta / 2];
         }
       }
@@ -323,10 +358,6 @@ export class TextArea {
     this.onSendHandler();
   };
 
-  // private onMouseUp = (evt: MouseEvent) => {
-  //   // Prevent textarea from losing focus when clicking the send button
-  //   evt.stopPropagation();
-  // };
   private updateSendButtonState() {
     if (!this.sendButton) return;
 

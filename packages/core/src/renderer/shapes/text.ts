@@ -88,7 +88,6 @@ export function renderText(
     "transform",
     state.getScreenAlignedTransform(position.x, position.y, !fixedSize)
   );
-
   root.appendChild(g);
   return g;
 }
@@ -141,23 +140,6 @@ function drawContent(
   // mistake in textbox types:
   const text = lines.svg() as unknown as SVGTextElement;
   const children = [...text.children];
-
-  // remove extra blank lines
-  // let index = 0;
-  // const toRemove: number[] = [];
-  // content.split("\n").forEach((l) => {
-  //   let query = l;
-  //   while (query.length && index < children.length) {
-  //     if (children[index].innerHTML === "&nbsp;") {
-  //       if (!query.startsWith("\n")) toRemove.push(index);
-  //       index++;
-  //       break;
-  //     }
-  //     const text = removeEllipsis(getText(children[index]));
-  //     if (query.startsWith(text)) query = query.slice(text.length).trim();
-  //     index++;
-  //   }
-  // });
 
   // replace spans with links:
   const matches = content.match(/(https?:\/\/.*)/gm);

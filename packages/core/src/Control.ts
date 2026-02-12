@@ -19,10 +19,12 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE,
   EVT_LINK,
-  SIDE_END
+  SIDE_END,
+  DEFAULT_EDIT_ICON
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { Links } from "./handlers/links";
+import { Snapping } from "./handlers/snapping";
 
 import { InteractionController } from "./interaction";
 
@@ -47,7 +49,8 @@ import {
   Polygon,
   Text,
   DeepPartial,
-  Side
+  Side,
+  ClickEvent
 } from "./types";
 
 const defaultOptions: ControllerOptions = {
@@ -57,6 +60,8 @@ const defaultOptions: ControllerOptions = {
   textPlaceholder: "Type here",
   showSendButton: true,
   sendButtonIcon: DEFAULT_SEND_ICON,
+  showEditButton: true,
+  editButtonIcon: DEFAULT_EDIT_ICON,
   minArrowHeight: 20,
   maxArrowHeight: 30
 };
@@ -81,6 +86,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private links: Links;
   private index: Index;
   private drawing: Drawing;
+  private snapping: Snapping;
 
   // API managers
   private selectionManager: SelectionManager;
@@ -88,7 +94,8 @@ export class Control extends EventEmitter<FeatureEvents> {
   private updateManager: UpdateManager;
   private commentManager: CommentManager;
 
-  constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
+  constructor(ogma: Ogma,
+    options: Partial<ControllerOptions> = {}) {
     super();
     this.ogma = ogma;
 
@@ -97,7 +104,11 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store = createStore(mergedOptions);
     this.index = new Index(this.store);
 
-    this.links = new Links(this.ogma, this.store, (arrow, link) => {
+    this.snapping = new Snapping(this.ogma, {
+      detectMargin: options.detectMargin === undefined ? 10 : options.detectMargin,
+      magnetRadius: options.magnetRadius === undefined ? 10 : options.magnetRadius,
+    }, this.index, this.store);
+    this.links = new Links(this.ogma, this.snapping, this.store, (arrow, link) => {
       this.emit(EVT_LINK, { arrow, link });
     });
     this.interactions = new InteractionController(
@@ -108,7 +119,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.editor = new AnnotationEditor(
       this.ogma,
       this.store,
-      this.index,
+      this.snapping,
       this.links,
       this.interactions
     );
@@ -145,13 +156,21 @@ export class Control extends EventEmitter<FeatureEvents> {
       .on("layoutEnd", this.onLayout);
 
     // Forward drag events from editor to Control
-    this.editor.addEventListener(EVT_DRAG_START, () =>
-      this.emit(EVT_DRAG_START)
+    this.editor.addEventListener(EVT_DRAG_START, (evt) =>
+      this.emit(EVT_DRAG_START, {
+        id: (evt as CustomEvent).detail.id,
+        position: (evt as CustomEvent).detail.position
+      })
     );
-    this.editor.addEventListener(EVT_DRAG_END, () => this.emit(EVT_DRAG_END));
+    this.editor.addEventListener(EVT_DRAG_END, (evt) => this.emit(EVT_DRAG_END, {
+      id: (evt as CustomEvent).detail.id,
+      position: (evt as CustomEvent).detail.position
+    }));
 
     // Forward click event from interaction controller
-    this.interactions.addEventListener(EVT_CLICK, () => this.emit(EVT_CLICK));
+    this.interactions.addEventListener(EVT_CLICK, ((evt: CustomEvent<ClickEvent>) => this.emit(EVT_CLICK, {
+      id: evt.detail.id, position: evt.detail.position
+    })) as unknown as EventListener);
 
     this.store.temporal.subscribe((state) => {
       this.emit(EVT_HISTORY, {
@@ -190,20 +209,19 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store.subscribe(
       (state) => state.features,
       (curr, prev) => {
-        if (prev) {
-          // Check for added features
-          for (const id of Object.keys(curr)) {
-            if (!prev[id]) {
-              this.emit(EVT_ADD, { id });
-            } else if (prev[id] !== curr[id]) {
-              // Feature was updated (reference changed)
-              this.emit(EVT_UPDATE, curr[id]);
-            }
+        // Check for added features
+        for (const id of Object.keys(curr)) {
+          if (!prev[id]) {
+            this.emit(EVT_ADD, { id });
+          } else if (prev[id] !== curr[id]) {
+            // Feature was updated (reference changed)
+            this.emit(EVT_UPDATE, curr[id]);
           }
-          // Check for removed features
-          for (const id of Object.keys(prev)) {
-            if (!curr[id]) this.emit(EVT_REMOVE, { id });
-          }
+        }
+        // Check for removed features
+        for (const id of Object.keys(prev)) {
+          if (curr[id]) continue;
+          this.emit(EVT_REMOVE, { id });
         }
       }
     );
@@ -486,6 +504,19 @@ export class Control extends EventEmitter<FeatureEvents> {
     } = {}
   ): this {
     this.drawing.enableCommentDrawing(options);
+    return this;
+  }
+
+  /**
+   * Place a pre-created annotation by moving it with the cursor.
+   * The annotation follows the mouse until the user clicks to place it.
+   * Press Escape to cancel.
+   *
+   * @param annotation The text or box annotation to place
+   * @returns this for chaining
+   */
+  public enablePlacement(annotation: Text | Box): this {
+    this.drawing.enablePlacement(annotation);
     return this;
   }
 

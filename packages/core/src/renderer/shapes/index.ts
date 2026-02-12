@@ -43,6 +43,7 @@ export class Shapes extends Renderer<SVGLayer> {
         liveUpdates: state.liveUpdates,
         hoveredFeature: state.hoveredFeature,
         selectedFeatures: state.selectedFeatures,
+        editingFeature: state.editingFeature,
         rotation: state.rotation,
         zoom: state.zoom
       }),
@@ -54,6 +55,7 @@ export class Shapes extends Renderer<SVGLayer> {
             a.liveUpdates === b.liveUpdates &&
             a.hoveredFeature === b.hoveredFeature &&
             a.selectedFeatures === b.selectedFeatures &&
+            a.editingFeature === b.editingFeature &&
             a.rotation === b.rotation &&
             a.zoom === b.zoom;
           return equal;
@@ -64,9 +66,10 @@ export class Shapes extends Renderer<SVGLayer> {
 
   render = (root: SVGSVGElement) => {
     //const root = this.layer.element;
+    if (!root) return; // Guard against null root
+    
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
-      this.store.getState();
-
+    this.store.getState();
     // Initialize persistent container groups on first render
     if (!this.annotationsRoot || !root.contains(this.annotationsRoot)) {
       // Clear root only on first render
@@ -162,12 +165,24 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private throttleRender = throttle(
     () => this.render(this.layer.element as unknown as SVGSVGElement),
-    16
+    16,
+    true
   );
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;
-    const { width, height } = ogma.view.getSize();
+    let viewSize;
+    try {
+      viewSize = ogma.view.getSize();
+    } catch {
+      // Guard against errors during cleanup
+      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    }
+    // Guard against null view during cleanup
+    if (!viewSize) {
+      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    }
+    const { width, height } = viewSize;
     const margin = 1.5;
 
     // Convert all four screen corners to graph coordinates to account for rotation

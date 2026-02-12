@@ -1,5 +1,5 @@
 import { Ogma, OgmaParameters } from "@linkurious/ogma";
-import { Control, createArrow } from "../../../src";
+import { Control, createArrow, createPolygon } from "../../../src";
 
 export interface AugmentedWindow {
   Ogma: typeof Ogma;
@@ -9,4 +9,5 @@ export interface AugmentedWindow {
   createOgma: <T extends OgmaParameters>(options: T) => Ogma;
   createEditor: () => Control;
   createArrow: typeof createArrow;
+  createPolygon: typeof createPolygon;
 }

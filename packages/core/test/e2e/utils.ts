@@ -12,6 +12,7 @@ declare global {
   let ogma: Ogma;
   let editor: import("../../src").Control;
   let createArrow: typeof import("../../src").createArrow;
+  let createPolygon: typeof import("../../src").createPolygon;
 }
 
 export class BrowserSession {

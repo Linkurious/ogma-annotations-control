@@ -2,6 +2,7 @@ import type { Node, NodeId, EdgeId, NodeList, Ogma, Point, EdgeList, Edge, Edges
 import { geometry } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
+import { Snapping } from "./snapping";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
 import { Store } from "../store";
 import type {
@@ -49,17 +50,20 @@ export class Links {
   private linksByArrowId: LinksByArrowId = new Map();
   private store: Store;
   private ogma: Ogma;
+  private snapping: Snapping;
   private updatedItems = new Set<Id>();
   private onLinkCreated?: (arrow: Arrow, link: Link) => void;
   private commitTimeout!: ReturnType<typeof setTimeout>;
 
   constructor(
     ogma: Ogma,
+    snapping: Snapping,
     store: Store,
     onLinkCreated?: (arrow: Arrow, link: Link) => void
   ) {
     this.ogma = ogma;
     this.store = store;
+    this.snapping = snapping;
     this.onLinkCreated = onLinkCreated;
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
@@ -82,7 +86,9 @@ export class Links {
    * Called by handlers during drag operations to update linked arrows
    * This method applies live updates directly without causing recursion
    */
-  public updateLinkedArrowsDuringDrag(annotationId: Id, displacement: Point) {
+  public updateLinkedArrowsDuringDrag(annotationId: Id, displacement: Point,
+    liveUpdates?: Record<Id, DeepPartial<Annotation>>
+  ) {
     const state = this.store.getState();
     const annotation = state.getFeature(annotationId) as Text;
     if (!annotation) return;
@@ -112,14 +118,73 @@ export class Links {
           return [...coord];
         })
       };
-
-      state.applyLiveUpdate(arrow.id, {
-        geometry: updatedGeometry
-      } as Partial<Arrow>);
+      if (liveUpdates) {
+        liveUpdates[arrow.id] = {
+          geometry: updatedGeometry
+        } as Partial<Arrow>;
+      } else {
+        state.applyLiveUpdate(arrow.id, {
+          geometry: updatedGeometry
+        } as Partial<Arrow>);
+      }
       this.updatedItems.add(arrow.id);
     }
   }
+  public snapLinkedArrowsDuringDrag(annotationId: Id,
+    liveUpdates?: Record<Id, DeepPartial<Annotation>>
+  ) {
+    const state = this.store.getState();
+    let annotation = state.getFeature(annotationId);
+    if (!annotation) return;
+    const updates = state.liveUpdates[annotationId]
+    annotation = updates ? { ...annotation, ...updates  as Annotation} : annotation;
+    const links = this.annotationToLink.get(annotationId);
 
+    if (!links) return;
+    for (const linkId of links) {
+      const link = this.links.get(linkId);
+      if (!link) continue;
+
+      let arrow = state.getFeature(link.arrow) as Arrow;
+      const arrowUpdates = state.liveUpdates[arrow.id];
+      arrow = arrowUpdates ? { ...arrow, ...arrowUpdates as Arrow } : arrow;
+      const position = arrow.geometry.coordinates[link.side === SIDE_START ? 0 : 1]
+      const point = {
+        x: position[0],
+        y: position[1]
+      };
+      let snap;
+      if (isText(annotation) || isComment(annotation) || isBox(annotation)
+      ) {
+        snap = this.snapping.snapToText(point, [annotation as Text]);
+      } else if (isPolygon(annotation)) {
+        snap = this.snapping.snapToPolygon(point, [annotation]);
+      }
+      if (!snap) continue;
+      const newEndPoint = snap.point;
+      const updatedGeometry = {
+        ...arrow.geometry,
+        coordinates: arrow.geometry.coordinates.map((coord, idx) => {
+          if (
+            (link.side === SIDE_START && idx === 0) ||
+            (link.side === SIDE_END && idx === 1)
+          )
+            return [newEndPoint.x, newEndPoint.y];
+
+          return [...coord];
+        })
+      };
+      if (liveUpdates) {
+        liveUpdates[arrow.id] = {
+          geometry: updatedGeometry
+        } as Partial<Arrow>;
+      } else {
+        state.applyLiveUpdate(arrow.id, {
+          geometry: updatedGeometry
+        } as Partial<Arrow>);
+      }
+    }
+  }
   public add(
     arrow: Arrow,
     side: Side,
@@ -205,10 +270,12 @@ export class Links {
     return this;
   }
 
-  public remove(arrow: Arrow, side: Side) {
-    const arrowId = arrow.id;
+  public remove(arrow: Arrow | Id, side: Side) {
+    const arrowId = typeof arrow === "object" ? arrow.id : arrow;
     const id = this.linksByArrowId.get(arrowId)?.[side];
-    delete arrow.properties.link?.[side];
+    if (typeof arrow === "object") {
+      delete arrow.properties.link?.[side];
+    }
     if (!id) return this;
     const link = this.links.get(id);
     if (!link) return this;
@@ -534,14 +601,16 @@ export class Links {
       } else {
         // Remove all links associated with this annotation
         const annotationLinks = this.annotationToLink.get(id);
-        if (annotationLinks) {
-          for (const linkId of annotationLinks) {
-            const link = this.links.get(linkId);
-            if (!link) continue;
-            const arrow = state.getFeature(link.arrow) as Arrow;
-            if (arrow) this.remove(arrow, link.side);
-            this.linksByArrowId.delete(link.arrow);
-            this.links.delete(linkId);
+        if (!annotationLinks) return;
+        for (const linkId of annotationLinks) {
+          const link = this.links.get(linkId);
+          if (!link) continue;
+          const arrow = state.getFeature(link.arrow) as Arrow;
+          // modify the object if passed
+          if (arrow) this.remove(arrow, link.side);
+          else{
+            // otherwise remove by id (happens when deleting the arrow from the state)
+            this.remove(link.arrow, link.side);
           }
         }
       }

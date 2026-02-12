@@ -19,14 +19,6 @@ import {
 import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 
-// Type guard to check if event target is the Ogma container element
-// Note: HTMLTextAreaElement is intentionally excluded - textarea events should be
-// handled natively by the textarea (for text selection, scrolling, etc.)
-function isOgmaContainerElement(
-  element: EventTarget | null
-): element is HTMLElement {
-  return element instanceof HTMLCanvasElement;
-}
 
 export class InteractionController extends EventTarget {
   private query = {
@@ -151,7 +143,6 @@ export class InteractionController extends EventTarget {
   }
 
   private onMouseMove = (evt: MouseEvent) => {
-    if (!isOgmaContainerElement(evt.target)) return;
     const screenPoint = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
@@ -196,10 +187,7 @@ export class InteractionController extends EventTarget {
   };
 
   private onMouseDown = (evt: MouseEvent) => {
-    if (
-      !isOgmaContainerElement(evt.target) ||
-      Date.now() < this.suppressClickUntil
-    )
+    if (Date.now() < this.suppressClickUntil)
       return;
 
     const screenPoint = clientToContainerPosition(
@@ -237,8 +225,6 @@ export class InteractionController extends EventTarget {
   };
 
   private onMouseUp = (evt: MouseEvent) => {
-    if (!isOgmaContainerElement(evt.target)) return;
-
     const state = this.store.getState();
 
     // Clear global mouse press state
@@ -268,7 +254,14 @@ export class InteractionController extends EventTarget {
       }
 
       // Dispatch click event for UI components to respond
-      this.dispatchEvent(new Event(EVT_CLICK));
+      this.dispatchEvent(new CustomEvent(EVT_CLICK, {
+        detail: {
+          id: annotation?.id ?? null, position: {
+            x: evt.clientX,
+            y: evt.clientY
+          }
+        }
+      }));
     }
 
     this.mouseDownState = null;

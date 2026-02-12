@@ -198,7 +198,6 @@ export class Handles extends Renderer<CanvasLayer> {
 
     const startR = r * (1 + (this.handleMagnifier - 1) * startHovered);
     const endR = r * (1 + (this.handleMagnifier - 1) * endHovered);
-
     ctx.beginPath();
 
     ctx.moveTo(start.x, start.y);
@@ -209,16 +208,15 @@ export class Handles extends Renderer<CanvasLayer> {
 
     ctx.beginPath();
 
-    // ctx.moveTo(start.x + startR, start.y);
-    // ctx.arc(start.x, start.y, startR, 0, 2 * Math.PI);
-    ctx.moveTo(start.x - startR, start.y - startR);
-    ctx.rect(start.x - startR, start.y - startR, startR * 2, startR * 2);
+    if (feature.properties.link?.start?.type !== 'comment') {
+      ctx.moveTo(start.x - startR, start.y - startR);
+      ctx.rect(start.x - startR, start.y - startR, startR * 2, startR * 2);
+    }
 
-    // ctx.moveTo(end.x + endR, end.y);
-    // ctx.arc(end.x, end.y, endR, 0, 2 * Math.PI);
-    ctx.moveTo(end.x - endR, end.y - endR);
-    ctx.rect(end.x - endR, end.y - endR, endR * 2, endR * 2);
-
+    if (feature.properties.link?.end?.type !== 'comment') {
+      ctx.moveTo(end.x - endR, end.y - endR);
+      ctx.rect(end.x - endR, end.y - endR, endR * 2, endR * 2);
+    }
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
@@ -258,10 +256,6 @@ export class Handles extends Renderer<CanvasLayer> {
 
       // square handles
       ctx.rect(x - handleR, y - handleR, handleR * 2, handleR * 2);
-
-      // circle handles
-      // ctx.moveTo(x + handleR, y);
-      // ctx.arc(x, y, handleR, 0, 2 * Math.PI);
     }
     ctx.closePath();
     ctx.fill();

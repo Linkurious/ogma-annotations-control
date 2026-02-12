@@ -384,9 +384,11 @@ export function getBrowserWindow() {
 /** @private */
 export const throttle = <T extends unknown[]>(
   callback: (...args: T) => void,
-  delay: number = 16
+  delay: number = 16,
+  callIfWaiting: boolean = false
 ) => {
   let isWaiting = false;
+  let pendingArgs: T | null = null;
   const frames = Math.max(1, Math.round((delay * 60) / 1000));
 
   const countFrames = (remaining: number) => {
@@ -395,13 +397,22 @@ export const throttle = <T extends unknown[]>(
         countFrames(remaining - 1);
       } else {
         isWaiting = false;
+        if (callIfWaiting && pendingArgs !== null) {
+          const args = pendingArgs;
+          pendingArgs = null;
+          callback(...args);
+          isWaiting = true;
+          countFrames(frames);
+        }
       }
     });
   };
 
   return (...args: T) => {
-    if (isWaiting) return;
-
+    if (isWaiting) {
+      if (callIfWaiting) pendingArgs = args;
+      return;
+    }
     callback(...args);
     isWaiting = true;
     countFrames(frames);

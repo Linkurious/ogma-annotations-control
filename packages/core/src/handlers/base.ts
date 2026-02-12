@@ -45,7 +45,15 @@ export abstract class Handler<
       if (this.hoveredHandle) {
         this.dragStartPoint = state.mousePressPoint;
         this.onDragStart(evt);
-        this.dispatchEvent(new Event(EVT_DRAG_START));
+        this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
+          detail: {
+            id: this.annotation,
+            position: {
+              x: evt.clientX,
+              y: evt.clientY
+            }
+          }
+        }));
         this.disablePanning();
         return;
       }
@@ -65,18 +73,6 @@ export abstract class Handler<
     if (!this.hoveredHandle) {
       this.detectHandle(evt, this.ogma.view.getZoom());
     }
-
-    if (!this.hoveredHandle) return;
-
-    evt.preventDefault();
-    evt.stopPropagation();
-
-    // start resizing
-
-    this.dragStartPoint = this.clientToCanvas(evt);
-    this.onDragStart(evt);
-    this.dispatchEvent(new Event(EVT_DRAG_START));
-    this.disablePanning();
   };
 
   protected disablePanning = () => {
@@ -95,11 +91,21 @@ export abstract class Handler<
   };
 
   handleMouseUp = (evt: MouseEvent): void => {
-    if (!this.isActive() || !this.dragging) return;
-
+    if (!this.isActive()) return;
+    if (!this.dragging) {
+      return;
+    }
     this.restorePanning();
     this.onDragEnd(evt);
-    this.dispatchEvent(new Event(EVT_DRAG_END));
+    this.dispatchEvent(new CustomEvent(EVT_DRAG_END, {
+      detail: {
+        id: this.annotation,
+        position: {
+          x: evt.clientX,
+          y: evt.clientY
+        }
+      }
+    }));
   };
 
   cancelEdit() {
@@ -138,6 +144,8 @@ export abstract class Handler<
     this.dispatchEvent(new Event(EVT_DRAG));
   }
 
+  protected onClick = (_evt: MouseEvent): void => {
+  }
   protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
     this.dragging = true;
@@ -169,9 +177,8 @@ export abstract class Handler<
         win.addEventListener("mousemove", this.handleMouseMove);
         win.addEventListener("mouseup", this.handleMouseUp, false);
         container.addEventListener("mousedown", this.handleMouseDown, true);
+        win.addEventListener("click", this.onClick as EventListener, true);
       }
-      // const { x: clientX, y: clientY } = this.ogma.getPointerInformation();
-      // this.handleMouseMove({ clientX, clientY });
     } else {
       // Guard against null container (e.g., in headless tests)
       const container: HTMLElement | null = this.ogma.getContainer();
@@ -180,14 +187,24 @@ export abstract class Handler<
         win.removeEventListener("mousemove", this.handleMouseMove);
         win.removeEventListener("mouseup", this.handleMouseUp);
         container.removeEventListener("mousedown", this.handleMouseDown);
+        win.removeEventListener("click", this.onClick as EventListener);
       }
       this.clearDragState();
       this.setCursor(cursors.default);
     }
   }
 
-  getAnnotation(): T | undefined {
-    return this.store.getState().getFeature(this.annotation!) as T;
+  getAnnotation(withLiveUpdates?: boolean): T | undefined {
+    const state = this.store.getState();
+    const annotation = state.getFeature(this.annotation!);
+    if (!withLiveUpdates) {
+      return annotation as T | undefined;
+    }
+    const liveUpdates = state.liveUpdates[this.annotation!];
+    if (annotation && liveUpdates) {
+      return { ...annotation, ...liveUpdates } as T;
+    }
+    return annotation as T | undefined;
   }
 
   protected setCursor(cursor: Cursor) {

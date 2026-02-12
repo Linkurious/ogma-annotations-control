@@ -26,6 +26,23 @@ export interface FeatureEvent {
   id: Id;
 }
 
+/** Event related to a single annotation feature */
+export interface ClickEvent {
+  /** Annotation ID involved in the event */
+  id?: Id;
+  /** Mouse position in pixel coordinates */
+  position: { x: number; y: number };
+}
+
+
+/** Event related to a single annotation feature */
+export interface DragEvent {
+  /** Annotation ID involved in the event */
+  id: Id;
+  /** Current mouse position in pixel coordinates during the drag */
+  position: { x: number; y: number };
+}
+
 /** History stack change event */
 export interface HistoryEvent {
   /** Indicates if undo operation is available */
@@ -83,13 +100,13 @@ export type FeatureEvents = {
   /**
    * Event triggered when a drag operation starts on an annotation
    */
-  [EVT_DRAG_START]: () => void;
+  [EVT_DRAG_START]: (evt: DragEvent) => void;
   /**
    * Event triggered when a drag operation ends on an annotation
    */
-  [EVT_DRAG_END]: () => void;
+  [EVT_DRAG_END]: (evt: DragEvent) => void;
   /**
    * Event triggered when a click completes on an annotation (mouseup without drag)
    */
-  [EVT_CLICK]: () => void;
+  [EVT_CLICK]: (evt: ClickEvent) => void;
 };

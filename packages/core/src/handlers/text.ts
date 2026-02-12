@@ -1,5 +1,6 @@
 import { Ogma, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
+import { handleDrag } from "./dragging";
 import { Links } from "./links";
 import { TextArea } from "./textArea";
 import {
@@ -21,7 +22,7 @@ import {
   isText
 } from "../types";
 import { getBoxCenter, getBoxSize } from "../utils/utils";
-import { dot, subtract } from "../utils/vec";
+import { dot } from "../utils/vec";
 
 // Constants for edge detection
 const AXIS_X = { x: 1, y: 0 } as const;
@@ -99,6 +100,7 @@ const cornerCursors: Cursor[] = [
 export class TextHandler extends Handler<Text | Comment, Handle> {
   private links: Links;
   private textEditor: TextArea | null = null;
+  private justActivated: boolean = false;
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -160,7 +162,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
             type: HandleType.CORNER,
             corner: i
           };
-          this.store.setState({ hoveredHandle: i });
+          this.store.setState({ hoveredHandle: i, hoveredFeature: this.annotation });
           this.setCursor(this.getCornerCursor(i));
           return; // Exit early if corner handle found
         }
@@ -183,7 +185,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
           my <= maxY + margin
         ) {
           this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
-          this.store.setState({ hoveredHandle: points[edge][0] + 4 }); // Offset edge handles
+          this.store.setState({ hoveredHandle: points[edge][0] + 4, hoveredFeature: this.annotation }); // Offset edge handles
           this.setCursor(this.getEdgeCursor(edge));
           return;
         }
@@ -197,20 +199,19 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       my >= -height / 2 - margin &&
       my <= height / 2 + margin
     ) {
-      this.store.setState({ hoveredHandle: 8 }); // 8 = body
+      this.store.setState({ hoveredHandle: 8, hoveredFeature: this.annotation }); // 8 = body
       // Treat body as edge for dragging
       this.hoveredHandle = { type: HandleType.BODY, corner: -1 };
       this.setCursor(cursors.grab);
       return;
     }
 
-    this.store.setState({ hoveredHandle: -1 });
+    this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
     this.setCursor(cursors.default);
   }
 
   onDrag(evt: MouseEvent) {
     if (!this.dragStartPoint || !this.hoveredHandle || !this.isActive()) return;
-
     evt.stopPropagation();
     evt.stopImmediatePropagation();
 
@@ -233,19 +234,15 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       // Edge handle: move the edge
       updatedFeature = this.dragEdge(original, delta, handle);
     } else if (handle.type === HandleType.BODY) {
-      // Body drag: move the entire box
-      updatedFeature = this.dragBody(original, delta);
+      // Body drag: use handleDrag to move annotation and update linked arrows
+      handleDrag(this.store, this.links, annotation.id, delta);
+      if (this.textEditor) this.textEditor.update();
     }
 
     if (updatedFeature) {
-      const update = updatedFeature;
-      // Apply live update to store instead of direct mutation
-      this.store.getState().applyLiveUpdate(annotation.id, update);
-      const displacement = subtract(
-        getBoxCenter(update),
-        getBoxCenter(original)
-      );
-      this.links.updateLinkedArrowsDuringDrag(annotation.id, displacement);
+      // Apply live update for corner/edge handles (resize operations)
+      this.store.getState().applyLiveUpdate(annotation.id, updatedFeature);
+      this.links.updateLinkedArrowsDuringDrag(annotation.id, delta);
       if (this.textEditor) this.textEditor.update();
     }
 
@@ -258,20 +255,6 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
         }
       })
     );
-  }
-
-  private dragBody(original: Text | Comment, delta: Point): Text | Comment {
-    const center = getBoxCenter(original);
-    return {
-      ...original,
-      geometry: {
-        type: original.geometry.type,
-        coordinates: [center.x + delta.x, center.y + delta.y] as [
-          number,
-          number
-        ]
-      }
-    } as Text | Comment;
   }
 
   private dragCorner(
@@ -399,14 +382,37 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   protected onDragStart(evt: ClientMouseEvent) {
     if (!super.onDragStart(evt)) return false;
+
     this.stopEditingText();
     // Start live update tracking for this annotation
     this.store.getState().startLiveUpdate([this.annotation!]);
     return true;
   }
 
-  protected onClick(_evt: ClientMouseEvent) {
+  protected onClick = (_evt: ClientMouseEvent) => {
     const annotation = this.getAnnotation();
+    if (!annotation) return;
+    if (isComment(annotation)
+      && annotation.properties.mode === COMMENT_MODE_COLLAPSED
+    ) {
+      this.store.getState().updateFeature(annotation.id, {
+        properties: {
+          ...annotation.properties,
+          mode: COMMENT_MODE_EXPANDED
+        }
+      });
+      this.ogma.view.afterNextFrame();
+      this.justActivated = false;
+      return;
+    }
+    if (!this.store.getState().selectedFeatures.has(annotation.id)) {
+      return;
+    }
+    // For comments: first click selects, second click enters edit mode
+    if (isComment(annotation) && this.justActivated) {
+      this.justActivated = false;
+      return;
+    }
     if (annotation && (isText(annotation) || isComment(annotation))) {
       this.startEditingText();
     }
@@ -414,6 +420,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
 
   public startEditingText() {
     if (this.textEditor === null) {
+      this.store.setState({ editingFeature: this.annotation });
       this.textEditor = new TextArea(
         this.ogma,
         this.store,
@@ -487,6 +494,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       this.textEditor.destroy();
     }
     this.textEditor = null;
+    this.store.setState({ editingFeature: null });
   };
 
   public startDrawing(id: Id, x: number, y: number) {
@@ -496,7 +504,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       type: HandleType.CORNER,
       corner: 2
     };
-    this.store.setState({ hoveredHandle: 2 });
+    this.store.setState({ hoveredHandle: 2, hoveredFeature: this.annotation });
     this.dragging = true;
     const pos = this.ogma.view.graphToScreenCoordinates({ x, y });
     this.dragStartPoint = pos;
@@ -508,6 +516,9 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   }
 
   public setAnnotation(annotation: Text | Comment | null): void {
+    if (annotation && isComment(annotation)) {
+      this.justActivated = true;
+    }
     super.setAnnotation(annotation);
     // if it's a collapsed comment, expand it
     if (

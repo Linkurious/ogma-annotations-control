@@ -15,10 +15,30 @@ function getMeasureContext(): CanvasRenderingContext2D {
 }
 
 /**
+ * Check if content fits in a single line (no wrapping, no line breaks)
+ */
+export function isSingleLineContent(
+  content: string,
+  font: string,
+  fontSize: number,
+  maxWidth: number,
+  padding: number
+): boolean {
+  if (!content || content.length === 0) return true;
+  if (content.includes("\n")) return false;
+
+  const ctx = getMeasureContext();
+  ctx.font = `${fontSize}px ${font}`;
+  const textWidth = ctx.measureText(content).width;
+  const availableWidth = maxWidth - padding * 2;
+  return textWidth <= availableWidth;
+}
+
+/**
  * Measure the width needed for text content
  * Returns the maximum width of all lines (natural width before wrapping)
  */
-function measureTextWidth(
+export function measureTextWidth(
   content: string,
   font: string,
   fontSize: number,
@@ -77,12 +97,23 @@ export function getCommentDefs(): SVGStyleElement {
   const style = createSVGElement<SVGStyleElement>("style");
   style.textContent = `
     /* Comment Animation Styles */
-    .comment-icon,
+    .comment-icon {
+      transition:
+        opacity 0.25s ease-in-out,
+        scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: scale, opacity;
+    }
+
     .comment-box {
       transition:
         opacity 0.25s ease-in-out,
         scale 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: scale, opacity;
+    }
+
+    .comment-box rect,
+    .comment-box foreignObject {
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* Disable transitions when comment was not visible */
@@ -129,6 +160,17 @@ export function getCommentDefs(): SVGStyleElement {
 
     .comment-box foreignObject div::-webkit-scrollbar-thumb:hover {
       background: rgba(0, 0, 0, 0.3);
+    }
+
+    /* Edit button on selected comment */
+    .comment-edit-button {
+      cursor: pointer;
+      opacity: 0.8;
+      transition: opacity 0.15s ease-in-out;
+    }
+
+    .comment-edit-button:hover {
+      opacity: 1;
     }
   `;
   return style;
@@ -202,7 +244,9 @@ function renderCollapsedIcon(
 function renderExpandedBox(
   boxGroup: SVGGElement,
   comment: Comment,
-  state: AnnotationState
+  state: AnnotationState,
+  extraWidth: number = 0,
+  showEditBtn: boolean = false
 ): void {
   const style = { ...defaultCommentStyle, ...comment.properties.style };
   const {
@@ -219,34 +263,39 @@ function renderExpandedBox(
 
   const maxWidth = comment.properties.width;
   const content = comment.properties.content || "";
+  const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
 
-  // Calculate actual width needed based on content
-  const actualWidth = measureTextWidth(
-    content,
-    font,
-    typeof fontSize === "number" ? fontSize : parseFloat(fontSize),
-    maxWidth,
-    padding
-  );
+  // Calculate actual width needed based on content (+ extra for inline button)
+  // When selected, use full maxWidth; otherwise use content width
+  const contentWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding);
+  const isSelected = state.selectedFeatures.has(comment.id);
+  const actualWidth = isSelected ? maxWidth : (contentWidth + extraWidth);
 
-  // Calculate height - use maxHeight if set
-  const contentHeight = comment.properties.height;
-  const displayHeight = maxHeight ? Math.min(contentHeight, maxHeight) : contentHeight;
-  const needsScroll = maxHeight ? contentHeight > maxHeight : false;
+  // Calculate height
+  const storedHeight = comment.properties.height;
+  const singleLine = isSingleLineContent(content, font, numericFontSize, maxWidth, padding);
+  const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
+  const effectiveHeight = singleLine ? Math.min(storedHeight, singleLineHeight) : storedHeight;
+  const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
+  const needsScroll = !singleLine && maxHeight ? storedHeight > maxHeight : false;
+
+  // Add extra height for edit button if shown (24px button + 4px gap)
+  const buttonHeight = showEditBtn ? 28 : 0;
+  const totalDisplayHeight = displayHeight + buttonHeight;
 
   // Clear existing content
   boxGroup.innerHTML = "";
 
-  // We use center-based positioning
+  // Center the box at (0,0) to align with the collapsed icon
   const x = -actualWidth / 2;
-  const y = -displayHeight / 2;
+  const y = -totalDisplayHeight / 2;
 
   // Create background rect
   const rect = createSVGElement<SVGRectElement>("rect");
   rect.setAttribute("x", `${x}`);
   rect.setAttribute("y", `${y}`);
   rect.setAttribute("width", `${actualWidth}`);
-  rect.setAttribute("height", `${displayHeight}`);
+  rect.setAttribute("height", `${totalDisplayHeight}`);
   rect.setAttribute("rx", `${borderRadius}`);
   rect.setAttribute("ry", `${borderRadius}`);
   rect.setAttribute("fill", state.hoveredFeature === comment.id ? brighten(background) : background);
@@ -261,7 +310,7 @@ function renderExpandedBox(
   foreignObject.setAttribute("x", `${x}`);
   foreignObject.setAttribute("y", `${y}`);
   foreignObject.setAttribute("width", `${actualWidth}`);
-  foreignObject.setAttribute("height", `${displayHeight}`);
+  foreignObject.setAttribute("height", `${totalDisplayHeight}`);
   foreignObject.style.pointerEvents = "none"; // Let clicks pass through to rect
 
   // Create the HTML content div
@@ -279,9 +328,29 @@ function renderExpandedBox(
   div.style.overflowWrap = "break-word";
   div.style.whiteSpace = "pre-wrap";
   div.style.pointerEvents = "none"; // Let clicks pass through to rect
+  div.style.display = "flex";
+  div.style.flexDirection = "column";
+  div.style.position = "relative";
 
-  // Convert content to HTML (handle line breaks and links)
-  div.innerHTML = formatContent(content);
+  // Create text content container
+  const textDiv = document.createElement("div");
+  textDiv.style.flex = "1";
+  textDiv.style.minHeight = "0";
+  textDiv.style.overflowY = needsScroll ? "auto" : "hidden";
+  textDiv.innerHTML = formatContent(content);
+  div.appendChild(textDiv);
+
+  // Add edit button if needed (same structure as the send button)
+  if (showEditBtn) {
+    const buttonDiv = document.createElement("div");
+    buttonDiv.classList.add("ogma-send-button");
+    buttonDiv.style.pointerEvents = "auto";
+    const iconSpan = document.createElement("span");
+    iconSpan.classList.add("ogma-send-button-icon");
+    iconSpan.innerHTML = state.options.editButtonIcon;
+    buttonDiv.appendChild(iconSpan);
+    div.appendChild(buttonDiv);
+  }
 
   foreignObject.appendChild(div);
   boxGroup.appendChild(foreignObject);
@@ -352,9 +421,27 @@ export function renderComment(
     g.appendChild(boxGroup);
   }
 
+  // Determine if edit button will be shown
+  const showEditBtn =
+    mode !== COMMENT_MODE_COLLAPSED &&
+    state.selectedFeatures.has(annotation.id) &&
+    state.editingFeature !== annotation.id &&
+    state.options.showEditButton;
+
+  // Compute extra width for inline edit button on single-line comments
+  let extraWidth = 0;
+  if (showEditBtn) {
+    const cStyle = { ...defaultCommentStyle, ...annotation.properties.style };
+    const content = annotation.properties.content || "";
+    const numFS = typeof cStyle.fontSize === "number" ? cStyle.fontSize : parseFloat((cStyle.fontSize || "12").toString());
+    if (isSingleLineContent(content, cStyle.font || "Arial, sans-serif", numFS, annotation.properties.width, cStyle.padding || 8)) {
+      extraWidth = 32; // buttonSize (24) + margins (4*2)
+    }
+  }
+
   // Render both states
   renderCollapsedIcon(iconGroup, annotation, state);
-  renderExpandedBox(boxGroup, annotation, state);
+  renderExpandedBox(boxGroup, annotation, state, extraWidth, showEditBtn);
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
   if (!wasVisible) {
@@ -364,16 +451,10 @@ export function renderComment(
   }
 
   // Update the mode class to trigger CSS transitions
-  if (
-    mode === COMMENT_MODE_COLLAPSED &&
-    !g.classList.contains("comment-collapsed")
-  ) {
+  if (mode === COMMENT_MODE_COLLAPSED) {
     g.classList.add("comment-collapsed");
     g.classList.remove("comment-expanded");
-  } else if (
-    mode !== COMMENT_MODE_COLLAPSED &&
-    g.classList.contains("comment-collapsed")
-  ) {
+  } else {
     g.classList.add("comment-expanded");
     g.classList.remove("comment-collapsed");
   }
@@ -385,6 +466,9 @@ export function renderComment(
     "transform",
     state.getScreenAlignedTransform(position.x, position.y, false)
   );
+
+  // Hide the entire SVG group while the textarea editor is active
+  g.style.visibility = state.editingFeature === annotation.id ? "hidden" : "";
 
   // Append to root if not already present
   if (!g.parentNode || g.parentNode !== root) {
