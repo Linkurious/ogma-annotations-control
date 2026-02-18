@@ -193,29 +193,32 @@ function renderCollapsedIcon(
     iconBorderWidth = defaultCommentStyle.iconBorderWidth
   } = style;
 
-  // Find or create circle
-  let circle = iconGroup.querySelector("circle") as SVGCircleElement;
-  if (!circle) {
-    circle = createSVGElement<SVGCircleElement>("circle");
-    circle.setAttribute("cx", "0");
-    circle.setAttribute("cy", "0");
-    iconGroup.appendChild(circle);
+  // Find or create rectangle
+  let rect = iconGroup.querySelector("rect") as SVGRectElement;
+  if (!rect) {
+    rect = createSVGElement<SVGRectElement>("rect");
+    rect.setAttribute("x", `${-size / 2}`);
+    rect.setAttribute("y", `${-size / 2}`);
+    rect.setAttribute("rx", `${style.borderRadius}`);
+    rect.setAttribute("ry", `${style.borderRadius}`);
+    iconGroup.appendChild(rect);
   }
 
-  // Update circle attributes
-  circle.setAttribute("r", `${size / 2}`);
+  // Update rectangle attributes
+  rect.setAttribute("width", `${size}`);
+  rect.setAttribute("height", `${size}`);
   if (state.hoveredFeature === comment.id) {
-    circle.setAttribute("fill", brighten(iconColor!));
+    rect.setAttribute("fill", brighten(iconColor!));
   } else {
-    circle.setAttribute("fill", iconColor!);
+    rect.setAttribute("fill", iconColor!);
   }
 
   if (iconBorderWidth && iconBorderWidth > 0) {
-    circle.setAttribute("stroke", iconBorderColor || "#CCC");
-    circle.setAttribute("stroke-width", `${iconBorderWidth}`);
+    rect.setAttribute("stroke", iconBorderColor || "#CCC");
+    rect.setAttribute("stroke-width", `${iconBorderWidth}`);
   } else {
-    circle.removeAttribute("stroke");
-    circle.removeAttribute("stroke-width");
+    rect.removeAttribute("stroke");
+    rect.removeAttribute("stroke-width");
   }
 
   // Find or create text
@@ -263,21 +266,39 @@ function renderExpandedBox(
 
   const maxWidth = comment.properties.width;
   const content = comment.properties.content || "";
-  const numericFontSize = typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
+  const numericFontSize =
+    typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
 
   // Calculate actual width needed based on content (+ extra for inline button)
   // When selected, use full maxWidth; otherwise use content width
-  const contentWidth = measureTextWidth(content, font, numericFontSize, maxWidth, padding);
+  const contentWidth = measureTextWidth(
+    content,
+    font,
+    numericFontSize,
+    maxWidth,
+    padding
+  );
   const isSelected = state.selectedFeatures.has(comment.id);
-  const actualWidth = isSelected ? maxWidth : (contentWidth + extraWidth);
+  const actualWidth = isSelected ? maxWidth : contentWidth + extraWidth;
 
   // Calculate height
   const storedHeight = comment.properties.height;
-  const singleLine = isSingleLineContent(content, font, numericFontSize, maxWidth, padding);
+  const singleLine = isSingleLineContent(
+    content,
+    font,
+    numericFontSize,
+    maxWidth,
+    padding
+  );
   const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
-  const effectiveHeight = singleLine ? Math.min(storedHeight, singleLineHeight) : storedHeight;
-  const displayHeight = maxHeight ? Math.min(effectiveHeight, maxHeight) : effectiveHeight;
-  const needsScroll = !singleLine && maxHeight ? storedHeight > maxHeight : false;
+  const effectiveHeight = singleLine
+    ? Math.min(storedHeight, singleLineHeight)
+    : storedHeight;
+  const displayHeight = maxHeight
+    ? Math.min(effectiveHeight, maxHeight)
+    : effectiveHeight;
+  const needsScroll =
+    !singleLine && maxHeight ? storedHeight > maxHeight : false;
 
   // Add extra height for edit button if shown (24px button + 4px gap)
   const buttonHeight = showEditBtn ? 28 : 0;
@@ -298,7 +319,10 @@ function renderExpandedBox(
   rect.setAttribute("height", `${totalDisplayHeight}`);
   rect.setAttribute("rx", `${borderRadius}`);
   rect.setAttribute("ry", `${borderRadius}`);
-  rect.setAttribute("fill", state.hoveredFeature === comment.id ? brighten(background) : background);
+  rect.setAttribute(
+    "fill",
+    state.hoveredFeature === comment.id ? brighten(background) : background
+  );
   if (strokeWidth && strokeWidth > 0) {
     rect.setAttribute("stroke", strokeColor || "#DDD");
     rect.setAttribute("stroke-width", `${strokeWidth}`);
@@ -306,7 +330,8 @@ function renderExpandedBox(
   boxGroup.appendChild(rect);
 
   // Use foreignObject for text content (supports scrolling)
-  const foreignObject = createSVGElement<SVGForeignObjectElement>("foreignObject");
+  const foreignObject =
+    createSVGElement<SVGForeignObjectElement>("foreignObject");
   foreignObject.setAttribute("x", `${x}`);
   foreignObject.setAttribute("y", `${y}`);
   foreignObject.setAttribute("width", `${actualWidth}`);
@@ -393,7 +418,7 @@ export function renderComment(
   annotation: Comment,
   cachedElement: SVGGElement | undefined,
   state: AnnotationState,
-  wasVisible: boolean,
+  wasVisible: boolean
 ): SVGGElement {
   const mode = annotation.properties.mode;
 
@@ -433,8 +458,19 @@ export function renderComment(
   if (showEditBtn) {
     const cStyle = { ...defaultCommentStyle, ...annotation.properties.style };
     const content = annotation.properties.content || "";
-    const numFS = typeof cStyle.fontSize === "number" ? cStyle.fontSize : parseFloat((cStyle.fontSize || "12").toString());
-    if (isSingleLineContent(content, cStyle.font || "Arial, sans-serif", numFS, annotation.properties.width, cStyle.padding || 8)) {
+    const numFS =
+      typeof cStyle.fontSize === "number"
+        ? cStyle.fontSize
+        : parseFloat((cStyle.fontSize || "12").toString());
+    if (
+      isSingleLineContent(
+        content,
+        cStyle.font || "Arial, sans-serif",
+        numFS,
+        annotation.properties.width,
+        cStyle.padding || 8
+      )
+    ) {
       extraWidth = 32; // buttonSize (24) + margins (4*2)
     }
   }
@@ -458,7 +494,6 @@ export function renderComment(
     g.classList.add("comment-expanded");
     g.classList.remove("comment-collapsed");
   }
-
 
   // Apply screen-aligned transform to the container
   const position = getBoxCenter(annotation);

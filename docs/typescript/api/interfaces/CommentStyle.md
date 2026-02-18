@@ -34,6 +34,14 @@ optional borderRadius: number;
 
 Text box border radius
 
+### boxShadow?
+
+```ts
+optional boxShadow: string;
+```
+
+box shadow in CSS format, e.g. "0px 4px 6px rgba(0, 0, 0, 0.1)"
+
 ### collapseZoomThreshold?
 
 ```ts

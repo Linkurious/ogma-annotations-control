@@ -45,10 +45,16 @@ Event trigerred when canceling drawing mode
 ### click()
 
 ```ts
-click: () => void;
+click: (evt) => void;
 ```
 
 Event triggered when a click completes on an annotation (mouseup without drag)
+
+#### Parameters
+
+##### evt
+
+[`ClickEvent`](../interfaces/ClickEvent.md)
 
 #### Returns
 
@@ -81,10 +87,16 @@ Contains the ID of the completed annotation
 ### dragend()
 
 ```ts
-dragend: () => void;
+dragend: (evt) => void;
 ```
 
 Event triggered when a drag operation ends on an annotation
+
+#### Parameters
+
+##### evt
+
+[`DragEvent`](../interfaces/DragEvent.md)
 
 #### Returns
 
@@ -95,10 +107,16 @@ Event triggered when a drag operation ends on an annotation
 ### dragstart()
 
 ```ts
-dragstart: () => void;
+dragstart: (evt) => void;
 ```
 
 Event triggered when a drag operation starts on an annotation
+
+#### Parameters
+
+##### evt
+
+[`DragEvent`](../interfaces/DragEvent.md)
 
 #### Returns
 

@@ -1,6 +1,6 @@
 # Getting Started
 
-Welcome to Ogma Annotations! This guide will help you add interactive arrows and text annotations to your Ogma graphs in just a few minutes.
+Welcome to Ogma Annotations! This guide will help you add interactive arrows and text annotations to your Ogma graphs in just a few minutes. [See it in action with Ogma](https://doc.linkurious.com/ogma/latest/examples/plugins-annotations.html).
 
 ## What is Ogma Annotations?
 

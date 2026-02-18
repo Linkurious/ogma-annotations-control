@@ -2,6 +2,7 @@ import { DefaultTheme, defineConfig } from "vitepress";
 import path from "path";
 import sidebarJSON from "../typescript/api/typedoc-sidebar.json";
 import reactSidebarJSON from "../react/api/typedoc-sidebar.json";
+import pkg from "../../packages/core/package.json";
 
 function cleanBasePaths(items: DefaultTheme.SidebarItem[]) {
   for (const item of items) {
@@ -55,6 +56,10 @@ export default defineConfig({
             target: "_blank"
           }
         ]
+      },
+      {
+        text: `v${pkg.version}`,
+        link: "https://github.com/Linkurious/ogma-annotations-control/releases"
       }
     ],
     outline: {

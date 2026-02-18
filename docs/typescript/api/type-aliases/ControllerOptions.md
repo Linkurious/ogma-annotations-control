@@ -18,6 +18,17 @@ The margin in which the Texts are detected when looking for magnet points
 
 ***
 
+### editButtonIcon
+
+```ts
+editButtonIcon: string;
+```
+
+SVG icon for the edit button in text editor
+Should be a complete SVG string (e.g., '<svg>...</svg>')
+
+***
+
 ### magnetHandleRadius
 
 ```ts
@@ -66,6 +77,16 @@ sendButtonIcon: string;
 
 SVG icon for the send button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
+
+***
+
+### showEditButton
+
+```ts
+showEditButton: boolean;
+```
+
+Show edit button in text editor
 
 ***
 
