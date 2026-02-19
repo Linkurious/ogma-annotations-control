@@ -70,14 +70,17 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Linkurious/ogma-prototype.git"
+    "url": "git+https://github.com/Linkurious/ogma-annotations-control.git"
   },
+  "homepage": "https://linkurious.github.io/ogma-annotations-control/",
   "keywords": [
     "annotations",
     "headless",
     "arrow",
     "ogma",
-    "text"
+    "text",
+    "graph",
+    "visualization"
   ],
   "author": "Linkurious SAS",
   "license": "Apache-2.0",

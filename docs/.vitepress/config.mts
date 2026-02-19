@@ -24,7 +24,43 @@ export default defineConfig({
   titleTemplate: ":title",
   description: "A plugin to draw annotations on top of Ogma",
   head: [
-    ["link", { rel: "icon", href: "/ogma-annotations-control/favicon.ico" }]
+    ["link", { rel: "icon", href: "/ogma-annotations-control/favicon.ico" }],
+    // AI/LLM discoverability
+    [
+      "link",
+      {
+        rel: "ai-reference",
+        type: "text/markdown",
+        href: "/ogma-annotations-control/AI_REFERENCE_TYPESCRIPT.md",
+        title: "TypeScript Reference"
+      }
+    ],
+    [
+      "link",
+      {
+        rel: "ai-reference",
+        type: "text/markdown",
+        href: "/ogma-annotations-control/AI_REFERENCE_REACT.md",
+        title: "React Reference"
+      }
+    ],
+    [
+      "link",
+      {
+        rel: "ai-reference",
+        type: "text/markdown",
+        href: "/ogma-annotations-control/AI_REFERENCE_API.md",
+        title: "API Reference"
+      }
+    ],
+    [
+      "link",
+      {
+        rel: "ai-discovery",
+        type: "text/plain",
+        href: "/ogma-annotations-control/llms.txt"
+      }
+    ]
   ],
   outDir: path.resolve(process.cwd(), "dist", "docs"),
   base: "/ogma-annotations-control/",
