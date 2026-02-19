@@ -14,6 +14,15 @@ https://github.com/user-attachments/assets/02a46720-142e-4d20-adee-cf6dd26b40b7
 
 Please visit the [documentation here](https://linkurious.github.io/ogma-annotations-control/).
 
+### AI-Friendly Reference
+
+For LLMs and coding assistants, machine-readable documentation is available:
+
+- [`llms.txt`](https://linkurious.github.io/ogma-annotations-control/llms.txt) - Discovery file
+- [TypeScript Reference](https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_TYPESCRIPT.md) - Core API and usage
+- [React Reference](https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_REACT.md) - React integration
+- [API Reference](https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_API.md) - Complete API
+
 ## License
 
 Apache 2.0
