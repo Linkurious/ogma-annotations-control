@@ -1,0 +1,22 @@
+# Ogma Annotations - AI Reference Documentation
+
+> Documentation for @linkurious/ogma-annotations - a plugin for adding interactive annotations to Ogma graph visualizations.
+
+## Available Documentation
+
+- [TypeScript Reference](https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_TYPESCRIPT.md): Core TypeScript API, usage patterns, and examples
+- [React Reference](https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_REACT.md): React integration with hooks and context provider
+- [API Reference](https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_API.md): Complete API reference (interfaces, types, functions)
+
+## Quick Links
+
+- GitHub: https://github.com/Linkurious/ogma-annotations-control
+- Documentation: https://linkurious.github.io/ogma-annotations-control/
+- npm: https://www.npmjs.com/package/@linkurious/ogma-annotations
+
+## Package Info
+
+- Package: @linkurious/ogma-annotations
+- React Package: @linkurious/ogma-annotations-react
+- License: Apache-2.0
+- Requires: Ogma >=4.5.6 or ^5.0.0
