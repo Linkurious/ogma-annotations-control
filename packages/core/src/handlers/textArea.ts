@@ -1,7 +1,7 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
-import { Id, Text, defaultTextStyle, CommentStyle, isComment } from "../types";
+import { Id, Text, defaultTextStyle, CommentStyle, isComment, defaultCommentStyle } from "../types";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -162,15 +162,17 @@ export class TextArea {
     const annotation = this.getAnnotation();
     if (!annotation) return;
 
+    // Use appropriate defaults based on annotation type
+    const defaults = isComment(annotation) ? defaultCommentStyle : defaultTextStyle;
     const {
       font,
-      fontSize = defaultTextStyle.fontSize,
+      fontSize = defaults.fontSize,
       borderRadius,
       color,
-      background,
+      background = defaults.background,
       padding = 0,
-      fixedSize = defaultTextStyle.fixedSize
-    } = annotation.properties.style || defaultTextStyle;
+      fixedSize = defaults.fixedSize
+    } = annotation.properties.style || defaults;
     const textArea = this.textarea;
     const editorEl = this.layer.element as HTMLElement;
     const zoom = this.store.getState().zoom;
@@ -185,11 +187,20 @@ export class TextArea {
     editorStyle.display = "grid";
     editorStyle.gridTemplateRows = "1fr auto";
     editorStyle.boxSizing = "border-box";
-    editorStyle.background = background || "transparent";
+    editorStyle.background = background;
     editorStyle.borderRadius = `${(borderRadius || 0) * effectiveScale}px`;
     editorStyle.padding = `${scaledPadding}px`;
     editorStyle.transformOrigin = "center";
     editorStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
+
+    // Add shadow for comments (matching SVG shadow)
+    if (isComment(annotation)) {
+      const commentStyle = annotation.properties.style as CommentStyle | undefined;
+      const showShadow = commentStyle?.shadow !== false;
+      editorStyle.boxShadow = showShadow
+        ? "0 2px 8px rgba(0, 0, 0, 0.15)"
+        : "none";
+    }
 
     // Style the textarea
     const textAreaStyle = textArea.style;
@@ -280,12 +291,14 @@ export class TextArea {
       this.textarea.style.height = prevHeight;
       const borderWidth = getBorderWidth(annotation);
       const zoom = this.store.getState().zoom;
+      const padding = annotation.properties.style?.padding || 0;
 
       // scrollHeight is in screen pixels (already scaled by 1/zoom for fixed-size)
       // We need to convert back to graph coordinates by multiplying by zoom
       // and then add back the border width (which was subtracted in getSize())
+      // Also add padding (top + bottom) since the renderer expects height to include padding
       const requiredHeight =
-        (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
+        (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom + padding * 2;
 
       // Get minimum height from style (default to 50px if not specified)
       const minHeight =
