@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-02-19 | Version: 2.x
+> Auto-generated: 2026-02-20 | Version: 2.x
 
 ---
 
@@ -2381,6 +2381,16 @@ optional color: string;
 
 text color: #f00, yellow...
 
+### expandOnSelect?
+
+```ts
+optional expandOnSelect: boolean;
+```
+
+Expand to full width when selected (default: false)
+
+***
+
 ### fixedSize?
 
 ```ts
@@ -2490,6 +2500,16 @@ optional scaled: boolean;
 ```
 
 if true, the box scales with zoom. Default is true
+
+### shadow?
+
+```ts
+optional shadow: boolean;
+```
+
+Show drop shadow on comment box (default: true)
+
+***
 
 ### showSendButton?
 
@@ -3925,6 +3945,10 @@ Default style for Comment annotations
   // Editing UI
   showSendButton: true,
   autoGrow: true,
+
+  // Visual effects
+  shadow: true,
+  expandOnSelect: false,
 
   // Fixed size (always screen-aligned)
   fixedSize: true
