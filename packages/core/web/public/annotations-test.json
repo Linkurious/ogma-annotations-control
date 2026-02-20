@@ -258,7 +258,7 @@
           "font": "IBM Plex Sans",
           "fontSize": 14,
           "padding": 8,
-          "iconColor": "#FFD700",
+          "iconColor": "#fff",
           "iconSymbol": "💬",
           "fixedSize": true
         }
@@ -323,7 +323,7 @@
           "padding": 8,
           "color": "#333",
           "font": "IBM Plex Sans",
-          "iconColor": "#FFCB2F",
+          "iconColor": "#FFFACD",
           "iconSymbol": "💬",
           "iconBorderColor": "#909090",
           "iconBorderWidth": 1,

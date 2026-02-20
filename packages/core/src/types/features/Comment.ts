@@ -42,6 +42,12 @@ export interface CommentStyle extends TextStyle {
   showSendButton?: boolean;
   /** Auto-grow height with content (default: true) */
   autoGrow?: boolean;
+
+  // Visual effects
+  /** Show drop shadow on comment box (default: true) */
+  shadow?: boolean;
+  /** Expand to full width when selected (default: false) */
+  expandOnSelect?: boolean;
 }
 
 /**
@@ -127,6 +133,10 @@ export const isComment = (
  *   showSendButton: true,
  *   autoGrow: true,
  *
+ *   // Visual effects
+ *   shadow: true,
+ *   expandOnSelect: false,
+ *
  *   // Fixed size (always screen-aligned)
  *   fixedSize: true
  * }
@@ -142,10 +152,10 @@ export const defaultCommentStyle: CommentStyle = {
   strokeType: "plain",
 
   // Icon styling (collapsed mode)
-  iconColor: "#FFCB2F", // Gold
+  iconColor: "#FFFACD", // Gold
   iconSymbol: "💬",
   iconBorderColor: "#aaa",
-  iconBorderWidth: 2,
+  iconBorderWidth: 1,
 
   // Size properties
   minHeight: 60,
@@ -161,6 +171,10 @@ export const defaultCommentStyle: CommentStyle = {
   // Editing UI
   showSendButton: true,
   autoGrow: true,
+
+  // Visual effects
+  shadow: true,
+  expandOnSelect: false,
 
   // Fixed size (always screen-aligned)
   fixedSize: true

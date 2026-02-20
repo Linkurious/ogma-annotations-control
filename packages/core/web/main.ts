@@ -3,10 +3,15 @@
 
 import { Ogma } from "@linkurious/ogma";
 import { AnnotationPanel } from "./AnnotationPanel";
-import { Control, AnnotationCollection, getAnnotationsBounds, createText } from "../src";
+import {
+  Control,
+  AnnotationCollection,
+  getAnnotationsBounds,
+  createText
+} from "../src";
 
-interface ND { }
-interface ED { }
+interface ND {}
+interface ED {}
 
 class App {
   private ogma: Ogma<ND, ED>;
@@ -50,7 +55,9 @@ class App {
 
     this.buttons = {
       addArrow: document.getElementById("add-arrow")! as HTMLButtonElement,
-      addStickyNote: document.getElementById("add-sticky-note")! as HTMLButtonElement,
+      addStickyNote: document.getElementById(
+        "add-sticky-note"
+      )! as HTMLButtonElement,
       addBox: document.getElementById("add-box")! as HTMLButtonElement,
       addPolygon: document.getElementById("add-polygon")! as HTMLButtonElement,
       addComment: document.getElementById("add-comment")! as HTMLButtonElement,
@@ -162,16 +169,26 @@ class App {
       this.buttons.addStickyNote.disabled = true;
       this.buttons.addStickyNote.classList.add("active");
       const w = 150;
-      const point = this.ogma.view.screenToGraphCoordinates({ x: evt.clientX, y: evt.clientY});
-      const text = createText(point.x- w/2, point.y-w/2, w, w, "Post it", {
-        font: "IBM Plex Sans",
-        fontSize: 14,
-        color: "#3A03CF",
-        background: "#EDE6FF",
-        borderRadius: 0,
-        boxShadow: '0 1px 4px 0 rgba(0, 0, 0, 0.15)',
-        padding: 12
+      const point = this.ogma.view.screenToGraphCoordinates({
+        x: evt.clientX,
+        y: evt.clientY
       });
+      const text = createText(
+        point.x - w / 2,
+        point.y - w / 2,
+        w,
+        w,
+        "Post it",
+        {
+          font: "IBM Plex Sans",
+          fontSize: 14,
+          color: "#3A03CF",
+          background: "#EDE6FF",
+          borderRadius: 0,
+          boxShadow: "0 1px 4px 0 rgba(0, 0, 0, 0.15)",
+          padding: 12
+        }
+      );
       this.control.enablePlacement(text);
 
       const done = () => {

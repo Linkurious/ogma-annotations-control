@@ -359,6 +359,32 @@ startComment for low-level programmatic control
 
 ***
 
+### enablePlacement()
+
+```ts
+enablePlacement(annotation): this;
+```
+
+Place a pre-created annotation by moving it with the cursor.
+The annotation follows the mouse until the user clicks to place it.
+Press Escape to cancel.
+
+#### Parameters
+
+##### annotation
+
+The text or box annotation to place
+
+[`Box`](../interfaces/Box.md) | [`Text`](../interfaces/Text.md)
+
+#### Returns
+
+`this`
+
+this for chaining
+
+***
+
 ### enablePolygonDrawing()
 
 ```ts
@@ -912,6 +938,12 @@ the updated options
 detectMargin: number;
 ```
 
+##### editButtonIcon
+
+```ts
+editButtonIcon: string;
+```
+
 ##### magnetHandleRadius
 
 ```ts
@@ -940,6 +972,12 @@ minArrowHeight: number;
 
 ```ts
 sendButtonIcon: string;
+```
+
+##### showEditButton
+
+```ts
+showEditButton: boolean;
 ```
 
 ##### showSendButton

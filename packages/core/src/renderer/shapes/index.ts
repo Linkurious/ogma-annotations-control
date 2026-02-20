@@ -1,4 +1,4 @@
-import { SVGLayer, Ogma } from "@linkurious/ogma";
+import { SVGLayer, Ogma, Size } from "@linkurious/ogma";
 import { renderArrow } from "./arrow";
 import { renderBox } from "./box";
 import { getCommentDefs, renderComment } from "./comment";
@@ -29,8 +29,8 @@ export class Shapes extends Renderer<SVGLayer> {
   private isExporting: boolean = false;
   constructor(ogma: Ogma, store: Store) {
     super(ogma, store);
-    ogma.events.on('viewExportStart', this.onExportStart);
-    ogma.events.on('afterImageExport', this.onExportEnd);
+    ogma.events.on("viewExportStart", this.onExportStart);
+    ogma.events.on("afterImageExport", this.onExportEnd);
     this.layer = this.ogma.layers.addSVGLayer(
       {
         draw: this.render
@@ -67,9 +67,9 @@ export class Shapes extends Renderer<SVGLayer> {
   render = (root: SVGSVGElement) => {
     //const root = this.layer.element;
     if (!root) return; // Guard against null root
-    
+
     const { features, hoveredFeature, selectedFeatures, liveUpdates } =
-    this.store.getState();
+      this.store.getState();
     // Initialize persistent container groups on first render
     if (!this.annotationsRoot || !root.contains(this.annotationsRoot)) {
       // Clear root only on first render
@@ -111,7 +111,8 @@ export class Shapes extends Renderer<SVGLayer> {
       }
 
       // Skip features outside viewport
-      if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds)) continue;
+      if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
+        continue;
       visibleFeatures.add(feature.id);
       let existingElement = this.features.get(feature.id);
       if (isBox(feature))
@@ -134,7 +135,7 @@ export class Shapes extends Renderer<SVGLayer> {
           feature,
           existingElement,
           state,
-          this.visibleFeatures.has(feature.id),
+          this.visibleFeatures.has(feature.id)
         );
       else if (isPolygon(feature)) {
         existingElement = renderPolygon(
@@ -171,17 +172,15 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;
-    let viewSize;
+    let viewSize: Size | null = null;
     try {
       viewSize = ogma.view.getSize();
     } catch {
       // Guard against errors during cleanup
-      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+      return [0, 0, 0, 0];
     }
     // Guard against null view during cleanup
-    if (!viewSize) {
-      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-    }
+    if (!viewSize) return [0, 0, 0, 0];
     const { width, height } = viewSize;
     const margin = 1.5;
 
@@ -328,10 +327,10 @@ export class Shapes extends Renderer<SVGLayer> {
 
   private onExportStart = () => {
     this.isExporting = true;
-  }
+  };
   private onExportEnd = () => {
     this.isExporting = false;
-  }
+  };
   public destroy(): void {
     this.features.clear();
     this.layer.destroy();

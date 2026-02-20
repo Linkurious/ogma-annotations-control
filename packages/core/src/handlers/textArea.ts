@@ -1,7 +1,15 @@
 import { Overlay, Ogma } from "@linkurious/ogma";
 import { LAYERS, TEXT_LINE_HEIGHT } from "../constants";
 import { Store } from "../store";
-import { Id, Text, defaultTextStyle, CommentStyle, isComment } from "../types";
+import {
+  Id,
+  Text,
+  Comment,
+  defaultTextStyle,
+  CommentStyle,
+  isComment,
+  defaultCommentStyle
+} from "../types";
 import { getBoxSize } from "../utils/utils";
 
 export class TextArea {
@@ -15,13 +23,14 @@ export class TextArea {
     private ogma: Ogma,
     private store: Store,
     private annotation: Id,
-    private onSendHandler: () => void = () => { }
+    private onSendHandler: () => void = () => {}
   ) {
     const position = this.getPosition();
     const size = this.getSize();
     const annotationData = this.getAnnotation()!;
     const state = this.store.getState();
-    const showSendButton = isComment(annotationData) && (state.options?.showSendButton ?? true);
+    const showSendButton =
+      isComment(annotationData) && (state.options?.showSendButton ?? true);
     const sendButtonIcon = state.options?.sendButtonIcon || "";
     const placeholderText = state.options?.textPlaceholder || "Enter text";
 
@@ -29,11 +38,12 @@ export class TextArea {
       {
         element: `<div class="ogma-annotation-text-editor">
           <textarea wrap="on" name="annotation-text--input" spellcheck="false" placeholder="${placeholderText}"></textarea>
-          ${showSendButton
-            ? `<button class="ogma-send-button" type="button" title="Send">
+          ${
+            showSendButton
+              ? `<button class="ogma-send-button" type="button" title="Send">
             <span class="ogma-send-button-icon">${sendButtonIcon}</span>
           </button>`
-            : ""
+              : ""
           }
         </div>`,
         position,
@@ -84,7 +94,7 @@ export class TextArea {
     );
   }
 
-  private getAnnotation(): Text | undefined {
+  private getAnnotation(): Text | Comment | undefined {
     const state = this.store.getState();
     if (!state.liveUpdates[this.annotation]) {
       state.startLiveUpdate([this.annotation]);
@@ -132,13 +142,14 @@ export class TextArea {
     const annotation = this.getAnnotation();
     if (!annotation) return { width: 0, height: 0 };
     const size = getBoxSize(annotation);
-    const borderWidth = getBorderWidth(annotation);
+    const borderWidth = getBorderWidth(annotation as Text);
     const style = annotation.properties.style as CommentStyle | undefined;
     const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
     const state = this.store.getState();
-    const showSendButton = isComment(annotation) && (state.options?.showSendButton ?? true);
+    const showSendButton =
+      isComment(annotation) && (state.options?.showSendButton ?? true);
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;
@@ -162,15 +173,19 @@ export class TextArea {
     const annotation = this.getAnnotation();
     if (!annotation) return;
 
+    // Use appropriate defaults based on annotation type
+    const defaults = isComment(annotation)
+      ? defaultCommentStyle
+      : defaultTextStyle;
     const {
       font,
-      fontSize = defaultTextStyle.fontSize,
+      fontSize = defaults.fontSize,
       borderRadius,
       color,
-      background,
+      background = defaults.background,
       padding = 0,
-      fixedSize = defaultTextStyle.fixedSize
-    } = annotation.properties.style || defaultTextStyle;
+      fixedSize = defaults.fixedSize
+    } = annotation.properties.style || defaults;
     const textArea = this.textarea;
     const editorEl = this.layer.element as HTMLElement;
     const zoom = this.store.getState().zoom;
@@ -190,6 +205,17 @@ export class TextArea {
     editorStyle.padding = `${scaledPadding}px`;
     editorStyle.transformOrigin = "center";
     editorStyle.transform = `rotate(${this.store.getState().rotation}rad)`;
+
+    // Add shadow for comments (matching SVG shadow)
+    if (annotation.properties.type === "comment") {
+      const commentStyle = annotation.properties.style as
+        | CommentStyle
+        | undefined;
+      const showShadow = commentStyle?.shadow !== false;
+      editorStyle.boxShadow = showShadow
+        ? "0 2px 8px rgba(0, 0, 0, 0.15)"
+        : "none";
+    }
 
     // Style the textarea
     const textAreaStyle = textArea.style;
@@ -228,9 +254,12 @@ export class TextArea {
 
     // Enable auto-growing for fixed-size text
     if (fixedSize) {
-      const maxHeight = (annotation.properties.style as CommentStyle | undefined)?.maxHeight;
+      const maxHeight = (
+        annotation.properties.style as CommentStyle | undefined
+      )?.maxHeight;
       // Enable scrolling only when content has reached maxHeight
-      const needsScroll = maxHeight && annotation.properties.height >= maxHeight;
+      const needsScroll =
+        maxHeight && annotation.properties.height >= maxHeight;
       textAreaStyle.overflowY = needsScroll ? "auto" : "hidden";
       textAreaStyle.overflowX = "hidden";
     }
@@ -275,17 +304,19 @@ export class TextArea {
     if (isFixedSize) {
       // Temporarily collapse height so scrollHeight reflects actual content
       const prevHeight = this.textarea.style.height;
-      this.textarea.style.height = '0px';
+      this.textarea.style.height = "0px";
       const textareaScrollHeight = this.textarea.scrollHeight;
       this.textarea.style.height = prevHeight;
-      const borderWidth = getBorderWidth(annotation);
+      const borderWidth = getBorderWidth(annotation as Text);
       const zoom = this.store.getState().zoom;
+      const padding = annotation.properties.style?.padding || 0;
 
       // scrollHeight is in screen pixels (already scaled by 1/zoom for fixed-size)
       // We need to convert back to graph coordinates by multiplying by zoom
       // and then add back the border width (which was subtracted in getSize())
+      // Also add padding (top + bottom) since the renderer expects height to include padding
       const requiredHeight =
-        (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom;
+        (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom + padding * 2;
 
       // Get minimum height from style (default to 50px if not specified)
       const minHeight =
@@ -295,7 +326,9 @@ export class TextArea {
 
       // Adjust center position to grow downward only (keep top edge fixed)
       // But stop moving once maxHeight is reached
-      const maxHeight = (annotation.properties.style as CommentStyle | undefined)?.maxHeight;
+      const maxHeight = (
+        annotation.properties.style as CommentStyle | undefined
+      )?.maxHeight;
       const oldHeight = annotation.properties.height;
       const heightDelta = newHeight - oldHeight;
 
@@ -317,7 +350,7 @@ export class TextArea {
     }
 
     // Update content, height, and position (if changed)
-    const update: Text = {
+    const update = {
       ...annotation,
       properties: {
         ...annotation.properties,
@@ -328,7 +361,7 @@ export class TextArea {
         ...annotation.geometry,
         coordinates: newCoordinates
       }
-    };
+    } as Text | Comment;
 
     // If height changed, update the layer size and position
     if (isFixedSize && Math.abs(annotation.properties.height - newHeight) > 1) {

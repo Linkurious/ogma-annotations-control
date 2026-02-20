@@ -19,9 +19,11 @@
 | [Box](interfaces/Box.md) | Box annotation feature |
 | [BoxProperties](interfaces/BoxProperties.md) | Properties specific to box annotations. |
 | [BoxStyle](interfaces/BoxStyle.md) | Styles specific to box annotations. |
+| [ClickEvent](interfaces/ClickEvent.md) | Event related to a single annotation feature |
 | [Comment](interfaces/Comment.md) | Comment annotation type Geometry: Point (center position of comment box/icon) |
 | [CommentProps](interfaces/CommentProps.md) | Properties for Comment annotations |
 | [CommentStyle](interfaces/CommentStyle.md) | Style configuration for Comment annotations |
+| [DragEvent](interfaces/DragEvent.md) | Event related to a single annotation feature |
 | [FeatureEvent](interfaces/FeatureEvent.md) | Event related to a single annotation feature |
 | [FeaturesEvent](interfaces/FeaturesEvent.md) | Event related to multiple annotation features |
 | [HistoryEvent](interfaces/HistoryEvent.md) | History stack change event |
@@ -68,6 +70,7 @@
 | [COMMENT\_MODE\_COLLAPSED](variables/COMMENT_MODE_COLLAPSED.md) | - |
 | [COMMENT\_MODE\_EXPANDED](variables/COMMENT_MODE_EXPANDED.md) | - |
 | [DATA\_ATTR](variables/DATA_ATTR.md) | - |
+| [DEFAULT\_EDIT\_ICON](variables/DEFAULT_EDIT_ICON.md) | - |
 | [DEFAULT\_SEND\_ICON](variables/DEFAULT_SEND_ICON.md) | Default send button icon (paper plane) |
 | [defaultArrowOptions](variables/defaultArrowOptions.md) | Default options for creating new Arrow annotations. Contains the default arrow structure with [defaultArrowStyle](variables/defaultArrowStyle.md). |
 | [defaultArrowStyle](variables/defaultArrowStyle.md) | Default style configuration for arrow annotations. |
