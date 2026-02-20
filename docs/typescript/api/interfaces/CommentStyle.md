@@ -60,6 +60,16 @@ optional color: string;
 
 text color: #f00, yellow...
 
+### expandOnSelect?
+
+```ts
+optional expandOnSelect: boolean;
+```
+
+Expand to full width when selected (default: false)
+
+***
+
 ### fixedSize?
 
 ```ts
@@ -169,6 +179,16 @@ optional scaled: boolean;
 ```
 
 if true, the box scales with zoom. Default is true
+
+### shadow?
+
+```ts
+optional shadow: boolean;
+```
+
+Show drop shadow on comment box (default: true)
+
+***
 
 ### showSendButton?
 

@@ -37,6 +37,10 @@ Default style for Comment annotations
   showSendButton: true,
   autoGrow: true,
 
+  // Visual effects
+  shadow: true,
+  expandOnSelect: false,
+
   // Fixed size (always screen-aligned)
   fixedSize: true
 }
