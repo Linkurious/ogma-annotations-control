@@ -6,9 +6,11 @@ import {
   createArrow,
   createText,
   createBox,
+  createComment,
   Arrow,
   Text,
-  Box
+  Box,
+  Comment
 } from "../../src";
 
 describe("Control.updateStyle", () => {
@@ -368,6 +370,95 @@ describe("Control.updateStyle", () => {
 
       const updated = control.getAnnotation<Arrow>(addedArrow.id)!;
       assert.equal(updated?.properties.style?.strokeColor, "blue");
+    });
+  });
+
+  describe("Comment style updates", () => {
+    it("should have shadow enabled by default", () => {
+      const comment = createComment(0, 0, "Test comment");
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      assert.equal(addedComment.properties.style?.shadow, true);
+    });
+
+    it("should have expandOnSelect disabled by default", () => {
+      const comment = createComment(0, 0, "Test comment");
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      assert.equal(addedComment.properties.style?.expandOnSelect, false);
+    });
+
+    it("should update comment shadow property", () => {
+      const comment = createComment(0, 0, "Test comment");
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      assert.equal(addedComment.properties.style?.shadow, true);
+
+      control.updateStyle(addedComment.id, { shadow: false });
+
+      const updated = control.getAnnotation<Comment>(addedComment.id)!;
+      assert.equal(updated?.properties.style?.shadow, false);
+    });
+
+    it("should update comment expandOnSelect property", () => {
+      const comment = createComment(0, 0, "Test comment");
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      assert.equal(addedComment.properties.style?.expandOnSelect, false);
+
+      control.updateStyle(addedComment.id, { expandOnSelect: true });
+
+      const updated = control.getAnnotation<Comment>(addedComment.id)!;
+      assert.equal(updated?.properties.style?.expandOnSelect, true);
+    });
+
+    it("should create comment with shadow disabled", () => {
+      const comment = createComment(0, 0, "Test comment", {
+        style: { shadow: false }
+      });
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      assert.equal(addedComment.properties.style?.shadow, false);
+    });
+
+    it("should create comment with expandOnSelect enabled", () => {
+      const comment = createComment(0, 0, "Test comment", {
+        style: { expandOnSelect: true }
+      });
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      assert.equal(addedComment.properties.style?.expandOnSelect, true);
+    });
+
+    it("should preserve other style properties when updating shadow", () => {
+      const comment = createComment(0, 0, "Test comment", {
+        style: {
+          background: "#FF0000",
+          color: "#00FF00"
+        }
+      });
+      const addedCollection = control.add(comment);
+      const addedComment = addedCollection.getAnnotations()
+        .features[0] as Comment;
+
+      control.updateStyle(addedComment.id, { shadow: false });
+
+      const updated = control.getAnnotation<Comment>(addedComment.id)!;
+      assert.equal(updated?.properties.style?.shadow, false);
+      assert.equal(updated?.properties.style?.background, "#FF0000");
+      assert.equal(updated?.properties.style?.color, "#00FF00");
     });
   });
 });

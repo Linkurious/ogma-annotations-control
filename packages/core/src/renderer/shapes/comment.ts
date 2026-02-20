@@ -270,7 +270,7 @@ function renderExpandedBox(
     typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
 
   // Calculate actual width needed based on content (+ extra for inline button)
-  // When selected, use full maxWidth; otherwise use content width
+  // When selected and expandOnSelect is true, use full maxWidth; otherwise use content width
   const contentWidth = measureTextWidth(
     content,
     font,
@@ -279,7 +279,8 @@ function renderExpandedBox(
     padding
   );
   const isSelected = state.selectedFeatures.has(comment.id);
-  const actualWidth = isSelected ? maxWidth : contentWidth + extraWidth;
+  const shouldExpand = isSelected && style.expandOnSelect === true;
+  const actualWidth = shouldExpand ? maxWidth : contentWidth + extraWidth;
 
   // Calculate height
   const storedHeight = comment.properties.height;
@@ -380,8 +381,12 @@ function renderExpandedBox(
   foreignObject.appendChild(div);
   boxGroup.appendChild(foreignObject);
 
-  // Add drop shadow for comments
-  boxGroup.setAttribute("filter", "url(#softShadow)");
+  // Add drop shadow for comments (if enabled)
+  if (style.shadow !== false) {
+    boxGroup.setAttribute("filter", "url(#softShadow)");
+  } else {
+    boxGroup.removeAttribute("filter");
+  }
 }
 
 /**
