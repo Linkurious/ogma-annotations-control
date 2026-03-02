@@ -286,8 +286,9 @@ export class Links {
     this.edgeToLink.get(link.target as EdgeId)?.delete(id);
     this.annotationToLink.get(link.target)?.delete(id);
     // remove the link from the linksByArrowId
-    this.linksByArrowId.has(arrowId) &&
-      (this.linksByArrowId.get(arrowId)![side] = undefined);
+    if (this.linksByArrowId.has(arrowId)) {
+      this.linksByArrowId.get(arrowId)![side] = undefined;
+    }
     return this;
   }
 

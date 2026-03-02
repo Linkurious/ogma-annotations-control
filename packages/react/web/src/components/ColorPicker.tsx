@@ -35,7 +35,7 @@ export const ColorPicker = ({
           }}
           onClick={() => {
             setSelected(c);
-            setColor && setColor(c);
+            if (setColor) setColor(c);
           }}
         />
       ))}

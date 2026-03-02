@@ -149,7 +149,7 @@ export const Controls = ({
 
   const stopEvent: React.MouseEventHandler<HTMLDivElement> = React.useCallback(
     preventDefault,
-    []
+    [] // oxlint-disable-line react-hooks/exhaustive-deps -- preventDefault is stable (module scope)
   );
 
   const divRefCallback = React.useCallback((node: LayerType) => {
