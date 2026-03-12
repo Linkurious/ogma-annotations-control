@@ -85,7 +85,7 @@
   "author": "Linkurious SAS",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@linkurious/ogma": ">=4.5.6 || ^5.0.0"
+    "@linkurious/ogma": ">=5.3.11"
   },
   "dependencies": {
     "@borgar/textbox": "1.8.0",
