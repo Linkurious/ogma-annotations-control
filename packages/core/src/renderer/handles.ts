@@ -6,12 +6,10 @@ import { Store } from "../store";
 import {
   Arrow,
   Box,
-  Comment,
   Polygon,
   Text,
   isArrow,
   isBox,
-  isComment,
   isPolygon,
   isText
 } from "../types";
@@ -72,13 +70,6 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.fillStyle = this.handleFill;
     ctx.lineWidth = this.handleStrokeWidth * scale;
     ctx.strokeStyle = this.handleStroke;
-
-    // DEBUG: Render debug info for all comments
-    Object.values(features).forEach((feature) => {
-      if (isComment(feature)) {
-        this.renderCommentDebug(feature, ctx, state.zoom);
-      }
-    });
 
     Object.values(features).forEach((baseFeature) => {
       // Only render handles for selected features
@@ -394,77 +385,6 @@ export class Handles extends Renderer<CanvasLayer> {
         true
       );
     }
-  }
-
-  /**
-   * DEBUG: Render comment debug visualization showing:
-   * - Center point (geometry.coordinates) as red dot
-   * - Bounding box in graph space as red rectangle
-   * - Width/height info as text
-   */
-  private renderCommentDebug(
-    comment: Comment,
-    ctx: CanvasRenderingContext2D,
-    zoom: number
-  ) {
-    const [cx, cy] = comment.geometry.coordinates;
-    const { width, height } = comment.properties;
-
-    // Comments have fixedSize: true, so convert pixel dimensions to graph space
-    const graphWidth = width / zoom;
-    const graphHeight = height / zoom;
-
-    ctx.save();
-
-    // Draw center point (red dot)
-    ctx.fillStyle = "red";
-    ctx.beginPath();
-    ctx.arc(cx, cy, 5 / zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw bounding box in graph space (red rectangle)
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 2 / zoom;
-    ctx.setLineDash([5 / zoom, 5 / zoom]);
-    ctx.strokeRect(
-      cx - graphWidth / 2,
-      cy - graphHeight / 2,
-      graphWidth,
-      graphHeight
-    );
-    ctx.setLineDash([]);
-
-    // Draw arrow anchor point (bottom center) as blue dot
-    ctx.fillStyle = "blue";
-    ctx.beginPath();
-    ctx.arc(cx, cy + graphHeight / 2, 5 / zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Draw text info
-    ctx.fillStyle = "red";
-    ctx.font = `${12 / zoom}px sans-serif`;
-    ctx.fillText(
-      `center: (${cx.toFixed(1)}, ${cy.toFixed(1)})`,
-      cx + graphWidth / 2 + 10 / zoom,
-      cy - graphHeight / 2
-    );
-    ctx.fillText(
-      `size: ${width}x${height}px`,
-      cx + graphWidth / 2 + 10 / zoom,
-      cy - graphHeight / 2 + 15 / zoom
-    );
-    ctx.fillText(
-      `graph: ${graphWidth.toFixed(1)}x${graphHeight.toFixed(1)}`,
-      cx + graphWidth / 2 + 10 / zoom,
-      cy - graphHeight / 2 + 30 / zoom
-    );
-    ctx.fillText(
-      `zoom: ${zoom.toFixed(2)}`,
-      cx + graphWidth / 2 + 10 / zoom,
-      cy - graphHeight / 2 + 45 / zoom
-    );
-
-    ctx.restore();
   }
 
   public destroy(): void {
