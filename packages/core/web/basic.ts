@@ -1,5 +1,5 @@
 import Ogma from "@linkurious/ogma";
-import { Control, createComment } from "@linkurious/ogma-annotations";
+import { Control, createComment } from "../src";
 import "./style.css";
 //import "@linkurious/ogma-annotations/style.css";
 // import "@linkurious/ogma-annotations/style.css";
@@ -23,9 +23,9 @@ await ogma.setGraph({
     { source: 2, target: 0 }
   ]
 });
-await ogma.view.locateGraph();
+await ogma.view.set({ x: 0, y: 0, zoom: 0.5 }, { duration: 0 });
 
-document.getElementById("enable").addEventListener("click", () => {
+document.getElementById("enable")!.addEventListener("click", () => {
   control.enableCommentDrawing({
     offsetX: 50,
     offsetY: -50,
@@ -49,4 +49,10 @@ document.getElementById("enable").addEventListener("click", () => {
       }
     }
   });
+});
+
+Object.assign(window, {
+  ogma,
+  control,
+  createComment
 });
