@@ -506,10 +506,16 @@ export function migrateBoxOrTextIfNeeded<T extends Annotation>(
 }
 
 /**
- * Automatically lightens or darkens a color (hex or rgba) for highlight purposes.
+ * Adjusts the brightness of a color (hex or rgba) based on its perceived luminance.
+ * For bright colors, the adjustment is applied as darkening; for dark colors, as lightening.
+ *
  * @param color - Color string in hex (#RRGGBB or #RGB) or rgba format
- * @param amount - Amount to lighten/darken (default 20 for lighter and -10 for darker)
- * @returns Highlighted color in rgba format
+ * @param amount - Adjustment factor between -1 and 1:
+ *   - Positive values (0 to 1): lighten dark colors, darken bright colors
+ *   - Negative values (-1 to 0): darken dark colors, lighten bright colors
+ *   - 0: no change
+ *   - Example: 0.2 applies a 20% adjustment, -0.1 applies a -10% adjustment
+ * @returns Adjusted color in rgba format
  */
 export function adjustColorBrightness(color: Color, amount: number): RgbaColor {
   let r: number,

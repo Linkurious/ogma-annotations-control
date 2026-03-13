@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Headless annotation plugin for Ogma",
   "type": "module",
   "main": "dist/index.mjs",
@@ -51,8 +51,8 @@
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "build": "vite build",
-    "lint:ci": "eslint -f checkstyle -o reports/checkstyle.xml --ext ts --ext js src",
-    "lint": "eslint --ext ts --ext js src",
+    "lint": "npx oxlint -c oxlint.json src",
+    "lint:ci": "mkdir -p reports && npx oxlint -c oxlint.json -f checkstyle src > reports/checkstyle.xml",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
     "preview": "vite preview",
     "docs:build": "typedoc && node scripts/organize-sidebar.mjs",
@@ -85,7 +85,7 @@
   "author": "Linkurious SAS",
   "license": "Apache-2.0",
   "peerDependencies": {
-    "@linkurious/ogma": ">=4.5.6 || ^5.0.0"
+    "@linkurious/ogma": ">=5.3.11"
   },
   "dependencies": {
     "@borgar/textbox": "1.8.0",
@@ -96,7 +96,8 @@
     "zustand": "5.0.7"
   },
   "devDependencies": {
-    "@linkurious/eslint-config-ogma": "1.0.14",
+    "@linkurious/eslint-config-ogma": "2.1.0",
+    "oxlint": "0.16.0",
     "@types/geojson": "7946.0.13",
     "@types/rbush": "4.0.0",
     "get-port": "7.0.0",
@@ -107,24 +108,10 @@
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
     "vanilla-colorful": "0.7.2",
-    "vite": "latest",
+    "vite": "6.3.5",
     "vite-plugin-dts": "^4.1.0",
-    "vitest": "latest",
+    "vitest": "3.2.4",
     "vitest-canvas-mock": "1.1.3"
-  },
-  "eslintConfig": {
-    "extends": [
-      "@linkurious/eslint-config-ogma"
-    ],
-    "rules": {
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          "argsIgnorePattern": "^_",
-          "varsIgnorePattern": "^_"
-        }
-      ]
-    }
   },
   "prettier": {
     "printWidth": 80,

@@ -1,4 +1,14 @@
-import type { Node, NodeId, EdgeId, NodeList, Ogma, Point, EdgeList, Edge, EdgesEvent } from "@linkurious/ogma";
+import type {
+  Node,
+  NodeId,
+  EdgeId,
+  NodeList,
+  Ogma,
+  Point,
+  EdgeList,
+  Edge,
+  EdgesEvent
+} from "@linkurious/ogma";
 import { geometry } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
@@ -78,7 +88,7 @@ export class Links {
     this.ogma.events
       // @ts-expect-error private event
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
-      .on(['addEdges', 'removeEdges'], this.onAddRemoveEdges)
+      .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
       .on("viewChanged", this.refresh);
   }
 
@@ -86,7 +96,9 @@ export class Links {
    * Called by handlers during drag operations to update linked arrows
    * This method applies live updates directly without causing recursion
    */
-  public updateLinkedArrowsDuringDrag(annotationId: Id, displacement: Point,
+  public updateLinkedArrowsDuringDrag(
+    annotationId: Id,
+    displacement: Point,
     liveUpdates?: Record<Id, DeepPartial<Annotation>>
   ) {
     const state = this.store.getState();
@@ -130,14 +142,17 @@ export class Links {
       this.updatedItems.add(arrow.id);
     }
   }
-  public snapLinkedArrowsDuringDrag(annotationId: Id,
+  public snapLinkedArrowsDuringDrag(
+    annotationId: Id,
     liveUpdates?: Record<Id, DeepPartial<Annotation>>
   ) {
     const state = this.store.getState();
     let annotation = state.getFeature(annotationId);
     if (!annotation) return;
-    const updates = state.liveUpdates[annotationId]
-    annotation = updates ? { ...annotation, ...updates  as Annotation} : annotation;
+    const updates = state.liveUpdates[annotationId];
+    annotation = updates
+      ? { ...annotation, ...(updates as Annotation) }
+      : annotation;
     const links = this.annotationToLink.get(annotationId);
 
     if (!links) return;
@@ -147,15 +162,15 @@ export class Links {
 
       let arrow = state.getFeature(link.arrow) as Arrow;
       const arrowUpdates = state.liveUpdates[arrow.id];
-      arrow = arrowUpdates ? { ...arrow, ...arrowUpdates as Arrow } : arrow;
-      const position = arrow.geometry.coordinates[link.side === SIDE_START ? 0 : 1]
+      arrow = arrowUpdates ? { ...arrow, ...(arrowUpdates as Arrow) } : arrow;
+      const position =
+        arrow.geometry.coordinates[link.side === SIDE_START ? 0 : 1];
       const point = {
         x: position[0],
         y: position[1]
       };
       let snap;
-      if (isText(annotation) || isComment(annotation) || isBox(annotation)
-      ) {
+      if (isText(annotation) || isComment(annotation) || isBox(annotation)) {
         snap = this.snapping.snapToText(point, [annotation as Text]);
       } else if (isPolygon(annotation)) {
         snap = this.snapping.snapToPolygon(point, [annotation]);
@@ -286,8 +301,9 @@ export class Links {
     this.edgeToLink.get(link.target as EdgeId)?.delete(id);
     this.annotationToLink.get(link.target)?.delete(id);
     // remove the link from the linksByArrowId
-    this.linksByArrowId.has(arrowId) &&
-      (this.linksByArrowId.get(arrowId)![side] = undefined);
+    if (this.linksByArrowId.has(arrowId)) {
+      this.linksByArrowId.get(arrowId)![side] = undefined;
+    }
     return this;
   }
 
@@ -299,9 +315,11 @@ export class Links {
     updatedAttributes: string[];
   }) => {
     const attributesSet = new Set(updatedAttributes);
-    if (!elements.isNode || (!attributesSet.has("x") &&
-      !attributesSet.has("y") &&
-      !attributesSet.has("radius"))
+    if (
+      !elements.isNode ||
+      (!attributesSet.has("x") &&
+        !attributesSet.has("y") &&
+        !attributesSet.has("radius"))
     )
       return;
     this.requestUpdateFromNodePositions(elements.toList() as NodeList);
@@ -429,21 +447,24 @@ export class Links {
     const links: LinksByArrowId = new Map();
     // Also update arrows linked to edges connected to these nodes
     const edgeLinksToUpdate: LinksByArrowId = new Map();
-    edges.getParallelEdges().getId().forEach((edgeId) => {
-      const edgeLinks = this.edgeToLink.get(edgeId);
-      if (!edgeLinks) return;
-      edgeLinks.forEach((linkId) => {
-        const link = this.links.get(linkId);
-        if (!link) return;
-        const arrowId = link.arrow;
-        links.set(arrowId, this.linksByArrowId.get(arrowId)!);
-        edgeLinksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+    edges
+      .getParallelEdges()
+      .getId()
+      .forEach((edgeId) => {
+        const edgeLinks = this.edgeToLink.get(edgeId);
+        if (!edgeLinks) return;
+        edgeLinks.forEach((linkId) => {
+          const link = this.links.get(linkId);
+          if (!link) return;
+          const arrowId = link.arrow;
+          links.set(arrowId, this.linksByArrowId.get(arrowId)!);
+          edgeLinksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        });
       });
-    });
     // Update edge links using the general update method
     if (edgeLinksToUpdate.size === 0) return;
     this.update(edgeLinksToUpdate);
-  }
+  };
 
   private commit = () => {
     const state = this.store.getState();
@@ -482,7 +503,11 @@ export class Links {
         ? start.targetType === TARGET_TYPES.NODE
           ? xyr[nodeIdToIndex.get(start.target)!]
           : start.targetType === TARGET_TYPES.EDGE
-            ? this._getEdgeSnapPoint(start.target as EdgeId, start.magnet.x, true)
+            ? this._getEdgeSnapPoint(
+                start.target as EdgeId,
+                start.magnet.x,
+                true
+              )
             : this._getAnnotationCenter(state.getFeature(start.target)!)
         : { x: startPoint[0], y: startPoint[1] };
 
@@ -503,7 +528,10 @@ export class Links {
             this._isLinkedToCenter(start)
           );
         } else if (start.targetType === TARGET_TYPES.EDGE) {
-          startPoint = this._getEdgeSnapPoint(start.target as EdgeId, start.magnet.x);
+          startPoint = this._getEdgeSnapPoint(
+            start.target as EdgeId,
+            start.magnet.x
+          );
         } else {
           const annotation = state.getFeature(start.target)!;
           startPoint = this._getAnnotationSnapPoint(
@@ -581,13 +609,7 @@ export class Links {
       if (arrow.properties.link?.end) {
         const linkData = arrow.properties.link.end;
         // Node/edge existence will be checked in add()
-        this.add(
-          arrow,
-          SIDE_END,
-          linkData.id,
-          linkData.type,
-          linkData.magnet!
-        );
+        this.add(arrow, SIDE_END, linkData.id, linkData.type, linkData.magnet!);
       }
     });
 
@@ -608,7 +630,7 @@ export class Links {
           const arrow = state.getFeature(link.arrow) as Arrow;
           // modify the object if passed
           if (arrow) this.remove(arrow, link.side);
-          else{
+          else {
             // otherwise remove by id (happens when deleting the arrow from the state)
             this.remove(link.arrow, link.side);
           }
@@ -674,14 +696,9 @@ export class Links {
       const rotatedY = offsetX * sin + offsetY * cos;
       offsetX = rotatedX;
       offsetY = rotatedY;
-    } else if (isComment(box)) {
-      // if comment is collapsed, use the icon size for snapping
-      const style = { ...box.properties.style };
-      const iconSize = style.iconSize || 32; // default to 32 if not specified
-      const scale = (iconSize / 16) * 0.5; // 0.5 because magnet is relative to half-size
-      offsetX = link.magnet.x * iconSize * scale;
-      offsetY = link.magnet.y * iconSize * scale;
     }
+    // Note: Comments use the same box calculation as other fixed-size elements.
+    // The width/height are already converted to graph space above when hasFixedSize is true.
 
     return [center.x + offsetX, center.y + offsetY];
   }
@@ -701,11 +718,18 @@ export class Links {
     return [snapPoint.x, snapPoint.y];
   }
 
+  private _getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint: true): Point;
+  private _getEdgeSnapPoint(
+    edgeId: EdgeId,
+    t: number,
+    asPoint?: false
+  ): Position;
 
-  private _getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint: true): Point
-  private _getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint?: false): Position
-
-  private _getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint = false): Position | Point {
+  private _getEdgeSnapPoint(
+    edgeId: EdgeId,
+    t: number,
+    asPoint = false
+  ): Position | Point {
     const edge = this.ogma.getEdge(edgeId);
     if (!edge) return [0, 0];
 
