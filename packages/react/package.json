@@ -36,8 +36,8 @@
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "docs:build": "typedoc && vite build -c web/vite.config.mts",
     "postdocs:build": "bash scripts/postdocs.sh",
-    "lint": "oxlint -c oxlint.json src web",
-    "lint:ci": "mkdir -p reports && oxlint -c oxlint.json -f checkstyle src web > reports/checkstyle.xml",
+    "lint": "npx oxlint -c oxlint.json src web",
+    "lint:ci": "mkdir -p reports && npx oxlint -c oxlint.json -f checkstyle src web > reports/checkstyle.xml",
     "test:unit": "vitest run",
     "test": "npm run test:unit"
   },
