@@ -139,9 +139,13 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.store.setState({ drawingFeature: comment.id });
 
     // Calculate arrow start point at comment edge (bottom center)
+    // Comments have fixedSize: true, so pixel dimensions need to be
+    // converted to graph space by dividing by zoom
     const commentHeight = comment.properties.height;
+    const zoom = state.zoom;
+    const graphHeight = commentHeight / zoom;
     const arrowFromCommentX = commentX;
-    const arrowFromCommentY = commentY + commentHeight * 0.5;
+    const arrowFromCommentY = commentY + graphHeight * 0.5;
 
     this.snapArrowStart(arrow, arrowStart[0], arrowStart[1]);
     const existingStartLink = arrow.properties.link?.start;
