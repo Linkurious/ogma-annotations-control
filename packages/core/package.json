@@ -108,7 +108,7 @@
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
     "vanilla-colorful": "0.7.2",
-    "vite": "6.3.5",
+    "vite": "6.4.1",
     "vite-plugin-dts": "^4.1.0",
     "vitest": "3.2.4",
     "vitest-canvas-mock": "1.1.3"
