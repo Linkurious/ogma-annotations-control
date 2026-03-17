@@ -147,6 +147,9 @@ export class TextArea {
     const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
+    const state = this.store.getState();
+    const showSendButton =
+      isComment(annotation) && (state.options?.showSendButton ?? true);
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;
@@ -158,11 +161,14 @@ export class TextArea {
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
-    // Note: Button is rendered within the same height using CSS grid,
-    // not added to the total height. The grid layout handles the button placement.
+
+    // Add button height to the overlay size (but not to the comment's stored height)
+    // The grid layout (1fr auto) requires this extra space for the button
+    const buttonHeight = showSendButton ? 28 * effectiveScale : 0;
+
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
-      height: height
+      height: height + buttonHeight
     };
   }
 
