@@ -304,16 +304,13 @@ export class TextArea {
       this.textarea.style.height = "0px";
       const textareaScrollHeight = this.textarea.scrollHeight;
       this.textarea.style.height = prevHeight;
-      const borderWidth = getBorderWidth(annotation as Text);
       const zoom = this.store.getState().zoom;
       const padding = annotation.properties.style?.padding || 0;
 
       // scrollHeight is in screen pixels (already scaled by 1/zoom for fixed-size)
       // We need to convert back to graph coordinates by multiplying by zoom
-      // and then add back the border width (which was subtracted in getSize())
-      // Also add padding (top + bottom) since the renderer expects height to include padding
-      const requiredHeight =
-        (textareaScrollHeight + (borderWidth * 2) / zoom) * zoom + padding * 2;
+      // and then add padding (top + bottom) since the renderer expects height to include padding
+      const requiredHeight = textareaScrollHeight * zoom + padding * 2;
 
       // Get minimum height from style (default to 50px if not specified)
       const minHeight =
