@@ -147,9 +147,6 @@ export class TextArea {
     const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
-    const state = this.store.getState();
-    const showSendButton =
-      isComment(annotation) && (state.options?.showSendButton ?? true);
 
     // Scale size inversely with zoom for fixed-size text
     const effectiveScale = fixedSize ? 1 / zoom : 1;
@@ -161,11 +158,11 @@ export class TextArea {
       const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
       height = Math.min(height, scaledMaxHeight);
     }
-    // Button is sized via width/height at 24*effectiveScale, plus 4px gap
-    const buttonHeight = showSendButton ? 28 * effectiveScale : 0;
+    // Note: Button is rendered within the same height using CSS grid,
+    // not added to the total height. The grid layout handles the button placement.
     return {
       width: (size.width - borderWidth * 2) * effectiveScale,
-      height: height + buttonHeight
+      height: height
     };
   }
 
@@ -324,15 +321,18 @@ export class TextArea {
         50;
       newHeight = Math.max(minHeight, requiredHeight);
 
-      // Adjust center position to grow downward only (keep top edge fixed)
-      // But stop moving once maxHeight is reached
+      // For comments, don't adjust center position on autogrow - grow around center
+      // For text annotations, adjust center to keep top edge fixed
       const maxHeight = (
         annotation.properties.style as CommentStyle | undefined
       )?.maxHeight;
       const oldHeight = annotation.properties.height;
       const heightDelta = newHeight - oldHeight;
 
-      if (Math.abs(heightDelta) > 1) {
+      // Only adjust position for non-comment text annotations
+      const isCommentAnnotation = isComment(annotation);
+
+      if (!isCommentAnnotation && Math.abs(heightDelta) > 1) {
         const [cx, cy] = annotation.geometry.coordinates as [number, number];
 
         if (maxHeight && newHeight > maxHeight) {
@@ -346,6 +346,9 @@ export class TextArea {
           // Normal growth or shrink (below maxHeight)
           newCoordinates = [cx, cy + heightDelta / 2];
         }
+      } else if (maxHeight && newHeight > maxHeight) {
+        // For comments, just clamp height without moving center
+        newHeight = maxHeight;
       }
     }
 
