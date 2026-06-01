@@ -18,6 +18,7 @@ import { Store } from "../store";
 import type {
   Arrow,
   Id,
+  Magnet,
   TargetType,
   Link,
   Side,
@@ -43,6 +44,23 @@ type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
 const COMMIT_DEBOUNCE_MS = 1;
+
+/**
+ * Converts a serialized { x, y } magnet (ExportedLink format) to the typed
+ * internal Magnet union. Called once per link in Links.add().
+ * For polygons, `raw` must already be bbox-relative (the conversion from
+ * absolute graph coords happens in add() before this is called).
+ */
+function toMagnet(raw: Point, targetType: TargetType): Magnet {
+  if (targetType === TARGET_TYPES.NODE)
+    return { type: "node", center: raw.x === 0 && raw.y === 0 };
+  if (targetType === TARGET_TYPES.EDGE)
+    return { type: "edge", t: raw.x };
+  if (targetType === TARGET_TYPES.POLYGON)
+    return { type: "polygon", rx: raw.x, ry: raw.y };
+  // text, box, comment — center-relative fraction of dimension
+  return { type: "box", nx: raw.x, ny: raw.y };
+}
 
 /**
  * Class that implements linking between annotation arrows and different items.
@@ -231,13 +249,13 @@ export class Links {
       }
     }
 
-    // create a link
+    // create a link — convert the serialized Point to the typed internal Magnet
     const link: Link = {
       id,
       arrow: arrowId,
       target: targetId,
       targetType,
-      magnet: adjustedMagnet,
+      magnet: toMagnet(adjustedMagnet, targetType),
       side
     };
     if (targetType === TARGET_TYPES.NODE) {
@@ -423,10 +441,6 @@ export class Links {
           }
         } as Arrow;
         this.updatedItems.add(arrowId);
-        link.magnet = {
-          x: snapPoint[0] - positionAndRadius.x,
-          y: snapPoint[1] - positionAndRadius.y
-        };
         updateBbox(updates[arrowId] as Arrow);
       }
     }
@@ -477,6 +491,31 @@ export class Links {
   };
 
   update(linksByArrowId: LinksByArrowId = this.linksByArrowId) {
+    const updates = this._computeArrowUpdates(linksByArrowId);
+    const state = this.store.getState();
+    state.applyLiveUpdates(updates);
+    this.requestCommit();
+  }
+
+  /**
+   * Compute and synchronously commit arrow position updates for the given links.
+   * Used when an annotation is moved programmatically (not during a live drag).
+   * Wraps changes in batchUpdate so no extra history entry is created.
+   */
+  private _updateAndCommitSync(linksByArrowId: LinksByArrowId) {
+    const updates = this._computeArrowUpdates(linksByArrowId);
+    if (Object.keys(updates).length === 0) return;
+    const state = this.store.getState();
+    state.batchUpdate(() => {
+      state.updateFeatures(
+        updates as Record<string, Partial<Annotation>>
+      );
+    });
+  }
+
+  private _computeArrowUpdates(
+    linksByArrowId: LinksByArrowId
+  ): Record<Id, DeepPartial<Arrow>> {
     const state = this.store.getState();
     const nodeIds = Array.from(this.nodeToLink.keys());
     const nodeIdToIndex = new Map<NodeId, number>();
@@ -505,7 +544,7 @@ export class Links {
           : start.targetType === TARGET_TYPES.EDGE
             ? this._getEdgeSnapPoint(
                 start.target as EdgeId,
-                start.magnet.x,
+                (start.magnet as { t: number }).t,
                 true
               )
             : this._getAnnotationCenter(state.getFeature(start.target)!)
@@ -515,7 +554,7 @@ export class Links {
         ? end.targetType === TARGET_TYPES.NODE
           ? xyr[nodeIdToIndex.get(end.target)!]
           : end.targetType === TARGET_TYPES.EDGE
-            ? this._getEdgeSnapPoint(end.target as EdgeId, end.magnet.x, true)
+            ? this._getEdgeSnapPoint(end.target as EdgeId, (end.magnet as { t: number }).t, true)
             : this._getAnnotationCenter(state.getFeature(end.target)!)
         : { x: endPoint[0], y: endPoint[1] };
 
@@ -530,7 +569,7 @@ export class Links {
         } else if (start.targetType === TARGET_TYPES.EDGE) {
           startPoint = this._getEdgeSnapPoint(
             start.target as EdgeId,
-            start.magnet.x
+            (start.magnet as { t: number }).t
           );
         } else {
           const annotation = state.getFeature(start.target)!;
@@ -550,7 +589,10 @@ export class Links {
             this._isLinkedToCenter(end)
           );
         } else if (end.targetType === TARGET_TYPES.EDGE) {
-          endPoint = this._getEdgeSnapPoint(end.target as EdgeId, end.magnet.x);
+          endPoint = this._getEdgeSnapPoint(
+            end.target as EdgeId,
+            (end.magnet as { t: number }).t
+          );
         } else {
           const annotation = state.getFeature(end.target)!;
           endPoint = this._getAnnotationSnapPoint(
@@ -571,8 +613,7 @@ export class Links {
       this.updatedItems.add(arrow.id);
     });
 
-    state.applyLiveUpdates(updates);
-    this.requestCommit();
+    return updates;
   }
 
   private requestCommit() {
@@ -637,10 +678,47 @@ export class Links {
         }
       }
     });
+
+    // Detect programmatic position/size changes in annotations with linked arrows
+    // and refresh those arrows so they stay connected.
+    const linksToRefresh: LinksByArrowId = new Map();
+    for (const id of oldIds) {
+      const newFeature = newFeatures[id];
+      if (!newFeature || !this.annotationToLink.has(id)) continue;
+
+      const prevFeature = prevFeatures[id];
+      // Coordinates reference changes when geometry is explicitly set (position change).
+      // Properties reference changes when width/height or other layout props change.
+      const positionChanged =
+        prevFeature.geometry.coordinates !== newFeature.geometry.coordinates;
+      const sizeChanged =
+        (prevFeature.properties as { width?: number; height?: number })
+          .width !==
+          (newFeature.properties as { width?: number; height?: number })
+            .width ||
+        (prevFeature.properties as { width?: number; height?: number })
+          .height !==
+          (newFeature.properties as { width?: number; height?: number })
+            .height;
+
+      if (!positionChanged && !sizeChanged) continue;
+
+      const annotationLinks = this.annotationToLink.get(id)!;
+      for (const linkId of annotationLinks) {
+        const link = this.links.get(linkId);
+        if (!link) continue;
+        const arrowId = link.arrow;
+        if (this.linksByArrowId.has(arrowId)) {
+          linksToRefresh.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        }
+      }
+    }
+
+    if (linksToRefresh.size > 0) this._updateAndCommitSync(linksToRefresh);
   };
 
   private _isLinkedToCenter(link: Link) {
-    return link.magnet.x === 0 && link.magnet.y === 0;
+    return link.magnet.type === "node" && link.magnet.center;
   }
 
   private _getAnnotationCenter(annotation: Annotation): Point {
@@ -658,9 +736,10 @@ export class Links {
     // based on the bounding box, similar to boxes
     if (isPolygon(annotation)) {
       const bbox = getPolygonBounds(annotation);
-      // Calculate absolute position from relative magnet
-      const x = bbox[0] + link.magnet.x * (bbox[2] - bbox[0]);
-      const y = bbox[1] + link.magnet.y * (bbox[3] - bbox[1]);
+      // PolygonMagnet: rx/ry are 0-1 fractions of the bbox from top-left
+      const m = link.magnet as { rx: number; ry: number };
+      const x = bbox[0] + m.rx * (bbox[2] - bbox[0]);
+      const y = bbox[1] + m.ry * (bbox[3] - bbox[1]);
       return [x, y];
     }
     return this._getBoxSnapPoint(annotation, point, link, zoom);
@@ -684,9 +763,10 @@ export class Links {
       height /= zoom;
     }
 
-    // Magnet is in center-relative coordinates
-    let offsetX = link.magnet.x * width;
-    let offsetY = link.magnet.y * height;
+    // Magnet is BoxMagnet: center-relative fractions of width/height
+    const m = link.magnet as { nx: number; ny: number };
+    let offsetX = m.nx * width;
+    let offsetY = m.ny * height;
 
     // Texts are counter-rotated (but not boxes or comments - they are screen-aligned)
     if (isText(box) && !isBox(box)) {
