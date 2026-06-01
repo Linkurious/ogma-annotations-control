@@ -120,7 +120,7 @@ function App() {
 <div class="vp-doc">
 
 - **New to Ogma Annotations?** Start with the [Getting Started Guide](/getting-started) for a step-by-step introduction
-- **Using TypeScript?** Explore the [TypeScript Documentation](/typescript/installation) and [API Reference](/api/classes/Control)
+- **Using TypeScript?** Explore the [TypeScript Documentation](/typescript/installation) and [API Reference](/API/classes/Control)
 - **Building with React?** Check out the [React Integration Guide](/react/installation) with hooks and components
 - **Need inspiration?** Browse the [Examples](/examples/typescript/basic) for common use cases and patterns
 - **Using an AI assistant?** Check the [AI Reference docs](/AI_REFERENCE_TYPESCRIPT.md) for LLM-optimized documentation
