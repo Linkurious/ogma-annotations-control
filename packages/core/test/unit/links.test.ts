@@ -1,6 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import { AnnotationCollection, Arrow, Control, createArrow } from "../../src";
+import {
+  AnnotationCollection,
+  Arrow,
+  Control,
+  createArrow,
+  createText
+} from "../../src";
 import { Links } from "../../src/handlers/links";
 import { Store } from "../../src/store";
 import { Snapping } from "../../src/handlers/snapping";
@@ -67,7 +73,8 @@ describe("Links", () => {
     expect(link?.target).toBe(targetId);
     expect(link?.targetType).toBe("edge");
     expect(link?.side).toBe(side);
-    expect(link?.magnet).toEqual(magnet);
+    // Internal magnet is typed EdgeMagnet; serialized format (arrow.properties.link) stays { x, y }
+    expect(link?.magnet).toEqual({ type: "edge", t: 0.5 });
   });
 
   // Add a link between an arrow and a text
@@ -90,7 +97,8 @@ describe("Links", () => {
     expect(link?.target).toBe(targetId);
     expect(link?.targetType).toBe("text");
     expect(link?.side).toBe(side);
-    expect(link?.magnet).toEqual(magnet);
+    // Internal magnet is typed BoxMagnet; serialized format (arrow.properties.link) stays { x, y }
+    expect(link?.magnet).toEqual({ type: "box", nx: 0, ny: 1 });
   });
 
   // Remove a link between an arrow and a node
@@ -253,8 +261,9 @@ describe("Links", () => {
           "arrow": 2,
           "id": undefined,
           "magnet": {
-            "x": 0.5,
-            "y": 1,
+            "nx": 0.5,
+            "ny": 1,
+            "type": "box",
           },
           "side": "start",
           "target": 0,
@@ -262,5 +271,103 @@ describe("Links", () => {
         },
       ]
     `);
+  });
+
+  describe("programmatic annotation move refreshes linked arrows", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("should update arrow endpoint when linked text is moved programmatically", () => {
+      const text = createText(100, 100, 100, 50, "Hello");
+      // Arrow with end linked to text at its right edge (magnet x=0.5, y=0)
+      // snap point = center(100,100) + (0.5*100, 0*50) = (150, 100)
+      const arrow = createArrow(0, 100, 150, 100);
+      arrow.properties.link = {
+        end: { id: text.id, side: "end", type: "text", magnet: { x: 0.5, y: 0 } }
+      };
+
+      control.add(text);
+      control.add(arrow);
+
+      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.update({
+        id: text.id,
+        geometry: { type: "Point", coordinates: [300, 300] }
+      });
+
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      expect(afterEnd[0]).not.toEqual(beforeEnd[0]);
+      expect(afterEnd[1]).not.toEqual(beforeEnd[1]);
+    });
+
+    it("should not move arrow when only text style is updated", () => {
+      const text = createText(100, 100, 100, 50, "Hello");
+      const arrow = createArrow(0, 100, 150, 100);
+      arrow.properties.link = {
+        end: { id: text.id, side: "end", type: "text", magnet: { x: 0.5, y: 0 } }
+      };
+
+      control.add(text);
+      control.add(arrow);
+
+      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.updateStyle(text.id, { color: "red" });
+
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      expect(afterEnd[0]).toEqual(beforeEnd[0]);
+      expect(afterEnd[1]).toEqual(beforeEnd[1]);
+    });
+
+    it("should update both arrow endpoints when both sides are linked to annotations that move", () => {
+      // createText(x, y, w, h) uses x,y as top-left; center = [x + w/2, y + h/2]
+      // textA center = [50, 25], right-edge snap (magnet {x:0.5}) = [50 + 50, 25] = [100, 25]
+      const textA = createText(0, 0, 100, 50, "A");
+      // textB center = [250, 25], left-edge snap (magnet {x:-0.5}) = [250 - 50, 25] = [200, 25]
+      const textB = createText(200, 0, 100, 50, "B");
+
+      // Arrow pre-placed at the actual snap points
+      const arrow = createArrow(100, 25, 200, 25);
+      arrow.properties.link = {
+        start: { id: textA.id, side: "start", type: "text", magnet: { x: 0.5, y: 0 } },
+        end: { id: textB.id, side: "end", type: "text", magnet: { x: -0.5, y: 0 } }
+      };
+
+      control.add(textA);
+      control.add(textB);
+      control.add(arrow);
+
+      // Move textA center to [50, 225]: new right-edge snap = [100, 225]
+      control.update({ id: textA.id, geometry: { type: "Point", coordinates: [50, 225] } });
+
+      const afterStart = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[0];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      // Start should have moved to textA's new right edge
+      expect(afterStart[0]).toBeCloseTo(100);
+      expect(afterStart[1]).toBeCloseTo(225);
+      // End should stay at textB's left edge (textB didn't move)
+      expect(afterEnd[0]).toBeCloseTo(200);
+      expect(afterEnd[1]).toBeCloseTo(25);
+    });
   });
 });
