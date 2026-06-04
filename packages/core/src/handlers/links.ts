@@ -580,7 +580,7 @@ export class Links {
             (start.magnet as { t: number }).t
           );
         } else {
-          const annotation = state.getFeature(start.target)!;
+          const annotation = state.getMergedFeature(start.target)!;
           startPoint = this._getAnnotationSnapPoint(
             annotation,
             endCenter,
@@ -602,7 +602,7 @@ export class Links {
             (end.magnet as { t: number }).t
           );
         } else {
-          const annotation = state.getFeature(end.target)!;
+          const annotation = state.getMergedFeature(end.target)!;
           endPoint = this._getAnnotationSnapPoint(
             annotation,
             startCenter,
