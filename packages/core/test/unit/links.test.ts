@@ -5,6 +5,7 @@ import {
   Arrow,
   Control,
   createArrow,
+  createComment,
   createText
 } from "../../src";
 import { Links } from "../../src/handlers/links";
@@ -368,6 +369,66 @@ describe("Links", () => {
       // End should stay at textB's left edge (textB didn't move)
       expect(afterEnd[0]).toBeCloseTo(200);
       expect(afterEnd[1]).toBeCloseTo(25);
+    });
+  });
+
+  describe("comment collapse updates linked arrow endpoint", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("should move arrow endpoint to icon edge when comment collapses", () => {
+      // Comment at (0,0), expanded: width=200, height=60, iconSize=32 (defaults)
+      // Right-edge snap with magnet {nx:0.5} at zoom=1:
+      //   expanded  → center(0,0) + 0.5 * 200 = (100, 0)
+      //   collapsed → center(0,0) + 0.5 *  32 = ( 16, 0)
+      const comment = createComment(0, 0, "review");
+      const arrow = createArrow(0, 0, 100, 0);
+      arrow.properties.link = {
+        end: {
+          id: comment.id,
+          side: "end",
+          type: "comment",
+          magnet: { x: 0.5, y: 0 }
+        }
+      };
+
+      control.add(comment);
+      control.add(arrow);
+
+      // Establish the initial snap (expanded): refresh writes to liveUpdates, commit flushes to features
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const expandedEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.toggleComment(comment.id);
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const collapsedEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      // Endpoint should shift inward from the expanded right edge (100) to the icon right edge (16)
+      expect(expandedEnd[0]).toBeCloseTo(100);
+      expect(collapsedEnd[0]).toBeCloseTo(16);
+      expect(collapsedEnd[1]).toBeCloseTo(0);
     });
   });
 });
