@@ -24,9 +24,17 @@ import type {
   Side,
   Text,
   Annotation,
-  DeepPartial
+  DeepPartial,
+  Comment
 } from "../types";
-import { isBox, isText, isPolygon, isComment, isArrow } from "../types";
+import {
+  isBox,
+  isText,
+  isPolygon,
+  isComment,
+  isArrow,
+  getCommentSize
+} from "../types";
 import {
   getArrowSide,
   getBoxCenter,
@@ -752,7 +760,10 @@ export class Links {
     zoom: number
   ): [number, number] {
     const center = getBoxCenter(box);
-    let { width, height } = getBoxSize(box);
+    // Comments use getCommentSize so collapsed mode returns iconSize dimensions
+    let { width, height } = isComment(box)
+      ? getCommentSize(box as Comment)
+      : getBoxSize(box);
 
     // Handle fixedSize for Text and Comment (comments always have fixedSize)
     const hasFixedSize =
