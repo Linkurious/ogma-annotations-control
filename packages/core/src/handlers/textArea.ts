@@ -18,6 +18,7 @@ export class TextArea {
   private sendButton: HTMLButtonElement | null = null;
   public isFocused: boolean;
   private unsubscribe: () => void;
+  private fixedSize: boolean;
 
   constructor(
     private ogma: Ogma,
@@ -25,14 +26,25 @@ export class TextArea {
     private annotation: Id,
     private onSendHandler: () => void = () => {}
   ) {
-    const position = this.getPosition();
-    const size = this.getSize();
     const annotationData = this.getAnnotation()!;
     const state = this.store.getState();
     const showSendButton =
       isComment(annotationData) && (state.options?.showSendButton ?? true);
     const sendButtonIcon = state.options?.sendButtonIcon || "";
     const placeholderText = state.options?.textPlaceholder || "Enter text";
+
+    // Resolve fixedSize before getPosition/getSize since both read this.fixedSize.
+    // fixedSize overlays use scaled:false (screen-pixel space) to avoid the browser
+    // minimum-font-size trap: with scaled:true the CSS font becomes fontSize/zoom,
+    // browsers clamp that to ~10 px, then scale(zoom) blows it up.
+    const defaults = isComment(annotationData)
+      ? defaultCommentStyle
+      : defaultTextStyle;
+    this.fixedSize =
+      annotationData.properties.style?.fixedSize ?? defaults.fixedSize ?? false;
+
+    const position = this.getPosition();
+    const size = this.getSize();
 
     this.layer = this.ogma.layers.addOverlay(
       {
@@ -47,7 +59,10 @@ export class TextArea {
           }
         </div>`,
         position,
-        size
+        size,
+        // fixedSize annotations must not be scaled by Ogma's zoom transform.
+        // Non-fixedSize annotations live in graph space and scale naturally.
+        scaled: !this.fixedSize
       },
       LAYERS.EDITOR
     );
@@ -112,7 +127,6 @@ export class TextArea {
     if (!annotation) return { x: 0, y: 0 };
 
     const style = annotation.properties.style as CommentStyle | undefined;
-    const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
     const borderWidth = getBorderWidth(annotation);
@@ -128,8 +142,9 @@ export class TextArea {
       height = Math.min(height, maxHeight);
     }
 
-    // For fixed-size, scale position to screen space
-    const scale = fixedSize ? 1 / zoom : 1;
+    // Use this.fixedSize (set in constructor from style + defaults) so comments
+    // without an explicit fixedSize in their style still get the correct scale.
+    const scale = this.fixedSize ? 1 / zoom : 1;
 
     // Calculate top-left corner from center
     return {
@@ -144,25 +159,22 @@ export class TextArea {
     const size = getBoxSize(annotation);
     const borderWidth = getBorderWidth(annotation as Text);
     const style = annotation.properties.style as CommentStyle | undefined;
-    const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
-    const zoom = this.store.getState().zoom;
 
-    // Scale size inversely with zoom for fixed-size text
-    const effectiveScale = fixedSize ? 1 / zoom : 1;
+    // With scaled:!fixedSize, Ogma handles all zoom compensation:
+    // - fixedSize (scaled:false): annotation dimensions are screen pixels, used as-is.
+    // - non-fixedSize (scaled:true): annotation dimensions are graph units, Ogma scales by zoom.
+    // In both cases the CSS size equals the annotation dimension directly.
+    let height = size.height - borderWidth * 2;
 
-    let height = (size.height - borderWidth * 2) * effectiveScale;
-
-    // Cap height at maxHeight if set (scaled for fixed-size)
     if (maxHeight) {
-      const scaledMaxHeight = (maxHeight - borderWidth * 2) * effectiveScale;
-      height = Math.min(height, scaledMaxHeight);
+      height = Math.min(height, maxHeight - borderWidth * 2);
     }
-    // Note: Button is rendered within the same height using CSS grid,
-    // not added to the total height. The grid layout handles the button placement.
+    // Button is rendered within the same height using CSS grid (1fr auto),
+    // not added to the total height.
     return {
-      width: (size.width - borderWidth * 2) * effectiveScale,
-      height: height
+      width: size.width - borderWidth * 2,
+      height
     };
   }
 
@@ -185,10 +197,10 @@ export class TextArea {
     } = annotation.properties.style || defaults;
     const textArea = this.textarea;
     const editorEl = this.layer.element as HTMLElement;
-    const zoom = this.store.getState().zoom;
 
-    // Scale font size inversely with zoom for fixed-size text
-    const effectiveScale = fixedSize ? 1 / zoom : 1;
+    // effectiveScale is 1 for both paths: fixedSize (scaled:false) uses screen pixels
+    // directly; non-fixedSize (scaled:true) passes graph units and Ogma applies zoom.
+    const effectiveScale = 1;
     const scaledFontSize = parseFloat(fontSize!.toString()) * effectiveScale;
     const scaledPadding = padding * effectiveScale;
 
@@ -216,7 +228,6 @@ export class TextArea {
 
     // Style the textarea
     const textAreaStyle = textArea.style;
-    textAreaStyle.font = `${scaledFontSize} ${font}`;
     textAreaStyle.fontFamily = font || "sans-serif";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
     textAreaStyle.lineHeight = `${scaledFontSize * TEXT_LINE_HEIGHT}px`;
@@ -304,13 +315,16 @@ export class TextArea {
       this.textarea.style.height = "0px";
       const textareaScrollHeight = this.textarea.scrollHeight;
       this.textarea.style.height = prevHeight;
-      const zoom = this.store.getState().zoom;
       const padding = annotation.properties.style?.padding || 0;
 
-      // scrollHeight is in screen pixels (already scaled by 1/zoom for fixed-size)
-      // We need to convert back to graph coordinates by multiplying by zoom
-      // and then add padding (top + bottom) since the renderer expects height to include padding
-      const requiredHeight = textareaScrollHeight * zoom + padding * 2;
+      // The overlay uses scaled:false so the textarea lives in screen-pixel space.
+      // scrollHeight is already in the same units as properties.height — no zoom needed.
+      // The send button (for comments) occupies a grid row inside the editor div, so its
+      // height must be included so the textarea isn't starved of vertical space.
+      const sendButtonHeight = this.sendButton
+        ? parseFloat(this.sendButton.style.height || "0")
+        : 0;
+      const requiredHeight = textareaScrollHeight + padding * 2 + sendButtonHeight;
 
       // Get minimum height from style (default to 50px if not specified)
       const minHeight =
