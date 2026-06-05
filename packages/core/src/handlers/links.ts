@@ -24,9 +24,17 @@ import type {
   Side,
   Text,
   Annotation,
-  DeepPartial
+  DeepPartial,
+  Comment
 } from "../types";
-import { isBox, isText, isPolygon, isComment, isArrow } from "../types";
+import {
+  isBox,
+  isText,
+  isPolygon,
+  isComment,
+  isArrow,
+  getCommentSize
+} from "../types";
 import {
   getArrowSide,
   getBoxCenter,
@@ -572,7 +580,7 @@ export class Links {
             (start.magnet as { t: number }).t
           );
         } else {
-          const annotation = state.getFeature(start.target)!;
+          const annotation = state.getMergedFeature(start.target)!;
           startPoint = this._getAnnotationSnapPoint(
             annotation,
             endCenter,
@@ -594,7 +602,7 @@ export class Links {
             (end.magnet as { t: number }).t
           );
         } else {
-          const annotation = state.getFeature(end.target)!;
+          const annotation = state.getMergedFeature(end.target)!;
           endPoint = this._getAnnotationSnapPoint(
             annotation,
             startCenter,
@@ -752,7 +760,10 @@ export class Links {
     zoom: number
   ): [number, number] {
     const center = getBoxCenter(box);
-    let { width, height } = getBoxSize(box);
+    // Comments use getCommentSize so collapsed mode returns iconSize dimensions
+    let { width, height } = isComment(box)
+      ? getCommentSize(box as Comment)
+      : getBoxSize(box);
 
     // Handle fixedSize for Text and Comment (comments always have fixedSize)
     const hasFixedSize =
