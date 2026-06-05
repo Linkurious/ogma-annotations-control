@@ -127,7 +127,6 @@ export class TextArea {
     if (!annotation) return { x: 0, y: 0 };
 
     const style = annotation.properties.style as CommentStyle | undefined;
-    const fixedSize = style?.fixedSize || false;
     const maxHeight = style?.maxHeight;
     const zoom = this.store.getState().zoom;
     const borderWidth = getBorderWidth(annotation);
@@ -143,8 +142,9 @@ export class TextArea {
       height = Math.min(height, maxHeight);
     }
 
-    // For fixed-size, scale position to screen space
-    const scale = fixedSize ? 1 / zoom : 1;
+    // Use this.fixedSize (set in constructor from style + defaults) so comments
+    // without an explicit fixedSize in their style still get the correct scale.
+    const scale = this.fixedSize ? 1 / zoom : 1;
 
     // Calculate top-left corner from center
     return {
@@ -319,7 +319,12 @@ export class TextArea {
 
       // The overlay uses scaled:false so the textarea lives in screen-pixel space.
       // scrollHeight is already in the same units as properties.height — no zoom needed.
-      const requiredHeight = textareaScrollHeight + padding * 2;
+      // The send button (for comments) occupies a grid row inside the editor div, so its
+      // height must be included so the textarea isn't starved of vertical space.
+      const sendButtonHeight = this.sendButton
+        ? parseFloat(this.sendButton.style.height || "0")
+        : 0;
+      const requiredHeight = textareaScrollHeight + padding * 2 + sendButtonHeight;
 
       // Get minimum height from style (default to 50px if not specified)
       const minHeight =
