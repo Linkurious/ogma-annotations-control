@@ -94,6 +94,58 @@ export function renderText(
 
 const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
 
+let _measureCtx: CanvasRenderingContext2D | null = null;
+const _baselineCache = new Map<string, number>();
+
+/**
+ * dy for the first SVG tspan so the baseline matches exactly where CSS puts it.
+ *
+ * Primary: inject a 1×1 inline-block with vertical-align:baseline into a
+ * font-styled div. The block's bottom edge lands on the CSS alphabetic
+ * baseline, so (probeBottom - outerTop) is the exact firstLineDy we need.
+ * This beats any Canvas metric because it uses the browser's own layout engine.
+ *
+ * Fallback (jsdom / SSR): canvas fontBoundingBox metrics.
+ */
+function firstLineDy(fontString: string, lineHeight: number): number {
+  const key = `${fontString}|${lineHeight}`;
+  const cached = _baselineCache.get(key);
+  if (cached != null) return cached;
+
+  try {
+    const outer = document.createElement("div");
+    const probe = document.createElement("span");
+    outer.style.cssText = `font:${fontString};line-height:${lineHeight}px;position:fixed;left:-9999px;top:0;margin:0;padding:0;visibility:hidden;`;
+    probe.style.cssText = "display:inline-block;width:1px;height:1px;vertical-align:baseline;";
+    outer.appendChild(probe);
+    document.body.appendChild(outer);
+    const dy = probe.getBoundingClientRect().bottom - outer.getBoundingClientRect().top;
+    document.body.removeChild(outer);
+    if (dy > 0 && dy <= lineHeight) {
+      _baselineCache.set(key, dy);
+      return dy;
+    }
+  } catch { /* non-browser env */ }
+
+  // Canvas fallback
+  try {
+    if (!_measureCtx)
+      _measureCtx = document.createElement("canvas").getContext("2d");
+    if (_measureCtx) {
+      _measureCtx.font = fontString;
+      const m = _measureCtx.measureText("M") as TextMetrics & {
+        fontBoundingBoxAscent?: number;
+        fontBoundingBoxDescent?: number;
+      };
+      const a = m.fontBoundingBoxAscent, d = m.fontBoundingBoxDescent;
+      if (a != null && d != null)
+        return Math.max(0, (lineHeight - a - d) / 2) + a;
+    }
+  } catch { /* ignore */ }
+
+  return lineHeight;
+}
+
 /**
  * @function draw
  * @param annotation the annotation to draw
@@ -152,10 +204,11 @@ function drawContent(
     `translate(${x + padding}, ${y + padding})`
   );
 
-  visibleLines.forEach((line) => {
+  const firstDy = firstLineDy(fontString, lineHeight);
+  visibleLines.forEach((line, i) => {
     const tspan = createSVGElement<SVGTSpanElement>("tspan");
     tspan.setAttribute("x", "0");
-    tspan.setAttribute("dy", `${lineHeight}`);
+    tspan.setAttribute("dy", `${i === 0 ? firstDy : lineHeight}`);
 
     let lastIndex = 0;
     let match: RegExpExecArray | null;
