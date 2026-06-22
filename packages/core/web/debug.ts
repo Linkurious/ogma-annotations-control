@@ -116,7 +116,7 @@ export function createDebugTools(ogma: Ogma, control: Control): DebugTools {
 
       // Track for cleanup
       eventHandlers.push(() => {
-        ogma.events.off("viewChanged", viewHandler);
+        ogma.events.off(viewHandler);
         control.off("update", updateHandler);
       });
 
@@ -146,7 +146,9 @@ export function createDebugTools(ogma: Ogma, control: Control): DebugTools {
   document.addEventListener("keydown", keyHandler);
   eventHandlers.push(() => document.removeEventListener("keydown", keyHandler));
 
-  console.log("[debug] Debug tools initialized. Press 'D' to toggle comment debug.");
+  console.log(
+    "[debug] Debug tools initialized. Press 'D' to toggle comment debug."
+  );
 
   return {
     toggleCommentDebug,
