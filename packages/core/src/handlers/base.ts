@@ -3,6 +3,7 @@ import { EVT_DRAG_END, EVT_DRAG, EVT_DRAG_START, cursors } from "../constants";
 import { Store } from "../store";
 import { Annotation, ClientMouseEvent, Cursor, Id } from "../types";
 import { clientToContainerPosition, getBrowserWindow } from "../utils/utils";
+import { isAnnotationLinkTarget } from "../utils/rendering";
 
 export abstract class Handler<
   T extends Annotation,
@@ -45,15 +46,17 @@ export abstract class Handler<
       if (this.hoveredHandle) {
         this.dragStartPoint = state.mousePressPoint;
         this.onDragStart(evt);
-        this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
-          detail: {
-            id: this.annotation,
-            position: {
-              x: evt.clientX,
-              y: evt.clientY
+        this.dispatchEvent(
+          new CustomEvent(EVT_DRAG_START, {
+            detail: {
+              id: this.annotation,
+              position: {
+                x: evt.clientX,
+                y: evt.clientY
+              }
             }
-          }
-        }));
+          })
+        );
         this.disablePanning();
         return;
       }
@@ -66,6 +69,9 @@ export abstract class Handler<
   handleMouseDown = (evt: MouseEvent): void => {
     // Don't intercept events on textarea - let it handle text selection
     if (evt.target instanceof HTMLTextAreaElement) return;
+    // Don't intercept clicks on URL links inside annotation content - let the
+    // browser open the link instead of starting selection/handle detection.
+    if (isAnnotationLinkTarget(evt.target)) return;
 
     if (!this.isActive() || this.dragging) return;
 
@@ -97,15 +103,17 @@ export abstract class Handler<
     }
     this.restorePanning();
     this.onDragEnd(evt);
-    this.dispatchEvent(new CustomEvent(EVT_DRAG_END, {
-      detail: {
-        id: this.annotation,
-        position: {
-          x: evt.clientX,
-          y: evt.clientY
+    this.dispatchEvent(
+      new CustomEvent(EVT_DRAG_END, {
+        detail: {
+          id: this.annotation,
+          position: {
+            x: evt.clientX,
+            y: evt.clientY
+          }
         }
-      }
-    }));
+      })
+    );
   };
 
   cancelEdit() {
@@ -144,8 +152,7 @@ export abstract class Handler<
     this.dispatchEvent(new Event(EVT_DRAG));
   }
 
-  protected onClick = (_evt: MouseEvent): void => {
-  }
+  protected onClick = (_evt: MouseEvent): void => {};
   protected onDragStart(evt: ClientMouseEvent) {
     if (!this.isActive()) return false;
     this.dragging = true;

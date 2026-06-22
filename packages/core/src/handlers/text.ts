@@ -22,6 +22,7 @@ import {
   isText
 } from "../types";
 import { getBoxCenter, getBoxSize } from "../utils/utils";
+import { isAnnotationLinkTarget } from "../utils/rendering";
 import { dot } from "../utils/vec";
 
 // Constants for edge detection
@@ -389,7 +390,11 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     return true;
   }
 
-  protected onClick = (_evt: ClientMouseEvent) => {
+  protected onClick = (evt: ClientMouseEvent & { target?: EventTarget | null }) => {
+    // A click on a URL inside the content should open the link, not select or
+    // edit the annotation. Let native anchor navigation proceed untouched.
+    // (Synthetic calls from handleMouseUp pass no target and fall through.)
+    if (isAnnotationLinkTarget(evt.target ?? null)) return;
     const annotation = this.getAnnotation();
     if (!annotation) return;
     if (isComment(annotation)

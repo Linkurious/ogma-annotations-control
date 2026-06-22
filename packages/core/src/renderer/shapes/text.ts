@@ -9,6 +9,10 @@ import {
   getBoxCenter,
   getTextSize
 } from "../../utils/utils";
+import {
+  createUrlPattern,
+  ANNOTATION_LINK_CLASS
+} from "../../utils/rendering";
 
 export function renderText(
   root: SVGElement,
@@ -92,7 +96,6 @@ export function renderText(
   return g;
 }
 
-const URL_PATTERN = /(https?:\/\/[^\s]+)/g;
 
 let _measureCtx: CanvasRenderingContext2D | null = null;
 const _baselineCache = new Map<string, number>();
@@ -212,9 +215,9 @@ function drawContent(
 
     let lastIndex = 0;
     let match: RegExpExecArray | null;
-    URL_PATTERN.lastIndex = 0;
+    const urlPattern = createUrlPattern();
 
-    while ((match = URL_PATTERN.exec(line.text)) !== null) {
+    while ((match = urlPattern.exec(line.text)) !== null) {
       if (match.index > lastIndex) {
         tspan.appendChild(
           document.createTextNode(line.text.slice(lastIndex, match.index))
@@ -223,6 +226,8 @@ function drawContent(
       const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
       a.setAttribute("href", match[0]);
       a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+      a.setAttribute("class", ANNOTATION_LINK_CLASS);
       a.textContent = match[0];
       tspan.appendChild(a);
       lastIndex = match.index + match[0].length;

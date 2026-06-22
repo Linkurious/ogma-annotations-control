@@ -2,6 +2,10 @@ import { COMMENT_MODE_COLLAPSED, TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, defaultCommentStyle } from "../../types";
 import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
+import {
+  createUrlPattern,
+  ANNOTATION_LINK_CLASS
+} from "../../utils/rendering";
 
 // Canvas context for measuring text
 let measureContext: CanvasRenderingContext2D | null = null;
@@ -372,7 +376,7 @@ function renderExpandedBox(
  * Format text content for HTML display
  * Handles line breaks and converts URLs to clickable links
  */
-function formatContent(content: string): string {
+export function formatContent(content: string): string {
   if (!content) return "";
 
   // Escape HTML
@@ -381,10 +385,13 @@ function formatContent(content: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Convert URLs to links
+  // Convert URLs to clickable links. The .ogma-annotation-link class colors
+  // the anchor (themeable via --annotation-link-color) and re-enables
+  // pointer-events so links are clickable even though the content div is
+  // pointer-events:none (which lets background clicks open the editor).
   html = html.replace(
-    /(https?:\/\/[^\s<]+)/g,
-    '<a href="$1" target="_blank" style="color: #38e; text-decoration: none;">$1</a>'
+    createUrlPattern(),
+    `<a href="$1" class="${ANNOTATION_LINK_CLASS}" target="_blank" rel="noopener noreferrer">$1</a>`
   );
 
   return html;
