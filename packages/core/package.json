@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations",
-  "version": "2.0.4",
+  "version": "2.1.0",
   "description": "Headless annotation plugin for Ogma",
   "type": "module",
   "main": "dist/index.mjs",
@@ -88,7 +88,7 @@
     "@linkurious/ogma": ">=5.3.11"
   },
   "dependencies": {
-    "@borgar/textbox": "1.8.0",
+    "@chenglou/pretext": "0.0.7",
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
     "rbush": "4.0.1",

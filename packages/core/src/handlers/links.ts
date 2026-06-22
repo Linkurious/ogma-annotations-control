@@ -90,6 +90,7 @@ export class Links {
   private updatedItems = new Set<Id>();
   private onLinkCreated?: (arrow: Arrow, link: Link) => void;
   private commitTimeout!: ReturnType<typeof setTimeout>;
+  private nodePositionTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     ogma: Ogma,
@@ -385,10 +386,17 @@ export class Links {
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
     // debounce to next tick to get the real coordinates
-    setTimeout(() => this.updateFromNodePositions(nodes), 1);
+    clearTimeout(this.nodePositionTimeout);
+    this.nodePositionTimeout = setTimeout(
+      () => this.updateFromNodePositions(nodes),
+      1
+    );
   }
 
   private updateFromNodePositions(nodes: NodeList) {
+    // The debounced call can fire after the nodes (or the whole graph) have been
+    // removed; bail out rather than reading attributes off a destroyed list.
+    if (!nodes.size) return;
     const ids = nodes.getId();
     const links: LinksByArrowId = new Map();
     ids.forEach((id) => {
@@ -420,7 +428,7 @@ export class Links {
 
     const xyr = nodes.getAttributes(XYR_ATTRIBUTES) as XYR[];
     const state = this.store.getState();
-    const updates: Record<Id, DeepPartial<Arrow>> = {};
+    const updates: Record<Id, DeepPartial<Annotation>> = {};
     for (let i = 0; i < ids.length; i++) {
       const nodeId = ids[i];
       const nodeLinks = this.nodeToLink.get(nodeId);
@@ -433,6 +441,7 @@ export class Links {
         const coordinates = arrow.geometry.coordinates.slice();
         const end = getArrowSide(arrow, SIDE_END);
         const start = getArrowSide(arrow, SIDE_START);
+        const nodeSideIndex = link.side === SIDE_START ? 0 : 1;
 
         const positionAndRadius = xyr[i];
         // Update the arrow's position
@@ -441,7 +450,36 @@ export class Links {
           mul(subtract(end, start), -1),
           this._isLinkedToCenter(link)
         );
-        coordinates[link.side === SIDE_START ? 0 : 1] = snapPoint;
+
+        // Rigid-follow: when the arrow's *other* endpoint is attached 1:1 to a
+        // comment, dragging the node carries the whole callout (comment + arrow)
+        // by the node's delta instead of stretching the line. The arrow keeps
+        // its length and angle; the comment translates with the node.
+        const comment = this._getRigidFollowComment(arrowId, link);
+        if (comment) {
+          const oldNodePoint = coordinates[nodeSideIndex];
+          const delta = subtract(
+            { x: snapPoint[0], y: snapPoint[1] },
+            { x: oldNodePoint[0], y: oldNodePoint[1] }
+          );
+          coordinates[0] = [coordinates[0][0] + delta.x, coordinates[0][1] + delta.y];
+          coordinates[1] = [coordinates[1][0] + delta.x, coordinates[1][1] + delta.y];
+
+          const [cx, cy] = comment.geometry.coordinates as [number, number];
+          const commentUpdate: DeepPartial<Comment> = {
+            ...comment,
+            geometry: {
+              type: "Point",
+              coordinates: [cx + delta.x, cy + delta.y]
+            }
+          };
+          updates[comment.id] = commentUpdate as Annotation;
+          updateBbox(commentUpdate as Comment);
+          this.updatedItems.add(comment.id);
+        } else {
+          coordinates[nodeSideIndex] = snapPoint;
+        }
+
         updates[arrowId] = {
           ...arrow,
           geometry: {
@@ -729,6 +767,38 @@ export class Links {
     return link.magnet.type === "node" && link.magnet.center;
   }
 
+  /**
+   * Rigid-follow guard: returns the linked Comment when this arrow's *other*
+   * endpoint (relative to `nodeSideLink`) is attached to a comment that has
+   * exactly one inbound link. In that case a node drag should translate the
+   * whole callout (comment + arrow) rather than just moving the node-side
+   * endpoint. Returns undefined when the relationship isn't a clean 1:1
+   * node→arrow→comment chain.
+   */
+  private _getRigidFollowComment(
+    arrowId: Id,
+    nodeSideLink: Link
+  ): Comment | undefined {
+    const arrowLinks = this.linksByArrowId.get(arrowId);
+    if (!arrowLinks) return undefined;
+
+    // The far side is whichever end isn't the one anchored to the moved node.
+    const farLinkId =
+      nodeSideLink.side === SIDE_START ? arrowLinks.end : arrowLinks.start;
+    if (!farLinkId) return undefined;
+
+    const farLink = this.links.get(farLinkId);
+    if (!farLink || farLink.targetType !== TARGET_TYPES.COMMENT) return undefined;
+
+    // 1:1 only — the comment must not be the target of any other link.
+    const commentLinks = this.annotationToLink.get(farLink.target);
+    if (!commentLinks || commentLinks.size !== 1) return undefined;
+
+    const comment = this.store.getState().getFeature(farLink.target);
+    if (!comment || !isComment(comment)) return undefined;
+    return comment;
+  }
+
   private _getAnnotationCenter(annotation: Annotation): Point {
     if (isPolygon(annotation)) return getPolygonCenter(annotation);
     return getBoxCenter(annotation as Text);
@@ -861,6 +931,8 @@ export class Links {
   }
 
   public destroy() {
+    clearTimeout(this.commitTimeout);
+    clearTimeout(this.nodePositionTimeout);
     this.ogma.events.off(this.onSetMultipleAttributes);
   }
 }
