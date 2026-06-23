@@ -41,6 +41,7 @@ export default defineConfig({
         globals: {
           "@linkurious/ogma": "Ogma",
           "@linkurious/ogma-react": "OgmaReact",
+          "@linkurious/ogma-annotations": "OgmaAnnotations",
           react: "React",
           "react-dom": "ReactDOM"
         }

@@ -30,7 +30,7 @@
   "scripts": {
     "dev": "vite -c web/vite.config.mts",
     "build": "tsc --p ./tsconfig-build.json && vite build --mode production",
-    "postversion": "npm i --save-peer @linkurious/ogma-annotations@${npm_new_version}",
+    "postversion": "npm i --save @linkurious/ogma-annotations@${npm_new_version}",
     "bump:patch": "bump2version patch && npm version --no-git-tag-version patch",
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
@@ -56,8 +56,6 @@
   "license": "Apache-2.0",
   "peerDependencies": {
     "@linkurious/ogma": ">=5.3.11",
-    "@linkurious/ogma-annotations": "2.1.0",
-    "@linkurious/ogma-react": "5.1.15-develop.3",
     "react": ">=17"
   },
   "devDependencies": {
@@ -81,6 +79,7 @@
     "vitest": "3.2.6"
   },
   "dependencies": {
-    "react-day-picker": "9.13.0"
+    "@linkurious/ogma-annotations": "2.1.0",
+    "@linkurious/ogma-react": "5.1.15"
   }
 }
