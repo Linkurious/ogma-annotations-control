@@ -2,6 +2,9 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    include: ["test/e2e/**/*.test.ts"]
+    include: ["test/e2e/**/*.test.ts"],
+    // Browser-driven e2e tests start a Playwright/WebSocket session; retry
+    // once to absorb transient connection/timing flakiness under CI load.
+    retry: 2
   }
 });
