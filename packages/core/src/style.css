@@ -4,6 +4,9 @@
   --point-handle-border: 2px;
   --point-handle-total: calc(var(--point-handle-width) + var(--point-handle-border));
   --handle-color: #38e;
+  /* Color for clickable URLs rendered inside text/comment content.
+     Defaults to the handle color but can be themed independently. */
+  --annotation-link-color: var(--handle-color);
   --handle-background: #fff;
   --active-color: #1a70e5;
   --disabled-color: #999;
@@ -15,6 +18,17 @@ svg text {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* Clickable URLs inside text and comment annotation content. The content
+   containers are pointer-events:none (so background clicks open the editor),
+   so the links re-enable pointer-events to stay clickable. */
+.ogma-annotation-link {
+  fill: var(--annotation-link-color, #38e);
+  color: var(--annotation-link-color, #38e);
+  text-decoration: none;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .handle {

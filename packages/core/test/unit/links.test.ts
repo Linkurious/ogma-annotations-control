@@ -1,6 +1,13 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import { AnnotationCollection, Arrow, Control, createArrow } from "../../src";
+import {
+  AnnotationCollection,
+  Arrow,
+  Control,
+  createArrow,
+  createComment,
+  createText
+} from "../../src";
 import { Links } from "../../src/handlers/links";
 import { Store } from "../../src/store";
 import { Snapping } from "../../src/handlers/snapping";
@@ -67,7 +74,8 @@ describe("Links", () => {
     expect(link?.target).toBe(targetId);
     expect(link?.targetType).toBe("edge");
     expect(link?.side).toBe(side);
-    expect(link?.magnet).toEqual(magnet);
+    // Internal magnet is typed EdgeMagnet; serialized format (arrow.properties.link) stays { x, y }
+    expect(link?.magnet).toEqual({ type: "edge", t: 0.5 });
   });
 
   // Add a link between an arrow and a text
@@ -90,7 +98,8 @@ describe("Links", () => {
     expect(link?.target).toBe(targetId);
     expect(link?.targetType).toBe("text");
     expect(link?.side).toBe(side);
-    expect(link?.magnet).toEqual(magnet);
+    // Internal magnet is typed BoxMagnet; serialized format (arrow.properties.link) stays { x, y }
+    expect(link?.magnet).toEqual({ type: "box", nx: 0, ny: 1 });
   });
 
   // Remove a link between an arrow and a node
@@ -253,8 +262,9 @@ describe("Links", () => {
           "arrow": 2,
           "id": undefined,
           "magnet": {
-            "x": 0.5,
-            "y": 1,
+            "nx": 0.5,
+            "ny": 1,
+            "type": "box",
           },
           "side": "start",
           "target": 0,
@@ -262,5 +272,313 @@ describe("Links", () => {
         },
       ]
     `);
+  });
+
+  describe("programmatic annotation move refreshes linked arrows", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("should update arrow endpoint when linked text is moved programmatically", () => {
+      const text = createText(100, 100, 100, 50, "Hello");
+      // Arrow with end linked to text at its right edge (magnet x=0.5, y=0)
+      // snap point = center(100,100) + (0.5*100, 0*50) = (150, 100)
+      const arrow = createArrow(0, 100, 150, 100);
+      arrow.properties.link = {
+        end: { id: text.id, side: "end", type: "text", magnet: { x: 0.5, y: 0 } }
+      };
+
+      control.add(text);
+      control.add(arrow);
+
+      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.update({
+        id: text.id,
+        geometry: { type: "Point", coordinates: [300, 300] }
+      });
+
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      expect(afterEnd[0]).not.toEqual(beforeEnd[0]);
+      expect(afterEnd[1]).not.toEqual(beforeEnd[1]);
+    });
+
+    it("should update arrow endpoint when linked comment is moved programmatically", () => {
+      // Comment at (100,100), expanded default width=200; right-edge snap
+      // (magnet x=0.5, y=0) = center(100,100) + (0.5*200, 0) = (200, 100)
+      const comment = createComment(100, 100, "review");
+      const arrow = createArrow(0, 100, 200, 100);
+      arrow.properties.link = {
+        end: { id: comment.id, side: "end", type: "comment", magnet: { x: 0.5, y: 0 } }
+      };
+
+      control.add(comment);
+      control.add(arrow);
+
+      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.update({
+        id: comment.id,
+        geometry: { type: "Point", coordinates: [300, 300] }
+      });
+
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      expect(afterEnd[0]).not.toEqual(beforeEnd[0]);
+      expect(afterEnd[1]).not.toEqual(beforeEnd[1]);
+    });
+
+    it("should not move arrow when only text style is updated", () => {
+      const text = createText(100, 100, 100, 50, "Hello");
+      const arrow = createArrow(0, 100, 150, 100);
+      arrow.properties.link = {
+        end: { id: text.id, side: "end", type: "text", magnet: { x: 0.5, y: 0 } }
+      };
+
+      control.add(text);
+      control.add(arrow);
+
+      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.updateStyle(text.id, { color: "red" });
+
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      expect(afterEnd[0]).toEqual(beforeEnd[0]);
+      expect(afterEnd[1]).toEqual(beforeEnd[1]);
+    });
+
+    it("should update both arrow endpoints when both sides are linked to annotations that move", () => {
+      // createText(x, y, w, h) uses x,y as top-left; center = [x + w/2, y + h/2]
+      // textA center = [50, 25], right-edge snap (magnet {x:0.5}) = [50 + 50, 25] = [100, 25]
+      const textA = createText(0, 0, 100, 50, "A");
+      // textB center = [250, 25], left-edge snap (magnet {x:-0.5}) = [250 - 50, 25] = [200, 25]
+      const textB = createText(200, 0, 100, 50, "B");
+
+      // Arrow pre-placed at the actual snap points
+      const arrow = createArrow(100, 25, 200, 25);
+      arrow.properties.link = {
+        start: { id: textA.id, side: "start", type: "text", magnet: { x: 0.5, y: 0 } },
+        end: { id: textB.id, side: "end", type: "text", magnet: { x: -0.5, y: 0 } }
+      };
+
+      control.add(textA);
+      control.add(textB);
+      control.add(arrow);
+
+      // Move textA center to [50, 225]: new right-edge snap = [100, 225]
+      control.update({ id: textA.id, geometry: { type: "Point", coordinates: [50, 225] } });
+
+      const afterStart = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[0];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      // Start should have moved to textA's new right edge
+      expect(afterStart[0]).toBeCloseTo(100);
+      expect(afterStart[1]).toBeCloseTo(225);
+      // End should stay at textB's left edge (textB didn't move)
+      expect(afterEnd[0]).toBeCloseTo(200);
+      expect(afterEnd[1]).toBeCloseTo(25);
+    });
+  });
+
+  describe("comment collapse updates linked arrow endpoint", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("should move arrow endpoint to icon edge when comment collapses", () => {
+      // Comment at (0,0), expanded: width=200, height=60, iconSize=32 (defaults)
+      // Right-edge snap with magnet {nx:0.5} at zoom=1:
+      //   expanded  → center(0,0) + 0.5 * 200 = (100, 0)
+      //   collapsed → center(0,0) + 0.5 *  32 = ( 16, 0)
+      const comment = createComment(0, 0, "review");
+      const arrow = createArrow(0, 0, 100, 0);
+      arrow.properties.link = {
+        end: {
+          id: comment.id,
+          side: "end",
+          type: "comment",
+          magnet: { x: 0.5, y: 0 }
+        }
+      };
+
+      control.add(comment);
+      control.add(arrow);
+
+      // Establish the initial snap (expanded): refresh writes to liveUpdates, commit flushes to features
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const expandedEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      control.toggleComment(comment.id);
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const collapsedEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+
+      // Endpoint should shift inward from the expanded right edge (100) to the icon right edge (16)
+      expect(expandedEnd[0]).toBeCloseTo(100);
+      expect(collapsedEnd[0]).toBeCloseTo(16);
+      expect(collapsedEnd[1]).toBeCloseTo(0);
+    });
+  });
+
+  describe("node drag rigidly moves a 1:1 attached comment", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("translates the comment and the whole arrow by the node's delta", () => {
+      ogma.addNode({ id: "node1", attributes: { x: 0, y: 0, radius: 0 } });
+
+      // Comment center at (200,0). Arrow from node center to comment left edge.
+      const comment = createComment(200, 0, "review");
+      const arrow = createArrow(0, 0, 100, 0);
+
+      control.add(comment);
+      control.add(arrow);
+
+      // start → node1 (center), end → comment left edge
+      // @ts-expect-error links is private
+      control.links.add(arrow, "start", "node1", "node", { x: 0, y: 0 });
+      // @ts-expect-error links is private
+      control.links.add(arrow, "end", comment.id, "comment", { x: -0.5, y: 0 });
+
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const beforeStart = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[0].slice();
+      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+      const beforeComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates.slice();
+
+      // Drag node1 down by 100. setAttributes emits setMultipleAttributes,
+      // which the Links handler picks up; invoke the update path directly so the
+      // assertion doesn't depend on the internal debounce timer.
+      ogma.getNode("node1")!.setAttributes({ y: 100 });
+      // @ts-expect-error updateFromNodePositions is private (bypasses the setTimeout debounce)
+      control.links.updateFromNodePositions(ogma.getNodes(["node1"]));
+      // @ts-expect-error commit is private
+      control.links.commit();
+      // Cancel the debounced duplicate scheduled by setAttributes so it can't
+      // translate the comment a second time after the assertions.
+      // @ts-expect-error nodePositionTimeout is private
+      clearTimeout(control.links.nodePositionTimeout);
+
+      const afterStart = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[0];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1];
+      const afterComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates;
+
+      // The comment translates rigidly with the node (delta y ≈ +100, x unchanged).
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1] + 100);
+
+      // Both arrow endpoints shift by the same delta → the line keeps its length
+      // and angle (no stretching).
+      expect(afterStart[0]).toBeCloseTo(beforeStart[0]);
+      expect(afterStart[1]).toBeCloseTo(beforeStart[1] + 100);
+      expect(afterEnd[0]).toBeCloseTo(beforeEnd[0]);
+      expect(afterEnd[1]).toBeCloseTo(beforeEnd[1] + 100);
+    });
+
+    it("does NOT rigidly move the comment when it has more than one inbound link", () => {
+      ogma.addNode({ id: "node1", attributes: { x: 0, y: 0, radius: 0 } });
+
+      const comment = createComment(200, 0, "review");
+      const arrow1 = createArrow(0, 0, 100, 0);
+      const arrow2 = createArrow(200, 200, 150, 0);
+
+      control.add(comment);
+      control.add(arrow1);
+      control.add(arrow2);
+
+      // arrow1: node1 → comment (the would-be rigid pair)
+      // @ts-expect-error links is private
+      control.links.add(arrow1, "start", "node1", "node", { x: 0, y: 0 });
+      // @ts-expect-error links is private
+      control.links.add(arrow1, "end", comment.id, "comment", { x: -0.5, y: 0 });
+      // arrow2 also targets the comment → it's no longer a 1:1 attachment.
+      // @ts-expect-error links is private
+      control.links.add(arrow2, "end", comment.id, "comment", { x: 0, y: 0.5 });
+
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const beforeComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates.slice();
+
+      ogma.getNode("node1")!.setAttributes({ y: 100 });
+      // @ts-expect-error updateFromNodePositions is private
+      control.links.updateFromNodePositions(ogma.getNodes(["node1"]));
+      // @ts-expect-error commit is private
+      control.links.commit();
+      // @ts-expect-error nodePositionTimeout is private
+      clearTimeout(control.links.nodePositionTimeout);
+
+      const afterComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates;
+
+      // Comment must stay put — multi-link falls back to rubber-band.
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1]);
+    });
   });
 });

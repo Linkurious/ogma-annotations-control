@@ -18,6 +18,7 @@ import {
 } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
+import { isAnnotationLinkTarget } from "../utils/rendering";
 
 
 export class InteractionController extends EventTarget {
@@ -190,6 +191,14 @@ export class InteractionController extends EventTarget {
     if (Date.now() < this.suppressClickUntil)
       return;
 
+    // A click on a URL inside text/comment content should open the link, not
+    // select or edit the annotation. Skip hit-detection and selection entirely
+    // and let the browser's native anchor navigation handle it.
+    if (isAnnotationLinkTarget(evt.target)) {
+      this.mouseDownState = null;
+      return;
+    }
+
     const screenPoint = clientToContainerPosition(
       evt,
       this.ogma.getContainer()
@@ -232,6 +241,14 @@ export class InteractionController extends EventTarget {
       mousePressed: false,
       mousePressPoint: null
     });
+
+    // Releasing over a content link: don't select or emit a click. Native
+    // anchor navigation handles it. (mouseDownState was already cleared in
+    // onMouseDown for the matching press.)
+    if (isAnnotationLinkTarget(evt.target)) {
+      this.mouseDownState = null;
+      return;
+    }
 
     // Handle click (mousedown + mouseup without significant movement)
     if (

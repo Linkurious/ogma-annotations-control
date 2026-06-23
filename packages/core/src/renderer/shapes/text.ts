@@ -1,4 +1,4 @@
-import Textbox from "@borgar/textbox";
+import { prepareWithSegments, layoutWithLines } from "@chenglou/pretext";
 import { renderBox } from "./box";
 import { TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
@@ -9,6 +9,10 @@ import {
   getBoxCenter,
   getTextSize
 } from "../../utils/utils";
+import {
+  createUrlPattern,
+  ANNOTATION_LINK_CLASS
+} from "../../utils/rendering";
 
 export function renderText(
   root: SVGElement,
@@ -92,8 +96,58 @@ export function renderText(
   return g;
 }
 
-const removeEllipsis = (str: string) => str.replace(/…$/, "");
-const getText = (e: Element) => e.children[0].innerHTML;
+
+let _measureCtx: CanvasRenderingContext2D | null = null;
+const _baselineCache = new Map<string, number>();
+
+/**
+ * dy for the first SVG tspan so the baseline matches exactly where CSS puts it.
+ *
+ * Primary: inject a 1×1 inline-block with vertical-align:baseline into a
+ * font-styled div. The block's bottom edge lands on the CSS alphabetic
+ * baseline, so (probeBottom - outerTop) is the exact firstLineDy we need.
+ * This beats any Canvas metric because it uses the browser's own layout engine.
+ *
+ * Fallback (jsdom / SSR): canvas fontBoundingBox metrics.
+ */
+function firstLineDy(fontString: string, lineHeight: number): number {
+  const key = `${fontString}|${lineHeight}`;
+  const cached = _baselineCache.get(key);
+  if (cached != null) return cached;
+
+  try {
+    const outer = document.createElement("div");
+    const probe = document.createElement("span");
+    outer.style.cssText = `font:${fontString};line-height:${lineHeight}px;position:fixed;left:-9999px;top:0;margin:0;padding:0;visibility:hidden;`;
+    probe.style.cssText = "display:inline-block;width:1px;height:1px;vertical-align:baseline;";
+    outer.appendChild(probe);
+    document.body.appendChild(outer);
+    const dy = probe.getBoundingClientRect().bottom - outer.getBoundingClientRect().top;
+    document.body.removeChild(outer);
+    if (dy > 0 && dy <= lineHeight) {
+      _baselineCache.set(key, dy);
+      return dy;
+    }
+  } catch { /* non-browser env */ }
+
+  // Canvas fallback
+  try {
+    if (!_measureCtx)
+      _measureCtx = document.createElement("canvas").getContext("2d");
+    if (_measureCtx) {
+      _measureCtx.font = fontString;
+      const m = _measureCtx.measureText("M") as TextMetrics & {
+        fontBoundingBoxAscent?: number;
+        fontBoundingBoxDescent?: number;
+      };
+      const a = m.fontBoundingBoxAscent, d = m.fontBoundingBoxDescent;
+      if (a != null && d != null)
+        return Math.max(0, (lineHeight - a - d) / 2) + a;
+    }
+  } catch { /* ignore */ }
+
+  return lineHeight;
+}
 
 /**
  * @function draw
@@ -118,59 +172,75 @@ function drawContent(
 
   // Use 1.2 line-height for better readability (20% more than font size)
   const lineHeight = parseFloat(fontSize!.toString()) * TEXT_LINE_HEIGHT;
-
-  const box = new Textbox({
-    font: `${fontSize}px/${lineHeight}px ${font}`.replace(/(px)+/g, "px"),
-    width: width - padding * 2,
-    height: height - padding,
-    align: "left",
-    valign: "top",
-    x: 0,
-    overflow: "ellipsis",
-    parser: Textbox.htmlparser,
-    createElement: Textbox.createElement
-  });
-  box.overflowWrap("break-word");
+  const fontString = `${fontSize}px ${font}`.replace(/(px)+/g, "px");
+  const maxWidth = width - padding * 2;
+  const maxHeight = height - padding;
 
   const content = annotation.properties.content || "";
   if (content.length === 0) return;
 
-  const lines = box.linebreak(content.replaceAll("\n", "<br>"));
+  const prepared = prepareWithSegments(content, fontString, {
+    whiteSpace: "pre-wrap",
+    wordBreak: "normal"
+  });
+  const { lines } = layoutWithLines(prepared, maxWidth, lineHeight);
 
-  // mistake in textbox types:
-  const text = lines.svg() as unknown as SVGTextElement;
-  const children = [...text.children];
+  const maxLineCount = Math.max(1, Math.floor(maxHeight / lineHeight));
+  const visibleLines = lines.slice(0, maxLineCount);
 
-  // replace spans with links:
-  const matches = content.match(/(https?:\/\/.*)/gm);
-  const links = matches ? matches.map((match) => match.split(" ")[0]) : [];
-  links.forEach((l) => {
-    let query = l;
-    const toReplace: typeof children = [];
-    while (query.length > 0) {
-      const start = children.find(
-        (e) =>
-          !!e.children[0] &&
-          e.children[0].tagName === "tspan" &&
-          query.startsWith(removeEllipsis(getText(e)))
-      );
-      if (!start) break;
-      toReplace.push(start);
-      const length = removeEllipsis(start.children[0].innerHTML).length;
-      if (!length) break;
-      query = query.slice(length);
+  if (lines.length > maxLineCount && visibleLines.length > 0) {
+    const last = visibleLines[visibleLines.length - 1];
+    visibleLines[visibleLines.length - 1] = {
+      ...last,
+      text: last.text.trimEnd() + "…"
+    };
+  }
+
+  const textEl = createSVGElement<SVGTextElement>("text");
+  textEl.setAttribute(
+    "font-size",
+    `${parseFloat(fontSize!.toString())}`
+  );
+  textEl.setAttribute("font-family", `${font}`);
+  textEl.setAttribute(
+    "transform",
+    `translate(${x + padding}, ${y + padding})`
+  );
+
+  const firstDy = firstLineDy(fontString, lineHeight);
+  visibleLines.forEach((line, i) => {
+    const tspan = createSVGElement<SVGTSpanElement>("tspan");
+    tspan.setAttribute("x", "0");
+    tspan.setAttribute("dy", `${i === 0 ? firstDy : lineHeight}`);
+
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    const urlPattern = createUrlPattern();
+
+    while ((match = urlPattern.exec(line.text)) !== null) {
+      if (match.index > lastIndex) {
+        tspan.appendChild(
+          document.createTextNode(line.text.slice(lastIndex, match.index))
+        );
+      }
+      const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
+      a.setAttribute("href", match[0]);
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer");
+      a.setAttribute("class", ANNOTATION_LINK_CLASS);
+      a.textContent = match[0];
+      tspan.appendChild(a);
+      lastIndex = match.index + match[0].length;
     }
-    toReplace.forEach((e) => {
-      const link = document.createElementNS("http://www.w3.org/2000/svg", "a");
-      link.setAttribute("href", l);
-      link.setAttribute("target", "_blank");
-      link.innerHTML = getText(e);
-      e.children[0].innerHTML = "";
-      e.children[0].appendChild(link);
-    });
+
+    if (lastIndex < line.text.length) {
+      tspan.appendChild(
+        document.createTextNode(line.text.slice(lastIndex))
+      );
+    }
+
+    textEl.appendChild(tspan);
   });
 
-  text.setAttribute("transform", `translate(${x + padding}, ${y + padding})`);
-
-  parent.appendChild(text);
+  parent.appendChild(textEl);
 }

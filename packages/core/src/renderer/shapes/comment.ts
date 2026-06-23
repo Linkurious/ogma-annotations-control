@@ -2,6 +2,10 @@ import { COMMENT_MODE_COLLAPSED, TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, defaultCommentStyle } from "../../types";
 import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
+import {
+  createUrlPattern,
+  ANNOTATION_LINK_CLASS
+} from "../../utils/rendering";
 
 // Canvas context for measuring text
 let measureContext: CanvasRenderingContext2D | null = null;
@@ -248,7 +252,6 @@ function renderExpandedBox(
   boxGroup: SVGGElement,
   comment: Comment,
   state: AnnotationState,
-  extraWidth: number = 0,
   showEditBtn: boolean = false
 ): void {
   const style = { ...defaultCommentStyle, ...comment.properties.style };
@@ -264,60 +267,29 @@ function renderExpandedBox(
     maxHeight
   } = style;
 
-  const maxWidth = comment.properties.width;
-  const content = comment.properties.content || "";
-  const numericFontSize =
-    typeof fontSize === "number" ? fontSize : parseFloat(fontSize);
-
-  // Calculate actual width needed based on content (+ extra for inline button)
-  // When selected and expandOnSelect is true, use full maxWidth; otherwise use content width
-  const contentWidth = measureTextWidth(
-    content,
-    font,
-    numericFontSize,
-    maxWidth,
-    padding
-  );
-  const isSelected = state.selectedFeatures.has(comment.id);
-  const shouldExpand = isSelected && style.expandOnSelect === true;
-  const actualWidth = shouldExpand ? maxWidth : contentWidth + extraWidth;
-
-  // Calculate height
+  // Always use the stored dimensions so the box never changes size on
+  // selection or edit — keeps the SVG and the textarea overlay in sync.
+  const actualWidth = comment.properties.width;
   const storedHeight = comment.properties.height;
-  const singleLine = isSingleLineContent(
-    content,
-    font,
-    numericFontSize,
-    maxWidth,
-    padding
-  );
-  const singleLineHeight = numericFontSize * TEXT_LINE_HEIGHT + padding * 2;
-  const effectiveHeight = singleLine
-    ? Math.min(storedHeight, singleLineHeight)
-    : storedHeight;
   const displayHeight = maxHeight
-    ? Math.min(effectiveHeight, maxHeight)
-    : effectiveHeight;
-  const needsScroll =
-    !singleLine && maxHeight ? storedHeight > maxHeight : false;
-
-  // Add extra height for edit button if shown (24px button + 4px gap)
-  const buttonHeight = showEditBtn ? 28 : 0;
-  const totalDisplayHeight = displayHeight + buttonHeight;
+    ? Math.min(storedHeight, maxHeight)
+    : storedHeight;
+  const needsScroll = maxHeight ? storedHeight > maxHeight : false;
+  const content = comment.properties.content || "";
 
   // Clear existing content
   boxGroup.innerHTML = "";
 
   // Center the box at (0,0) to align with the collapsed icon
   const x = -actualWidth / 2;
-  const y = -totalDisplayHeight / 2;
+  const y = -displayHeight / 2;
 
   // Create background rect
   const rect = createSVGElement<SVGRectElement>("rect");
   rect.setAttribute("x", `${x}`);
   rect.setAttribute("y", `${y}`);
   rect.setAttribute("width", `${actualWidth}`);
-  rect.setAttribute("height", `${totalDisplayHeight}`);
+  rect.setAttribute("height", `${displayHeight}`);
   rect.setAttribute("rx", `${borderRadius}`);
   rect.setAttribute("ry", `${borderRadius}`);
   rect.setAttribute(
@@ -336,7 +308,7 @@ function renderExpandedBox(
   foreignObject.setAttribute("x", `${x}`);
   foreignObject.setAttribute("y", `${y}`);
   foreignObject.setAttribute("width", `${actualWidth}`);
-  foreignObject.setAttribute("height", `${totalDisplayHeight}`);
+  foreignObject.setAttribute("height", `${displayHeight}`);
   foreignObject.style.pointerEvents = "none"; // Let clicks pass through to rect
 
   // Create the HTML content div
@@ -346,7 +318,7 @@ function renderExpandedBox(
   div.style.padding = `${padding}px`;
   div.style.boxSizing = "border-box";
   div.style.fontFamily = font;
-  div.style.fontSize = `${fontSize}px`;
+  div.style.fontSize = `${typeof fontSize === "number" ? fontSize : parseFloat(fontSize)}px`;
   div.style.lineHeight = `${(typeof fontSize === "number" ? fontSize : parseFloat(fontSize)) * TEXT_LINE_HEIGHT}px`;
   div.style.color = color;
   div.style.overflowY = needsScroll ? "auto" : "hidden";
@@ -354,32 +326,43 @@ function renderExpandedBox(
   div.style.overflowWrap = "break-word";
   div.style.whiteSpace = "pre-wrap";
   div.style.pointerEvents = "none"; // Let clicks pass through to rect
-  div.style.display = "flex";
-  div.style.flexDirection = "column";
-  div.style.position = "relative";
 
-  // Create text content container
-  const textDiv = document.createElement("div");
-  textDiv.style.flex = "1";
-  textDiv.style.minHeight = "0";
-  textDiv.style.overflowY = needsScroll ? "auto" : "hidden";
-  textDiv.innerHTML = formatContent(content);
-  div.appendChild(textDiv);
+  div.innerHTML = formatContent(content);
+  foreignObject.appendChild(div);
+  boxGroup.appendChild(foreignObject);
 
-  // Add edit button if needed (same structure as the send button)
+  // Edit button: a corner badge that sits inside the bottom-right of the
+  // box without adding to its dimensions. Clicking it triggers the same
+  // onClick path that opens the textarea editor.
   if (showEditBtn) {
-    const buttonDiv = document.createElement("div");
-    buttonDiv.classList.add("ogma-send-button");
-    buttonDiv.style.pointerEvents = "auto";
+    const btnSize = 24;
+    const btnMargin = 4;
+    const fo = createSVGElement<SVGForeignObjectElement>("foreignObject");
+    fo.setAttribute("x", `${x + actualWidth - btnSize - btnMargin}`);
+    fo.setAttribute("y", `${y + displayHeight - btnSize - btnMargin}`);
+    fo.setAttribute("width", `${btnSize}`);
+    fo.setAttribute("height", `${btnSize}`);
+
+    const btnDiv = document.createElement("div");
+    btnDiv.classList.add("ogma-send-button");
+    btnDiv.style.width = "100%";
+    btnDiv.style.height = "100%";
+    btnDiv.style.display = "flex";
+    btnDiv.style.alignItems = "center";
+    btnDiv.style.justifyContent = "center";
+    btnDiv.style.boxSizing = "border-box";
+    btnDiv.style.background = background;
+    btnDiv.style.border = `1px solid ${strokeColor || "#DDD"}`;
+    btnDiv.style.borderRadius = "4px";
+    btnDiv.style.pointerEvents = "auto";
+
     const iconSpan = document.createElement("span");
     iconSpan.classList.add("ogma-send-button-icon");
     iconSpan.innerHTML = state.options.editButtonIcon;
-    buttonDiv.appendChild(iconSpan);
-    div.appendChild(buttonDiv);
+    btnDiv.appendChild(iconSpan);
+    fo.appendChild(btnDiv);
+    boxGroup.appendChild(fo);
   }
-
-  foreignObject.appendChild(div);
-  boxGroup.appendChild(foreignObject);
 
   // Add drop shadow for comments (if enabled)
   if (style.shadow !== false) {
@@ -393,7 +376,7 @@ function renderExpandedBox(
  * Format text content for HTML display
  * Handles line breaks and converts URLs to clickable links
  */
-function formatContent(content: string): string {
+export function formatContent(content: string): string {
   if (!content) return "";
 
   // Escape HTML
@@ -402,10 +385,13 @@ function formatContent(content: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 
-  // Convert URLs to links
+  // Convert URLs to clickable links. The .ogma-annotation-link class colors
+  // the anchor (themeable via --annotation-link-color) and re-enables
+  // pointer-events so links are clickable even though the content div is
+  // pointer-events:none (which lets background clicks open the editor).
   html = html.replace(
-    /(https?:\/\/[^\s<]+)/g,
-    '<a href="$1" target="_blank" style="color: #38e; text-decoration: none;">$1</a>'
+    createUrlPattern(),
+    `<a href="$1" class="${ANNOTATION_LINK_CLASS}" target="_blank" rel="noopener noreferrer">$1</a>`
   );
 
   return html;
@@ -458,31 +444,9 @@ export function renderComment(
     state.editingFeature !== annotation.id &&
     state.options.showEditButton;
 
-  // Compute extra width for inline edit button on single-line comments
-  let extraWidth = 0;
-  if (showEditBtn) {
-    const cStyle = { ...defaultCommentStyle, ...annotation.properties.style };
-    const content = annotation.properties.content || "";
-    const numFS =
-      typeof cStyle.fontSize === "number"
-        ? cStyle.fontSize
-        : parseFloat((cStyle.fontSize || "12").toString());
-    if (
-      isSingleLineContent(
-        content,
-        cStyle.font || "Arial, sans-serif",
-        numFS,
-        annotation.properties.width,
-        cStyle.padding || 8
-      )
-    ) {
-      extraWidth = 32; // buttonSize (24) + margins (4*2)
-    }
-  }
-
   // Render both states
   renderCollapsedIcon(iconGroup, annotation, state);
-  renderExpandedBox(boxGroup, annotation, state, extraWidth, showEditBtn);
+  renderExpandedBox(boxGroup, annotation, state, showEditBtn);
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
   if (!wasVisible) {
