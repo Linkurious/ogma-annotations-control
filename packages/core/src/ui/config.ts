@@ -34,7 +34,7 @@ export const FONTS: FontOption[] = [
 export interface ExtremityOption {
   value: string;
   label: string;
-  icon: string;
+  icon: IconName;
 }
 
 export const EXTREMITY_OPTIONS: ExtremityOption[] = [
