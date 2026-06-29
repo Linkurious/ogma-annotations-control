@@ -47,7 +47,7 @@ export const EXTREMITY_OPTIONS: ExtremityOption[] = [
 
 export interface LineTypeOption {
   value: string;
-  icon: string;
+  icon: IconName;
 }
 
 export const LINE_TYPES: LineTypeOption[] = [
