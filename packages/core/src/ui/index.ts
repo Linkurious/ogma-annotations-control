@@ -13,4 +13,4 @@ export * from "./config";
 export * from "./color";
 export * from "./icons";
 export { attachPanelVisibility } from "./panelVisibility";
-export type { PanelVisibilityHandlers } from "./panelVisibility";
+export type { PanelVisibilityControl, PanelVisibilityHandlers } from "./panelVisibility";
