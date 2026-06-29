@@ -2,7 +2,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { Ogma } from "@linkurious/ogma";
-import { AnnotationPanel } from "./AnnotationPanel";
+import { AnnotationPanel } from "@linkurious/ogma-annotations/ui";
+import "@linkurious/ogma-annotations/ui/styles.css";
 import {
   Control,
   AnnotationCollection,

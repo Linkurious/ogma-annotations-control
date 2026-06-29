@@ -1,10 +1,8 @@
 import { useOgma } from "@linkurious/ogma-react";
-import { RotateCw, RotateCcw, Minimize } from "lucide-react";
+import { getAnnotationsBounds } from "@linkurious/ogma-annotations";
 import React from "react";
-import { useAnnotationsContext, getAnnotationsBounds } from "../../../src";
-
-import "../tooltip.css";
-import "./ViewControls.css";
+import { useAnnotationsContext } from "../types";
+import { Icon } from "./Icon";
 
 export const ViewControls = () => {
   const ogma = useOgma();
@@ -31,25 +29,17 @@ export const ViewControls = () => {
     e.preventDefault();
   }, []);
 
-  React.useEffect(() => {
-    setTimeout(() => {
-      //console.log("Auto-centering view to fit annotations", annotations);
-      //handleCenterView();
-    }, 2500);
-  }, [ogma]);
-
-  const buttonSize = 16;
   return (
     <div className="view-controls" onMouseMove={stopEvent} onClick={stopEvent}>
       <button data-tooltip="Center view" onClick={handleCenterView}>
-        <Minimize width={buttonSize} height={buttonSize} />
+        <Icon name="minimize" size={16} />
       </button>
       <span className="separator"></span>
       <button data-tooltip="Rotate clockwise" onClick={handleRotateCW}>
-        <RotateCw width={buttonSize} height={buttonSize} />
+        <Icon name="rotate-cw" size={16} />
       </button>
       <button data-tooltip="Rotate counter-clockwise" onClick={handleRotateCCW}>
-        <RotateCcw width={buttonSize} height={buttonSize} />
+        <Icon name="rotate-ccw" size={16} />
       </button>
     </div>
   );

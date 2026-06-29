@@ -2,26 +2,15 @@ import {
   EVT_COMPLETE_DRAWING,
   EVT_CANCEL_DRAWING
 } from "@linkurious/ogma-annotations";
-import {
-  Trash,
-  Undo,
-  Redo,
-  Pentagon,
-  RectangleHorizontal,
-  MessageSquare,
-  Download,
-  Type,
-  ArrowRight,
-  Camera
-} from "lucide-react";
 import React from "react";
-import { useAnnotationsContext } from "../../../src";
-import "../tooltip.css";
-import "./AddMenu.css";
+import { useAnnotationsContext } from "../types";
+import { Icon } from "./Icon";
 
-interface AddMenuProps {
-  onSvgExport: () => void;
-  onJsonExport: () => void;
+export interface AddMenuProps {
+  /** Called when the SVG export button is clicked. Omit to hide the button. */
+  onSvgExport?: () => void;
+  /** Called when the JSON export button is clicked. Omit to hide the button. */
+  onJsonExport?: () => void;
 }
 
 type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
@@ -31,17 +20,11 @@ export const AddMenu = ({ onSvgExport, onJsonExport }: AddMenuProps) => {
     useAnnotationsContext();
   const [activeMode, setActiveMode] = React.useState<DrawingMode>(null);
 
-  // Listen to drawing completion and cancellation events to clear active mode
   React.useEffect(() => {
     if (!editor) return;
-
-    const handleDrawingEnd = () => {
-      setActiveMode(null);
-    };
-
+    const handleDrawingEnd = () => setActiveMode(null);
     editor.on(EVT_COMPLETE_DRAWING, handleDrawingEnd);
     editor.on(EVT_CANCEL_DRAWING, handleDrawingEnd);
-
     return () => {
       editor.off(EVT_COMPLETE_DRAWING, handleDrawingEnd);
       editor.off(EVT_CANCEL_DRAWING, handleDrawingEnd);
@@ -115,9 +98,7 @@ export const AddMenu = ({ onSvgExport, onJsonExport }: AddMenuProps) => {
 
   const handleDelete = React.useCallback(() => {
     const selected = editor.getSelectedAnnotations();
-    if (selected.features.length > 0) {
-      remove(selected);
-    }
+    if (selected.features.length > 0) remove(selected);
   }, [editor, remove]);
 
   const stopEvent = React.useCallback((evt: React.MouseEvent) => {
@@ -125,7 +106,6 @@ export const AddMenu = ({ onSvgExport, onJsonExport }: AddMenuProps) => {
     evt.preventDefault();
   }, []);
 
-  const buttonSize = 16;
   return (
     <div className="add-menu" onClick={stopEvent} onMouseMove={stopEvent}>
       <button
@@ -133,54 +113,58 @@ export const AddMenu = ({ onSvgExport, onJsonExport }: AddMenuProps) => {
         onClick={handleArrow}
         className={activeMode === "arrow" ? "active" : ""}
       >
-        <ArrowRight width={buttonSize} height={buttonSize} />
+        <Icon name="arrow-right" size={16} />
       </button>
       <button
         data-tooltip="Add comment"
         onClick={handleComment}
         className={activeMode === "comment" ? "active" : ""}
       >
-        <MessageSquare width={buttonSize} height={buttonSize} />
+        <Icon name="message-square" size={16} />
       </button>
       <button
         data-tooltip="Add box"
         onClick={handleBox}
         className={activeMode === "box" ? "active" : ""}
       >
-        <RectangleHorizontal width={buttonSize} height={buttonSize} />
+        <Icon name="rectangle-horizontal" size={16} />
       </button>
       <button
         data-tooltip="Add text"
         onClick={handleText}
         className={activeMode === "text" ? "active" : ""}
       >
-        <Type width={buttonSize} height={buttonSize} />
+        <Icon name="type" size={16} />
       </button>
       <button
         data-tooltip="Add polygon (click points, Esc to finish)"
         onClick={handlePolygon}
         className={activeMode === "polygon" ? "active" : ""}
       >
-        <Pentagon width={buttonSize} height={buttonSize} />
+        <Icon name="pentagon" size={16} />
       </button>
       <span className="separator"></span>
       <button data-tooltip="Undo" onClick={() => undo()} disabled={!canUndo}>
-        <Undo width={buttonSize} height={buttonSize} />
+        <Icon name="undo" size={16} />
       </button>
       <button data-tooltip="Redo" onClick={() => redo()} disabled={!canRedo}>
-        <Redo width={buttonSize} height={buttonSize} />
+        <Icon name="redo" size={16} />
       </button>
       <span className="separator"></span>
       <button data-tooltip="Delete selected" onClick={handleDelete}>
-        <Trash width={buttonSize} height={buttonSize} />
+        <Icon name="trash" size={16} />
       </button>
-      <span className="separator"></span>
-      <button data-tooltip="Export annotations" onClick={onJsonExport}>
-        <Download width={buttonSize} height={buttonSize} />
-      </button>
-      <button data-tooltip="Export SVG" onClick={onSvgExport}>
-        <Camera width={buttonSize} height={buttonSize} />
-      </button>
+      {(onJsonExport || onSvgExport) && <span className="separator"></span>}
+      {onJsonExport && (
+        <button data-tooltip="Export annotations" onClick={onJsonExport}>
+          <Icon name="download" size={16} />
+        </button>
+      )}
+      {onSvgExport && (
+        <button data-tooltip="Export SVG" onClick={onSvgExport}>
+          <Icon name="camera" size={16} />
+        </button>
+      )}
     </div>
   );
 };

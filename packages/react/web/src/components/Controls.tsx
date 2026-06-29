@@ -7,10 +7,10 @@ import "@linkurious/ogma-annotations/style.css";
 
 import "./Controls.css";
 
-import { AddMenu } from "./AddMenu";
+import { AddMenu, ViewControls } from "@linkurious/ogma-annotations-react/ui";
+import "@linkurious/ogma-annotations-react/ui/styles.css";
 import { JsonExportPopup } from "./JsonExportPopup";
 import { SvgExportPopup } from "./SvgExportPopup";
-import { ViewControls } from "./ViewControls";
 
 import {
   useAnnotationsContext,

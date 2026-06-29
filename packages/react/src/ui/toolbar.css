@@ -1,0 +1,148 @@
+/* Toolbar + view controls styling for the React UI components. */
+
+.add-menu {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+.add-menu > button {
+  margin: 2px;
+  padding: 5px;
+  border: 1px solid #fff;
+  cursor: pointer;
+  border-radius: 5px;
+  background: #fff;
+  color: #444;
+}
+
+.add-menu > button:hover {
+  background: #f0f0f0;
+  color: #222;
+}
+
+.add-menu > button.active {
+  background: var(--oa-accent, var(--brand, #3a03cf));
+  color: #fff;
+}
+
+.add-menu > button.active:hover {
+  background: var(--oa-accent, var(--brand, #3a03cf));
+  border-color: var(--oa-accent, var(--brand, #3a03cf));
+}
+
+.add-menu > button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.add-menu > .separator {
+  border-left: 1px solid #ccc;
+  margin: 0 5px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.view-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.view-controls > button {
+  margin: 2px;
+  padding: 5px;
+  border: 1px solid #fff;
+  cursor: pointer;
+  border-radius: 5px;
+  background: #fff;
+  color: #444;
+}
+
+.view-controls > button:hover {
+  background: #f0f0f0;
+  color: #222;
+}
+
+.view-controls > button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.view-controls > .separator {
+  border-top: 1px solid #ccc;
+  width: 20px;
+  height: 0;
+  margin: 5px 0;
+}
+
+/* Tooltips */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px 6px 0 6px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.7) transparent transparent transparent;
+  z-index: 99;
+  opacity: 0;
+}
+
+[tooltip-position="left"]::before {
+  left: 0%;
+  top: 50%;
+  margin-left: -12px;
+  transform: translatey(-50%) rotate(-90deg);
+}
+[tooltip-position="right"]::before {
+  left: 100%;
+  top: 50%;
+  margin-left: 1px;
+  transform: translatey(-50%) rotate(90deg);
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translateX(-50%) translateY(-100%);
+  background: rgba(0, 0, 0, 0.7);
+  text-align: center;
+  color: #fff;
+  font-size: 12px;
+  min-width: 60px;
+  border-radius: 5px;
+  pointer-events: none;
+  padding: 4px 4px;
+  z-index: 99;
+  opacity: 0;
+}
+
+[tooltip-position="left"]::after {
+  left: 0%;
+  top: 50%;
+  margin-left: -8px;
+  transform: translateX(-100%) translateY(-50%);
+}
+[tooltip-position="right"]::after {
+  left: 100%;
+  top: 50%;
+  margin-left: 8px;
+  transform: translateX(0%) translateY(-50%);
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:hover::before {
+  opacity: 1;
+}

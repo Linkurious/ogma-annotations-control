@@ -20,6 +20,13 @@
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
+    "./ui": {
+      "types": "./dist/types/ui.d.ts",
+      "import": "./dist/ui.mjs",
+      "require": "./dist/ui.js",
+      "default": "./dist/ui.mjs"
+    },
+    "./ui/styles.css": "./dist/ui.css",
     "./umd": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/index.js",
@@ -80,6 +87,7 @@
   },
   "dependencies": {
     "@linkurious/ogma-annotations": "2.1.0",
-    "@linkurious/ogma-react": "5.1.15"
+    "@linkurious/ogma-react": "5.1.15",
+    "vanilla-colorful": "0.7.2"
   }
 }

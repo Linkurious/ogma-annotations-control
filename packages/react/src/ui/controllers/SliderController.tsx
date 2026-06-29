@@ -1,11 +1,11 @@
 import { Annotation } from "@linkurious/ogma-annotations";
 import React from "react";
-import { useAnnotationsContext } from "../../../../src";
+import { useAnnotationsContext } from "../../types";
 
 interface SliderControllerProps {
   annotation: Annotation;
   title: string;
-  property: string;
+  property: "strokeWidth" | "fontSize";
   value: number;
   min: number;
   max: number;

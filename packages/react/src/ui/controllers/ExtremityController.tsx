@@ -1,14 +1,8 @@
 import { Extremity, Arrow } from "@linkurious/ogma-annotations";
+import { EXTREMITY_OPTIONS, type IconName } from "@linkurious/ogma-annotations/ui";
 import React, { useState } from "react";
-import { useAnnotationsContext } from "../../../../src";
-
-const EXTREMITY_OPTIONS = [
-  { value: "none", label: "None", icon: "icon-x" },
-  { value: "arrow", label: "Open Arrow", icon: "icon-arrow-left" },
-  { value: "arrow-plain", label: "Filled Arrow", icon: "icon-play" },
-  { value: "halo-dot", label: "Halo Dot", icon: "icon-circle-dot" },
-  { value: "dot", label: "Dot", icon: "icon-dot" }
-];
+import { useAnnotationsContext } from "../../types";
+import { Icon } from "../Icon";
 
 interface ExtremityControllerProps {
   annotation: Arrow;
@@ -24,24 +18,22 @@ export const ExtremityController: React.FC<ExtremityControllerProps> = ({
     if (annotation) {
       editor?.updateStyle(annotation.id, { [end]: value as Extremity });
     }
-
     setOpenDropdowns((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(end);
-      return newSet;
+      const next = new Set(prev);
+      next.delete(end);
+      return next;
     });
   };
 
   const toggleDropdown = (end: "head" | "tail") => {
     setOpenDropdowns((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(end)) {
-        newSet.delete(end);
-      } else {
-        newSet.clear();
-        newSet.add(end);
+      const next = new Set(prev);
+      if (next.has(end)) next.delete(end);
+      else {
+        next.clear();
+        next.add(end);
       }
-      return newSet;
+      return next;
     });
   };
 
@@ -51,9 +43,9 @@ export const ExtremityController: React.FC<ExtremityControllerProps> = ({
       ...o,
       icon:
         o.value === "arrow" && side === "tail"
-          ? "icon-arrow-left"
+          ? "arrow-left"
           : o.value === "arrow"
-            ? "icon-arrow-right"
+            ? "arrow-right"
             : o.icon,
       selected: o.value === ext,
       rotate: o.value === "arrow-plain" && side === "tail"
@@ -69,12 +61,9 @@ export const ExtremityController: React.FC<ExtremityControllerProps> = ({
             className="custom-select-trigger"
             onClick={() => toggleDropdown(side)}
           >
-            <i
-              className={selected.icon}
-              style={selected.rotate ? { transform: "rotate(180deg)" } : {}}
-            ></i>
+            <Icon name={selected.icon as IconName} rotate={selected.rotate} />
             <span>{selected.label}</span>
-            <i className="icon-chevron-down custom-select-arrow"></i>
+            <Icon name="chevron-down" className="custom-select-arrow" />
           </div>
           <div className="custom-select-options">
             {opts.map((option) => (
@@ -84,10 +73,7 @@ export const ExtremityController: React.FC<ExtremityControllerProps> = ({
                 title={option.label}
                 onClick={() => handleExtremitySelect(side, option.value)}
               >
-                <i
-                  className={option.icon}
-                  style={option.rotate ? { transform: "rotate(180deg)" } : {}}
-                ></i>
+                <Icon name={option.icon as IconName} rotate={option.rotate} />
                 <span>{option.label}</span>
               </div>
             ))}

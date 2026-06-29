@@ -24,9 +24,14 @@ export default defineConfig({
   define: { "process.env": { NODE_ENV: "production" } },
   build: {
     lib: {
-      name: "OgmaAnnotationsReact",
-      fileName: (format) => `index.${format === "umd" ? "" : "m"}js`,
-      entry: resolve(__dirname, "src/index.ts")
+      entry: {
+        index: resolve(__dirname, "src/index.ts"),
+        ui: resolve(__dirname, "src/ui/index.ts")
+      },
+      // Multi-entry libs cannot use UMD; emit ESM (.mjs) and CJS (.js).
+      formats: ["es", "cjs"],
+      fileName: (format, entryName) =>
+        `${entryName}.${format === "es" ? "mjs" : "js"}`
     },
 
     rollupOptions: {
@@ -34,18 +39,12 @@ export default defineConfig({
         "@linkurious/ogma",
         "@linkurious/ogma-react",
         "@linkurious/ogma-annotations",
+        "@linkurious/ogma-annotations/ui",
+        "vanilla-colorful",
+        "vanilla-colorful/rgba-color-picker.js",
         "react",
         "react-dom"
-      ],
-      output: {
-        globals: {
-          "@linkurious/ogma": "Ogma",
-          "@linkurious/ogma-react": "OgmaReact",
-          "@linkurious/ogma-annotations": "OgmaAnnotations",
-          react: "React",
-          "react-dom": "ReactDOM"
-        }
-      }
+      ]
     }
   },
   test: {

@@ -1,59 +1,45 @@
+import { RgbaColorPicker } from "vanilla-colorful/rgba-color-picker.js";
+import { Control } from "../Control";
 import {
-  RgbaColor,
-  RgbaColorPicker
-} from "vanilla-colorful/rgba-color-picker.js";
-import {
-  Control,
   Annotation,
   Arrow,
   Text,
   Polygon,
+  Extremity,
   isArrow,
   isText,
   isPolygon,
-  parseColor,
-  Extremity,
-  defaultArrowStyle,
-  defaultTextStyle,
   isBox,
-  isComment
-} from "../src";
-import "./AnnotationPanel.css";
+  isComment,
+  defaultArrowStyle,
+  defaultTextStyle
+} from "../types";
+import { parseColor } from "../utils/utils";
+import {
+  BACKGROUNDS,
+  FONTS,
+  EXTREMITY_OPTIONS,
+  LINE_TYPES
+} from "./config";
+import {
+  rgbaToString,
+  initialRecentColors,
+  withColorFromAnnotation,
+  type RecentColorsState
+} from "./color";
+import { svgIcon, type IconName } from "./icons";
+import { attachPanelVisibility } from "./panelVisibility";
 
 type AnnotationMode = "arrow" | "text" | "polygon" | null;
 
-interface AnnotationPanelOptions {
+export interface AnnotationPanelOptions {
   control: Control;
+  /**
+   * Element the panel mounts into. The panel creates and manages its own root
+   * `<div class="annotation-panel">` inside it. Defaults to `document.body`.
+   */
+  container?: HTMLElement;
 }
-
-// Configuration constants
-const BACKGROUNDS = [
-  { value: "#f5f5f5", style: "--circle-color: #f5f5f5;" },
-  { value: "#EDE6FF", style: "--circle-color: #EDE6FF;" },
-  {
-    value: "transparent",
-    style: "--circle-color: white; border: 2px dashed #ccc;"
-  }
-];
-
-const FONTS = [
-  { value: "sans-serif", label: "Sans Serif", icon: "icon-type" },
-  { value: "serif", label: "Serif", icon: "icon-italic" },
-  { value: "monospace", label: "Monospace", icon: "icon-code" }
-];
-
-const EXTREMITY_OPTIONS = [
-  { value: "none", label: "None", icon: "icon-x" },
-  { value: "arrow", label: "Open Arrow", icon: "icon-arrow-left" },
-  { value: "arrow-plain", label: "Filled Arrow", icon: "icon-play" },
-  { value: "halo-dot", label: "Halo Dot", icon: "icon-circle-dot" },
-  { value: "dot", label: "Dot", icon: "icon-dot" }
-];
-
-const LINE_TYPES = [
-  { value: "plain", icon: "icon-circle" },
-  { value: "dashed", icon: "icon-circle-dashed" }
-];
 
 export class AnnotationPanel {
   private control: Control;
@@ -61,78 +47,41 @@ export class AnnotationPanel {
   private panelBody: HTMLElement;
   private mode: AnnotationMode = null;
   private currentAnnotation: Annotation | null = null;
-  private pendingAnnotation: Annotation | null = null;
   private currentColor = "#0099FF";
-  private recentColors = ["#0099FF", "#FF7523", "#44AA99"];
-  private activeColorIndex = 0;
+  private recent: RecentColorsState = initialRecentColors();
   private colorCircles: HTMLButtonElement[] = [];
   private colorPickerOverlay: HTMLElement | null = null;
   private colorPicker: RgbaColorPicker | null = null;
+  private detachVisibility: () => void;
+  private documentClickHandler: (e: MouseEvent) => void;
 
   constructor(options: AnnotationPanelOptions) {
     this.control = options.control;
-    this.panel = document.getElementById("annotation-panel")!;
-    this.panelBody = this.panel.querySelector(".panel-body")!;
 
-    this.control.on("select", (sel) => {
-      if (sel.ids.length === 1) {
-        const ann = this.control.getAnnotation(sel.ids[0]);
-        if (!ann) return;
+    // Build our own root inside the container, rather than relying on a
+    // pre-existing #annotation-panel element in the host page.
+    const container = options.container ?? document.body;
+    this.panel = document.createElement("div");
+    this.panel.className = "annotation-panel";
+    this.panel.style.display = "none";
+    this.panelBody = document.createElement("div");
+    this.panelBody.className = "panel-body";
+    this.panel.appendChild(this.panelBody);
+    container.appendChild(this.panel);
 
-        // Store as pending - don't show immediately in case of drag
-        this.pendingAnnotation = ann;
-
-        const showPanel = () => {
-          if (this.pendingAnnotation) {
-            this.setAnnotation(this.pendingAnnotation);
-            this.show();
-            this.pendingAnnotation = null;
-          }
-        };
-
-        if (this.control.isDrawing()) {
-          this.control
-            .once("cancelDrawing", showPanel)
-            .once("completeDrawing", showPanel);
-        }
-        // Don't show immediately - wait for potential drag or mouseup
-      } else {
-        this.pendingAnnotation = null;
-        this.hide();
-      }
-    });
-
-    // Show panel on click (mouseup without drag)
-    this.control.on("click", () => {
-      if (this.pendingAnnotation) {
-        this.setAnnotation(this.pendingAnnotation);
+    this.detachVisibility = attachPanelVisibility(this.control, {
+      onShow: (ann) => {
+        this.setAnnotation(ann);
         this.show();
-        this.pendingAnnotation = null;
-      }
+      },
+      onHide: this.hide
     });
-
-    // Show panel after drag ends (if there's a pending annotation)
-    this.control.on("dragend", () => {
-      if (this.pendingAnnotation) {
-        this.setAnnotation(this.pendingAnnotation);
-        this.show();
-        this.pendingAnnotation = null;
-      }
-    });
-
-    // Hide panel during drag
-    this.control.on("dragstart", () => {
-      this.pendingAnnotation = null;
-      this.hide();
-    });
-
-    this.control.on("unselect", this.hide);
 
     ["click", "mousedown", "mousemove"].forEach((evt) =>
       this.panel.addEventListener(evt, (e) => e.stopPropagation())
     );
 
-    document.addEventListener("click", (e) => {
+    this.documentClickHandler = (e: MouseEvent) => {
       if (
         this.colorPickerOverlay &&
         !this.colorPickerOverlay.contains(e.target as Node) &&
@@ -143,7 +92,8 @@ export class AnnotationPanel {
       this.panelBody
         .querySelectorAll(".custom-select")
         .forEach((s) => s.classList.remove("open"));
-    });
+    };
+    document.addEventListener("click", this.documentClickHandler);
   }
 
   private setAnnotation(annotation: Annotation) {
@@ -229,8 +179,14 @@ export class AnnotationPanel {
     return `<div class="section-header"><h3>${title}</h3></div>${content}`;
   }
 
+  private icon(name: IconName, rotate = false) {
+    return rotate
+      ? `<span style="display:inline-flex;transform:rotate(180deg)">${svgIcon(name)}</span>`
+      : svgIcon(name);
+  }
+
   private colorSelector() {
-    return `<div class="color-selector">${this.recentColors
+    return `<div class="color-selector">${this.recent.colors
       .map(
         (c, i) => `
       <button class="color-circle ${i === 0 ? "color-circle-primary" : ""}" data-index="${i}" data-color="${c}">
@@ -266,9 +222,9 @@ export class AnnotationPanel {
       ...o,
       icon:
         o.value === "arrow" && side === "tail"
-          ? "icon-arrow-left"
+          ? "arrow-left"
           : o.value === "arrow"
-            ? "icon-arrow-right"
+            ? "arrow-right"
             : o.icon,
       selected: o.value === ext,
       rotate: o.value === "arrow-plain" && side === "tail"
@@ -291,15 +247,15 @@ export class AnnotationPanel {
   ) {
     return `<div class="custom-select" data-type="${type}" ${extra}>
       <div class="custom-select-trigger">
-        <i class="${selected.icon}" ${selected.rotate ? 'style="transform: rotate(180deg)"' : ""}></i>
+        ${this.icon(selected.icon as IconName, selected.rotate)}
         <span>${selected.label}</span>
-        <i class="icon-chevron-down custom-select-arrow"></i>
+        ${this.icon("chevron-down")}
       </div>
       <div class="custom-select-options">${options
         .map(
           (o) => `
-        <div class="custom-select-option ${o.selected ? "selected" : ""}" data-value="${o.value}" title="${o.label}">
-          <i class="${o.icon}" ${o.rotate ? 'style="transform: rotate(180deg)"' : ""}></i>
+        <div class="custom-select-option ${o.selected ? "selected" : ""}" data-value="${o.value}" data-icon="${o.icon}" data-rotate="${o.rotate ? "1" : ""}" title="${o.label}">
+          ${this.icon(o.icon as IconName, o.rotate)}
           <span>${o.label}</span>
         </div>
       `
@@ -330,7 +286,7 @@ export class AnnotationPanel {
       `<div class="linetype-section">${LINE_TYPES.map(
         ({ value, icon }) => `
       <button class="linetype-button ${current === value ? "active" : ""}" data-linetype="${value}" title="${value}">
-        <i class="${icon}"></i>
+        ${this.icon(icon as IconName)}
       </button>
     `
       ).join("")}</div>`
@@ -347,10 +303,10 @@ export class AnnotationPanel {
       circle.addEventListener("click", (e) => {
         e.stopPropagation();
         const wasActive =
-          this.activeColorIndex === i &&
+          this.recent.activeIndex === i &&
           circle.classList.contains("color-circle-primary");
-        this.activeColorIndex = i;
-        this.currentColor = this.recentColors[i];
+        this.recent = { ...this.recent, activeIndex: i };
+        this.currentColor = this.recent.colors[i];
         this.updateColorCircles();
 
         if (wasActive) this.toggleColorPicker(circle);
@@ -398,9 +354,13 @@ export class AnnotationPanel {
             options.forEach((o) => o.classList.remove("selected"));
             opt.classList.add("selected");
 
-            const icon = opt.querySelector("i")!.className;
-            const label = opt.querySelector("span")!.textContent;
-            trigger.querySelector("i")!.className = icon;
+            // Reflect the chosen option's icon/label in the trigger.
+            const iconName = opt.dataset.icon as IconName;
+            const rotate = opt.dataset.rotate === "1";
+            const label = opt.querySelector("span")!.textContent || "";
+            const triggerIcon = trigger.querySelector("svg, span[style]");
+            if (triggerIcon)
+              triggerIcon.outerHTML = this.icon(iconName, rotate);
             trigger.querySelector("span")!.textContent = label;
             sel.classList.remove("open");
 
@@ -457,23 +417,17 @@ export class AnnotationPanel {
 
   // Color management
   private updateColorFromAnnotation(color: string) {
-    if (!this.recentColors.includes(color)) {
-      this.recentColors.unshift(color);
-      this.recentColors = this.recentColors.slice(0, 3);
-      this.activeColorIndex = 0;
-    } else {
-      this.activeColorIndex = this.recentColors.indexOf(color);
-    }
+    this.recent = withColorFromAnnotation(this.recent, color);
     this.currentColor = color;
   }
 
   private updateColorCircles() {
     this.colorCircles.forEach((circle, i) => {
-      circle.setAttribute("data-color", this.recentColors[i]);
-      circle.style.setProperty("--circle-color", this.recentColors[i]);
+      circle.setAttribute("data-color", this.recent.colors[i]);
+      circle.style.setProperty("--circle-color", this.recent.colors[i]);
       circle.classList.toggle(
         "color-circle-primary",
-        i === this.activeColorIndex
+        i === this.recent.activeIndex
       );
     });
   }
@@ -498,7 +452,7 @@ export class AnnotationPanel {
 
     this.colorPicker.addEventListener("color-changed", (event) => {
       this.currentColor = rgbaToString(event.detail.value);
-      this.recentColors[this.activeColorIndex] = this.currentColor;
+      this.recent.colors[this.recent.activeIndex] = this.currentColor;
       this.updateColorCircles();
 
       if (this.mode === "arrow")
@@ -550,9 +504,8 @@ export class AnnotationPanel {
 
   public destroy() {
     this.closeColorPicker();
+    this.detachVisibility();
+    document.removeEventListener("click", this.documentClickHandler);
+    this.panel.remove();
   }
-}
-
-function rgbaToString(color: RgbaColor): string {
-  return `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
 }

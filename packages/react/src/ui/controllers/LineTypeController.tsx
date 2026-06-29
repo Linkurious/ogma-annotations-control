@@ -1,11 +1,8 @@
 import { Annotation } from "@linkurious/ogma-annotations";
+import { LINE_TYPES, type IconName } from "@linkurious/ogma-annotations/ui";
 import React from "react";
-import { useAnnotationsContext } from "../../../../src";
-
-const LINE_TYPES = [
-  { value: "plain", icon: "icon-circle" },
-  { value: "dashed", icon: "icon-circle-dashed" }
-];
+import { useAnnotationsContext } from "../../types";
+import { Icon } from "../Icon";
 
 interface LineTypeControllerProps {
   annotation: Annotation;
@@ -19,9 +16,7 @@ export const LineTypeController: React.FC<LineTypeControllerProps> = ({
   const { editor } = useAnnotationsContext();
 
   const handleLineTypeClick = (lineType: "plain" | "dashed") => {
-    if (annotation) {
-      editor?.updateStyle(annotation.id, { strokeType: lineType });
-    }
+    if (annotation) editor?.updateStyle(annotation.id, { strokeType: lineType });
   };
 
   return (
@@ -37,7 +32,7 @@ export const LineTypeController: React.FC<LineTypeControllerProps> = ({
             title={value}
             onClick={() => handleLineTypeClick(value as "plain" | "dashed")}
           >
-            <i className={icon}></i>
+            <Icon name={icon as IconName} />
           </button>
         ))}
       </div>
