@@ -2,6 +2,7 @@
  * Shared, framework-agnostic configuration for the annotation style panel UI.
  * Consumed by both the vanilla `AnnotationPanel` (core) and the React controllers.
  */
+import type { IconName } from "./icons";
 
 export interface BackgroundOption {
   value: string;
@@ -22,7 +23,7 @@ export interface FontOption {
   value: string;
   label: string;
   /** Icon name from the shared icon set (see `ui/icons`). */
-  icon: string;
+  icon: IconName;
 }
 
 export const FONTS: FontOption[] = [
