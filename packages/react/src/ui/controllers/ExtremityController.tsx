@@ -1,7 +1,7 @@
 import { Extremity, Arrow } from "@linkurious/ogma-annotations";
 import { EXTREMITY_OPTIONS, type IconName } from "@linkurious/ogma-annotations/ui";
 import React, { useState } from "react";
-import { useAnnotationsContext } from "../../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { Icon } from "../Icon";
 
 interface ExtremityControllerProps {

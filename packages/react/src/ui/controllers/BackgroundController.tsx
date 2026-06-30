@@ -1,7 +1,7 @@
 import { Annotation } from "@linkurious/ogma-annotations";
 import { BACKGROUNDS } from "@linkurious/ogma-annotations/ui";
 import React from "react";
-import { useAnnotationsContext } from "../../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 
 interface BackgroundControllerProps {
   annotation: Annotation;

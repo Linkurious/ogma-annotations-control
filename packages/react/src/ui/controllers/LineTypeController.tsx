@@ -1,7 +1,7 @@
 import { Annotation } from "@linkurious/ogma-annotations";
 import { LINE_TYPES, type IconName } from "@linkurious/ogma-annotations/ui";
 import React from "react";
-import { useAnnotationsContext } from "../../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { Icon } from "../Icon";
 
 interface LineTypeControllerProps {

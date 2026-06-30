@@ -3,11 +3,12 @@ import {
   rgbaToString,
   initialRecentColors,
   withColorFromAnnotation,
+  createRgbaColorPicker,
+  type RgbaColorPicker,
   type RecentColorsState
 } from "@linkurious/ogma-annotations/ui";
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { RgbaColorPicker } from "vanilla-colorful/rgba-color-picker.js";
-import { useAnnotationsContext } from "../../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 
 interface ColorControllerProps {
   annotation: Annotation;
@@ -70,7 +71,7 @@ export const ColorController: React.FC<ColorControllerProps> = ({
       colorPickerRef.current &&
       !colorPickerInstance.current
     ) {
-      colorPickerInstance.current = new RgbaColorPicker();
+      colorPickerInstance.current = createRgbaColorPicker();
       colorPickerInstance.current.color = parseColor(currentColor);
       colorPickerRef.current.appendChild(colorPickerInstance.current);
 

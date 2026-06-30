@@ -1,6 +1,5 @@
 import type { Layer as LayerType } from "@linkurious/ogma";
 import { ArrowStyles, TextStyle } from "@linkurious/ogma-annotations";
-//import "@linkurious/ogma-annotations/style.css";
 import { Layer, useOgma } from "@linkurious/ogma-react";
 import React from "react";
 import "@linkurious/ogma-annotations/style.css";
@@ -17,7 +16,7 @@ import {
   defaultArrowStyle,
   defaultTextStyle,
   getAnnotationsBounds
-} from "../../../src";
+} from "@linkurious/ogma-annotations-react";
 
 const preventDefault = (
   evt: React.MouseEvent<HTMLDivElement, MouseEvent> | WheelEvent

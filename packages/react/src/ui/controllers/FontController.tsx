@@ -1,7 +1,7 @@
 import { Comment, Text } from "@linkurious/ogma-annotations";
 import { FONTS, type IconName } from "@linkurious/ogma-annotations/ui";
 import React, { useState } from "react";
-import { useAnnotationsContext } from "../../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { Icon } from "../Icon";
 
 interface FontControllerProps {

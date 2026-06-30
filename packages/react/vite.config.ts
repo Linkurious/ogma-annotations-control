@@ -36,12 +36,14 @@ export default defineConfig({
 
     rollupOptions: {
       external: [
-        "@linkurious/ogma",
-        "@linkurious/ogma-react",
-        "@linkurious/ogma-annotations",
-        "@linkurious/ogma-annotations/ui",
-        "vanilla-colorful",
-        "vanilla-colorful/rgba-color-picker.js",
+        /^@linkurious\/ogma($|\/)/,
+        /^@linkurious\/ogma-react($|\/)/,
+        /^@linkurious\/ogma-annotations($|\/)/,
+        // The /ui entry imports the package's own main entry for the React
+        // context so consumers share a single context instance (avoids the
+        // "editor is undefined" dual-context bug).
+        /^@linkurious\/ogma-annotations-react($|\/)/,
+        /^vanilla-colorful($|\/)/,
         "react",
         "react-dom"
       ]

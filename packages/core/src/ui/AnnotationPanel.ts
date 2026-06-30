@@ -1,4 +1,4 @@
-import { RgbaColorPicker } from "vanilla-colorful/rgba-color-picker.js";
+import { createRgbaColorPicker, type RgbaColorPicker } from "./colorPicker";
 import { Control } from "../Control";
 import {
   Annotation,
@@ -442,7 +442,7 @@ export class AnnotationPanel {
     this.colorPickerOverlay.className = "color-picker-overlay";
     document.body.appendChild(this.colorPickerOverlay);
 
-    this.colorPicker = new RgbaColorPicker();
+    this.colorPicker = createRgbaColorPicker();
     this.colorPicker.color = parseColor(this.currentColor);
     this.colorPickerOverlay.appendChild(this.colorPicker);
 

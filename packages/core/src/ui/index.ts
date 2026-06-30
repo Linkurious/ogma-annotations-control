@@ -12,5 +12,7 @@ export type { AnnotationPanelOptions } from "./AnnotationPanel";
 export * from "./config";
 export * from "./color";
 export * from "./icons";
+export { createRgbaColorPicker } from "./colorPicker";
+export type { RgbaColorPicker, RgbaColor } from "./colorPicker";
 export { attachPanelVisibility } from "./panelVisibility";
 export type { PanelVisibilityControl, PanelVisibilityHandlers } from "./panelVisibility";

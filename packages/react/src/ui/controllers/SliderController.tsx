@@ -1,6 +1,6 @@
 import { Annotation } from "@linkurious/ogma-annotations";
 import React from "react";
-import { useAnnotationsContext } from "../../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 
 interface SliderControllerProps {
   annotation: Annotation;

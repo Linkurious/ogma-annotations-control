@@ -24,7 +24,9 @@ export default defineConfig({
         `${entryName}.${format === "es" ? "mjs" : "js"}`
     },
     rollupOptions: {
-      external: ["@linkurious/ogma", "vanilla-colorful"]
+      // Externalize @linkurious/ogma and every vanilla-colorful entry
+      // (including deep imports like vanilla-colorful/lib/entrypoints/rgba.js).
+      external: [/^@linkurious\/ogma($|\/)/, /^vanilla-colorful($|\/)/]
     },
     minify: true
   }

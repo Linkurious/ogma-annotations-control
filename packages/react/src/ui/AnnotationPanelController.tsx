@@ -1,7 +1,7 @@
 import { Annotation } from "@linkurious/ogma-annotations";
 import { attachPanelVisibility } from "@linkurious/ogma-annotations/ui";
 import React, { useState, useEffect } from "react";
-import { useAnnotationsContext } from "../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { AnnotationPanel } from "./AnnotationPanel";
 
 /**

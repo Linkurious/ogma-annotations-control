@@ -1,7 +1,7 @@
 import { useOgma } from "@linkurious/ogma-react";
 import { getAnnotationsBounds } from "@linkurious/ogma-annotations";
 import React from "react";
-import { useAnnotationsContext } from "../types";
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { Icon } from "./Icon";
 
 export const ViewControls = () => {
