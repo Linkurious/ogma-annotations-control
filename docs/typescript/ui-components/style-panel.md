@@ -44,6 +44,8 @@ const panel = new AnnotationPanel({
 panel.destroy();
 ```
 
+<img src="/ui/vanilla-panel.png" alt="The vanilla style panel showing color, background, font and stroke controls for a selected annotation" />
+
 The panel renders the right controls for the selected annotation type:
 
 - **Arrow** — color, head/tail extremities, stroke width, line type.

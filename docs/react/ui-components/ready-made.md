@@ -70,6 +70,8 @@ That's a full editor: a drawing toolbar, view controls, and a style panel that
 appears when you select an annotation and lets you edit color, background,
 font, line type, stroke width, and arrow extremities.
 
+<img src="/ui/react-editor.png" alt="The ready-made editor: AddMenu toolbar, ViewControls, and the style panel over an annotated graph" />
+
 ## Components
 
 ### `AnnotationPanelController`
@@ -81,6 +83,17 @@ during drags and when nothing is selected. No props.
 ```tsx
 <AnnotationPanelController />
 ```
+
+<div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
+  <figure style="margin: 0;">
+    <img src="/ui/panel-arrow.png" alt="Style panel for a selected arrow: color, extremities, stroke width, line type" style="max-width: 240px;" />
+    <figcaption>Arrow selected</figcaption>
+  </figure>
+  <figure style="margin: 0;">
+    <img src="/ui/panel-text.png" alt="Style panel for selected text: color, background, font, font size, stroke width, line type" style="max-width: 240px;" />
+    <figcaption>Text selected</figcaption>
+  </figure>
+</div>
 
 If you want to control rendering yourself, use the `useAnnotationPanel` hook,
 which returns the current `annotation` and `visible` state:
@@ -110,6 +123,8 @@ via `AnnotationPanelController`, but you can drive it directly.
 The drawing toolbar: buttons for arrow, comment, box, text and polygon, plus
 undo / redo and delete. Optional export buttons appear only when you pass the
 corresponding callback.
+
+<img src="/ui/add-menu.png" alt="AddMenu toolbar with drawing, history, delete and export buttons" />
 
 | Prop | Type | Description |
 | --- | --- | --- |
