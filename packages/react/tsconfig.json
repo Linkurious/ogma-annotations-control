@@ -6,6 +6,14 @@
     "module": "es2022",
     "skipLibCheck": true,
     "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      // The /ui sources import the package's own main entry (for the React
+      // context) and core's /ui subpath. Both are externalized at bundle time,
+      // but tsc runs before dist exists — resolve them to source for typecheck.
+      "@linkurious/ogma-annotations-react": ["./src/index.ts"],
+      "@linkurious/ogma-annotations/ui": ["../core/src/ui/index.ts"]
+    },
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
