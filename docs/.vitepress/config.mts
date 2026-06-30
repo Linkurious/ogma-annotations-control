@@ -150,6 +150,16 @@ export default defineConfig({
               ]
             },
             {
+              text: "UI Components",
+              collapsed: false,
+              items: [
+                {
+                  text: "Ready-made Style Panel",
+                  link: "/typescript/ui-components/style-panel"
+                }
+              ]
+            },
+            {
               text: "Managing Annotations",
               collapsed: false,
               items: [
@@ -215,6 +225,10 @@ export default defineConfig({
               text: "Building UI Components",
               collapsed: false,
               items: [
+                {
+                  text: "Ready-made UI",
+                  link: "/react/ui-components/ready-made"
+                },
                 { text: "Toolbar", link: "/react/ui-components/toolbar" },
                 {
                   text: "Style Panel",
