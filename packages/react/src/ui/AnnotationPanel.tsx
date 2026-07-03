@@ -11,7 +11,7 @@ import {
   defaultArrowStyle,
   defaultTextStyle
 } from "@linkurious/ogma-annotations";
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   ColorController,
   BackgroundController,
@@ -20,8 +20,6 @@ import {
   SliderController,
   LineTypeController
 } from "./controllers";
-
-type AnnotationMode = "arrow" | "text" | "polygon" | null;
 
 export interface AnnotationPanelProps {
   visible: boolean;
@@ -32,19 +30,6 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   visible,
   annotation
 }) => {
-  const [mode, setMode] = useState<AnnotationMode>(null);
-
-  useEffect(() => {
-    if (!annotation) {
-      setMode(null);
-    } else if (isArrow(annotation)) {
-      setMode("arrow");
-    } else if (isText(annotation) || isBox(annotation) || isComment(annotation)) {
-      setMode("text");
-    } else if (isPolygon(annotation)) {
-      setMode("polygon");
-    }
-  }, [annotation]);
 
   const renderArrow = (arrow: Arrow) => {
     const s = arrow.properties.style || {};
@@ -168,13 +153,10 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
       onMouseMove={stopEvent}
     >
       <div className="panel-body">
-        {mode === "arrow" && isArrow(annotation) && renderArrow(annotation)}
-        {mode === "text" &&
-          (isText(annotation) || isBox(annotation) || isComment(annotation)) &&
+        {isArrow(annotation) && renderArrow(annotation)}
+        {(isText(annotation) || isBox(annotation) || isComment(annotation)) &&
           renderText(annotation as Text)}
-        {mode === "polygon" &&
-          isPolygon(annotation) &&
-          renderPolygon(annotation)}
+        {isPolygon(annotation) && renderPolygon(annotation)}
       </div>
     </div>
   );

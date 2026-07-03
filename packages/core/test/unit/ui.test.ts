@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   initialRecentColors,
   withColorFromAnnotation,
@@ -71,7 +71,7 @@ function createFakeControl(annotation: Annotation) {
       return control;
     },
     once(event, handler) {
-      const wrapped = (...args: never[]) => {
+      const wrapped = (...args: unknown[]) => {
         control.off(event, wrapped);
         handler(...args);
       };
@@ -93,28 +93,43 @@ function createFakeControl(annotation: Annotation) {
 describe("ui/panelVisibility", () => {
   const annotation = { id: "a1" } as unknown as Annotation;
 
-  it("shows on click after a single selection", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  it("shows after the delay following a single selection (no click needed)", () => {
     const { control, emit } = createFakeControl(annotation);
     const onShow = vi.fn();
-    const onHide = vi.fn();
-    attachPanelVisibility(control, { onShow, onHide });
+    attachPanelVisibility(control, { onShow, onHide: vi.fn() });
 
     emit("select", { ids: ["a1"] });
-    expect(onShow).not.toHaveBeenCalled(); // pending, not shown yet
-    emit("click");
+    expect(onShow).not.toHaveBeenCalled(); // pending, timer not yet fired
+    vi.runAllTimers();
     expect(onShow).toHaveBeenCalledWith(annotation);
   });
 
-  it("does not show on click when a drag started after selection", () => {
+  it("shows immediately on click, pre-empting the timer", () => {
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide: vi.fn() });
+
+    emit("select", { ids: ["a1"] });
+    emit("click");
+    expect(onShow).toHaveBeenCalledTimes(1);
+    // Timer was cleared, so no second show.
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show when a drag starts after selection", () => {
     const { control, emit } = createFakeControl(annotation);
     const onShow = vi.fn();
     const onHide = vi.fn();
     attachPanelVisibility(control, { onShow, onHide });
 
     emit("select", { ids: ["a1"] });
-    emit("dragstart");
+    emit("dragstart"); // cancels the pending show
     expect(onHide).toHaveBeenCalled();
-    emit("click");
+    vi.runAllTimers();
     expect(onShow).not.toHaveBeenCalled();
   });
 
@@ -125,6 +140,7 @@ describe("ui/panelVisibility", () => {
     attachPanelVisibility(control, { onShow, onHide });
 
     emit("select", { ids: ["a1", "a2"] });
+    vi.runAllTimers();
     expect(onHide).toHaveBeenCalled();
     expect(onShow).not.toHaveBeenCalled();
   });
@@ -136,19 +152,22 @@ describe("ui/panelVisibility", () => {
 
     setDrawing(true);
     emit("select", { ids: ["a1"] });
-    expect(onShow).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(onShow).not.toHaveBeenCalled(); // no timer while drawing
     emit("completeDrawing");
     expect(onShow).toHaveBeenCalledWith(annotation);
   });
 
-  it("detach removes every registered listener", () => {
+  it("detach removes every registered listener and pending timer", () => {
     const { control, emit, listenerCount } = createFakeControl(annotation);
     const onShow = vi.fn();
     const detach = attachPanelVisibility(control, { onShow, onHide: vi.fn() });
 
+    emit("select", { ids: ["a1"] }); // arms the timer
     detach();
     expect(listenerCount("select")).toBe(0);
     expect(listenerCount("click")).toBe(0);
+    vi.runAllTimers();
     emit("select", { ids: ["a1"] });
     emit("click");
     expect(onShow).not.toHaveBeenCalled();

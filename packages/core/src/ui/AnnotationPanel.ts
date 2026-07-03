@@ -492,7 +492,8 @@ export class AnnotationPanel {
 
   // Visibility
   public show() {
-    setTimeout(() => (this.panel.style.display = "block"), 200);
+    // Timing is handled by the shared visibility state machine; show now.
+    this.panel.style.display = "block";
   }
 
   public hide = () => {
