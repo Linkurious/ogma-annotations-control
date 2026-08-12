@@ -98,7 +98,7 @@
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "2.1.0",
     "oxlint": "0.16.0",
-    "@types/geojson": "7946.0.13",
+    "@types/geojson": "7946.0.16",
     "@types/rbush": "4.0.0",
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
