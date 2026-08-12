@@ -75,7 +75,7 @@
     "oxlint": "0.16.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "typedoc": "0.28.15",
+    "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
