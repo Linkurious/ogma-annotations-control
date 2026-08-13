@@ -1,0 +1,573 @@
+/**
+ * Canonical stylesheet for the annotation style panel and toolbar UI.
+ * Shared by the vanilla (core) and React packages.
+ *
+ * Theming: override the `--oa-*` custom properties on `.annotation-panel`
+ * / `.annotation-toolbar` (or any ancestor) to restyle. Defaults preserve
+ * the original look. The accent color falls back to the legacy `--brand`
+ * variable if set.
+ *
+ * Layout: both roots carry `data-placement` (which screen edge/corner they
+ * dock to — `right` (default for the panel), `left`, `top`,
+ * `bottom` (default for the toolbar), `top-left`, `top-right`,
+ * `bottom-left`, `bottom-right`) and `data-orientation` (`vertical`
+ * (default for the panel) or `horizontal` (default for the toolbar)), set
+ * via the `placement`/`orientation` options (vanilla) or props (React).
+ * Position either relative to its container by giving that container
+ * `position: relative`.
+ */
+
+.annotation-panel,
+.annotation-toolbar {
+  /* Theme tokens */
+  --oa-accent: var(--brand, #3a03cf);
+  --oa-panel-bg: #ffffff;
+  --oa-panel-radius: 10px;
+  --oa-panel-shadow: 0 0 5px rgba(0, 0, 0, 0.4);
+  --oa-control-bg: #eeeeee;
+  --oa-text-color: #333333;
+  --oa-muted-color: #666666;
+  --oa-panel-margin: 10px;
+
+  position: absolute;
+  background: var(--oa-panel-bg);
+  z-index: 100;
+  box-shadow: var(--oa-panel-shadow);
+  border-radius: var(--oa-panel-radius);
+}
+
+.annotation-panel {
+  width: 228px;
+}
+
+/* Placement: which screen edge/corner the root docks to. */
+.annotation-panel:not([data-placement]),
+.annotation-panel[data-placement="right"],
+.annotation-toolbar[data-placement="right"] {
+  right: var(--oa-panel-margin);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.annotation-panel[data-placement="left"],
+.annotation-toolbar[data-placement="left"] {
+  left: var(--oa-panel-margin);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.annotation-panel[data-placement="top"],
+.annotation-toolbar[data-placement="top"] {
+  top: var(--oa-panel-margin);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.annotation-toolbar:not([data-placement]),
+.annotation-panel[data-placement="bottom"],
+.annotation-toolbar[data-placement="bottom"] {
+  bottom: var(--oa-panel-margin);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.annotation-panel[data-placement="top-left"],
+.annotation-toolbar[data-placement="top-left"] {
+  left: var(--oa-panel-margin);
+  top: var(--oa-panel-margin);
+}
+
+.annotation-panel[data-placement="top-right"],
+.annotation-toolbar[data-placement="top-right"] {
+  right: var(--oa-panel-margin);
+  top: var(--oa-panel-margin);
+}
+
+.annotation-panel[data-placement="bottom-left"],
+.annotation-toolbar[data-placement="bottom-left"] {
+  left: var(--oa-panel-margin);
+  bottom: var(--oa-panel-margin);
+}
+
+.annotation-panel[data-placement="bottom-right"],
+.annotation-toolbar[data-placement="bottom-right"] {
+  right: var(--oa-panel-margin);
+  bottom: var(--oa-panel-margin);
+}
+
+/* Orientation: lay sections out as a horizontal toolbar instead of a
+   vertically-stacked card. Every section is a `.section-header` + one
+   content sibling (`.color-selector`, `.slider-section`, ...); a 2-row
+   auto-flow grid regroups each consecutive pair into its own column
+   without any markup changes. */
+.annotation-panel[data-orientation="horizontal"] {
+  width: auto;
+  max-width: min(90vw, 640px);
+}
+
+.annotation-panel[data-orientation="horizontal"] .panel-body {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: auto auto;
+  align-items: start;
+  column-gap: 20px;
+  overflow-x: auto;
+}
+
+.annotation-panel[data-orientation="horizontal"] .section-header {
+  margin-top: 0;
+}
+
+.annotation-panel[data-orientation="horizontal"] .slider {
+  width: 120px;
+}
+
+.panel-header {
+  padding: 20px 20px 10px 20px;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.panel-body {
+  padding: 10px 20px 20px 20px;
+}
+
+/* Color Selector */
+.color-selector {
+  display: flex;
+  gap: 12px;
+}
+
+.color-circle {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.color-circle:hover {
+  transform: scale(1.05);
+}
+
+.color-circle .color-inner {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid #d4d4d8;
+  background: white;
+  position: relative;
+}
+
+.color-circle .color-inner::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--circle-color);
+}
+
+.color-circle-primary .color-inner {
+  border: 3px solid var(--oa-accent);
+}
+
+/* Color Picker Container */
+.color-picker-container {
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 4px;
+  display: none !important;
+}
+
+/* Toggle Section */
+.toggle-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0;
+  margin-bottom: 10px;
+}
+
+.toggle-section svg {
+  color: var(--oa-text-color);
+}
+
+.toggle-label {
+  font-size: 14px;
+  color: var(--oa-text-color);
+  font-weight: 400;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 31px;
+  height: 15px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #eeeeee;
+  transition: 0.3s;
+  border-radius: 7.5px;
+  border: 0.5px solid #b6c2e2;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 2px;
+  bottom: 1.5px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--oa-accent);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(15px);
+}
+
+/* Section Headers */
+.section-header {
+  margin-top: 10px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Slider Section */
+.slider-section {
+  position: relative;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider {
+  width: 85%;
+  height: 4.8px;
+  border-radius: 2.4px;
+  background: #e4e4e7;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--oa-accent);
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  border: 3px solid var(--oa-accent);
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+}
+
+.slider-value {
+  width: 15%;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.slider-value span {
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+}
+
+/* Line Type Section */
+.linetype-section {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.linetype-button {
+  flex: 1;
+  height: 36px;
+  background: var(--oa-control-bg);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--oa-muted-color);
+  transition: all 0.2s;
+  font-size: 18px;
+}
+
+.linetype-button:hover {
+  background: #e0e0e0;
+}
+
+.linetype-button.active {
+  background: var(--oa-accent);
+  color: white;
+}
+
+/* Color Picker Overlay */
+.color-picker-overlay {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+/* Custom Select Section */
+.custom-select-section {
+  display: flex;
+  gap: 8px;
+}
+
+.extremity-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.extremity-wrapper label {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--oa-muted-color);
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.custom-select {
+  position: relative;
+  width: 100%;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  height: 36px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 0 8px;
+  font-size: 14px;
+  color: var(--oa-text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.custom-select-trigger svg:first-child {
+  flex-shrink: 0;
+}
+
+.custom-select-trigger span {
+  display: none;
+}
+
+.custom-select-arrow {
+  font-size: 12px;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.custom-select.open .custom-select-arrow {
+  transform: rotate(180deg);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-top: 4px;
+  margin-right: 24px;
+  overflow: hidden;
+  z-index: 1000;
+  display: none;
+}
+
+.custom-select.open .custom-select-options {
+  display: block;
+  width: 36px;
+}
+
+.custom-select-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.15s;
+  font-size: 14px;
+  color: var(--oa-text-color);
+}
+
+.custom-select-option:hover {
+  background: #f5f5f5;
+}
+
+.custom-select-option.selected {
+  background: #e8f4ff;
+  color: var(--oa-accent);
+}
+
+.custom-select-option svg {
+  flex-shrink: 0;
+}
+
+.custom-select-option span {
+  display: none;
+}
+
+/* --- Annotation Toolbar (AnnotationToolbar) ---
+   Drawing/undo-redo toolbar. Shares the placement rules above with
+   `.annotation-panel`; only its own button/orientation styling lives here. */
+.annotation-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px;
+}
+
+.annotation-toolbar[data-orientation="vertical"] {
+  flex-direction: column;
+}
+
+.annotation-toolbar:not([data-orientation]),
+.annotation-toolbar[data-orientation="horizontal"] {
+  flex-direction: row;
+}
+
+.annotation-toolbar button {
+  margin: 2px;
+  padding: 5px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--oa-muted-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.annotation-toolbar button:hover {
+  background: var(--oa-control-bg);
+  color: var(--oa-text-color);
+}
+
+.annotation-toolbar button.active {
+  background: var(--oa-accent);
+  color: #fff;
+}
+
+.annotation-toolbar button:disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.annotation-toolbar .separator {
+  border-left: 1px solid #ccc;
+  margin: 0 4px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.annotation-toolbar[data-orientation="vertical"] .separator {
+  border-left: none;
+  border-top: 1px solid #ccc;
+  width: 20px;
+  height: 0;
+  margin: 4px 0;
+}
+
+/* Tooltips, shown on hover via the `data-tooltip` attribute. */
+.annotation-toolbar [data-tooltip] {
+  position: relative;
+}
+
+.annotation-toolbar [data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%) translateY(-6px);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 5px;
+  pointer-events: none;
+  z-index: 99;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.annotation-toolbar [data-tooltip]:hover::after {
+  opacity: 1;
+}

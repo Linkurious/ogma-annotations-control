@@ -1,12 +1,8 @@
 import { Comment, Text } from "@linkurious/ogma-annotations";
+import { FONTS, type IconName } from "@linkurious/ogma-annotations/ui";
 import React, { useState } from "react";
-import { useAnnotationsContext } from "../../../../src";
-
-const FONTS = [
-  { value: "sans-serif", label: "Sans Serif", icon: "icon-type" },
-  { value: "serif", label: "Serif", icon: "icon-italic" },
-  { value: "monospace", label: "Monospace", icon: "icon-code" }
-];
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
+import { Icon } from "../Icon";
 
 interface FontControllerProps {
   annotation: Comment | Text;
@@ -21,9 +17,7 @@ export const FontController: React.FC<FontControllerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const handleFontSelect = (fontValue: string) => {
-    if (annotation) {
-      editor?.updateStyle(annotation.id, { font: fontValue });
-    }
+    if (annotation) editor?.updateStyle(annotation.id, { font: fontValue });
     setIsOpen(false);
   };
 
@@ -40,9 +34,9 @@ export const FontController: React.FC<FontControllerProps> = ({
             className="custom-select-trigger"
             onClick={() => setIsOpen(!isOpen)}
           >
-            <i className={selected.icon}></i>
+            <Icon name={selected.icon as IconName} />
             <span>{selected.label}</span>
-            <i className="icon-chevron-down custom-select-arrow"></i>
+            <Icon name="chevron-down" className="custom-select-arrow" />
           </div>
           <div className="custom-select-options">
             {FONTS.map((font) => (
@@ -52,7 +46,7 @@ export const FontController: React.FC<FontControllerProps> = ({
                 title={font.label}
                 onClick={() => handleFontSelect(font.value)}
               >
-                <i className={font.icon}></i>
+                <Icon name={font.icon as IconName} />
                 <span>{font.label}</span>
               </div>
             ))}

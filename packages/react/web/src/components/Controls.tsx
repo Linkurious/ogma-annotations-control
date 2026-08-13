@@ -1,23 +1,22 @@
 import type { Layer as LayerType } from "@linkurious/ogma";
 import { ArrowStyles, TextStyle } from "@linkurious/ogma-annotations";
-//import "@linkurious/ogma-annotations/style.css";
 import { Layer, useOgma } from "@linkurious/ogma-react";
 import React from "react";
 import "@linkurious/ogma-annotations/style.css";
 
 import "./Controls.css";
 
-import { AddMenu } from "./AddMenu";
+import { AddMenu, ViewControls } from "@linkurious/ogma-annotations-react/ui";
+import "@linkurious/ogma-annotations-react/ui/styles.css";
 import { JsonExportPopup } from "./JsonExportPopup";
 import { SvgExportPopup } from "./SvgExportPopup";
-import { ViewControls } from "./ViewControls";
 
 import {
   useAnnotationsContext,
   defaultArrowStyle,
   defaultTextStyle,
   getAnnotationsBounds
-} from "../../../src";
+} from "@linkurious/ogma-annotations-react";
 
 const preventDefault = (
   evt: React.MouseEvent<HTMLDivElement, MouseEvent> | WheelEvent

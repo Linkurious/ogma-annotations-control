@@ -24,28 +24,29 @@ export default defineConfig({
   define: { "process.env": { NODE_ENV: "production" } },
   build: {
     lib: {
-      name: "OgmaAnnotationsReact",
-      fileName: (format) => `index.${format === "umd" ? "" : "m"}js`,
-      entry: resolve(__dirname, "src/index.ts")
+      entry: {
+        index: resolve(__dirname, "src/index.ts"),
+        ui: resolve(__dirname, "src/ui/index.ts")
+      },
+      // Multi-entry libs cannot use UMD; emit ESM (.mjs) and CJS (.js).
+      formats: ["es", "cjs"],
+      fileName: (format, entryName) =>
+        `${entryName}.${format === "es" ? "mjs" : "js"}`
     },
 
     rollupOptions: {
       external: [
-        "@linkurious/ogma",
-        "@linkurious/ogma-react",
-        "@linkurious/ogma-annotations",
+        /^@linkurious\/ogma($|\/)/,
+        /^@linkurious\/ogma-react($|\/)/,
+        /^@linkurious\/ogma-annotations($|\/)/,
+        // The /ui entry imports the package's own main entry for the React
+        // context so consumers share a single context instance (avoids the
+        // "editor is undefined" dual-context bug).
+        /^@linkurious\/ogma-annotations-react($|\/)/,
+        /^vanilla-colorful($|\/)/,
         "react",
         "react-dom"
-      ],
-      output: {
-        globals: {
-          "@linkurious/ogma": "Ogma",
-          "@linkurious/ogma-react": "OgmaReact",
-          "@linkurious/ogma-annotations": "OgmaAnnotations",
-          react: "React",
-          "react-dom": "ReactDOM"
-        }
-      }
+      ]
     }
   },
   test: {

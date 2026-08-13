@@ -22,6 +22,23 @@
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
+    "./ui": {
+      "types": "./dist/types/ui.d.ts",
+      "import": "./dist/ui.mjs",
+      "require": "./dist/ui.js",
+      "default": "./dist/ui.mjs"
+    },
+    "./ui/styles.css": {
+      "style": {
+        "default": "./dist/ui-styles.css"
+      },
+      "import": {
+        "default": "./dist/ui-styles.css"
+      },
+      "require": {
+        "default": "./dist/ui-styles.css"
+      }
+    },
     "./style.css": {
       "style": {
         "default": "./dist/ogma-annotations.css"
@@ -52,6 +69,7 @@
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "build": "vite build",
+    "postbuild": "cp src/ui/styles.css dist/ui-styles.css",
     "lint": "npx oxlint -c oxlint.json src",
     "lint:ci": "mkdir -p reports && npx oxlint -c oxlint.json -f checkstyle src > reports/checkstyle.xml",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
@@ -93,6 +111,7 @@
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
     "rbush": "4.0.1",
+    "vanilla-colorful": "0.7.2",
     "zundo": "2.3.0",
     "zustand": "5.0.7"
   },
@@ -108,7 +127,6 @@
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
-    "vanilla-colorful": "0.7.2",
     "vite": "6.4.3",
     "vite-plugin-dts": "^4.1.0",
     "vitest": "3.2.6",
