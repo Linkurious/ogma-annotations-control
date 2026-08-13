@@ -1,5 +1,13 @@
 import { Control } from "../Control";
 import { EVT_COMPLETE_DRAWING, EVT_CANCEL_DRAWING, EVT_HISTORY } from "../constants";
+import type {
+  Arrow,
+  ArrowProperties,
+  Box,
+  CommentProps,
+  Polygon,
+  Text
+} from "../types";
 import { svgIcon, type IconName } from "./icons";
 import type { PanelPlacement, PanelOrientation } from "./layout";
 
@@ -10,6 +18,35 @@ const DEFAULT_TOOLBAR_PLACEMENT: PanelPlacement = "bottom";
 const DEFAULT_TOOLBAR_ORIENTATION: PanelOrientation = "horizontal";
 
 type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
+
+/** One of the toolbar's drawing tools - see `enabledTypes`. */
+export type ToolbarDrawingType = "arrow" | "comment" | "box" | "text" | "polygon";
+
+const ALL_DRAWING_TYPES: ToolbarDrawingType[] = [
+  "arrow",
+  "comment",
+  "box",
+  "text",
+  "polygon"
+];
+
+/**
+ * Per-type default style overrides, merged over the toolbar's own built-in
+ * defaults (which stay in effect for anything you don't override). See
+ * `Control.enableArrowDrawing` etc. for what each shape configures.
+ */
+export interface AnnotationToolbarStyles {
+  arrow?: Partial<Arrow["properties"]["style"]>;
+  box?: Partial<Box["properties"]["style"]>;
+  text?: Partial<Text["properties"]["style"]>;
+  polygon?: Partial<Polygon["properties"]["style"]>;
+  comment?: {
+    offsetX?: number;
+    offsetY?: number;
+    commentStyle?: Partial<CommentProps>;
+    arrowStyle?: Partial<ArrowProperties>;
+  };
+}
 
 export interface AnnotationToolbarOptions {
   control: Control;
@@ -30,6 +67,13 @@ export interface AnnotationToolbarOptions {
    * {@link AnnotationToolbar.setOrientation}.
    */
   orientation?: PanelOrientation;
+  /**
+   * Which drawing tools to show, and in what order. Defaults to all five:
+   * `["arrow", "comment", "box", "text", "polygon"]`.
+   */
+  enabledTypes?: ToolbarDrawingType[];
+  /** Per-type default style overrides for the drawing tool buttons. */
+  styles?: AnnotationToolbarStyles;
   /** Called when the SVG export button is clicked. Omit to hide the button. */
   onSvgExport?: () => void;
   /** Called when the JSON export button is clicked. Omit to hide the button. */
@@ -67,83 +111,14 @@ export class AnnotationToolbar {
       this.root.addEventListener(evt, (e) => e.stopPropagation())
     );
 
-    this.root.appendChild(
-      this.button("arrow", "arrow-right", "Add arrow", () => {
-        this.control.enableArrowDrawing({
-          strokeType: "plain",
-          strokeColor: "#3A03CF",
-          strokeWidth: 2,
-          head: "arrow"
-        });
-        this.setActiveMode("arrow");
-      })
-    );
-    this.root.appendChild(
-      this.button("comment", "message-square", "Add comment", () => {
-        this.control.enableCommentDrawing({
-          offsetX: 200,
-          offsetY: -150,
-          commentStyle: {
-            content: "",
-            style: {
-              color: "#3A03CF",
-              background: "#EDE6FF",
-              fontSize: 16,
-              font: "IBM Plex Sans"
-            }
-          },
-          arrowStyle: {
-            style: {
-              strokeType: "plain",
-              strokeColor: "#3A03CF",
-              strokeWidth: 2,
-              head: "halo-dot"
-            }
-          }
-        });
-        this.setActiveMode("comment");
-      })
-    );
-    this.root.appendChild(
-      this.button("box", "rectangle-horizontal", "Add box", () => {
-        this.control.enableBoxDrawing({
-          background: "#EDE6FF",
-          borderRadius: 8,
-          padding: 12
-        });
-        this.setActiveMode("box");
-      })
-    );
-    this.root.appendChild(
-      this.button("text", "type", "Add text", () => {
-        this.control.enableTextDrawing({
-          font: "IBM Plex Sans",
-          fontSize: 24,
-          color: "#3A03CF",
-          background: "#EDE6FF",
-          borderRadius: 8,
-          padding: 12
-        });
-        this.setActiveMode("text");
-      })
-    );
-    this.root.appendChild(
-      this.button(
-        "polygon",
-        "pentagon",
-        "Add polygon (click points, Esc to finish)",
-        () => {
-          this.control.enablePolygonDrawing({
-            strokeColor: "#3A03CF",
-            strokeWidth: 2,
-            background: "rgba(58, 3, 207, 0.15)"
-          });
-          this.setActiveMode("polygon");
-        }
-      )
+    const enabled = options.enabledTypes ?? ALL_DRAWING_TYPES;
+    const styles = options.styles ?? {};
+
+    ALL_DRAWING_TYPES.filter((type) => enabled.includes(type)).forEach(
+      (type) => this.root.appendChild(this.drawingButton(type, styles))
     );
 
-    this.root.appendChild(this.separator());
+    if (enabled.length > 0) this.root.appendChild(this.separator());
 
     this.undoButton = this.button(null, "undo", "Undo", () => this.control.undo());
     this.redoButton = this.button(null, "redo", "Redo", () => this.control.redo());
@@ -175,6 +150,94 @@ export class AnnotationToolbar {
     this.control.on(EVT_CANCEL_DRAWING, this.handleDrawingEnd);
     this.control.on(EVT_HISTORY, this.handleHistory);
     this.updateUndoRedo();
+  }
+
+  private drawingButton(
+    type: ToolbarDrawingType,
+    styles: AnnotationToolbarStyles
+  ): HTMLButtonElement {
+    switch (type) {
+      case "arrow":
+        return this.button("arrow", "arrow-right", "Add arrow", () => {
+          this.control.enableArrowDrawing({
+            strokeType: "plain",
+            strokeColor: "#3A03CF",
+            strokeWidth: 2,
+            head: "arrow",
+            ...styles.arrow
+          });
+          this.setActiveMode("arrow");
+        });
+      case "comment":
+        return this.button("comment", "message-square", "Add comment", () => {
+          const commentOverride = styles.comment?.commentStyle;
+          const arrowOverride = styles.comment?.arrowStyle;
+          this.control.enableCommentDrawing({
+            offsetX: styles.comment?.offsetX ?? 200,
+            offsetY: styles.comment?.offsetY ?? -150,
+            commentStyle: {
+              content: "",
+              ...commentOverride,
+              style: {
+                color: "#3A03CF",
+                background: "#EDE6FF",
+                fontSize: 16,
+                font: "IBM Plex Sans",
+                ...commentOverride?.style
+              }
+            },
+            arrowStyle: {
+              ...arrowOverride,
+              style: {
+                strokeType: "plain",
+                strokeColor: "#3A03CF",
+                strokeWidth: 2,
+                head: "halo-dot",
+                ...arrowOverride?.style
+              }
+            }
+          });
+          this.setActiveMode("comment");
+        });
+      case "box":
+        return this.button("box", "rectangle-horizontal", "Add box", () => {
+          this.control.enableBoxDrawing({
+            background: "#EDE6FF",
+            borderRadius: 8,
+            padding: 12,
+            ...styles.box
+          });
+          this.setActiveMode("box");
+        });
+      case "text":
+        return this.button("text", "type", "Add text", () => {
+          this.control.enableTextDrawing({
+            font: "IBM Plex Sans",
+            fontSize: 24,
+            color: "#3A03CF",
+            background: "#EDE6FF",
+            borderRadius: 8,
+            padding: 12,
+            ...styles.text
+          });
+          this.setActiveMode("text");
+        });
+      case "polygon":
+        return this.button(
+          "polygon",
+          "pentagon",
+          "Add polygon (click points, Esc to finish)",
+          () => {
+            this.control.enablePolygonDrawing({
+              strokeColor: "#3A03CF",
+              strokeWidth: 2,
+              background: "rgba(58, 3, 207, 0.15)",
+              ...styles.polygon
+            });
+            this.setActiveMode("polygon");
+          }
+        );
+    }
   }
 
   private button(

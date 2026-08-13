@@ -13,5 +13,6 @@ little padding):
 | `panel-arrow.png` | Style panel with an **arrow** selected (color, extremities, stroke width, line type) | `react/ui-components/ready-made.md` |
 | `panel-text.png` | Style panel with a **text** annotation selected (color, background, font, font size, stroke width, line type) | `react/ui-components/ready-made.md` |
 | `vanilla-panel.png` | The vanilla `AnnotationPanel` (any annotation type) | `typescript/ui-components/style-panel.md` |
+| `vanilla-toolbar.png` | The vanilla `AnnotationToolbar` on its own | `typescript/ui-components/toolbar.md` |
 
 Once added, delete this README if you like — it isn't referenced anywhere.

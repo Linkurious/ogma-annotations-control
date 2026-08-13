@@ -156,6 +156,10 @@ export default defineConfig({
                 {
                   text: "Ready-made Style Panel",
                   link: "/typescript/ui-components/style-panel"
+                },
+                {
+                  text: "Ready-made Toolbar",
+                  link: "/typescript/ui-components/toolbar"
                 }
               ]
             },

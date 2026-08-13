@@ -9,7 +9,11 @@
 export { AnnotationPanel } from "./AnnotationPanel";
 export type { AnnotationPanelOptions } from "./AnnotationPanel";
 export { AnnotationToolbar } from "./AnnotationToolbar";
-export type { AnnotationToolbarOptions } from "./AnnotationToolbar";
+export type {
+  AnnotationToolbarOptions,
+  AnnotationToolbarStyles,
+  ToolbarDrawingType
+} from "./AnnotationToolbar";
 
 export * from "./config";
 export * from "./color";

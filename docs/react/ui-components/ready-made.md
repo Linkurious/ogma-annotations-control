@@ -78,10 +78,15 @@ font, line type, stroke width, and arrow extremities.
 
 A turnkey style panel. It listens to the editor's selection and shows the
 [`AnnotationPanel`](#annotationpanel) for the selected annotation, hiding it
-during drags and when nothing is selected. No props.
+during drags and when nothing is selected.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
+| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`. |
 
 ```tsx
-<AnnotationPanelController />
+<AnnotationPanelController placement="top-right" orientation="horizontal" />
 ```
 
 <div style="display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start;">
@@ -117,6 +122,16 @@ via `AnnotationPanelController`, but you can drive it directly.
 | --- | --- | --- |
 | `annotation` | `Annotation \| null` | The annotation to edit. |
 | `visible` | `boolean` | Whether the panel is shown. |
+| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
+| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`. |
+
+`PanelPlacement` is one of `"left"`, `"right"` (default), `"top"`, `"bottom"`,
+`"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"` — applied as a
+`data-placement` attribute and handled entirely in CSS, same as the vanilla
+[`AnnotationPanel`](/typescript/ui-components/style-panel#layout) it wraps.
+`AddMenu` doesn't yet support the same docking system (its position is left to
+your own CSS); the vanilla-only [`AnnotationToolbar`](/typescript/ui-components/toolbar)
+does.
 
 ### `AddMenu`
 
@@ -128,12 +143,32 @@ corresponding callback.
 
 | Prop | Type | Description |
 | --- | --- | --- |
+| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_ | Which drawing tools to show, and in what order. Defaults to all five: `["arrow", "comment", "box", "text", "polygon"]`. |
+| `styles` | `AnnotationToolbarStyles` _(optional)_ | Per-type default style overrides for the drawing tool buttons. |
 | `onJsonExport` | `() => void` _(optional)_ | Show a JSON export button that calls this. |
 | `onSvgExport` | `() => void` _(optional)_ | Show an SVG export button that calls this. |
 
 ```tsx
 <AddMenu onJsonExport={exportJson} onSvgExport={exportSvg} />
 ```
+
+Restrict the tools shown and override their default styles - only the
+properties you set change, everything else keeps its built-in default:
+
+```tsx
+<AddMenu
+  enabledTypes={["arrow", "text"]}
+  styles={{
+    arrow: { strokeColor: "#0aa", strokeWidth: 3 },
+    text: { font: "Georgia", fontSize: 18 }
+  }}
+/>
+```
+
+`ToolbarDrawingType` and `AnnotationToolbarStyles` come from
+`@linkurious/ogma-annotations/ui` — the same types the vanilla
+[`AnnotationToolbar`](/typescript/ui-components/toolbar#restricting-tools-and-overriding-defaults)
+uses.
 
 ### `ViewControls`
 

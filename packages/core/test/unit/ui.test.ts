@@ -407,4 +407,38 @@ describe("ui/AnnotationToolbar", () => {
     expect(document.querySelector(".annotation-toolbar")).toBeNull();
     expect(listenerCount("completeDrawing")).toBe(0);
   });
+
+  it("only renders the drawing tools listed in enabledTypes", () => {
+    const fake = createFakeToolbarControl(empty);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      enabledTypes: ["arrow", "text"]
+    });
+
+    expect(document.querySelector('[data-tooltip="Add arrow"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Add text"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Add comment"]')).toBeNull();
+    expect(document.querySelector('[data-tooltip="Add box"]')).toBeNull();
+    expect(
+      document.querySelector('[data-tooltip="Add polygon (click points, Esc to finish)"]')
+    ).toBeNull();
+
+    toolbar.destroy();
+  });
+
+  it("merges per-type style overrides over the built-in defaults", () => {
+    const fake = createFakeToolbarControl(empty);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      styles: { arrow: { strokeColor: "#00ff00" } }
+    });
+
+    document.querySelector<HTMLButtonElement>('[data-tooltip="Add arrow"]')!.click();
+
+    expect(fake.control.enableArrowDrawing).toHaveBeenCalledWith(
+      expect.objectContaining({ strokeColor: "#00ff00", strokeWidth: 2 })
+    );
+
+    toolbar.destroy();
+  });
 });

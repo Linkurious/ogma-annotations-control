@@ -5,6 +5,8 @@ have to build one by hand. It lives under the `@linkurious/ogma-annotations/ui`
 subpath and is completely optional — importing the main package entry stays
 headless and pulls in none of this code or CSS.
 
+<img src="/ui/vanilla-panel.png" alt="The vanilla style panel showing color, background, font and stroke controls for a selected annotation" />
+
 ## Installation
 
 The panel is part of the package — no extra install. Import it from the `/ui`
@@ -44,8 +46,6 @@ const panel = new AnnotationPanel({
 panel.destroy();
 ```
 
-<img src="/ui/vanilla-panel.png" alt="The vanilla style panel showing color, background, font and stroke controls for a selected annotation" />
-
 The panel renders the right controls for the selected annotation type:
 
 - **Arrow** — color, head/tail extremities, stroke width, line type.
@@ -62,6 +62,8 @@ so changes flow through the normal update path (including undo/redo).
 | --- | --- | --- |
 | `control` | `Control` | The annotation controller to bind to. |
 | `container` | `HTMLElement` _(optional)_ | Element the panel mounts into. Defaults to `document.body`. |
+| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
+| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`. |
 
 ## Methods
 
@@ -69,7 +71,42 @@ so changes flow through the normal update path (including undo/redo).
 | --- | --- |
 | `show()` | Show the panel. |
 | `hide()` | Hide the panel and close any open color picker. |
+| `setPlacement(placement)` | Change which edge/corner the panel docks to at runtime. |
+| `setOrientation(orientation)` | Switch between vertical and horizontal layout at runtime. |
 | `destroy()` | Detach all event listeners and remove the panel from the DOM. |
+
+## Layout
+
+`placement` docks the panel to a screen edge or corner; `orientation` controls
+whether its sections stack vertically or run left-to-right as a toolbar. Both
+are applied as `data-placement`/`data-orientation` attributes and handled
+entirely in CSS — there's no inline positioning to fight.
+
+```ts
+import { AnnotationPanel } from "@linkurious/ogma-annotations/ui";
+
+const panel = new AnnotationPanel({
+  control,
+  placement: "top-right",
+  orientation: "horizontal"
+});
+
+// Change either at runtime:
+panel.setPlacement("bottom-left");
+panel.setOrientation("vertical");
+```
+
+`PanelPlacement` is one of `"left"`, `"right"` (default), `"top"`, `"bottom"`,
+`"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"`.
+
+`PanelOrientation` is `"vertical"` (default) or `"horizontal"`.
+
+::: tip Placing it inside a container
+`placement` positions the panel relative to its nearest positioned ancestor —
+by default that's the viewport (via `document.body`). Pass a `container` with
+`position: relative` to dock corners/edges relative to that element instead
+of the whole page.
+:::
 
 ## Theming
 
