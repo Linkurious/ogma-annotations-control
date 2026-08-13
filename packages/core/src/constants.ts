@@ -61,6 +61,15 @@ export const COMMENT_MODE_EXPANDED = "expanded";
 export const TEXT_LINE_HEIGHT = 1.2;
 export const HL_BRIGHTEN = 0.2;
 
+/** Default world-units buffer kept around each node in a tracked region */
+export const REGION_DEFAULT_PADDING = 20;
+/** Default concaveman concavity for region polygons (lower = more organic) */
+export const REGION_DEFAULT_CONCAVITY = 2;
+/** Points generated around each node's circumference when hulling a region */
+export const REGION_HULL_POINTS_PER_NODE = 8;
+/** Debounce (ms) before recomputing region shapes after a node move batch */
+export const REGION_COMMIT_DEBOUNCE_MS = 1;
+
 /** @private */
 export const TARGET_TYPES = {
   TEXT: "text" as const,

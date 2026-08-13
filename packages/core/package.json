@@ -108,6 +108,7 @@
   },
   "dependencies": {
     "@chenglou/pretext": "0.0.7",
+    "concaveman": "2.0.0",
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
     "rbush": "4.0.1",
@@ -117,11 +118,12 @@
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "2.1.0",
-    "oxlint": "0.16.0",
+    "@types/concaveman": "1.1.6",
     "@types/geojson": "7946.0.16",
     "@types/rbush": "4.0.0",
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
+    "oxlint": "0.16.0",
     "playwright": "1.57.0",
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.9.0",

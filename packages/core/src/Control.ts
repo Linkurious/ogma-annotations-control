@@ -24,6 +24,7 @@ import {
 } from "./constants";
 import { AnnotationEditor } from "./handlers";
 import { Links } from "./handlers/links";
+import { Regions } from "./handlers/regions";
 import { Snapping } from "./handlers/snapping";
 
 import { InteractionController } from "./interaction";
@@ -47,6 +48,7 @@ import {
   FeatureEvents,
   Id,
   Polygon,
+  PolygonStyle,
   Text,
   DeepPartial,
   Side,
@@ -84,6 +86,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private editor: AnnotationEditor;
   // TODO: maybe links should be part of the store?
   private links: Links;
+  private regions: Regions;
   private index: Index;
   private drawing: Drawing;
   private snapping: Snapping;
@@ -111,6 +114,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.links = new Links(this.ogma, this.snapping, this.store, (arrow, link) => {
       this.emit(EVT_LINK, { arrow, link });
     });
+    this.regions = new Regions(this.ogma, this.store, this.index);
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
@@ -465,6 +469,55 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
+   * Create a "region" polygon: a concave hull wrapped around the given
+   * nodes' current positions, which then keeps reshaping to enclose them as
+   * they're dragged. Membership is sticky (a node stays tracked once
+   * enclosed) and geometric (a node dragged into the region from outside
+   * joins automatically) — see {@link trackRegionNodes} to opt an existing
+   * polygon into the same behavior instead of creating a new one.
+   *
+   * @param nodeIds Ids of the graph nodes to wrap and track
+   * @param options.padding World-units buffer kept around each node (default 20)
+   * @param options.concavity concaveman concavity — lower is more organic/tighter, higher is more convex (default 2)
+   * @param options.style Polygon style options
+   * @returns The created region polygon
+   */
+  public createRegion(
+    nodeIds: Id[],
+    options?: { padding?: number; concavity?: number; style?: PolygonStyle }
+  ): Polygon {
+    return this.regions.createRegion(nodeIds, options);
+  }
+
+  /**
+   * Turn an existing polygon into a live region: it starts reshaping to
+   * keep enclosing whichever nodes are currently inside it (detected
+   * geometrically), and any node dragged in later joins automatically.
+   *
+   * @param polygonId Id of the polygon to start tracking
+   * @param options.padding World-units buffer kept around each node (default 20)
+   * @param options.concavity concaveman concavity (default 2)
+   */
+  public trackRegionNodes(
+    polygonId: Id,
+    options?: { padding?: number; concavity?: number }
+  ): this {
+    this.regions.trackRegionNodes(polygonId, options);
+    return this;
+  }
+
+  /**
+   * Stop tracking a region — the polygon becomes an ordinary static polygon
+   * again (its ring stays as it last was, but no longer reshapes).
+   *
+   * @param polygonId Id of the region polygon to stop tracking
+   */
+  public untrackRegion(polygonId: Id): this {
+    this.regions.untrackRegion(polygonId);
+    return this;
+  }
+
+  /**
    * Enable comment drawing mode - the recommended way to add comments.
    *
    * Call this method when the user clicks an "Add Comment" button. The control will:
@@ -765,6 +818,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public destroy() {
     this.ogma.events.off(this.onRotate).off(this.onZoom);
     this.links.destroy();
+    this.regions.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();
     this.editor.destroy();
