@@ -12,7 +12,8 @@
     "dist/*.mjs",
     "dist/*.js",
     "dist/**/*.css",
-    "dist/types"
+    "dist/types",
+    "src/style.d.ts"
   ],
   "exports": {
     ".": {
@@ -40,15 +41,15 @@
     },
     "./style.css": {
       "style": {
-        "default": "./src/style.css"
+        "default": "./dist/ogma-annotations.css"
       },
       "import": {
         "types": "./src/style.d.ts",
-        "default": "./src/style.css"
+        "default": "./dist/ogma-annotations.css"
       },
       "require": {
         "types": "./src/style.d.ts",
-        "default": "./src/style.css"
+        "default": "./dist/ogma-annotations.css"
       }
     },
     "./umd": {
