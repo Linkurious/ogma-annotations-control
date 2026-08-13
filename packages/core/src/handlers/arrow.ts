@@ -11,20 +11,26 @@ import {
   EVT_DRAG,
   SIDE_END,
   SIDE_START,
+  TARGET_TYPES,
   cursors,
   handleDetectionThreshold
 } from "../constants";
 import { Store } from "../store";
 import {
+  Annotation,
   Arrow,
   ArrowProperties,
   ClientMouseEvent,
+  Comment,
+  DeepPartial,
   Id,
   Side,
   Text,
   detectArrow,
   isBox,
+  isComment,
   isPolygon,
+  isRigidConnector,
   isText
 } from "../types";
 import {
@@ -149,6 +155,54 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
           type: this.snap.type,
           magnet: this.snap.magnet
         };
+      }
+
+      // Rigid-follow: dragging the free tip of a comment arrow by hand
+      // carries the whole callout (comment + any sibling arrows attached to
+      // it) by the same offset, instead of just stretching this arrow.
+      const state = this.store.getState();
+      const startLink = link.start;
+      const comment =
+        startLink?.type === TARGET_TYPES.COMMENT
+          ? (state.getFeature(startLink.id) as Comment | undefined)
+          : undefined;
+      if (comment && isComment(comment) && isRigidConnector(comment)) {
+        const delta = {
+          x: point.x - handle.point.x,
+          y: point.y - handle.point.y
+        };
+        const [cx, cy] = comment.geometry.coordinates as [number, number];
+        const liveUpdates: Record<Id, DeepPartial<Annotation>> = {
+          [comment.id]: {
+            geometry: {
+              type: "Point" as const,
+              coordinates: [cx + delta.x, cy + delta.y]
+            }
+          }
+        };
+        // Translates every arrow linked to the comment (including this
+        // one's start side) by `delta`, reading from the pre-drag committed
+        // positions — same "delta from drag start" convention as text.ts.
+        this.links.updateLinkedArrowsDuringDrag(comment.id, delta, liveUpdates);
+        const arrowUpdate = liveUpdates[annotation.id] as
+          | Partial<Arrow>
+          | undefined;
+        liveUpdates[annotation.id] = {
+          ...arrowUpdate,
+          id: annotation.id,
+          properties: { ...annotation.properties, link } as ArrowProperties,
+          geometry: {
+            type: annotation.geometry.type,
+            coordinates: [
+              (arrowUpdate?.geometry as { coordinates?: number[][] })
+                ?.coordinates?.[0] ?? newCoordinates[0],
+              [point.x, point.y]
+            ]
+          }
+        };
+        state.applyLiveUpdates(liveUpdates);
+        this.dispatchEvent(event);
+        return;
       }
     }
 

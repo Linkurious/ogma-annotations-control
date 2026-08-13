@@ -33,7 +33,8 @@ import {
   isPolygon,
   isComment,
   isArrow,
-  getCommentSize
+  getCommentSize,
+  isRigidConnector
 } from "../types";
 import {
   getArrowSide,
@@ -120,14 +121,48 @@ export class Links {
   }
 
   /**
-   * Called by handlers during drag operations to update linked arrows
-   * This method applies live updates directly without causing recursion
+   * Called by handlers during drag operations to update linked arrows.
+   *
+   * Translates every arrow linked to `annotationId` by `displacement`. When
+   * an arrow's *other* end is a comment in "rigid" mode, that comment (and
+   * everything else attached to it) is cascaded through the same
+   * displacement.
+   *
+   * `displacement` is always the *total* offset from the start of the drag
+   * (matching the convention every caller already uses), and every read
+   * here goes through the committed feature plus whatever this same call
+   * has already staged — never the store's own `liveUpdates` bucket, which
+   * can still hold a *previous* drag frame's stale values. Reading that
+   * would compound frame over frame instead of recomputing the absolute
+   * position each time.
    */
   public updateLinkedArrowsDuringDrag(
     annotationId: Id,
     displacement: Point,
     liveUpdates?: Record<Id, DeepPartial<Annotation>>
   ) {
+    // Batch internally even when the caller wants immediate application, so
+    // the rigid-comment cascade below can see updates staged earlier in the
+    // very same call instead of clobbering them.
+    const batched = liveUpdates ?? {};
+    this._collectLinkedArrowUpdates(annotationId, displacement, batched, new Set());
+    if (!liveUpdates) this.store.getState().applyLiveUpdates(batched);
+  }
+
+  /**
+   * Recursive worker for {@link updateLinkedArrowsDuringDrag}. `visited`
+   * bounds the recursion so a link graph can't cause it to revisit an
+   * annotation it already moved.
+   */
+  private _collectLinkedArrowUpdates(
+    annotationId: Id,
+    displacement: Point,
+    liveUpdates: Record<Id, DeepPartial<Annotation>>,
+    visited: Set<Id>
+  ) {
+    if (visited.has(annotationId)) return;
+    visited.add(annotationId);
+
     const state = this.store.getState();
     const annotation = state.getFeature(annotationId) as Text;
     if (!annotation) return;
@@ -136,37 +171,66 @@ export class Links {
 
     if (!links) return;
 
+    const rigidComments = new Set<Id>();
+
     for (const linkId of links) {
       const link = this.links.get(linkId);
       if (!link) continue;
 
-      const arrow = state.getFeature(link.arrow) as Arrow;
-      const currentEndPoint = getArrowSide(arrow, link.side);
+      const committedArrow = state.getFeature(link.arrow) as Arrow;
+      if (!committedArrow) continue;
+      // An earlier link in this same cascade (e.g. this arrow's other end,
+      // processed via the rigid-comment recursion below) may have already
+      // staged a live update for this arrow — build on top of that instead
+      // of the committed geometry, or we'd clobber it back to its pre-drag
+      // position.
+      const staged = liveUpdates[link.arrow] as Partial<Arrow> | undefined;
+      const baseCoordinates = (staged?.geometry?.coordinates ??
+        committedArrow.geometry.coordinates) as number[][];
+      const sideIndex = link.side === SIDE_START ? 0 : 1;
+      const currentEndPoint = {
+        x: baseCoordinates[sideIndex][0],
+        y: baseCoordinates[sideIndex][1]
+      };
       const newEndPoint = add(currentEndPoint, displacement);
 
-      // Apply live update to the arrow
+      // Stage the update for the arrow
       const updatedGeometry = {
-        ...arrow.geometry,
-        coordinates: arrow.geometry.coordinates.map((coord, idx) => {
-          if (
-            (link.side === SIDE_START && idx === 0) ||
-            (link.side === SIDE_END && idx === 1)
-          )
-            return [newEndPoint.x, newEndPoint.y];
-
+        ...committedArrow.geometry,
+        coordinates: baseCoordinates.map((coord, idx) => {
+          if (idx === sideIndex) return [newEndPoint.x, newEndPoint.y];
           return [...coord];
         })
       };
-      if (liveUpdates) {
-        liveUpdates[arrow.id] = {
-          geometry: updatedGeometry
-        } as Partial<Arrow>;
-      } else {
-        state.applyLiveUpdate(arrow.id, {
-          geometry: updatedGeometry
-        } as Partial<Arrow>);
-      }
-      this.updatedItems.add(arrow.id);
+      liveUpdates[link.arrow] = {
+        geometry: updatedGeometry
+      } as Partial<Arrow>;
+      this.updatedItems.add(link.arrow);
+
+      // Rigid-follow: if this arrow's *other* end is a comment in "rigid"
+      // mode, it should translate along with `annotationId` too, instead of
+      // being left behind to stretch elastically.
+      const rigidComment = this._getRigidFollowComment(link.arrow, link);
+      if (rigidComment && !visited.has(rigidComment.id))
+        rigidComments.add(rigidComment.id);
+    }
+
+    for (const commentId of rigidComments) {
+      const comment = state.getFeature(commentId) as Comment | undefined;
+      if (!comment) continue;
+      const [cx, cy] = comment.geometry.coordinates as [number, number];
+      const commentUpdate: DeepPartial<Comment> = {
+        geometry: {
+          type: "Point" as const,
+          coordinates: [cx + displacement.x, cy + displacement.y]
+        }
+      };
+      liveUpdates[commentId] = commentUpdate as Annotation;
+      this.updatedItems.add(commentId);
+
+      // Cascade: move every other arrow attached to this comment too (and,
+      // transitively, anything rigidly attached beyond that).
+      this._collectLinkedArrowUpdates(commentId, displacement, liveUpdates, visited);
     }
   }
   public snapLinkedArrowsDuringDrag(
@@ -451,10 +515,11 @@ export class Links {
           this._isLinkedToCenter(link)
         );
 
-        // Rigid-follow: when the arrow's *other* endpoint is attached 1:1 to a
-        // comment, dragging the node carries the whole callout (comment + arrow)
-        // by the node's delta instead of stretching the line. The arrow keeps
-        // its length and angle; the comment translates with the node.
+        // Rigid-follow: when the arrow's *other* endpoint is attached to a
+        // comment in "rigid" mode (the default), dragging the node carries
+        // the whole callout (comment + arrow) by the node's delta instead of
+        // stretching the line. The arrow keeps its length and angle; the
+        // comment translates with the node.
         const comment = this._getRigidFollowComment(arrowId, link);
         if (comment) {
           const oldNodePoint = coordinates[nodeSideIndex];
@@ -561,7 +626,7 @@ export class Links {
 
   private _computeArrowUpdates(
     linksByArrowId: LinksByArrowId
-  ): Record<Id, DeepPartial<Arrow>> {
+  ): Record<Id, DeepPartial<Annotation>> {
     const state = this.store.getState();
     const nodeIds = Array.from(this.nodeToLink.keys());
     const nodeIdToIndex = new Map<NodeId, number>();
@@ -573,7 +638,7 @@ export class Links {
       radius: number;
     }[];
 
-    const updates: Record<Id, DeepPartial<Arrow>> = {};
+    const updates: Record<Id, DeepPartial<Annotation>> = {};
 
     linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
@@ -649,12 +714,37 @@ export class Links {
           );
         }
       }
+      // Rigid-follow: when one side is anchored to a comment in "rigid" mode
+      // and the *other* side actually moved, translate the comment (and this
+      // endpoint) by that delta instead of letting the comment side
+      // re-anchor elastically to the nearest point on the box.
+      const startComment = this._getRigidComment(start);
+      const endComment = this._getRigidComment(end);
+
+      if (startComment && end) {
+        const oldEnd = arrow.geometry.coordinates[1];
+        const delta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        if (delta.x !== 0 || delta.y !== 0) {
+          const oldStart = arrow.geometry.coordinates[0];
+          startPoint = [oldStart[0] + delta.x, oldStart[1] + delta.y];
+          this._translateComment(startComment, delta, updates);
+        }
+      } else if (endComment && start) {
+        const oldStart = arrow.geometry.coordinates[0];
+        const delta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        if (delta.x !== 0 || delta.y !== 0) {
+          const oldEnd = arrow.geometry.coordinates[1];
+          endPoint = [oldEnd[0] + delta.x, oldEnd[1] + delta.y];
+          this._translateComment(endComment, delta, updates);
+        }
+      }
+
       updates[arrow.id] = {
         properties: arrow.properties,
         geometry: {
           coordinates: [startPoint, endPoint]
         }
-      };
+      } as Annotation;
       updateBbox(updates[arrow.id] as Arrow);
       this.updatedItems.add(arrow.id);
     });
@@ -769,11 +859,11 @@ export class Links {
 
   /**
    * Rigid-follow guard: returns the linked Comment when this arrow's *other*
-   * endpoint (relative to `nodeSideLink`) is attached to a comment that has
-   * exactly one inbound link. In that case a node drag should translate the
-   * whole callout (comment + arrow) rather than just moving the node-side
-   * endpoint. Returns undefined when the relationship isn't a clean 1:1
-   * node→arrow→comment chain.
+   * endpoint (relative to `nodeSideLink`) is attached to a comment whose
+   * connector mode is "rigid" (the default). In that case a node drag should
+   * translate the whole callout (comment + arrow) rather than just moving
+   * the node-side endpoint. Returns undefined when the far side isn't a
+   * comment, or the comment opted into "elastic" mode.
    */
   private _getRigidFollowComment(
     arrowId: Id,
@@ -790,13 +880,42 @@ export class Links {
     const farLink = this.links.get(farLinkId);
     if (!farLink || farLink.targetType !== TARGET_TYPES.COMMENT) return undefined;
 
-    // 1:1 only — the comment must not be the target of any other link.
-    const commentLinks = this.annotationToLink.get(farLink.target);
-    if (!commentLinks || commentLinks.size !== 1) return undefined;
+    return this._getRigidComment(farLink);
+  }
 
-    const comment = this.store.getState().getFeature(farLink.target);
+  /**
+   * Returns the Comment targeted by `link`, when it's a comment link whose
+   * connector mode is "rigid". Shared eligibility check for both the
+   * node-drag path and the generic (edge / annotation move) path.
+   */
+  private _getRigidComment(link: Link | undefined): Comment | undefined {
+    if (!link || link.targetType !== TARGET_TYPES.COMMENT) return undefined;
+    const comment = this.store.getState().getFeature(link.target);
     if (!comment || !isComment(comment)) return undefined;
+    if (!isRigidConnector(comment)) return undefined;
     return comment;
+  }
+
+  /**
+   * Translate a comment by `delta` and stage the update, mirroring the
+   * rigid-follow handling in `updateFromNodePositions`.
+   */
+  private _translateComment(
+    comment: Comment,
+    delta: Point,
+    updates: Record<Id, DeepPartial<Annotation>>
+  ) {
+    const [cx, cy] = comment.geometry.coordinates as [number, number];
+    const commentUpdate: DeepPartial<Comment> = {
+      ...comment,
+      geometry: {
+        type: "Point",
+        coordinates: [cx + delta.x, cy + delta.y]
+      }
+    };
+    updates[comment.id] = commentUpdate as Annotation;
+    updateBbox(commentUpdate as Comment);
+    this.updatedItems.add(comment.id);
   }
 
   private _getAnnotationCenter(annotation: Annotation): Point {

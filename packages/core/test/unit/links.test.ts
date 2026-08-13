@@ -6,6 +6,7 @@ import {
   Control,
   createArrow,
   createComment,
+  createPolygon,
   createText
 } from "../../src";
 import { Links } from "../../src/handlers/links";
@@ -535,7 +536,7 @@ describe("Links", () => {
       expect(afterEnd[1]).toBeCloseTo(beforeEnd[1] + 100);
     });
 
-    it("does NOT rigidly move the comment when it has more than one inbound link", () => {
+    it("still rigidly moves the comment when it has more than one inbound link, and the sibling arrow tracks it elastically", () => {
       ogma.addNode({ id: "node1", attributes: { x: 0, y: 0, radius: 0 } });
 
       const comment = createComment(200, 0, "review");
@@ -546,14 +547,73 @@ describe("Links", () => {
       control.add(arrow1);
       control.add(arrow2);
 
-      // arrow1: node1 → comment (the would-be rigid pair)
+      // arrow1: node1 → comment (the rigid pair)
       // @ts-expect-error links is private
       control.links.add(arrow1, "start", "node1", "node", { x: 0, y: 0 });
       // @ts-expect-error links is private
       control.links.add(arrow1, "end", comment.id, "comment", { x: -0.5, y: 0 });
-      // arrow2 also targets the comment → it's no longer a 1:1 attachment.
+      // arrow2 also targets the comment, from an unrelated free point — it's
+      // no longer a 1:1 attachment, but rigid-follow no longer requires one.
       // @ts-expect-error links is private
       control.links.add(arrow2, "end", comment.id, "comment", { x: 0, y: 0.5 });
+
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const beforeComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates.slice();
+      const beforeArrow2 = control
+        .getAnnotation<Arrow>(arrow2.id)!
+        .geometry.coordinates.map((c) => c.slice());
+
+      ogma.getNode("node1")!.setAttributes({ y: 100 });
+      // @ts-expect-error updateFromNodePositions is private
+      control.links.updateFromNodePositions(ogma.getNodes(["node1"]));
+      // @ts-expect-error commit is private
+      control.links.commit();
+      // @ts-expect-error nodePositionTimeout is private
+      clearTimeout(control.links.nodePositionTimeout);
+
+      const afterComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates;
+      const afterArrow2 = control.getAnnotation<Arrow>(arrow2.id)!.geometry
+        .coordinates;
+
+      // The comment still translates rigidly with node1 (delta y ≈ +100).
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1] + 100);
+
+      // arrow2's free start point (unrelated to node1) is left untouched —
+      // it wasn't dragged as part of the node's rigid chain.
+      expect(afterArrow2[0][0]).toBeCloseTo(beforeArrow2[0][0]);
+      expect(afterArrow2[0][1]).toBeCloseTo(beforeArrow2[0][1]);
+
+      // arrow2's comment-side endpoint elastically re-anchors to the
+      // comment's new position (which happens to shift by the same delta,
+      // since the comment only translated — it didn't resize or rotate).
+      expect(afterArrow2[1][0]).toBeCloseTo(beforeArrow2[1][0]);
+      expect(afterArrow2[1][1]).toBeCloseTo(beforeArrow2[1][1] + 100);
+    });
+
+    it("does NOT rigidly move a comment with connectorMode: elastic", () => {
+      ogma.addNode({ id: "node1", attributes: { x: 0, y: 0, radius: 0 } });
+
+      const comment = createComment(200, 0, "review", {
+        style: { connectorMode: "elastic" }
+      });
+      const arrow = createArrow(0, 0, 100, 0);
+
+      control.add(comment);
+      control.add(arrow);
+
+      // @ts-expect-error links is private
+      control.links.add(arrow, "start", "node1", "node", { x: 0, y: 0 });
+      // @ts-expect-error links is private
+      control.links.add(arrow, "end", comment.id, "comment", { x: -0.5, y: 0 });
 
       // @ts-expect-error links is private
       control.links.refresh();
@@ -576,9 +636,347 @@ describe("Links", () => {
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
       ).coordinates;
 
-      // Comment must stay put — multi-link falls back to rubber-band.
+      // Comment stays put — "elastic" opts back out of rigid-follow.
       expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
       expect(afterComment[1]).toBeCloseTo(beforeComment[1]);
+    });
+  });
+
+  describe("edge and annotation moves also rigidly move a comment", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("translates the comment when its edge attachment point moves", () => {
+      ogma.addNode({ id: "node1", attributes: { x: 0, y: 0, radius: 0 } });
+      ogma.addNode({ id: "node2", attributes: { x: 200, y: 0, radius: 0 } });
+      ogma.addEdge({ id: "edge1", source: "node1", target: "node2" });
+
+      // Comment below the edge midpoint; arrow from comment's top edge to
+      // the edge's midpoint (t = 0.5).
+      const comment = createComment(0, -100, "review");
+      const arrow = createArrow(0, -70, 100, 0);
+
+      control.add(comment);
+      control.add(arrow);
+
+      // @ts-expect-error links is private
+      control.links.add(arrow, "start", comment.id, "comment", { x: 0, y: 0.5 });
+      // @ts-expect-error links is private
+      control.links.add(arrow, "end", "edge1", "edge", { x: 0.5, y: 0 });
+
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      const beforeComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates.slice();
+
+      // Move node2 so the edge midpoint shifts from (100,0) to (100,100).
+      ogma.getNode("node2")!.setAttributes({ y: 200 });
+      // @ts-expect-error updateFromNodePositions is private
+      control.links.updateFromNodePositions(ogma.getNodes(["node2"]));
+      // @ts-expect-error commit is private
+      control.links.commit();
+      // @ts-expect-error nodePositionTimeout is private
+      clearTimeout(control.links.nodePositionTimeout);
+
+      const afterComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates;
+      const afterArrow = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates;
+
+      // The comment rigidly translates by the edge midpoint's delta (0, +100).
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1] + 100);
+      // The arrow's edge-side endpoint tracks the new midpoint exactly.
+      expect(afterArrow[1][0]).toBeCloseTo(100);
+      expect(afterArrow[1][1]).toBeCloseTo(100);
+    });
+
+    it("translates the comment when a linked annotation attachment point moves", () => {
+      // textA center = [50, 25], right-edge snap (magnet {x:0.5}) = [100, 25]
+      const textA = createText(0, 0, 100, 50, "A");
+      // comment center = [300, 25]; left-edge snap (magnet {x:-0.5}) = [200, 25]
+      const comment = createComment(300, 25, "review");
+      const arrow = createArrow(200, 25, 100, 25);
+      arrow.properties.link = {
+        start: {
+          id: comment.id,
+          side: "start",
+          type: "comment",
+          magnet: { x: -0.5, y: 0 }
+        },
+        end: {
+          id: textA.id,
+          side: "end",
+          type: "text",
+          magnet: { x: 0.5, y: 0 }
+        }
+      };
+
+      control.add(textA);
+      control.add(comment);
+      control.add(arrow);
+
+      const beforeComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates.slice();
+
+      // Move textA's center from [50,25] to [50,225]: new right-edge snap = [100,225].
+      control.update({
+        id: textA.id,
+        geometry: { type: "Point", coordinates: [50, 225] }
+      });
+
+      const afterComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates;
+      const afterArrow = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates;
+
+      // The comment rigidly translates by textA's delta (0, +200) — this is
+      // the key difference from the pre-existing elastic behavior, where the
+      // comment's own geometry never changed at all.
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1] + 200);
+      // The arrow's text-side endpoint tracks textA's new right edge.
+      expect(afterArrow[1][0]).toBeCloseTo(100);
+      expect(afterArrow[1][1]).toBeCloseTo(225);
+    });
+  });
+
+  describe("manual arrow-tip drag rigidly moves the comment", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    it("translates the comment by the same offset as the dragged free tip", () => {
+      const comment = createComment(200, 0, "review");
+      const arrow = createArrow(100, 0, 0, 0);
+
+      control.add(comment);
+      control.add(arrow);
+
+      // Start -> comment's left edge; end is a free point (no link).
+      // @ts-expect-error links is private
+      control.links.add(arrow, "start", comment.id, "comment", { x: -0.5, y: 0 });
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      control.select(arrow.id);
+
+      // @ts-expect-error editor is private
+      const arrowHandler = control.editor.getArrowHandler() as unknown as {
+        clientToCanvas: (evt: { clientX: number; clientY: number }) => {
+          x: number;
+          y: number;
+        };
+        hoveredHandle: unknown;
+        dragStartPoint: unknown;
+        dragging: boolean;
+        onDrag: (evt: unknown) => void;
+        commitChange: () => void;
+      };
+      // Deterministic client->graph mapping — the headless test ogma has no
+      // real viewport/container to derive it from.
+      arrowHandler.clientToCanvas = (evt) => ({ x: evt.clientX, y: evt.clientY });
+
+      const beforeComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates.slice();
+      const beforeEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
+        .geometry.coordinates[1].slice();
+
+      // Grab the free end handle and drag it by (30, 40).
+      arrowHandler.hoveredHandle = {
+        type: "end",
+        point: { x: beforeEnd[0], y: beforeEnd[1] }
+      };
+      arrowHandler.dragStartPoint = { x: beforeEnd[0], y: beforeEnd[1] };
+      arrowHandler.dragging = true;
+      arrowHandler.onDrag({
+        clientX: beforeEnd[0] + 30,
+        clientY: beforeEnd[1] + 40,
+        stopPropagation() {},
+        stopImmediatePropagation() {}
+      });
+      arrowHandler.commitChange();
+
+      const afterComment = (
+        control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
+      ).coordinates;
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
+
+      // Comment translates by the tip's drag delta.
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0] + 30);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1] + 40);
+      // The tip itself lands exactly at the drop point.
+      expect(afterEnd[0]).toBeCloseTo(beforeEnd[0] + 30);
+      expect(afterEnd[1]).toBeCloseTo(beforeEnd[1] + 40);
+    });
+  });
+
+  describe("live-dragging a polygon rigidly carries its attached comments", () => {
+    let ogma: ReturnType<typeof createOgma>;
+    let control: Control;
+
+    beforeEach(() => {
+      ogma = createOgma();
+      control = new Control(ogma);
+    });
+
+    afterEach(() => {
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+
+    // Regression test: dragging a polygon body used to leave its attached
+    // comments behind (elastic-only), and — once the comment cascade was
+    // added to updateLinkedArrowsDuringDrag — a second, unrelated bug made
+    // it compound the displacement across mousemove frames instead of
+    // recomputing an absolute position each time, eventually blowing the
+    // call stack once the drag committed.
+    it("translates two attached comments by the drag delta across many mousemove frames, without compounding", () => {
+      const polygon = createPolygon([
+        [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]]
+      ]);
+      const comment1 = createComment(300, 0, "c1");
+      const comment2 = createComment(300, 100, "c2");
+      const arrow1 = createArrow(100, 0, 100, 0);
+      const arrow2 = createArrow(100, 100, 100, 100);
+      // Polygon-target magnets go through Links.add()'s absolute→relative
+      // bbox conversion, so unlike comment/text magnets these must be given
+      // as absolute graph coordinates (here: the polygon's own corners).
+      arrow1.properties.link = {
+        start: { id: comment1.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
+        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 100, y: 0 } }
+      };
+      arrow2.properties.link = {
+        start: { id: comment2.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
+        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 100, y: 100 } }
+      };
+
+      control.add(polygon);
+      control.add(comment1);
+      control.add(comment2);
+      control.add(arrow1);
+      control.add(arrow2);
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      control.select(polygon.id);
+      // @ts-expect-error editor is private
+      const handler = control.editor["handlers"].get("polygon") as {
+        clientToCanvas: (evt: { clientX: number; clientY: number }) => {
+          x: number;
+          y: number;
+        };
+        hoveredHandle: unknown;
+        dragStartPoint: unknown;
+        dragging: boolean;
+        onDrag: (evt: unknown) => void;
+        onDragEnd: () => void;
+      };
+      handler.clientToCanvas = (evt) => ({ x: evt.clientX, y: evt.clientY });
+
+      handler.hoveredHandle = { type: "body", point: { x: 50, y: 50 } };
+      handler.dragStartPoint = { x: 50, y: 50 };
+      handler.dragging = true;
+
+      // 30 mousemove frames, each reporting the *total* displacement from
+      // drag start (as real handleMouseMove events would).
+      expect(() => {
+        for (let i = 1; i <= 30; i++) {
+          handler.onDrag({ clientX: 50, clientY: 50 + i * 10 });
+        }
+        handler.onDragEnd();
+      }).not.toThrow();
+
+      const c1 = control.getAnnotation(comment1.id)!.geometry as {
+        coordinates: number[];
+      };
+      const c2 = control.getAnnotation(comment2.id)!.geometry as {
+        coordinates: number[];
+      };
+
+      // Total drag delta is (0, 300) — both comments should have translated
+      // by exactly that, not 30x that.
+      expect(c1.coordinates[1]).toBeCloseTo(0 + 300);
+      expect(c2.coordinates[1]).toBeCloseTo(100 + 300);
+    });
+
+    it("does not exceed the call stack with many comments and many drag frames", () => {
+      const polygon = createPolygon([
+        [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]]
+      ]);
+      control.add(polygon);
+      for (let n = 0; n < 5; n++) {
+        const comment = createComment(300 + n * 10, n * 20, `c${n}`);
+        const arrow = createArrow(100, n * 20, 100, n * 20);
+        arrow.properties.link = {
+          start: { id: comment.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
+          end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 100, y: 20 * n } }
+        };
+        control.add(comment);
+        control.add(arrow);
+      }
+      // @ts-expect-error links is private
+      control.links.refresh();
+      // @ts-expect-error commit is private
+      control.links.commit();
+
+      control.select(polygon.id);
+      // @ts-expect-error editor is private
+      const handler = control.editor["handlers"].get("polygon") as {
+        clientToCanvas: (evt: { clientX: number; clientY: number }) => {
+          x: number;
+          y: number;
+        };
+        hoveredHandle: unknown;
+        dragStartPoint: unknown;
+        dragging: boolean;
+        onDrag: (evt: unknown) => void;
+        onDragEnd: () => void;
+      };
+      handler.clientToCanvas = (evt) => ({ x: evt.clientX, y: evt.clientY });
+      handler.hoveredHandle = { type: "body", point: { x: 50, y: 50 } };
+      handler.dragStartPoint = { x: 50, y: 50 };
+      handler.dragging = true;
+
+      expect(() => {
+        for (let i = 1; i <= 200; i++) {
+          handler.onDrag({ clientX: 50 + Math.sin(i) * 5, clientY: 50 + i });
+        }
+        handler.onDragEnd();
+      }).not.toThrow();
     });
   });
 });
