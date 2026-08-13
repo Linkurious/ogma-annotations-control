@@ -7,9 +7,10 @@ import {
   svgIcon,
   ICON_PATHS,
   AnnotationPanel,
+  AnnotationToolbar,
   type PanelVisibilityControl
 } from "../../src/ui";
-import type { Annotation, Control } from "../../src";
+import type { Annotation, AnnotationCollection, Control } from "../../src";
 
 describe("ui/color", () => {
   it("seeds three default recent colors with the first active", () => {
@@ -231,5 +232,179 @@ describe("ui/AnnotationPanel layout", () => {
     expect(root.getAttribute("data-placement")).toBe("bottom");
 
     panel.destroy();
+  });
+});
+
+/** Minimal fake Control implementing the slice AnnotationToolbar needs. */
+function createFakeToolbarControl(selected: AnnotationCollection) {
+  const handlers = new Map<string, Set<(...args: never[]) => void>>();
+  let undoable = false;
+  let redoable = false;
+
+  const on = (event: string, handler: (...args: never[]) => void) => {
+    if (!handlers.has(event)) handlers.set(event, new Set());
+    handlers.get(event)!.add(handler);
+    return control;
+  };
+  const off = (event: string, handler: (...args: never[]) => void) => {
+    handlers.get(event)?.delete(handler);
+    return control;
+  };
+  const emit = (event: string, ...args: unknown[]) => {
+    handlers
+      .get(event)
+      ?.forEach((h) => (h as (...a: unknown[]) => void)(...args));
+  };
+
+  const control = {
+    on,
+    off,
+    once: on,
+    canUndo: () => undoable,
+    canRedo: () => redoable,
+    undo: vi.fn(),
+    redo: vi.fn(),
+    remove: vi.fn(),
+    getSelectedAnnotations: () => selected,
+    enableArrowDrawing: vi.fn(),
+    enableCommentDrawing: vi.fn(),
+    enableBoxDrawing: vi.fn(),
+    enableTextDrawing: vi.fn(),
+    enablePolygonDrawing: vi.fn()
+  };
+
+  return {
+    control,
+    emit,
+    listenerCount: (event: string) => handlers.get(event)?.size ?? 0,
+    setUndoable: (v: boolean) => (undoable = v),
+    setRedoable: (v: boolean) => (redoable = v)
+  };
+}
+
+describe("ui/AnnotationToolbar", () => {
+  const empty = { type: "FeatureCollection", features: [] } as AnnotationCollection;
+
+  function createToolbar(
+    options?: Partial<{ placement: string; orientation: string }>,
+    selected: AnnotationCollection = empty
+  ) {
+    const fake = createFakeToolbarControl(selected);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      ...options
+    } as ConstructorParameters<typeof AnnotationToolbar>[0]);
+    return { toolbar, ...fake };
+  }
+
+  it("defaults to bottom placement and horizontal orientation", () => {
+    const { toolbar } = createToolbar();
+    const root = document.querySelector(".annotation-toolbar")!;
+    expect(root.getAttribute("data-placement")).toBe("bottom");
+    expect(root.getAttribute("data-orientation")).toBe("horizontal");
+    toolbar.destroy();
+  });
+
+  it("applies the placement and orientation passed to the constructor", () => {
+    const { toolbar } = createToolbar({
+      placement: "top-left",
+      orientation: "vertical"
+    });
+    const root = document.querySelector(".annotation-toolbar")!;
+    expect(root.getAttribute("data-placement")).toBe("top-left");
+    expect(root.getAttribute("data-orientation")).toBe("vertical");
+    toolbar.destroy();
+  });
+
+  it("updates placement and orientation at runtime", () => {
+    const { toolbar } = createToolbar();
+    const root = document.querySelector(".annotation-toolbar")!;
+
+    toolbar.setPlacement("left");
+    expect(root.getAttribute("data-placement")).toBe("left");
+
+    toolbar.setOrientation("vertical");
+    expect(root.getAttribute("data-orientation")).toBe("vertical");
+
+    toolbar.destroy();
+  });
+
+  it("arms arrow drawing and marks the button active until drawing ends", () => {
+    const { toolbar, control, emit } = createToolbar();
+    const arrowButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Add arrow"]'
+    )!;
+
+    arrowButton.click();
+    expect(control.enableArrowDrawing).toHaveBeenCalled();
+    expect(arrowButton.classList.contains("active")).toBe(true);
+
+    emit("completeDrawing", { id: "a1" });
+    expect(arrowButton.classList.contains("active")).toBe(false);
+
+    toolbar.destroy();
+  });
+
+  it("reflects canUndo/canRedo and calls undo/redo on click", () => {
+    const { toolbar, control, emit, setUndoable, setRedoable } = createToolbar();
+    const undoButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Undo"]'
+    )!;
+    const redoButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Redo"]'
+    )!;
+
+    expect(undoButton.disabled).toBe(true);
+    expect(redoButton.disabled).toBe(true);
+
+    setUndoable(true);
+    setRedoable(true);
+    emit("history", { canUndo: true, canRedo: true });
+    expect(undoButton.disabled).toBe(false);
+    expect(redoButton.disabled).toBe(false);
+
+    undoButton.click();
+    redoButton.click();
+    expect(control.undo).toHaveBeenCalledTimes(1);
+    expect(control.redo).toHaveBeenCalledTimes(1);
+
+    toolbar.destroy();
+  });
+
+  it("deletes the current selection, no-ops when nothing is selected", () => {
+    const selected = {
+      type: "FeatureCollection",
+      features: [{ id: "a1" }]
+    } as unknown as AnnotationCollection;
+    const { toolbar, control } = createToolbar({}, selected);
+    const deleteButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Delete selected"]'
+    )!;
+
+    deleteButton.click();
+    expect(control.remove).toHaveBeenCalledWith(selected);
+
+    toolbar.destroy();
+  });
+
+  it("does not call remove when the selection is empty", () => {
+    const { toolbar, control } = createToolbar();
+    const deleteButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Delete selected"]'
+    )!;
+
+    deleteButton.click();
+    expect(control.remove).not.toHaveBeenCalled();
+
+    toolbar.destroy();
+  });
+
+  it("destroy removes the root and detaches its listeners", () => {
+    const { toolbar, listenerCount } = createToolbar();
+    expect(listenerCount("completeDrawing")).toBeGreaterThan(0);
+
+    toolbar.destroy();
+    expect(document.querySelector(".annotation-toolbar")).toBeNull();
+    expect(listenerCount("completeDrawing")).toBe(0);
   });
 });

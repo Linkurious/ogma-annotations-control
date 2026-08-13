@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8" />
     <title>ogma-annotations — panel layout options</title>
-    <link href="fonts/lucide.css" rel="stylesheet" />
     <style>
       html,
       body {
@@ -99,56 +98,6 @@
         position: absolute;
         inset: 0;
       }
-
-      /* --- Demo-only drawing/undo-redo toolbar ---
-         Not a shipped component: it's the same `.control-bar` markup and
-         look as the main demo (web/index.html + style.css), just with its
-         position driven by `data-placement`/`data-orientation` instead of
-         the main demo's fixed `#controls`/`#vis-controls` rules - so it
-         docks consistently alongside the real `AnnotationPanel`. */
-      #drawing-toolbar[data-placement="right"] {
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      #drawing-toolbar[data-placement="left"] {
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-      }
-
-      #drawing-toolbar[data-placement="top"] {
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-
-      #drawing-toolbar[data-placement="bottom"] {
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-
-      #drawing-toolbar[data-placement="top-left"] {
-        top: 10px;
-        left: 10px;
-      }
-
-      #drawing-toolbar[data-placement="top-right"] {
-        top: 10px;
-        right: 10px;
-      }
-
-      #drawing-toolbar[data-placement="bottom-left"] {
-        bottom: 10px;
-        left: 10px;
-      }
-
-      #drawing-toolbar[data-placement="bottom-right"] {
-        bottom: 10px;
-        right: 10px;
-      }
     </style>
   </head>
   <body>
@@ -194,39 +143,16 @@
       </div>
 
       <div id="layout-hint">
-        Style panel shows the selected arrow's style. The toolbar draws new
-        annotations and undoes/redoes/deletes. Both dock inside the stage
-        (right of this sidebar) via the <code>container</code> option, so
-        placements never collide with these controls.
+        Style panel (<code>AnnotationPanel</code>) shows the selected arrow's
+        style. Toolbar (<code>AnnotationToolbar</code>) draws new annotations
+        and undoes/redoes/deletes. Both dock inside the stage (right of this
+        sidebar) via the <code>container</code> option, so placements never
+        collide with these controls.
       </div>
     </div>
 
     <div id="stage">
       <div id="graph-container"></div>
-      <div
-        id="drawing-toolbar"
-        class="control-bar"
-        data-placement="bottom"
-        data-orientation="horizontal"
-      >
-        <button id="tb-arrow" tooltip="Add arrow">
-          <i class="icon-arrow-right"></i>
-        </button>
-        <button id="tb-text" tooltip="Add text">
-          <i class="icon-type"></i>
-        </button>
-        <span class="separator"></span>
-        <button id="tb-undo" tooltip="Undo" disabled>
-          <i class="icon-undo"></i>
-        </button>
-        <button id="tb-redo" tooltip="Redo" disabled>
-          <i class="icon-redo"></i>
-        </button>
-        <span class="separator"></span>
-        <button id="tb-delete" tooltip="Delete selected" disabled>
-          <i class="icon-trash"></i>
-        </button>
-      </div>
     </div>
 
     <script type="module" src="panel-layout.ts"></script>
