@@ -1,5 +1,9 @@
 import { Annotation } from "@linkurious/ogma-annotations";
-import { attachPanelVisibility } from "@linkurious/ogma-annotations/ui";
+import {
+  attachPanelVisibility,
+  type PanelPlacement,
+  type PanelOrientation
+} from "@linkurious/ogma-annotations/ui";
 import React, { useState, useEffect } from "react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { AnnotationPanel } from "./AnnotationPanel";
@@ -32,11 +36,33 @@ export function useAnnotationPanel() {
   return { annotation, visible };
 }
 
+export interface AnnotationPanelControllerProps {
+  /**
+   * Which screen edge/corner the panel docks to. Defaults to `"right"`
+   * (vertically centered on the right edge — the original look).
+   */
+  placement?: PanelPlacement;
+  /**
+   * Whether panel sections stack vertically or run horizontally as a
+   * toolbar. Defaults to `"vertical"`.
+   */
+  orientation?: PanelOrientation;
+}
+
 /**
  * Turnkey style panel: renders {@link AnnotationPanel} and keeps it in sync with
  * the current selection. Drop it inside an `AnnotationsContextProvider`.
  */
-export const AnnotationPanelController: React.FC = () => {
+export const AnnotationPanelController: React.FC<
+  AnnotationPanelControllerProps
+> = ({ placement, orientation }) => {
   const { annotation, visible } = useAnnotationPanel();
-  return <AnnotationPanel visible={visible} annotation={annotation} />;
+  return (
+    <AnnotationPanel
+      visible={visible}
+      annotation={annotation}
+      placement={placement}
+      orientation={orientation}
+    />
+  );
 };

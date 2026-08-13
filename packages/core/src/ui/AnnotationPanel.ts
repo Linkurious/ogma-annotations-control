@@ -29,6 +29,12 @@ import {
 } from "./color";
 import { svgIcon, type IconName } from "./icons";
 import { attachPanelVisibility } from "./panelVisibility";
+import {
+  DEFAULT_PANEL_PLACEMENT,
+  DEFAULT_PANEL_ORIENTATION,
+  type PanelPlacement,
+  type PanelOrientation
+} from "./layout";
 
 type AnnotationMode = "arrow" | "text" | "polygon" | null;
 
@@ -39,6 +45,18 @@ export interface AnnotationPanelOptions {
    * `<div class="annotation-panel">` inside it. Defaults to `document.body`.
    */
   container?: HTMLElement;
+  /**
+   * Which screen edge/corner the panel docks to. Defaults to `"right"`
+   * (vertically centered on the right edge — the original look). Change at
+   * runtime with {@link AnnotationPanel.setPlacement}.
+   */
+  placement?: PanelPlacement;
+  /**
+   * Whether panel sections stack vertically or run horizontally as a
+   * toolbar. Defaults to `"vertical"`. Change at runtime with
+   * {@link AnnotationPanel.setOrientation}.
+   */
+  orientation?: PanelOrientation;
 }
 
 export class AnnotationPanel {
@@ -64,6 +82,9 @@ export class AnnotationPanel {
     this.panel = document.createElement("div");
     this.panel.className = "annotation-panel";
     this.panel.style.display = "none";
+    this.panel.dataset.placement = options.placement ?? DEFAULT_PANEL_PLACEMENT;
+    this.panel.dataset.orientation =
+      options.orientation ?? DEFAULT_PANEL_ORIENTATION;
     this.panelBody = document.createElement("div");
     this.panelBody.className = "panel-body";
     this.panel.appendChild(this.panelBody);
@@ -488,6 +509,15 @@ export class AnnotationPanel {
     } else {
       this.control.updateStyle<Text>(this.currentAnnotation.id, updates);
     }
+  }
+
+  // Layout
+  public setPlacement(placement: PanelPlacement) {
+    this.panel.dataset.placement = placement;
+  }
+
+  public setOrientation(orientation: PanelOrientation) {
+    this.panel.dataset.orientation = orientation;
   }
 
   // Visibility

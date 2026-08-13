@@ -6,9 +6,10 @@ import {
   attachPanelVisibility,
   svgIcon,
   ICON_PATHS,
+  AnnotationPanel,
   type PanelVisibilityControl
 } from "../../src/ui";
-import type { Annotation } from "../../src";
+import type { Annotation, Control } from "../../src";
 
 describe("ui/color", () => {
   it("seeds three default recent colors with the first active", () => {
@@ -171,5 +172,64 @@ describe("ui/panelVisibility", () => {
     emit("select", { ids: ["a1"] });
     emit("click");
     expect(onShow).not.toHaveBeenCalled();
+  });
+});
+
+describe("ui/AnnotationPanel layout", () => {
+  const annotation = { id: "a1" } as unknown as Annotation;
+
+  function createPanel(
+    options?: Partial<{ placement: string; orientation: string }>
+  ) {
+    const { control } = createFakeControl(annotation);
+    return new AnnotationPanel({
+      control: control as unknown as Control,
+      ...options
+    } as ConstructorParameters<typeof AnnotationPanel>[0]);
+  }
+
+  it("defaults to right placement and vertical orientation", () => {
+    const panel = createPanel();
+    const root = document.querySelector(".annotation-panel")!;
+    expect(root.getAttribute("data-placement")).toBe("right");
+    expect(root.getAttribute("data-orientation")).toBe("vertical");
+    panel.destroy();
+  });
+
+  it("applies the placement and orientation passed to the constructor", () => {
+    const panel = createPanel({
+      placement: "top-left",
+      orientation: "horizontal"
+    });
+    const root = document.querySelector(".annotation-panel")!;
+    expect(root.getAttribute("data-placement")).toBe("top-left");
+    expect(root.getAttribute("data-orientation")).toBe("horizontal");
+    panel.destroy();
+  });
+
+  it("updates placement and orientation at runtime", () => {
+    const panel = createPanel();
+    const root = document.querySelector(".annotation-panel")!;
+
+    panel.setPlacement("bottom-right");
+    expect(root.getAttribute("data-placement")).toBe("bottom-right");
+
+    panel.setOrientation("horizontal");
+    expect(root.getAttribute("data-orientation")).toBe("horizontal");
+
+    panel.destroy();
+  });
+
+  it("supports the top/bottom center placements alongside the corners", () => {
+    const panel = createPanel();
+    const root = document.querySelector(".annotation-panel")!;
+
+    panel.setPlacement("top");
+    expect(root.getAttribute("data-placement")).toBe("top");
+
+    panel.setPlacement("bottom");
+    expect(root.getAttribute("data-placement")).toBe("bottom");
+
+    panel.destroy();
   });
 });

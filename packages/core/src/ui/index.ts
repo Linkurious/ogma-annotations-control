@@ -16,3 +16,8 @@ export { createRgbaColorPicker } from "./colorPicker";
 export type { RgbaColorPicker, RgbaColor } from "./colorPicker";
 export { attachPanelVisibility } from "./panelVisibility";
 export type { PanelVisibilityControl, PanelVisibilityHandlers } from "./panelVisibility";
+export {
+  DEFAULT_PANEL_PLACEMENT,
+  DEFAULT_PANEL_ORIENTATION
+} from "./layout";
+export type { PanelPlacement, PanelOrientation } from "./layout";

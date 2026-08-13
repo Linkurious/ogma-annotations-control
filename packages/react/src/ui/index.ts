@@ -16,6 +16,7 @@ export {
   AnnotationPanelController,
   useAnnotationPanel
 } from "./AnnotationPanelController";
+export type { AnnotationPanelControllerProps } from "./AnnotationPanelController";
 export { AddMenu } from "./AddMenu";
 export type { AddMenuProps } from "./AddMenu";
 export { ViewControls } from "./ViewControls";

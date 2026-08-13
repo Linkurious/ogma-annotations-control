@@ -11,6 +11,12 @@ import {
   defaultArrowStyle,
   defaultTextStyle
 } from "@linkurious/ogma-annotations";
+import {
+  DEFAULT_PANEL_PLACEMENT,
+  DEFAULT_PANEL_ORIENTATION,
+  type PanelPlacement,
+  type PanelOrientation
+} from "@linkurious/ogma-annotations/ui";
 import React from "react";
 import {
   ColorController,
@@ -24,11 +30,23 @@ import {
 export interface AnnotationPanelProps {
   visible: boolean;
   annotation: Annotation | null;
+  /**
+   * Which screen edge/corner the panel docks to. Defaults to `"right"`
+   * (vertically centered on the right edge — the original look).
+   */
+  placement?: PanelPlacement;
+  /**
+   * Whether panel sections stack vertically or run horizontally as a
+   * toolbar. Defaults to `"vertical"`.
+   */
+  orientation?: PanelOrientation;
 }
 
 export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   visible,
-  annotation
+  annotation,
+  placement = DEFAULT_PANEL_PLACEMENT,
+  orientation = DEFAULT_PANEL_ORIENTATION
 }) => {
 
   const renderArrow = (arrow: Arrow) => {
@@ -148,6 +166,8 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   return (
     <div
       className="annotation-panel"
+      data-placement={placement}
+      data-orientation={orientation}
       onClick={stopEvent}
       onMouseDown={stopEvent}
       onMouseMove={stopEvent}

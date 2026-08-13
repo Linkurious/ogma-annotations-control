@@ -5,6 +5,13 @@
  * Theming: override the `--oa-*` custom properties on `.annotation-panel`
  * (or any ancestor) to restyle. Defaults preserve the original look. The
  * accent color falls back to the legacy `--brand` variable if set.
+ *
+ * Layout: the panel root carries `data-placement` (which screen edge/corner
+ * it docks to — `right` (default), `left`, `top`, `bottom`, `top-left`,
+ * `top-right`, `bottom-left`, `bottom-right`) and `data-orientation`
+ * (`vertical` (default) or `horizontal`), set via the `placement`/
+ * `orientation` options (vanilla) or props (React). Position the panel
+ * relative to its container by giving that container `position: relative`.
  */
 
 .annotation-panel {
@@ -16,16 +23,87 @@
   --oa-control-bg: #eeeeee;
   --oa-text-color: #333333;
   --oa-muted-color: #666666;
+  --oa-panel-margin: 10px;
 
   position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
   width: 228px;
   background: var(--oa-panel-bg);
   z-index: 100;
   box-shadow: var(--oa-panel-shadow);
   border-radius: var(--oa-panel-radius);
+}
+
+/* Placement: which screen edge/corner the panel docks to. */
+.annotation-panel:not([data-placement]),
+.annotation-panel[data-placement="right"] {
+  right: var(--oa-panel-margin);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.annotation-panel[data-placement="left"] {
+  left: var(--oa-panel-margin);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.annotation-panel[data-placement="top"] {
+  top: var(--oa-panel-margin);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.annotation-panel[data-placement="bottom"] {
+  bottom: var(--oa-panel-margin);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.annotation-panel[data-placement="top-left"] {
+  left: var(--oa-panel-margin);
+  top: var(--oa-panel-margin);
+}
+
+.annotation-panel[data-placement="top-right"] {
+  right: var(--oa-panel-margin);
+  top: var(--oa-panel-margin);
+}
+
+.annotation-panel[data-placement="bottom-left"] {
+  left: var(--oa-panel-margin);
+  bottom: var(--oa-panel-margin);
+}
+
+.annotation-panel[data-placement="bottom-right"] {
+  right: var(--oa-panel-margin);
+  bottom: var(--oa-panel-margin);
+}
+
+/* Orientation: lay sections out as a horizontal toolbar instead of a
+   vertically-stacked card. Every section is a `.section-header` + one
+   content sibling (`.color-selector`, `.slider-section`, ...); a 2-row
+   auto-flow grid regroups each consecutive pair into its own column
+   without any markup changes. */
+.annotation-panel[data-orientation="horizontal"] {
+  width: auto;
+  max-width: min(90vw, 640px);
+}
+
+.annotation-panel[data-orientation="horizontal"] .panel-body {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: auto auto;
+  align-items: start;
+  column-gap: 20px;
+  overflow-x: auto;
+}
+
+.annotation-panel[data-orientation="horizontal"] .section-header {
+  margin-top: 0;
+}
+
+.annotation-panel[data-orientation="horizontal"] .slider {
+  width: 120px;
 }
 
 .panel-header {
