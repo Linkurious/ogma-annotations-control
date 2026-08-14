@@ -43,7 +43,11 @@ const defaultStickyNoteStyle: Partial<Text["properties"]["style"]> = {
   strokeType: "plain",
   borderRadius: 4,
   padding: 16,
-  fixedSize: false
+  fixedSize: false,
+  // Ghost text via the textarea's native placeholder - shown while content
+  // is empty, gone the instant the user types. No selection/focus tricks
+  // needed, unlike pre-filling real content the user has to overwrite.
+  placeholder: "Quick note…"
 };
 
 /**
@@ -278,12 +282,16 @@ export class Drawing {
       this.editor.getActiveHandler()!.stopEditing();
     this.control.cancelDrawing();
 
+    // Empty content: shows the `placeholder` ghost text (see
+    // defaultStickyNoteStyle) via the textarea's native placeholder
+    // attribute until the user types, instead of pre-filled content they'd
+    // have to select and overwrite.
     const note = createText(
       x - STICKY_NOTE_SIZE / 2,
       y - STICKY_NOTE_SIZE / 2,
       STICKY_NOTE_SIZE,
       STICKY_NOTE_SIZE,
-      "Quick note",
+      "",
       {
         ...defaultStickyNoteStyle,
         ...style
@@ -301,10 +309,9 @@ export class Drawing {
     this.control.select(note.id);
     this.store.setState({ drawingFeature: null });
 
-    // Drop straight into editing, with the "Quick note" placeholder
-    // pre-selected, so the first keystroke replaces it - otherwise the user
-    // has to click the note again just to start typing over the default.
-    (this.editor.getActiveHandler() as TextHandler)?.startEditingText(true);
+    // Drop straight into editing - otherwise the user has to click the note
+    // again just to start typing.
+    (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
     return this.control;
   }
 

@@ -423,13 +423,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     }
   }
 
-  /**
-   * @param selectAll Pre-select the current content, so the first keystroke
-   * replaces it instead of inserting at the cursor - use this when the
-   * content is a placeholder the user is expected to overwrite (e.g. a
-   * freshly-placed sticky note), not when resuming editing existing content.
-   */
-  public startEditingText(selectAll = false) {
+  public startEditingText() {
     if (this.textEditor === null) {
       this.store.setState({ editingFeature: this.annotation });
       this.textEditor = new TextArea(
@@ -438,16 +432,6 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
         this.annotation!,
         this.stopEditingText
       );
-      if (selectAll) {
-        // Deferred: this is typically called from within the same mousedown
-        // that placed the annotation (e.g. a freshly-dropped sticky note).
-        // The native mouseup that follows immediately after would otherwise
-        // land on the now-focused textarea and collapse our selection by
-        // placing the caret at the click point - selecting on the next tick,
-        // after that mouseup has been processed, survives it.
-        const editor = this.textEditor;
-        setTimeout(() => editor.selectAll(), 0);
-      }
     }
   }
 

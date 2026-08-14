@@ -63,7 +63,7 @@ describe("Draw API", () => {
     assert.equal(annotations.features.length, 1);
   });
 
-  it("should place a resizable sticky note with no connector arrow", () => {
+  it("should place a resizable, empty sticky note with a ghost placeholder and no connector arrow", () => {
     assert.isFunction(control.startStickyNote);
     control.startStickyNote(0, 0);
 
@@ -71,7 +71,10 @@ describe("Draw API", () => {
     assert.equal(annotations.features.length, 1);
     const feature = annotations.features[0] as Text;
     assert.equal(feature.properties.type, "text");
-    assert.equal(feature.properties.content, "Quick note");
+    // empty content: the placeholder is ghost text, not real content the
+    // user has to select and overwrite
+    assert.equal(feature.properties.content, "");
+    assert.isString(feature.properties.style?.placeholder);
     // not fixed-size, so it keeps its corner/edge resize handles
     assert.notEqual(feature.properties.style?.fixedSize, true);
     // no arrow was created alongside it
@@ -93,9 +96,9 @@ describe("Draw API", () => {
   it("should drop the sticky note straight into editing without throwing", () => {
     // This test harness runs Ogma with `renderer: null`, so the overlay
     // layer TextArea mounts into never gets attached to `document` - the
-    // placeholder-selected behavior itself is only verifiable in a real
+    // ghost placeholder rendering itself is only verifiable in a real
     // browser. This just guards the call chain (getActiveHandler() ->
-    // startEditingText(true) -> TextArea.selectAll()) doesn't throw.
+    // startEditingText()) doesn't throw.
     assert.doesNotThrow(() => control.startStickyNote(0, 0));
   });
 

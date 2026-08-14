@@ -509,16 +509,17 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   /**
    * Enable sticky note drawing mode - drops a plain, resizable text box
-   * (default text "Quick note", no connector arrow) like a Miro sticky note,
-   * unlike `enableCommentDrawing`. It's a regular `text` annotation, so once
-   * placed it gets the usual corner/edge drag handles to resize it.
+   * (empty content, "Quick note…" ghost placeholder, no connector arrow)
+   * like a Miro sticky note, unlike `enableCommentDrawing`. It's a regular
+   * `text` annotation, so once placed it gets the usual corner/edge drag
+   * handles to resize it.
    *
    * Call this method when the user clicks an "Add sticky note" button. The
    * control will:
    * 1. Wait for the next mousedown event
    * 2. Create and place a default-size note at that position, already selected
-   * 3. Drop straight into editing with the "Quick note" placeholder
-   *    pre-selected, so the next keystroke replaces it
+   * 3. Drop straight into editing - the placeholder is just ghost text, so
+   *    typing immediately replaces it, no selection needed
    * 4. Clean up automatically when done
    *
    * @example
