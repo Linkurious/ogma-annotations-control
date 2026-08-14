@@ -337,15 +337,16 @@ export class Shapes extends Renderer<SVGLayer> {
 
   /**
    * Drop this class's cached DOM elements for any feature no longer in the
-   * store. Takes `features` (not a pre-built id set) and builds the set from
-   * the values' actual `id` here - `Object.keys()` always returns strings,
-   * but `Id` can be numeric, and stringifying would make numeric-id features
-   * never match, so they'd get needlessly removed/recreated every render.
+   * store. Checks membership with `in` rather than a `Set<Id>` built from
+   * `Object.keys()` - that would always be strings, and `Id` can be numeric,
+   * so a numeric-id feature would never match and get needlessly
+   * removed/recreated every render. `in` doesn't have that problem: like any
+   * plain object property access, it coerces the key the same way on both
+   * sides.
    */
   private removeFeatures(features: Record<Id, Annotation>) {
-    const featureIds = new Set(Object.values(features).map((f) => f.id));
     for (const id of this.features.keys()) {
-      if (!featureIds.has(id)) {
+      if (!(id in features)) {
         const element = this.features.get(id);
         if (element && element.parentNode) {
           element.parentNode.removeChild(element);
