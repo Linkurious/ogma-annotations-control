@@ -163,6 +163,12 @@ export const AddMenu = ({
     }
   }, [editor]);
 
+  React.useEffect(() => {
+    if (!editor) return;
+    return () => {
+      if (editor.isEraseModeActive()) editor.disableEraseMode();
+    };
+  }, [editor]);
   const handleDelete = React.useCallback(() => {
     const selected = editor.getSelectedAnnotations();
     if (selected.features.length > 0) remove(selected);
