@@ -516,7 +516,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Call this method when the user clicks an "Add sticky note" button. The
    * control will:
    * 1. Wait for the next mousedown event
-   * 2. Create and place a fixed-size note at that position, already selected
+   * 2. Create and place a default-size note at that position, already selected
    * 3. Clean up automatically when done
    *
    * @example
