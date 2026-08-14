@@ -261,7 +261,8 @@ addStickyNoteButton.addEventListener("click", () => {
 When sticky note drawing is enabled:
 
 1. User clicks to drop the note at a fixed default size, already selected
-2. User double-clicks (or single-clicks while selected) to edit the text
+2. It drops straight into editing with the "Quick note" placeholder
+   pre-selected, so the next keystroke replaces it - no extra click needed
 3. Because it isn't `fixedSize`, the usual corner/edge drag handles let the
    user resize it afterward, same as a `text` annotation
 

@@ -300,6 +300,11 @@ export class Drawing {
     this.interactions.suppressClicksTemporarily(200);
     this.control.select(note.id);
     this.store.setState({ drawingFeature: null });
+
+    // Drop straight into editing, with the "Quick note" placeholder
+    // pre-selected, so the first keystroke replaces it - otherwise the user
+    // has to click the note again just to start typing over the default.
+    (this.editor.getActiveHandler() as TextHandler)?.startEditingText(true);
     return this.control;
   }
 

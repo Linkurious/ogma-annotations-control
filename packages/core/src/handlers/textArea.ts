@@ -419,6 +419,11 @@ export class TextArea {
     this.layer.setSize(this.getSize());
   };
 
+  /** Select the whole current value, so the next keystroke replaces it. */
+  public selectAll() {
+    this.textarea.select();
+  }
+
   destroy() {
     this.store.getState().commitLiveUpdates(new Set([this.annotation]));
     this.unsubscribe();

@@ -90,6 +90,15 @@ describe("Draw API", () => {
     assert.isFalse(control.isDrawing());
   });
 
+  it("should drop the sticky note straight into editing without throwing", () => {
+    // This test harness runs Ogma with `renderer: null`, so the overlay
+    // layer TextArea mounts into never gets attached to `document` - the
+    // placeholder-selected behavior itself is only verifiable in a real
+    // browser. This just guards the call chain (getActiveHandler() ->
+    // startEditingText(true) -> TextArea.selectAll()) doesn't throw.
+    assert.doesNotThrow(() => control.startStickyNote(0, 0));
+  });
+
   it("should erase whatever is clicked while erase mode is active", () => {
     const arrow = createArrow(0, 0, 0, 0);
     control.add(arrow);

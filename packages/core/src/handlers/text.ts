@@ -423,7 +423,13 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     }
   }
 
-  public startEditingText() {
+  /**
+   * @param selectAll Pre-select the current content, so the first keystroke
+   * replaces it instead of inserting at the cursor - use this when the
+   * content is a placeholder the user is expected to overwrite (e.g. a
+   * freshly-placed sticky note), not when resuming editing existing content.
+   */
+  public startEditingText(selectAll = false) {
     if (this.textEditor === null) {
       this.store.setState({ editingFeature: this.annotation });
       this.textEditor = new TextArea(
@@ -432,6 +438,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
         this.annotation!,
         this.stopEditingText
       );
+      if (selectAll) this.textEditor.selectAll();
     }
   }
 

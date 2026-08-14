@@ -517,7 +517,9 @@ export class Control extends EventEmitter<FeatureEvents> {
    * control will:
    * 1. Wait for the next mousedown event
    * 2. Create and place a default-size note at that position, already selected
-   * 3. Clean up automatically when done
+   * 3. Drop straight into editing with the "Quick note" placeholder
+   *    pre-selected, so the next keystroke replaces it
+   * 4. Clean up automatically when done
    *
    * @example
    * ```ts

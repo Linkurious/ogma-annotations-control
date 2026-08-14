@@ -149,9 +149,10 @@ function AddCommentButton() {
 
 A sticky note is a plain, resizable `text` annotation (Miro-style: padded,
 colored, no connector arrow) dropped at a fixed default size and pre-filled
-with "Quick note" - unlike a comment, it has no target arrow. Because it
-isn't `fixedSize`, it keeps the usual corner/edge drag handles once selected,
-so users can resize it after placing it:
+with "Quick note" - unlike a comment, it has no target arrow. Placing one
+drops straight into editing with that placeholder pre-selected, so the next
+keystroke replaces it. Because it isn't `fixedSize`, it keeps the usual
+corner/edge drag handles once selected, so users can resize it afterward:
 
 ```tsx
 function AddStickyNoteButton() {
