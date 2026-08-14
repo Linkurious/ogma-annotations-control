@@ -282,20 +282,43 @@ export class Drawing {
       this.editor.getActiveHandler()!.stopEditing();
     this.control.cancelDrawing();
 
-    // Box/arrow/text/polygon suppress Ogma's own pan-on-drag through their
-    // interactive Handler.startDrawing() (see Handler.disablePanning in
-    // handlers/base.ts). Sticky notes place in one click with no handler
-    // drag phase, so without this the same mousedown that places the note
-    // would also start panning the viewport as the user's held-down mouse
-    // moves. Restore on the very next mouseup - there's nothing further to
+    // Box/arrow/text/polygon go through Handler.startDrawing(), which both
+    // disables Ogma's own pan-on-drag (Handler.disablePanning) and sets
+    // store.isDragging = true (via the "dragstart" event AnnotationEditor
+    // listens for). Sticky notes place in one click with no handler drag
+    // phase at all, so without replicating both of those:
+    // 1. The same mousedown that places the note would also pan the
+    //    viewport as the held-down mouse moves.
+    // 2. InteractionController.onMouseUp - whose hit-test for this click ran
+    //    at mousedown time, before the note existed, so it found nothing -
+    //    treats the upcoming mouseup as "clicked empty space" and clears
+    //    the selection (`!state.isDragging` is the only thing that guards
+    //    that branch), tearing down the edit session we're about to start
+    //    almost immediately after creating it.
+    // Both are undone on the very next mouseup - there's nothing further to
     // track.
     this.ogma.setOptions({
       interactions: { pan: { enabled: false }, drag: { enabled: false } }
     });
+    this.store.setState({ isDragging: true });
     this.ogma.events.once("mouseup", () => {
       this.ogma.setOptions({
         interactions: { pan: { enabled: true }, drag: { enabled: true } }
       });
+      this.store.setState({ isDragging: false });
+
+      // Deferred to this mouseup rather than called synchronously below,
+      // in the same mousedown that placed the note: focusing the new
+      // textarea from inside a mousedown handler loses that race against
+      // the browser's own default mousedown behavior, which (for
+      // whatever element was actually under the pointer - here, Ogma's
+      // container) re-focuses it right after our synchronous JS handlers
+      // finish, stealing focus back before the user can type. box/text
+      // don't hit this: their edit mode only opens on the *following*
+      // mouseup's click handling (TextHandler.onClick), never inside the
+      // placing mousedown itself, so there's no default action left to
+      // race against by the time they call focus().
+      (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
     });
 
     // Empty content: shows the `placeholder` ghost text (see
@@ -325,9 +348,6 @@ export class Drawing {
     this.control.select(note.id);
     this.store.setState({ drawingFeature: null });
 
-    // Drop straight into editing - otherwise the user has to click the note
-    // again just to start typing.
-    (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
     return this.control;
   }
 
