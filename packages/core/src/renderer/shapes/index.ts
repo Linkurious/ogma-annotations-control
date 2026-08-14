@@ -113,12 +113,7 @@ export class Shapes extends Renderer<SVGLayer> {
     const viewportBounds = this.getViewportBounds();
 
     // delete features that are no longer present
-    // `Object.keys` always returns strings, but `Id` (and the keys this
-    // class's own `features` map uses) can be numeric - build the set from
-    // the values' actual `id` instead, or numeric-id features never match
-    // and get needlessly removed/recreated on every render.
-    const featureIds = new Set(Object.values(features).map((f) => f.id));
-    this.removeFeatures(featureIds);
+    this.removeFeatures(features);
     const visibleFeatures = new Set<Id>();
     for (let feature of Object.values(features)) {
       if (liveUpdates[feature.id]) {
@@ -186,12 +181,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
     const state = this.store.getState();
     const viewportBounds = this.getViewportBounds();
-    // `Object.keys` always returns strings, but `Id` (and the keys this
-    // class's own `features` map uses) can be numeric - build the set from
-    // the values' actual `id` instead, or numeric-id features never match
-    // and get needlessly removed/recreated on every render.
-    const featureIds = new Set(Object.values(features).map((f) => f.id));
-    this.removeFeatures(featureIds);
+    this.removeFeatures(features);
 
     for (let feature of Object.values(features)) {
       if (!(isBox(feature) || isPolygon(feature))) continue;
@@ -345,7 +335,15 @@ export class Shapes extends Renderer<SVGLayer> {
     return defs;
   }
 
-  private removeFeatures(featureIds: Set<Id>) {
+  /**
+   * Drop this class's cached DOM elements for any feature no longer in the
+   * store. Takes `features` (not a pre-built id set) and builds the set from
+   * the values' actual `id` here - `Object.keys()` always returns strings,
+   * but `Id` can be numeric, and stringifying would make numeric-id features
+   * never match, so they'd get needlessly removed/recreated every render.
+   */
+  private removeFeatures(features: Record<Id, Annotation>) {
+    const featureIds = new Set(Object.values(features).map((f) => f.id));
     for (const id of this.features.keys()) {
       if (!featureIds.has(id)) {
         const element = this.features.get(id);
