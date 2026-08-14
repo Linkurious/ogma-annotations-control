@@ -438,7 +438,16 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
         this.annotation!,
         this.stopEditingText
       );
-      if (selectAll) this.textEditor.selectAll();
+      if (selectAll) {
+        // Deferred: this is typically called from within the same mousedown
+        // that placed the annotation (e.g. a freshly-dropped sticky note).
+        // The native mouseup that follows immediately after would otherwise
+        // land on the now-focused textarea and collapse our selection by
+        // placing the caret at the click point - selecting on the next tick,
+        // after that mouseup has been processed, survives it.
+        const editor = this.textEditor;
+        setTimeout(() => editor.selectAll(), 0);
+      }
     }
   }
 
