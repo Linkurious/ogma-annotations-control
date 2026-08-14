@@ -29,6 +29,8 @@ export type IconName =
   | "pentagon"
   | "rectangle-horizontal"
   | "message-square"
+  | "sticky-note"
+  | "eraser"
   | "download"
   | "camera"
   | "rotate-cw"
@@ -62,6 +64,10 @@ export const ICON_PATHS: Record<IconName, string> = {
     '<rect width="20" height="12" x="2" y="6" rx="2"/>',
   "message-square":
     '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  "sticky-note":
+    '<path d="M21 9a2.4 2.4 0 0 0-.706-1.706l-3.588-3.588A2.4 2.4 0 0 0 15 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2z"/><path d="M15 3v5a1 1 0 0 0 1 1h5"/>',
+  eraser:
+    '<path d="M21 21H8a2 2 0 0 1-1.42-.587l-3.994-3.999a2 2 0 0 1 0-2.828l10-10a2 2 0 0 1 2.829 0l5.999 6a2 2 0 0 1 0 2.828L12.834 21"/><path d="m5.082 11.09 8.828 8.828"/>',
   download:
     '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   camera:

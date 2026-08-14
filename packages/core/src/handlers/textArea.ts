@@ -31,7 +31,10 @@ export class TextArea {
     const showSendButton =
       isComment(annotationData) && (state.options?.showSendButton ?? true);
     const sendButtonIcon = state.options?.sendButtonIcon || "";
-    const placeholderText = state.options?.textPlaceholder || "Enter text";
+    const placeholderText =
+      annotationData.properties.style?.placeholder ||
+      state.options?.textPlaceholder ||
+      "Enter text";
 
     // Resolve fixedSize before getPosition/getSize since both read this.fixedSize.
     // fixedSize overlays use scaled:false (screen-pixel space) to avoid the browser

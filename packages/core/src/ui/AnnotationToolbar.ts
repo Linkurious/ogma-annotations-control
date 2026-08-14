@@ -17,18 +17,41 @@ import type { PanelPlacement, PanelOrientation } from "./layout";
 const DEFAULT_TOOLBAR_PLACEMENT: PanelPlacement = "bottom";
 const DEFAULT_TOOLBAR_ORIENTATION: PanelOrientation = "horizontal";
 
-type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
+type DrawingMode =
+  | "arrow"
+  | "comment"
+  | "sticky-note"
+  | "box"
+  | "text"
+  | "polygon"
+  | "erase"
+  | null;
 
 /** One of the toolbar's drawing tools - see `enabledTypes`. */
-export type ToolbarDrawingType = "arrow" | "comment" | "box" | "text" | "polygon";
+export type ToolbarDrawingType =
+  | "arrow"
+  | "comment"
+  | "sticky-note"
+  | "box"
+  | "text"
+  | "polygon";
 
 const ALL_DRAWING_TYPES: ToolbarDrawingType[] = [
   "arrow",
   "comment",
+  "sticky-note",
   "box",
   "text",
   "polygon"
 ];
+
+/**
+ * Which deletion control(s) the toolbar shows - `"erase"` (default) deletes
+ * on click via the erase tool; `"select"` selects an annotation then deletes
+ * it with the trash button; `"both"` shows both, since they serve slightly
+ * different workflows.
+ */
+export type DeleteMode = "select" | "erase" | "both";
 
 /**
  * Per-type default style overrides, merged over the toolbar's own built-in
@@ -46,6 +69,7 @@ export interface AnnotationToolbarStyles {
     commentStyle?: Partial<CommentProps>;
     arrowStyle?: Partial<ArrowProperties>;
   };
+  stickyNote?: Partial<Text["properties"]["style"]>;
 }
 
 export interface AnnotationToolbarOptions {
@@ -68,12 +92,17 @@ export interface AnnotationToolbarOptions {
    */
   orientation?: PanelOrientation;
   /**
-   * Which drawing tools to show, and in what order. Defaults to all five:
-   * `["arrow", "comment", "box", "text", "polygon"]`.
+   * Which drawing tools to show, and in what order. Defaults to all six:
+   * `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`.
    */
   enabledTypes?: ToolbarDrawingType[];
   /** Per-type default style overrides for the drawing tool buttons. */
   styles?: AnnotationToolbarStyles;
+  /**
+   * Which deletion control(s) to show - the erase tool, the
+   * select-then-trash button, or both. Defaults to `"erase"`.
+   */
+  deleteMode?: DeleteMode;
   /** Called when the SVG export button is clicked. Omit to hide the button. */
   onSvgExport?: () => void;
   /** Called when the JSON export button is clicked. Omit to hide the button. */
@@ -125,14 +154,37 @@ export class AnnotationToolbar {
     this.root.appendChild(this.undoButton);
     this.root.appendChild(this.redoButton);
 
-    this.root.appendChild(this.separator());
+    const deleteMode = options.deleteMode ?? "erase";
 
-    this.root.appendChild(
-      this.button(null, "trash", "Delete selected", () => {
-        const selected = this.control.getSelectedAnnotations();
-        if (selected.features.length > 0) this.control.remove(selected);
-      })
-    );
+    if (deleteMode === "erase" || deleteMode === "both") {
+      this.root.appendChild(this.separator());
+      this.root.appendChild(
+        this.button(
+          "erase",
+          "eraser",
+          "Erase (click annotations to delete them)",
+          () => {
+            if (this.control.isEraseModeActive()) {
+              this.control.disableEraseMode();
+              this.setActiveMode(null);
+            } else {
+              this.control.enableEraseMode();
+              this.setActiveMode("erase");
+            }
+          }
+        )
+      );
+    }
+
+    if (deleteMode === "select" || deleteMode === "both") {
+      if (deleteMode === "select") this.root.appendChild(this.separator());
+      this.root.appendChild(
+        this.button(null, "trash", "Delete selected", () => {
+          const selected = this.control.getSelectedAnnotations();
+          if (selected.features.length > 0) this.control.remove(selected);
+        })
+      );
+    }
 
     if (options.onJsonExport || options.onSvgExport) {
       this.root.appendChild(this.separator());
@@ -199,6 +251,18 @@ export class AnnotationToolbar {
           });
           this.setActiveMode("comment");
         });
+      case "sticky-note":
+        return this.button(
+          "sticky-note",
+          "sticky-note",
+          "Add sticky note",
+          () => {
+            this.control.enableStickyNoteDrawing({
+              ...styles.stickyNote
+            });
+            this.setActiveMode("sticky-note");
+          }
+        );
       case "box":
         return this.button("box", "rectangle-horizontal", "Add box", () => {
           this.control.enableBoxDrawing({

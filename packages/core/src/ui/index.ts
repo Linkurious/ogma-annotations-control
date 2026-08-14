@@ -12,7 +12,8 @@ export { AnnotationToolbar } from "./AnnotationToolbar";
 export type {
   AnnotationToolbarOptions,
   AnnotationToolbarStyles,
-  ToolbarDrawingType
+  ToolbarDrawingType,
+  DeleteMode
 } from "./AnnotationToolbar";
 
 export * from "./config";
