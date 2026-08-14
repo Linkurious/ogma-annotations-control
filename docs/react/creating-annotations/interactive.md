@@ -148,10 +148,15 @@ function AddCommentButton() {
 ### Sticky Note Drawing
 
 A sticky note is a plain, resizable `text` annotation (Miro-style: padded,
-colored, no connector arrow) dropped at a fixed default size and pre-filled
-with "Quick note" - unlike a comment, it has no target arrow. Because it
-isn't `fixedSize`, it keeps the usual corner/edge drag handles once selected,
-so users can resize it after placing it:
+colored, no connector arrow), empty, with a "Quick note…" ghost placeholder -
+unlike a comment, it has no target arrow. It places the same way as a box:
+click for a default square size, or drag to size it. A plain click also
+drops straight into editing - since the placeholder is just ghost text
+shown via the textarea's native `placeholder` attribute (not real content),
+typing immediately replaces it, no selection needed (dragging instead needs
+a follow-up click to start typing, same as text/box). Because it isn't
+`fixedSize`, it keeps the usual corner/edge drag handles once selected, so
+users can resize it afterward:
 
 ```tsx
 function AddStickyNoteButton() {
@@ -160,7 +165,8 @@ function AddStickyNoteButton() {
   const handleClick = React.useCallback(() => {
     editor.enableStickyNoteDrawing({
       background: "#FFEB99",
-      color: "#4A3B00"
+      color: "#4A3B00",
+      placeholder: "Jot something down…"
     });
   }, [editor]);
 

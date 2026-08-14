@@ -48,9 +48,9 @@ The toolbar provides buttons for:
 - **Add arrow, comment, sticky note, box, text, polygon** — each arms the
   matching `control.enable*Drawing()` call and marks its own button active
   until drawing completes or is cancelled. A sticky note is a plain, resizable
-  `text` annotation (Miro-style: padded, colored, no connector) dropped at a
-  fixed default size — comment is the icon-based annotation with a connector
-  arrow to a target.
+  `text` annotation (Miro-style: padded, colored, no connector), placed the
+  same way as a box - click for a default square size, or drag to size it -
+  comment is the icon-based annotation with a connector arrow to a target.
 - **Undo / redo** — disabled automatically based on `control.canUndo()` /
   `control.canRedo()`, tracking the `history` event.
 - **Erase** — toggles a mode where clicking any annotation deletes it

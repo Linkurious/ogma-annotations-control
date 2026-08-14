@@ -28,8 +28,9 @@ import {
 } from "../types";
 import { findPlace } from "../utils/place-finder";
 
-/** Default width/height (square) a sticky note is dropped at - resizable
- * afterward via the usual text drag handles. */
+/** Width/height (square) a sticky note is dropped at on a plain click (no
+ * drag) - see TextHandler.applyDefaultSizeIfEmpty. Dragging instead sizes
+ * it to match, same as a box. */
 const STICKY_NOTE_SIZE = 160;
 
 /** Miro-style yellow note look: padded, borderless, lightly rounded. Not
@@ -43,7 +44,11 @@ const defaultStickyNoteStyle: Partial<Text["properties"]["style"]> = {
   strokeType: "plain",
   borderRadius: 4,
   padding: 16,
-  fixedSize: false
+  fixedSize: false,
+  // Ghost text via the textarea's native placeholder - shown while content
+  // is empty, gone the instant the user types. No selection/focus tricks
+  // needed, unlike pre-filling real content the user has to overwrite.
+  placeholder: "Quick note…"
 };
 
 /**
@@ -265,9 +270,12 @@ export class Drawing {
   /**
    * Place a plain sticky note - a resizable text box with no connector arrow,
    * like a Miro sticky note - at the given position and select it. It's a
-   * regular `text` annotation (not `fixedSize`), so it gets the usual
-   * corner/edge drag handles once selected: see `TextHandler.detectHandle`
-   * and `renderBoxHandles`.
+   * regular `text` annotation, so it goes through the same interactive
+   * corner-drag `TextHandler.startDrawing()` as `startBox`/`startText`: a
+   * click drops it at the default `STICKY_NOTE_SIZE` square (see
+   * `TextHandler.applyDefaultSizeIfEmpty`); dragging sizes it like any
+   * other box. Either way it isn't `fixedSize`, so it keeps its
+   * corner/edge drag handles afterward too.
    */
   public startStickyNote(
     x: number,
@@ -278,28 +286,27 @@ export class Drawing {
       this.editor.getActiveHandler()!.stopEditing();
     this.control.cancelDrawing();
 
-    const note = createText(
-      x - STICKY_NOTE_SIZE / 2,
-      y - STICKY_NOTE_SIZE / 2,
-      STICKY_NOTE_SIZE,
-      STICKY_NOTE_SIZE,
-      "Quick note",
-      {
-        ...defaultStickyNoteStyle,
-        ...style
-      }
-    );
+    // Empty content: shows the `placeholder` ghost text (see
+    // defaultStickyNoteStyle) via the textarea's native placeholder
+    // attribute until the user types, instead of pre-filled content they'd
+    // have to select and overwrite.
+    const note = createText(x, y, 0, 0, "", {
+      ...defaultStickyNoteStyle,
+      ...style
+    });
 
-    // Mark this feature as being drawn, then immediately complete the
-    // drawing - sticky notes are dropped at a fixed default size in one
-    // click (resize afterward via the drag handles), no interactive
-    // draw-out step is needed. Setting drawingFeature back to null makes
-    // Control auto-emit EVT_COMPLETE_DRAWING for this id.
     this.store.setState({ drawingFeature: note.id });
     this.control.add(note);
     this.interactions.suppressClicksTemporarily(200);
     this.control.select(note.id);
-    this.store.setState({ drawingFeature: null });
+
+    const handler = this.editor.getActiveHandler() as TextHandler;
+    handler.startDrawing(note.id, x, y, {
+      defaultSize: { width: STICKY_NOTE_SIZE, height: STICKY_NOTE_SIZE },
+      // Unlike box/text, sticky notes are for writing - drop into editing
+      // whether the user clicked (default size) or dragged one out.
+      autoEditAfterDrag: true
+    });
     return this.control;
   }
 

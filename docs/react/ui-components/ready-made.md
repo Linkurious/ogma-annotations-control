@@ -138,10 +138,11 @@ does.
 The drawing toolbar: buttons for arrow, comment, sticky note, box, text and
 polygon, plus undo / redo and erase. Optional export buttons appear only
 when you pass the corresponding callback. A sticky note is a plain, resizable
-`text` annotation (Miro-style: padded, colored, no connector) dropped at a
-fixed default size. Erase toggles a mode where clicking any annotation
-deletes it immediately, and is shown by default; the select-then-trash
-Delete button overlaps with it and is opt-in via `deleteMode`.
+`text` annotation (Miro-style: padded, colored, no connector), placed the
+same way as a box - click for a default square size, or drag to size it.
+Erase toggles a mode where clicking any annotation deletes it immediately,
+and is shown by default; the select-then-trash Delete button overlaps with
+it and is opt-in via `deleteMode`.
 
 <img src="/ui/add-menu.png" alt="AddMenu toolbar with drawing, history, erase, delete and export buttons" />
 
