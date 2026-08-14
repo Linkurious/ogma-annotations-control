@@ -508,29 +508,30 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Enable sticky note drawing mode - drops a plain comment annotation
-   * (default text "Quick note") with no connector arrow, unlike
-   * `enableCommentDrawing`.
+   * Enable sticky note drawing mode - drops a plain, resizable text box
+   * (default text "Quick note", no connector arrow) like a Miro sticky note,
+   * unlike `enableCommentDrawing`. It's a regular `text` annotation, so once
+   * placed it gets the usual corner/edge drag handles to resize it.
    *
    * Call this method when the user clicks an "Add sticky note" button. The
    * control will:
    * 1. Wait for the next mousedown event
-   * 2. Create and place a comment at that position, already selected
+   * 2. Create and place a fixed-size note at that position, already selected
    * 3. Clean up automatically when done
    *
    * @example
    * ```ts
    * addStickyNoteButton.addEventListener('click', () => {
-   *   control.enableStickyNoteDrawing({ iconColor: '#FFFACD' });
+   *   control.enableStickyNoteDrawing({ background: '#FFEB99' });
    * });
    * ```
    *
-   * @param style Sticky note style options (merged over the comment defaults)
+   * @param style Sticky note style options (merged over the sticky note defaults)
    * @returns this for chaining
    * @see startStickyNote for low-level programmatic control
    */
   public enableStickyNoteDrawing(
-    style?: Partial<CommentProps["style"]>
+    style?: Partial<Text["properties"]["style"]>
   ): this {
     this.drawing.enableStickyNoteDrawing(style);
     return this;
@@ -622,12 +623,13 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   /**
    * **Advanced API:** Programmatically place a sticky note at specific
-   * coordinates, already complete (no interactive resize/link step).
+   * coordinates, already complete (no interactive draw-out step - resize it
+   * afterward via the usual text drag handles).
    *
    * **For most use cases, use `enableStickyNoteDrawing()` instead.**
    *
-   * @param x X coordinate for the note
-   * @param y Y coordinate for the note
+   * @param x X coordinate for the note's center
+   * @param y Y coordinate for the note's center
    * @param style Sticky note style options
    * @returns this for chaining
    * @see enableStickyNoteDrawing for the recommended high-level API
@@ -635,7 +637,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   public startStickyNote(
     x: number,
     y: number,
-    style?: Partial<CommentProps["style"]>
+    style?: Partial<Text["properties"]["style"]>
   ): this {
     this.drawing.startStickyNote(x, y, style);
     return this;

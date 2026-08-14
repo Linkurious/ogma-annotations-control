@@ -1,14 +1,7 @@
 import { Ogma } from "@linkurious/ogma";
 import { describe, it, assert, beforeEach, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import {
-  Control,
-  createArrow,
-  createText,
-  Text,
-  Comment,
-  EVT_CLICK
-} from "../../src";
+import { Control, createArrow, createText, Text, EVT_CLICK } from "../../src";
 
 describe("Draw API", () => {
   let ogma: Ogma;
@@ -70,15 +63,17 @@ describe("Draw API", () => {
     assert.equal(annotations.features.length, 1);
   });
 
-  it("should place a sticky note with no connector arrow", () => {
+  it("should place a resizable sticky note with no connector arrow", () => {
     assert.isFunction(control.startStickyNote);
     control.startStickyNote(0, 0);
 
     const annotations = control.getAnnotations();
     assert.equal(annotations.features.length, 1);
-    const feature = annotations.features[0] as Comment;
-    assert.equal(feature.properties.type, "comment");
+    const feature = annotations.features[0] as Text;
+    assert.equal(feature.properties.type, "text");
     assert.equal(feature.properties.content, "Quick note");
+    // not fixed-size, so it keeps its corner/edge resize handles
+    assert.notEqual(feature.properties.style?.fixedSize, true);
     // no arrow was created alongside it
     assert.isUndefined(
       annotations.features.find((f) => f.properties.type === "arrow")

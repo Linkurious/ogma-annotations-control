@@ -4,7 +4,8 @@ import {
 } from "@linkurious/ogma-annotations";
 import type {
   ToolbarDrawingType,
-  AnnotationToolbarStyles
+  AnnotationToolbarStyles,
+  DeleteMode
 } from "@linkurious/ogma-annotations/ui";
 import React from "react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
@@ -27,6 +28,11 @@ export interface AddMenuProps {
   enabledTypes?: ToolbarDrawingType[];
   /** Per-type default style overrides for the drawing tool buttons. */
   styles?: AnnotationToolbarStyles;
+  /**
+   * Which deletion control(s) to show - the erase tool, the
+   * select-then-trash button, or both. Defaults to `"both"`.
+   */
+  deleteMode?: DeleteMode;
   /** Called when the SVG export button is clicked. Omit to hide the button. */
   onSvgExport?: () => void;
   /** Called when the JSON export button is clicked. Omit to hide the button. */
@@ -46,6 +52,7 @@ type DrawingMode =
 export const AddMenu = ({
   enabledTypes = DEFAULT_ENABLED_TYPES,
   styles = {},
+  deleteMode = "both",
   onSvgExport,
   onJsonExport
 }: AddMenuProps) => {
@@ -231,17 +238,26 @@ export const AddMenu = ({
       <button data-tooltip="Redo" onClick={() => redo()} disabled={!canRedo}>
         <Icon name="redo" size={16} />
       </button>
-      <span className="separator"></span>
-      <button
-        data-tooltip="Erase (click annotations to delete them)"
-        onClick={handleErase}
-        className={activeMode === "erase" ? "active" : ""}
-      >
-        <Icon name="eraser" size={16} />
-      </button>
-      <button data-tooltip="Delete selected" onClick={handleDelete}>
-        <Icon name="trash" size={16} />
-      </button>
+      {(deleteMode === "erase" || deleteMode === "both") && (
+        <>
+          <span className="separator"></span>
+          <button
+            data-tooltip="Erase (click annotations to delete them)"
+            onClick={handleErase}
+            className={activeMode === "erase" ? "active" : ""}
+          >
+            <Icon name="eraser" size={16} />
+          </button>
+        </>
+      )}
+      {(deleteMode === "select" || deleteMode === "both") && (
+        <>
+          {deleteMode === "select" && <span className="separator"></span>}
+          <button data-tooltip="Delete selected" onClick={handleDelete}>
+            <Icon name="trash" size={16} />
+          </button>
+        </>
+      )}
       {(onJsonExport || onSvgExport) && <span className="separator"></span>}
       {onJsonExport && (
         <button data-tooltip="Export annotations" onClick={onJsonExport}>

@@ -384,6 +384,41 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
+  it("shows both delete controls by default", () => {
+    const { toolbar } = createToolbar();
+    expect(
+      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+    ).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    toolbar.destroy();
+  });
+
+  it("hides the trash button when deleteMode is erase", () => {
+    const fake = createFakeToolbarControl(empty);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      deleteMode: "erase"
+    });
+    expect(
+      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+    ).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).toBeNull();
+    toolbar.destroy();
+  });
+
+  it("hides the erase button when deleteMode is select", () => {
+    const fake = createFakeToolbarControl(empty);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      deleteMode: "select"
+    });
+    expect(
+      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+    ).toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    toolbar.destroy();
+  });
+
   it("reflects canUndo/canRedo and calls undo/redo on click", () => {
     const { toolbar, control, emit, setUndoable, setRedoable } = createToolbar();
     const undoButton = document.querySelector<HTMLButtonElement>(
