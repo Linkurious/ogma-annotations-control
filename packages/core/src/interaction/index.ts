@@ -315,7 +315,7 @@ export class InteractionController extends EventTarget {
     }
   };
 
-  private setCursor(cursor: Cursor) {
+  public setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
     if (container) (container as HTMLElement).style.cursor = cursor;
   }

@@ -4,7 +4,8 @@ import {
 } from "@linkurious/ogma-annotations";
 import type {
   ToolbarDrawingType,
-  AnnotationToolbarStyles
+  AnnotationToolbarStyles,
+  DeleteMode
 } from "@linkurious/ogma-annotations/ui";
 import React from "react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
@@ -13,6 +14,7 @@ import { Icon } from "./Icon";
 const DEFAULT_ENABLED_TYPES: ToolbarDrawingType[] = [
   "arrow",
   "comment",
+  "sticky-note",
   "box",
   "text",
   "polygon"
@@ -20,23 +22,37 @@ const DEFAULT_ENABLED_TYPES: ToolbarDrawingType[] = [
 
 export interface AddMenuProps {
   /**
-   * Which drawing tools to show, and in what order. Defaults to all five:
-   * `["arrow", "comment", "box", "text", "polygon"]`.
+   * Which drawing tools to show, and in what order. Defaults to all six:
+   * `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`.
    */
   enabledTypes?: ToolbarDrawingType[];
   /** Per-type default style overrides for the drawing tool buttons. */
   styles?: AnnotationToolbarStyles;
+  /**
+   * Which deletion control(s) to show - the erase tool, the
+   * select-then-trash button, or both. Defaults to `"erase"`.
+   */
+  deleteMode?: DeleteMode;
   /** Called when the SVG export button is clicked. Omit to hide the button. */
   onSvgExport?: () => void;
   /** Called when the JSON export button is clicked. Omit to hide the button. */
   onJsonExport?: () => void;
 }
 
-type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
+type DrawingMode =
+  | "arrow"
+  | "comment"
+  | "sticky-note"
+  | "box"
+  | "text"
+  | "polygon"
+  | "erase"
+  | null;
 
 export const AddMenu = ({
   enabledTypes = DEFAULT_ENABLED_TYPES,
   styles = {},
+  deleteMode = "erase",
   onSvgExport,
   onJsonExport
 }: AddMenuProps) => {
@@ -130,6 +146,29 @@ export const AddMenu = ({
     setActiveMode("comment");
   }, [editor, styles.comment]);
 
+  const handleStickyNote = React.useCallback(() => {
+    editor.enableStickyNoteDrawing({
+      ...styles.stickyNote
+    });
+    setActiveMode("sticky-note");
+  }, [editor, styles.stickyNote]);
+
+  const handleErase = React.useCallback(() => {
+    if (editor.isEraseModeActive()) {
+      editor.disableEraseMode();
+      setActiveMode(null);
+    } else {
+      editor.enableEraseMode();
+      setActiveMode("erase");
+    }
+  }, [editor]);
+
+  React.useEffect(() => {
+    if (!editor) return;
+    return () => {
+      if (editor.isEraseModeActive()) editor.disableEraseMode();
+    };
+  }, [editor]);
   const handleDelete = React.useCallback(() => {
     const selected = editor.getSelectedAnnotations();
     if (selected.features.length > 0) remove(selected);
@@ -160,6 +199,15 @@ export const AddMenu = ({
           className={activeMode === "comment" ? "active" : ""}
         >
           <Icon name="message-square" size={16} />
+        </button>
+      )}
+      {isEnabled("sticky-note") && (
+        <button
+          data-tooltip="Add sticky note"
+          onClick={handleStickyNote}
+          className={activeMode === "sticky-note" ? "active" : ""}
+        >
+          <Icon name="sticky-note" size={16} />
         </button>
       )}
       {isEnabled("box") && (
@@ -196,10 +244,26 @@ export const AddMenu = ({
       <button data-tooltip="Redo" onClick={() => redo()} disabled={!canRedo}>
         <Icon name="redo" size={16} />
       </button>
-      <span className="separator"></span>
-      <button data-tooltip="Delete selected" onClick={handleDelete}>
-        <Icon name="trash" size={16} />
-      </button>
+      {(deleteMode === "erase" || deleteMode === "both") && (
+        <>
+          <span className="separator"></span>
+          <button
+            data-tooltip="Erase (click annotations to delete them)"
+            onClick={handleErase}
+            className={activeMode === "erase" ? "active" : ""}
+          >
+            <Icon name="eraser" size={16} />
+          </button>
+        </>
+      )}
+      {(deleteMode === "select" || deleteMode === "both") && (
+        <>
+          {deleteMode === "select" && <span className="separator"></span>}
+          <button data-tooltip="Delete selected" onClick={handleDelete}>
+            <Icon name="trash" size={16} />
+          </button>
+        </>
+      )}
       {(onJsonExport || onSvgExport) && <span className="separator"></span>}
       {onJsonExport && (
         <button data-tooltip="Export annotations" onClick={onJsonExport}>

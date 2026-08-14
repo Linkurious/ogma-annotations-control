@@ -230,6 +230,73 @@ When comment drawing is enabled:
 4. User can immediately start typing
 5. User presses Enter or clicks outside to finish
 
+## Drawing Sticky Notes
+
+Enable sticky note drawing mode with `enableStickyNoteDrawing()`. A sticky
+note is a plain, resizable `text` annotation (Miro-style: padded, colored, no
+connector arrow) dropped at a fixed default size and pre-filled with
+"Quick note" — unlike a comment, it has no target and isn't collapsible.
+
+```typescript
+addStickyNoteButton.addEventListener("click", () => {
+  controller.enableStickyNoteDrawing();
+});
+```
+
+### With Custom Styling
+
+```typescript
+addStickyNoteButton.addEventListener("click", () => {
+  controller.enableStickyNoteDrawing({
+    background: "#FFEB99",
+    color: "#4A3B00",
+    fontSize: 18,
+    padding: 16
+  });
+});
+```
+
+### Interactive Behavior
+
+When sticky note drawing is enabled:
+
+1. User clicks to drop the note at a fixed default size, already selected
+2. User double-clicks (or single-clicks while selected) to edit the text
+3. Because it isn't `fixedSize`, the usual corner/edge drag handles let the
+   user resize it afterward, same as a `text` annotation
+
+## Erasing Annotations
+
+Unlike the `enable*Drawing()` tools, erase mode isn't a one-shot draw - once
+armed with `enableEraseMode()`, every click on an annotation deletes it
+immediately, and it stays armed across multiple clicks until you turn it off.
+
+```typescript
+eraseButton.addEventListener("click", () => {
+  if (controller.isEraseModeActive()) {
+    controller.disableEraseMode();
+  } else {
+    controller.enableEraseMode();
+  }
+});
+```
+
+### Interactive Behavior
+
+When erase mode is enabled:
+
+1. Clicking an annotation deletes it immediately (cascades to a comment's
+   linked arrows, same as `remove()`)
+2. Clicking empty space does nothing
+3. Stays active across multiple clicks - no need to re-arm it between deletes
+4. Turned off by `disableEraseMode()`, or automatically when another drawing
+   tool is enabled or `cancelDrawing()` is called
+
+::: tip
+This is a separate workflow from selecting an annotation and clicking a
+trash/delete button - use whichever fits your UI, or offer both.
+:::
+
 ## Canceling Drawing
 
 Cancel the current drawing operation programmatically:
@@ -303,6 +370,14 @@ const buttons = [
   {
     label: "Comment",
     action: () => controller.enableCommentDrawing()
+  },
+  {
+    label: "Sticky Note",
+    action: () => controller.enableStickyNoteDrawing()
+  },
+  {
+    label: "Erase",
+    action: () => controller.enableEraseMode()
   },
   {
     label: "Cancel",

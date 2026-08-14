@@ -52,7 +52,7 @@ export function Editor({ graph }) {
   return (
     <Ogma graph={graph}>
       <AnnotationsContextProvider>
-        {/* Toolbar: add arrow/text/box/polygon/comment, undo/redo, delete */}
+        {/* Toolbar: add arrow/comment/sticky note/box/text/polygon, undo/redo, erase/delete */}
         <AddMenu />
 
         {/* Center / rotate the view */}
@@ -135,16 +135,21 @@ does.
 
 ### `AddMenu`
 
-The drawing toolbar: buttons for arrow, comment, box, text and polygon, plus
-undo / redo and delete. Optional export buttons appear only when you pass the
-corresponding callback.
+The drawing toolbar: buttons for arrow, comment, sticky note, box, text and
+polygon, plus undo / redo and erase. Optional export buttons appear only
+when you pass the corresponding callback. A sticky note is a plain, resizable
+`text` annotation (Miro-style: padded, colored, no connector) dropped at a
+fixed default size. Erase toggles a mode where clicking any annotation
+deletes it immediately, and is shown by default; the select-then-trash
+Delete button overlaps with it and is opt-in via `deleteMode`.
 
-<img src="/ui/add-menu.png" alt="AddMenu toolbar with drawing, history, delete and export buttons" />
+<img src="/ui/add-menu.png" alt="AddMenu toolbar with drawing, history, erase, delete and export buttons" />
 
 | Prop | Type | Description |
 | --- | --- | --- |
-| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_ | Which drawing tools to show, and in what order. Defaults to all five: `["arrow", "comment", "box", "text", "polygon"]`. |
+| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_ | Which drawing tools to show, and in what order. Defaults to all six: `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`. |
 | `styles` | `AnnotationToolbarStyles` _(optional)_ | Per-type default style overrides for the drawing tool buttons. |
+| `deleteMode` | `"select" \| "erase" \| "both"` _(optional)_ | Which deletion control(s) to show. Defaults to `"erase"`. |
 | `onJsonExport` | `() => void` _(optional)_ | Show a JSON export button that calls this. |
 | `onSvgExport` | `() => void` _(optional)_ | Show an SVG export button that calls this. |
 

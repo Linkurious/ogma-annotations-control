@@ -1,6 +1,6 @@
 import type { Ogma } from "@linkurious/ogma";
 import { MouseButtonEvent } from "@linkurious/ogma";
-import { EVT_ADD } from "../constants";
+import { cursors, EVT_ADD, EVT_CLICK } from "../constants";
 import type { Control } from "../Control";
 import { AnnotationEditor } from "../handlers";
 import { ArrowHandler } from "../handlers/arrow";
@@ -28,6 +28,24 @@ import {
 } from "../types";
 import { findPlace } from "../utils/place-finder";
 
+/** Default width/height (square) a sticky note is dropped at - resizable
+ * afterward via the usual text drag handles. */
+const STICKY_NOTE_SIZE = 160;
+
+/** Miro-style yellow note look: padded, borderless, lightly rounded. Not
+ * `fixedSize`, so it keeps its corner/edge resize handles once selected. */
+const defaultStickyNoteStyle: Partial<Text["properties"]["style"]> = {
+  font: "IBM Plex Sans",
+  fontSize: 18,
+  color: "#4A3B00",
+  background: "#FFEB99",
+  strokeWidth: 0,
+  strokeType: "plain",
+  borderRadius: 4,
+  padding: 16,
+  fixedSize: false
+};
+
 /**
  * Handles drawing interactions for annotations.
  * Contains both high-level enable*Drawing methods and low-level start* methods.
@@ -48,6 +66,9 @@ export class Drawing {
 
   // Track placement mode listeners for cleanup
   private placementCleanup: (() => void) | null = null;
+
+  // Whether erase mode (click an annotation to delete it) is armed
+  private eraseModeActive = false;
 
   constructor(
     ogma: Ogma,
@@ -82,10 +103,46 @@ export class Drawing {
       this.placementCleanup();
       this.placementCleanup = null;
     }
+    // Exit erase mode, if active
+    this.disableEraseMode();
   }
 
   public isDrawing(): boolean {
     return this.store.getState().drawingFeature !== null;
+  }
+
+  public isEraseModeActive(): boolean {
+    return this.eraseModeActive;
+  }
+
+  // Bound once so on/off reference the same function
+  private onEraseClick = (evt: { id?: Id }) => {
+    if (evt.id === undefined || evt.id === null) return;
+    const feature = this.store.getState().features[evt.id];
+    if (feature) this.control.remove(feature);
+  };
+
+  /**
+   * Enable erase mode: every subsequent click on an annotation deletes it
+   * immediately. Stays armed across multiple clicks until `disableEraseMode()`
+   * is called, or another tool/drawing mode is enabled (which cancels it via
+   * `cancelPendingDrawing()`).
+   */
+  public enableEraseMode(): Control {
+    if (this.eraseModeActive) return this.control;
+    this.control.unselect().cancelDrawing();
+    this.eraseModeActive = true;
+    this.control.on(EVT_CLICK, this.onEraseClick);
+    this.interactions.setCursor(cursors.crosshair);
+    return this.control;
+  }
+
+  public disableEraseMode(): Control {
+    if (!this.eraseModeActive) return this.control;
+    this.eraseModeActive = false;
+    this.control.off(EVT_CLICK, this.onEraseClick);
+    this.interactions.setCursor(cursors.default);
+    return this.control;
   }
 
   /**
@@ -190,6 +247,60 @@ export class Drawing {
         offsetY
       });
     });
+  }
+
+  /**
+   * @param style Sticky note style options (merged over the sticky note defaults)
+   * @returns Control instance for chaining
+   * @see startStickyNote for low-level programmatic control
+   */
+  public enableStickyNoteDrawing(
+    style?: Partial<Text["properties"]["style"]>
+  ): Control {
+    return this.enableDrawingMode((x, y) => {
+      this.startStickyNote(x, y, style);
+    });
+  }
+
+  /**
+   * Place a plain sticky note - a resizable text box with no connector arrow,
+   * like a Miro sticky note - at the given position and select it. It's a
+   * regular `text` annotation (not `fixedSize`), so it gets the usual
+   * corner/edge drag handles once selected: see `TextHandler.detectHandle`
+   * and `renderBoxHandles`.
+   */
+  public startStickyNote(
+    x: number,
+    y: number,
+    style?: Partial<Text["properties"]["style"]>
+  ): Control {
+    if (this.editor.getActiveHandler())
+      this.editor.getActiveHandler()!.stopEditing();
+    this.control.cancelDrawing();
+
+    const note = createText(
+      x - STICKY_NOTE_SIZE / 2,
+      y - STICKY_NOTE_SIZE / 2,
+      STICKY_NOTE_SIZE,
+      STICKY_NOTE_SIZE,
+      "Quick note",
+      {
+        ...defaultStickyNoteStyle,
+        ...style
+      }
+    );
+
+    // Mark this feature as being drawn, then immediately complete the
+    // drawing - sticky notes are dropped at a fixed default size in one
+    // click (resize afterward via the drag handles), no interactive
+    // draw-out step is needed. Setting drawingFeature back to null makes
+    // Control auto-emit EVT_COMPLETE_DRAWING for this id.
+    this.store.setState({ drawingFeature: note.id });
+    this.control.add(note);
+    this.interactions.suppressClicksTemporarily(200);
+    this.control.select(note.id);
+    this.store.setState({ drawingFeature: null });
+    return this.control;
   }
 
   /**
