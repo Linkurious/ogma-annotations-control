@@ -282,6 +282,22 @@ export class Drawing {
       this.editor.getActiveHandler()!.stopEditing();
     this.control.cancelDrawing();
 
+    // Box/arrow/text/polygon suppress Ogma's own pan-on-drag through their
+    // interactive Handler.startDrawing() (see Handler.disablePanning in
+    // handlers/base.ts). Sticky notes place in one click with no handler
+    // drag phase, so without this the same mousedown that places the note
+    // would also start panning the viewport as the user's held-down mouse
+    // moves. Restore on the very next mouseup - there's nothing further to
+    // track.
+    this.ogma.setOptions({
+      interactions: { pan: { enabled: false }, drag: { enabled: false } }
+    });
+    this.ogma.events.once("mouseup", () => {
+      this.ogma.setOptions({
+        interactions: { pan: { enabled: true }, drag: { enabled: true } }
+      });
+    });
+
     // Empty content: shows the `placeholder` ghost text (see
     // defaultStickyNoteStyle) via the textarea's native placeholder
     // attribute until the user types, instead of pre-filled content they'd

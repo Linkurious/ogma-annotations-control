@@ -102,6 +102,17 @@ describe("Draw API", () => {
     assert.doesNotThrow(() => control.startStickyNote(0, 0));
   });
 
+  it("should suppress viewport pan/drag while placing a sticky note", () => {
+    // Placing a note is a single click with no interactive draw-out phase
+    // (unlike box/arrow/text/polygon, which suppress panning through their
+    // own Handler.startDrawing()) - without this, the same mousedown that
+    // places the note also starts panning the viewport as the mouse moves.
+    assert.notEqual(ogma.getOptions().interactions?.pan?.enabled, false);
+    control.startStickyNote(0, 0);
+    assert.equal(ogma.getOptions().interactions?.pan?.enabled, false);
+    assert.equal(ogma.getOptions().interactions?.drag?.enabled, false);
+  });
+
   it("should erase whatever is clicked while erase mode is active", () => {
     const arrow = createArrow(0, 0, 0, 0);
     control.add(arrow);
