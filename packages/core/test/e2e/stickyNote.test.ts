@@ -131,4 +131,25 @@ describe("Sticky notes", () => {
     expect(note.width).toBeGreaterThan(160);
     expect(note.height).toBeGreaterThan(160);
   }, 10000);
+
+  it("should drop into editing after a drag too, not just a plain click", async () => {
+    // Unlike box/text, sticky notes drop into editing after either
+    // completion path - see startDrawing()'s autoEditAfterDrag.
+    const pos = await session.page.evaluate(() => {
+      editor.enableStickyNoteDrawing();
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+    });
+
+    await session.page.mouse.move(pos.x, pos.y);
+    await session.page.mouse.down();
+    await session.page.mouse.move(pos.x + 200, pos.y + 150, { steps: 10 });
+    await session.page.mouse.up();
+
+    await session.page.keyboard.type("Dragged");
+
+    const typedValue = await session.page.evaluate(
+      () => document.querySelector("textarea")?.value
+    );
+    expect(typedValue).toBe("Dragged");
+  }, 10000);
 });

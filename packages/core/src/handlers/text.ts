@@ -112,6 +112,10 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   // built-in DEFAULT_EMPTY_CLICK_WIDTH/HEIGHT applied on a no-drag click -
   // see applyDefaultSizeIfEmpty().
   private pendingDefaultSize: { width: number; height: number } | null = null;
+  // Set by startDrawing() when the caller wants edit mode entered right
+  // after the *initial placement* drag completes too, not just a no-drag
+  // click - see onDragEnd's commitChange() branch.
+  private autoEditAfterDrag = false;
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -491,6 +495,13 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     const currentPos = this.clientToCanvas(evt);
     const dx = currentPos.x - (this.dragStartPoint?.x || 0);
     const dy = currentPos.y - (this.dragStartPoint?.y || 0);
+    // One-shot: only ever set by startDrawing(), for this same initial
+    // placement drag - consume it now regardless of which branch runs
+    // below, so a later resize-handle drag of this same annotation never
+    // picks up a stale value.
+    const autoEdit = this.autoEditAfterDrag;
+    this.autoEditAfterDrag = false;
+
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
       this.clearDragState();
       this.applyDefaultSizeIfEmpty();
@@ -498,7 +509,13 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
         clientX: evt.clientX,
         clientY: evt.clientY
       });
-    } else this.commitChange();
+    } else {
+      this.commitChange();
+      const annotation = this.getAnnotation();
+      if (autoEdit && annotation && (isText(annotation) || isComment(annotation))) {
+        this.startEditingText();
+      }
+    }
 
     this.hoveredHandle = undefined;
     this.dragStartPoint = undefined;
@@ -548,18 +565,27 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   };
 
   /**
-   * @param defaultSize Size to fall back to if the user completes
+   * @param options.defaultSize Size to fall back to if the user completes
    * placement with a click instead of dragging one out - see
    * applyDefaultSizeIfEmpty(). Omit to use DEFAULT_EMPTY_CLICK_WIDTH/HEIGHT.
+   * @param options.autoEditAfterDrag Also enter edit mode when placement
+   * completes via a drag, not just a no-drag click (which always enters
+   * edit mode for text/comments, via onClick). Off by default: box/text
+   * dragged out the normal way still need a follow-up click to start
+   * typing, same as today.
    */
   public startDrawing(
     id: Id,
     x: number,
     y: number,
-    defaultSize?: { width: number; height: number }
+    options?: {
+      defaultSize?: { width: number; height: number };
+      autoEditAfterDrag?: boolean;
+    }
   ) {
     this.annotation = id;
-    this.pendingDefaultSize = defaultSize ?? null;
+    this.pendingDefaultSize = options?.defaultSize ?? null;
+    this.autoEditAfterDrag = options?.autoEditAfterDrag ?? false;
     // Set up to drag the bottom-right corner (corner index 2)
     this.hoveredHandle = {
       type: HandleType.CORNER,

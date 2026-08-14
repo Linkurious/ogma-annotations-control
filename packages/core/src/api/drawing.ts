@@ -302,8 +302,10 @@ export class Drawing {
 
     const handler = this.editor.getActiveHandler() as TextHandler;
     handler.startDrawing(note.id, x, y, {
-      width: STICKY_NOTE_SIZE,
-      height: STICKY_NOTE_SIZE
+      defaultSize: { width: STICKY_NOTE_SIZE, height: STICKY_NOTE_SIZE },
+      // Unlike box/text, sticky notes are for writing - drop into editing
+      // whether the user clicked (default size) or dragged one out.
+      autoEditAfterDrag: true
     });
     return this.control;
   }

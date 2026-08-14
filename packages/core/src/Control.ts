@@ -521,9 +521,10 @@ export class Control extends EventEmitter<FeatureEvents> {
    * 1. Wait for the next mousedown event
    * 2. Create the note at that position and start the interactive
    *    corner-drag, already selected
-   * 3. On release: a plain click (no drag) gets a default square size and
-   *    drops straight into editing (the placeholder is just ghost text, so
-   *    typing immediately replaces it); a drag gets sized to match instead
+   * 3. On release: a plain click (no drag) gets a default square size, a
+   *    drag gets sized to match instead - either way it drops straight
+   *    into editing (the placeholder is just ghost text, so typing
+   *    immediately replaces it)
    * 4. Clean up automatically when done
    *
    * @example
