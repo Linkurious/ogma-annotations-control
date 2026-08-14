@@ -112,7 +112,9 @@ export class Shapes extends Renderer<SVGLayer> {
     // Get viewport bounds for culling
     const viewportBounds = this.getViewportBounds();
 
-    // delete features that are no longer present
+    // Delete features that are no longer present. Not type-scoped, so this
+    // one call also covers the box/polygon elements renderUnderGraph()
+    // caches in the same this.features map - no need to call it there too.
     this.removeFeatures(features);
     const visibleFeatures = new Set<Id>();
     for (let feature of Object.values(features)) {
@@ -181,7 +183,10 @@ export class Shapes extends Renderer<SVGLayer> {
 
     const state = this.store.getState();
     const viewportBounds = this.getViewportBounds();
-    this.removeFeatures(features);
+    // Cleanup isn't type-scoped - render() already pruned this.features for
+    // every feature id gone from the store (not just text/comment/arrow), so
+    // doing it again here would just re-walk the same, now-already-correct
+    // map for no effect.
 
     for (let feature of Object.values(features)) {
       if (!(isBox(feature) || isPolygon(feature))) continue;
