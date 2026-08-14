@@ -1,6 +1,6 @@
 import type { Ogma } from "@linkurious/ogma";
 import { MouseButtonEvent } from "@linkurious/ogma";
-import { EVT_ADD } from "../constants";
+import { COMMENT_MODE_COLLAPSED, cursors, EVT_ADD, EVT_CLICK } from "../constants";
 import type { Control } from "../Control";
 import { AnnotationEditor } from "../handlers";
 import { ArrowHandler } from "../handlers/arrow";
@@ -49,6 +49,9 @@ export class Drawing {
   // Track placement mode listeners for cleanup
   private placementCleanup: (() => void) | null = null;
 
+  // Whether erase mode (click an annotation to delete it) is armed
+  private eraseModeActive = false;
+
   constructor(
     ogma: Ogma,
     store: Store,
@@ -82,10 +85,46 @@ export class Drawing {
       this.placementCleanup();
       this.placementCleanup = null;
     }
+    // Exit erase mode, if active
+    this.disableEraseMode();
   }
 
   public isDrawing(): boolean {
     return this.store.getState().drawingFeature !== null;
+  }
+
+  public isEraseModeActive(): boolean {
+    return this.eraseModeActive;
+  }
+
+  // Bound once so on/off reference the same function
+  private onEraseClick = (evt: { id?: Id }) => {
+    if (evt.id === undefined || evt.id === null) return;
+    const feature = this.store.getState().features[evt.id];
+    if (feature) this.control.remove(feature);
+  };
+
+  /**
+   * Enable erase mode: every subsequent click on an annotation deletes it
+   * immediately. Stays armed across multiple clicks until `disableEraseMode()`
+   * is called, or another tool/drawing mode is enabled (which cancels it via
+   * `cancelPendingDrawing()`).
+   */
+  public enableEraseMode(): Control {
+    if (this.eraseModeActive) return this.control;
+    this.control.unselect().cancelDrawing();
+    this.eraseModeActive = true;
+    this.control.on(EVT_CLICK, this.onEraseClick);
+    this.interactions.setCursor(cursors.crosshair);
+    return this.control;
+  }
+
+  public disableEraseMode(): Control {
+    if (!this.eraseModeActive) return this.control;
+    this.eraseModeActive = false;
+    this.control.off(EVT_CLICK, this.onEraseClick);
+    this.interactions.setCursor(cursors.default);
+    return this.control;
   }
 
   /**
@@ -190,6 +229,50 @@ export class Drawing {
         offsetY
       });
     });
+  }
+
+  /**
+   * @param style Sticky note style options (merged over the comment defaults)
+   * @returns Control instance for chaining
+   * @see startStickyNote for low-level programmatic control
+   */
+  public enableStickyNoteDrawing(
+    style?: Partial<CommentProps["style"]>
+  ): Control {
+    return this.enableDrawingMode((x, y) => {
+      this.startStickyNote(x, y, style);
+    });
+  }
+
+  /**
+   * Place a plain sticky note - a comment annotation with no connector arrow -
+   * at the given position and select it. Unlike `startComment`, this doesn't
+   * go through `CommentDrawingHandler`, which always attaches an arrow.
+   */
+  public startStickyNote(
+    x: number,
+    y: number,
+    style?: Partial<CommentProps["style"]>
+  ): Control {
+    if (this.editor.getActiveHandler())
+      this.editor.getActiveHandler()!.stopEditing();
+    this.control.cancelDrawing();
+
+    const note = createComment(x, y, "Quick note", {
+      mode: COMMENT_MODE_COLLAPSED,
+      style
+    });
+
+    // Mark this feature as being drawn, then immediately complete the
+    // drawing - sticky notes are fixed-size and dropped in one click, no
+    // interactive resize/link step is needed. Setting drawingFeature back to
+    // null makes Control auto-emit EVT_COMPLETE_DRAWING for this id.
+    this.store.setState({ drawingFeature: note.id });
+    this.control.add(note);
+    this.interactions.suppressClicksTemporarily(200);
+    this.control.select(note.id);
+    this.store.setState({ drawingFeature: null });
+    return this.control;
   }
 
   /**

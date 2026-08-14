@@ -25,6 +25,10 @@ export class Shapes extends Renderer<SVGLayer> {
   private shapesRoot: SVGGElement | null = null;
   private commentsRoot: SVGGElement | null = null;
   private annotationsRoot: SVGGElement | null = null;
+  // Second SVG layer, moved below Ogma's own graph layer, that boxes and
+  // polygons render into instead of `shapesRoot` - see `renderUnderGraph`.
+  private underLayer!: SVGLayer;
+  private underGraphRoot: SVGGElement | null = null;
   private visibleFeatures = new Set<Id>();
   private isExporting: boolean = false;
   constructor(ogma: Ogma, store: Store) {
@@ -37,6 +41,13 @@ export class Shapes extends Renderer<SVGLayer> {
       },
       LAYERS.SHAPES
     );
+    // Boxes/polygons render behind the graph: create the layer, then send it
+    // to the bottom of the stack (below the graph's own layer, which is
+    // always registered before any plugin/Control code runs).
+    this.underLayer = this.ogma.layers.addSVGLayer({
+      draw: this.renderUnderGraph
+    });
+    this.underLayer.moveToBottom();
     this.store.subscribe(
       (state) => ({
         features: state.features,
@@ -114,15 +125,11 @@ export class Shapes extends Renderer<SVGLayer> {
       if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
         continue;
       visibleFeatures.add(feature.id);
+      // Boxes and polygons render on the under-graph layer instead - see
+      // `renderUnderGraph`.
+      if (isBox(feature) || isPolygon(feature)) continue;
       let existingElement = this.features.get(feature.id);
-      if (isBox(feature))
-        existingElement = renderBox(
-          shapesRoot,
-          feature,
-          existingElement,
-          state
-        );
-      else if (isText(feature))
+      if (isText(feature))
         existingElement = renderText(
           shapesRoot,
           feature,
@@ -137,14 +144,7 @@ export class Shapes extends Renderer<SVGLayer> {
           state,
           this.visibleFeatures.has(feature.id)
         );
-      else if (isPolygon(feature)) {
-        existingElement = renderPolygon(
-          shapesRoot,
-          feature,
-          existingElement,
-          state
-        );
-      } else if (isArrow(feature)) {
+      else if (isArrow(feature)) {
         existingElement = renderArrow(
           arrowsRoot,
           feature,
@@ -164,8 +164,62 @@ export class Shapes extends Renderer<SVGLayer> {
     this.visibleFeatures = visibleFeatures;
   };
 
+  /** Draw callback for the under-graph layer: boxes and polygons only. */
+  renderUnderGraph = (root: SVGSVGElement) => {
+    if (!root) return;
+
+    const { features, liveUpdates, hoveredFeature, selectedFeatures } =
+      this.store.getState();
+
+    if (!this.underGraphRoot || !root.contains(this.underGraphRoot)) {
+      root.innerHTML = "";
+      this.underGraphRoot = createSVGElement<SVGGElement>("g");
+      root.appendChild(this.underGraphRoot);
+    }
+
+    root.removeChild(this.underGraphRoot);
+    const underGraphRoot = this.underGraphRoot;
+
+    const state = this.store.getState();
+    const viewportBounds = this.getViewportBounds();
+    const featureIds = new Set(Object.keys(features));
+    this.removeFeatures(featureIds);
+
+    for (let feature of Object.values(features)) {
+      if (!(isBox(feature) || isPolygon(feature))) continue;
+      if (liveUpdates[feature.id]) {
+        feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
+      }
+      if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
+        continue;
+
+      let existingElement = this.features.get(feature.id);
+      if (isBox(feature))
+        existingElement = renderBox(
+          underGraphRoot,
+          feature,
+          existingElement,
+          state
+        );
+      else if (isPolygon(feature))
+        existingElement = renderPolygon(
+          underGraphRoot,
+          feature,
+          existingElement,
+          state
+        );
+      if (existingElement) this.features.set(feature.id, existingElement);
+    }
+
+    this.applyStateClasses(underGraphRoot, hoveredFeature, selectedFeatures);
+    root.appendChild(underGraphRoot);
+  };
+
   private throttleRender = throttle(
-    () => this.render(this.layer.element as unknown as SVGSVGElement),
+    () => {
+      this.render(this.layer.element as unknown as SVGSVGElement);
+      this.renderUnderGraph(this.underLayer.element as unknown as SVGSVGElement);
+    },
     16,
     true
   );
@@ -323,6 +377,7 @@ export class Shapes extends Renderer<SVGLayer> {
 
   public refresh = (): void => {
     this.layer.refresh();
+    this.underLayer.refresh();
   };
 
   private onExportStart = () => {
@@ -334,6 +389,7 @@ export class Shapes extends Renderer<SVGLayer> {
   public destroy(): void {
     this.features.clear();
     this.layer.destroy();
+    this.underLayer.destroy();
     this.ogma.events.off(this.onExportStart);
     this.ogma.events.off(this.onExportEnd);
     super.destroy();

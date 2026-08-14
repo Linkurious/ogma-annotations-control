@@ -1,7 +1,14 @@
 import { Ogma } from "@linkurious/ogma";
 import { describe, it, assert, beforeEach, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import { Control, createArrow, createText, Text } from "../../src";
+import {
+  Control,
+  createArrow,
+  createText,
+  Text,
+  Comment,
+  EVT_CLICK
+} from "../../src";
 
 describe("Draw API", () => {
   let ogma: Ogma;
@@ -61,5 +68,62 @@ describe("Draw API", () => {
     control.cancelDrawing();
     const annotations = control.getAnnotations();
     assert.equal(annotations.features.length, 1);
+  });
+
+  it("should place a sticky note with no connector arrow", () => {
+    assert.isFunction(control.startStickyNote);
+    control.startStickyNote(0, 0);
+
+    const annotations = control.getAnnotations();
+    assert.equal(annotations.features.length, 1);
+    const feature = annotations.features[0] as Comment;
+    assert.equal(feature.properties.type, "comment");
+    assert.equal(feature.properties.content, "Quick note");
+    // no arrow was created alongside it
+    assert.isUndefined(
+      annotations.features.find((f) => f.properties.type === "arrow")
+    );
+  });
+
+  it("should select the sticky note and complete drawing immediately", () => {
+    control.startStickyNote(0, 0);
+    const [note] = control.getAnnotations().features;
+    assert.deepEqual(
+      control.getSelectedAnnotations().features.map((f) => f.id),
+      [note.id]
+    );
+    assert.isFalse(control.isDrawing());
+  });
+
+  it("should erase whatever is clicked while erase mode is active", () => {
+    const arrow = createArrow(0, 0, 0, 0);
+    control.add(arrow);
+    assert.equal(control.getAnnotations().features.length, 1);
+
+    control.enableEraseMode();
+    assert.isTrue(control.isEraseModeActive());
+
+    control.emit(EVT_CLICK, { id: arrow.id, position: { x: 0, y: 0 } });
+    assert.equal(control.getAnnotations().features.length, 0);
+  });
+
+  it("shouldn't erase anything once erase mode is disabled", () => {
+    const arrow = createArrow(0, 0, 0, 0);
+    control.add(arrow);
+
+    control.enableEraseMode();
+    control.disableEraseMode();
+    assert.isFalse(control.isEraseModeActive());
+
+    control.emit(EVT_CLICK, { id: arrow.id, position: { x: 0, y: 0 } });
+    assert.equal(control.getAnnotations().features.length, 1);
+  });
+
+  it("should exit erase mode when another drawing tool is enabled", () => {
+    control.enableEraseMode();
+    assert.isTrue(control.isEraseModeActive());
+
+    control.enableArrowDrawing();
+    assert.isFalse(control.isEraseModeActive());
   });
 });

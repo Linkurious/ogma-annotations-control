@@ -508,6 +508,59 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
+   * Enable sticky note drawing mode - drops a plain comment annotation
+   * (default text "Quick note") with no connector arrow, unlike
+   * `enableCommentDrawing`.
+   *
+   * Call this method when the user clicks an "Add sticky note" button. The
+   * control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create and place a comment at that position, already selected
+   * 3. Clean up automatically when done
+   *
+   * @example
+   * ```ts
+   * addStickyNoteButton.addEventListener('click', () => {
+   *   control.enableStickyNoteDrawing({ iconColor: '#FFFACD' });
+   * });
+   * ```
+   *
+   * @param style Sticky note style options (merged over the comment defaults)
+   * @returns this for chaining
+   * @see startStickyNote for low-level programmatic control
+   */
+  public enableStickyNoteDrawing(
+    style?: Partial<CommentProps["style"]>
+  ): this {
+    this.drawing.enableStickyNoteDrawing(style);
+    return this;
+  }
+
+  /**
+   * Enable erase mode: every click on an annotation deletes it immediately.
+   * Stays armed across multiple clicks until `disableEraseMode()` is called,
+   * or another drawing tool is enabled / `cancelDrawing()` is called.
+   *
+   * @returns this for chaining
+   * @see disableEraseMode to turn erase mode off
+   */
+  public enableEraseMode(): this {
+    this.drawing.enableEraseMode();
+    return this;
+  }
+
+  /** Turn erase mode off. No-op if it isn't active. */
+  public disableEraseMode(): this {
+    this.drawing.disableEraseMode();
+    return this;
+  }
+
+  /** Whether erase mode is currently active. */
+  public isEraseModeActive(): boolean {
+    return this.drawing.isEraseModeActive();
+  }
+
+  /**
    * Place a pre-created annotation by moving it with the cursor.
    * The annotation follows the mouse until the user clicks to place it.
    * Press Escape to cancel.
@@ -564,6 +617,27 @@ export class Control extends EventEmitter<FeatureEvents> {
     }
   ): this {
     this.drawing.startComment(x, y, comment, options);
+    return this;
+  }
+
+  /**
+   * **Advanced API:** Programmatically place a sticky note at specific
+   * coordinates, already complete (no interactive resize/link step).
+   *
+   * **For most use cases, use `enableStickyNoteDrawing()` instead.**
+   *
+   * @param x X coordinate for the note
+   * @param y Y coordinate for the note
+   * @param style Sticky note style options
+   * @returns this for chaining
+   * @see enableStickyNoteDrawing for the recommended high-level API
+   */
+  public startStickyNote(
+    x: number,
+    y: number,
+    style?: Partial<CommentProps["style"]>
+  ): this {
+    this.drawing.startStickyNote(x, y, style);
     return this;
   }
 

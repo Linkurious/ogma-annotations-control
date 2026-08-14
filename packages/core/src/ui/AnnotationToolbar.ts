@@ -17,14 +17,29 @@ import type { PanelPlacement, PanelOrientation } from "./layout";
 const DEFAULT_TOOLBAR_PLACEMENT: PanelPlacement = "bottom";
 const DEFAULT_TOOLBAR_ORIENTATION: PanelOrientation = "horizontal";
 
-type DrawingMode = "arrow" | "comment" | "box" | "text" | "polygon" | null;
+type DrawingMode =
+  | "arrow"
+  | "comment"
+  | "sticky-note"
+  | "box"
+  | "text"
+  | "polygon"
+  | "erase"
+  | null;
 
 /** One of the toolbar's drawing tools - see `enabledTypes`. */
-export type ToolbarDrawingType = "arrow" | "comment" | "box" | "text" | "polygon";
+export type ToolbarDrawingType =
+  | "arrow"
+  | "comment"
+  | "sticky-note"
+  | "box"
+  | "text"
+  | "polygon";
 
 const ALL_DRAWING_TYPES: ToolbarDrawingType[] = [
   "arrow",
   "comment",
+  "sticky-note",
   "box",
   "text",
   "polygon"
@@ -46,6 +61,7 @@ export interface AnnotationToolbarStyles {
     commentStyle?: Partial<CommentProps>;
     arrowStyle?: Partial<ArrowProperties>;
   };
+  stickyNote?: Partial<CommentProps["style"]>;
 }
 
 export interface AnnotationToolbarOptions {
@@ -128,6 +144,23 @@ export class AnnotationToolbar {
     this.root.appendChild(this.separator());
 
     this.root.appendChild(
+      this.button(
+        "erase",
+        "eraser",
+        "Erase (click annotations to delete them)",
+        () => {
+          if (this.control.isEraseModeActive()) {
+            this.control.disableEraseMode();
+            this.setActiveMode(null);
+          } else {
+            this.control.enableEraseMode();
+            this.setActiveMode("erase");
+          }
+        }
+      )
+    );
+
+    this.root.appendChild(
       this.button(null, "trash", "Delete selected", () => {
         const selected = this.control.getSelectedAnnotations();
         if (selected.features.length > 0) this.control.remove(selected);
@@ -199,6 +232,18 @@ export class AnnotationToolbar {
           });
           this.setActiveMode("comment");
         });
+      case "sticky-note":
+        return this.button(
+          "sticky-note",
+          "sticky-note",
+          "Add sticky note",
+          () => {
+            this.control.enableStickyNoteDrawing({
+              ...styles.stickyNote
+            });
+            this.setActiveMode("sticky-note");
+          }
+        );
       case "box":
         return this.button("box", "rectangle-horizontal", "Add box", () => {
           this.control.enableBoxDrawing({

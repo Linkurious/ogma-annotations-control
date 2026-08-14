@@ -256,6 +256,8 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
       ?.forEach((h) => (h as (...a: unknown[]) => void)(...args));
   };
 
+  let eraseActive = false;
+
   const control = {
     on,
     off,
@@ -268,9 +270,13 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
     getSelectedAnnotations: () => selected,
     enableArrowDrawing: vi.fn(),
     enableCommentDrawing: vi.fn(),
+    enableStickyNoteDrawing: vi.fn(),
     enableBoxDrawing: vi.fn(),
     enableTextDrawing: vi.fn(),
-    enablePolygonDrawing: vi.fn()
+    enablePolygonDrawing: vi.fn(),
+    isEraseModeActive: () => eraseActive,
+    enableEraseMode: vi.fn(() => (eraseActive = true)),
+    disableEraseMode: vi.fn(() => (eraseActive = false))
   };
 
   return {
@@ -341,6 +347,39 @@ describe("ui/AnnotationToolbar", () => {
 
     emit("completeDrawing", { id: "a1" });
     expect(arrowButton.classList.contains("active")).toBe(false);
+
+    toolbar.destroy();
+  });
+
+  it("arms sticky note drawing and marks the button active until drawing ends", () => {
+    const { toolbar, control, emit } = createToolbar();
+    const stickyButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Add sticky note"]'
+    )!;
+
+    stickyButton.click();
+    expect(control.enableStickyNoteDrawing).toHaveBeenCalled();
+    expect(stickyButton.classList.contains("active")).toBe(true);
+
+    emit("completeDrawing", { id: "s1" });
+    expect(stickyButton.classList.contains("active")).toBe(false);
+
+    toolbar.destroy();
+  });
+
+  it("toggles erase mode on and off from the same button", () => {
+    const { toolbar, control } = createToolbar();
+    const eraseButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Erase (click annotations to delete them)"]'
+    )!;
+
+    eraseButton.click();
+    expect(control.enableEraseMode).toHaveBeenCalledTimes(1);
+    expect(eraseButton.classList.contains("active")).toBe(true);
+
+    eraseButton.click();
+    expect(control.disableEraseMode).toHaveBeenCalledTimes(1);
+    expect(eraseButton.classList.contains("active")).toBe(false);
 
     toolbar.destroy();
   });
