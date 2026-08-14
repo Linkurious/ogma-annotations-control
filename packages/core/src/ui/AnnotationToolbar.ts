@@ -46,10 +46,10 @@ const ALL_DRAWING_TYPES: ToolbarDrawingType[] = [
 ];
 
 /**
- * Which deletion control(s) the toolbar shows - `"select"` selects an
- * annotation then deletes it with the trash button; `"erase"` deletes on
- * click via the erase tool; `"both"` (default) shows both, since they serve
- * slightly different workflows.
+ * Which deletion control(s) the toolbar shows - `"erase"` (default) deletes
+ * on click via the erase tool; `"select"` selects an annotation then deletes
+ * it with the trash button; `"both"` shows both, since they serve slightly
+ * different workflows.
  */
 export type DeleteMode = "select" | "erase" | "both";
 
@@ -100,7 +100,7 @@ export interface AnnotationToolbarOptions {
   styles?: AnnotationToolbarStyles;
   /**
    * Which deletion control(s) to show - the erase tool, the
-   * select-then-trash button, or both. Defaults to `"both"`.
+   * select-then-trash button, or both. Defaults to `"erase"`.
    */
   deleteMode?: DeleteMode;
   /** Called when the SVG export button is clicked. Omit to hide the button. */
@@ -154,7 +154,7 @@ export class AnnotationToolbar {
     this.root.appendChild(this.undoButton);
     this.root.appendChild(this.redoButton);
 
-    const deleteMode = options.deleteMode ?? "both";
+    const deleteMode = options.deleteMode ?? "erase";
 
     if (deleteMode === "erase" || deleteMode === "both") {
       this.root.appendChild(this.separator());

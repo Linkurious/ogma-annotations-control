@@ -292,7 +292,11 @@ describe("ui/AnnotationToolbar", () => {
   const empty = { type: "FeatureCollection", features: [] } as AnnotationCollection;
 
   function createToolbar(
-    options?: Partial<{ placement: string; orientation: string }>,
+    options?: Partial<{
+      placement: string;
+      orientation: string;
+      deleteMode: "select" | "erase" | "both";
+    }>,
     selected: AnnotationCollection = empty
   ) {
     const fake = createFakeToolbarControl(selected);
@@ -384,25 +388,25 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
-  it("shows both delete controls by default", () => {
+  it("shows only erase by default", () => {
     const { toolbar } = createToolbar();
     expect(
       document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
     ).not.toBeNull();
-    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).toBeNull();
     toolbar.destroy();
   });
 
-  it("hides the trash button when deleteMode is erase", () => {
+  it("shows both delete controls when deleteMode is both", () => {
     const fake = createFakeToolbarControl(empty);
     const toolbar = new AnnotationToolbar({
       control: fake.control as unknown as Control,
-      deleteMode: "erase"
+      deleteMode: "both"
     });
     expect(
       document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
     ).not.toBeNull();
-    expect(document.querySelector('[data-tooltip="Delete selected"]')).toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
     toolbar.destroy();
   });
 
@@ -450,7 +454,7 @@ describe("ui/AnnotationToolbar", () => {
       type: "FeatureCollection",
       features: [{ id: "a1" }]
     } as unknown as AnnotationCollection;
-    const { toolbar, control } = createToolbar({}, selected);
+    const { toolbar, control } = createToolbar({ deleteMode: "both" }, selected);
     const deleteButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Delete selected"]'
     )!;
@@ -462,7 +466,7 @@ describe("ui/AnnotationToolbar", () => {
   });
 
   it("does not call remove when the selection is empty", () => {
-    const { toolbar, control } = createToolbar();
+    const { toolbar, control } = createToolbar({ deleteMode: "both" });
     const deleteButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Delete selected"]'
     )!;

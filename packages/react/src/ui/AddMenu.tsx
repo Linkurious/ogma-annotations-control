@@ -30,7 +30,7 @@ export interface AddMenuProps {
   styles?: AnnotationToolbarStyles;
   /**
    * Which deletion control(s) to show - the erase tool, the
-   * select-then-trash button, or both. Defaults to `"both"`.
+   * select-then-trash button, or both. Defaults to `"erase"`.
    */
   deleteMode?: DeleteMode;
   /** Called when the SVG export button is clicked. Omit to hide the button. */
@@ -52,7 +52,7 @@ type DrawingMode =
 export const AddMenu = ({
   enabledTypes = DEFAULT_ENABLED_TYPES,
   styles = {},
-  deleteMode = "both",
+  deleteMode = "erase",
   onSvgExport,
   onJsonExport
 }: AddMenuProps) => {
