@@ -108,9 +108,9 @@
   },
   "dependencies": {
     "@chenglou/pretext": "0.0.7",
-    "concaveman": "2.0.0",
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
+    "martinez-polygon-clipping": "0.8.1",
     "rbush": "4.0.1",
     "vanilla-colorful": "0.7.2",
     "zundo": "2.3.0",
@@ -118,7 +118,6 @@
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "2.1.0",
-    "@types/concaveman": "1.1.6",
     "@types/geojson": "7946.0.16",
     "@types/rbush": "4.0.0",
     "get-port": "7.0.0",

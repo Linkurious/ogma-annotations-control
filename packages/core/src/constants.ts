@@ -63,12 +63,18 @@ export const HL_BRIGHTEN = 0.2;
 
 /** Default world-units buffer kept around each node in a tracked region */
 export const REGION_DEFAULT_PADDING = 20;
-/** Default concaveman concavity for region polygons (lower = more organic) */
-export const REGION_DEFAULT_CONCAVITY = 2;
-/** Points generated around each node's circumference when hulling a region */
-export const REGION_HULL_POINTS_PER_NODE = 8;
+/** Points generated around each node's circumference when growing a region */
+export const REGION_CIRCLE_POINTS_PER_NODE = 16;
+/** Half-width of the bridging corridor used to weld a disjoint member back
+ *  into a region's ring (world units) */
+export const REGION_BRIDGE_HALF_WIDTH = 4;
 /** Debounce (ms) before recomputing region shapes after a node move batch */
 export const REGION_COMMIT_DEBOUNCE_MS = 1;
+/** Douglas-Peucker tolerance (world units) applied after each ring union.
+ *  Repeated near-tangent unions otherwise accumulate near-duplicate/nearly-
+ *  collinear vertices without bound over many moves; this keeps ring
+ *  complexity flat without visibly altering the shape. */
+export const REGION_SIMPLIFY_TOLERANCE = 1;
 
 /** @private */
 export const TARGET_TYPES = {

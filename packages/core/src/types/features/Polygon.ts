@@ -10,19 +10,19 @@ export interface PolygonStyle extends BoxStyle {}
 /**
  * Live node-containment metadata for a polygon acting as a "region".
  *
- * When present, the polygon's ring is recomputed (a padded concave hull) to
- * keep enclosing `nodeIds` whenever one of them moves. Membership is
- * sticky: a node stays tracked once it's a member, and a node dragged into
- * the polygon's current boundary from outside joins automatically. See
- * {@link Regions} for the reactive behavior.
+ * When present, the polygon's ring is grown — never recomputed from
+ * scratch — to keep enclosing `nodeIds` whenever one of them moves: each
+ * moved member's padded footprint is unioned into the existing ring, so
+ * untouched parts of the (possibly hand-drawn) contour are left byte-for-byte
+ * alone. Membership is sticky: a node stays tracked once it's a member, and
+ * a node dragged into the polygon's current boundary from outside joins
+ * automatically. See {@link Regions} for the reactive behavior.
  */
 export interface PolygonRegion {
   /** Ids of graph nodes this polygon tracks and reshapes to contain */
   nodeIds: Id[];
   /** World-units buffer kept around each member node (default 20) */
   padding?: number;
-  /** concaveman concavity — lower = tighter/more organic, higher = more convex (default 2) */
-  concavity?: number;
 }
 
 export interface PolygonProperties extends AnnotationProps {

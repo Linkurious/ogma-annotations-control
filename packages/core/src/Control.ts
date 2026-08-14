@@ -469,39 +469,40 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * Create a "region" polygon: a concave hull wrapped around the given
-   * nodes' current positions, which then keeps reshaping to enclose them as
-   * they're dragged. Membership is sticky (a node stays tracked once
-   * enclosed) and geometric (a node dragged into the region from outside
-   * joins automatically) — see {@link trackRegionNodes} to opt an existing
-   * polygon into the same behavior instead of creating a new one.
+   * Create a "region" polygon wrapped around the given nodes' current
+   * positions, which then keeps growing to enclose them as they're dragged.
+   * Growth is additive — each moved member's padded footprint is unioned
+   * into the existing ring rather than recomputed from scratch, so once the
+   * region exists, further reshaping never redraws parts of the boundary
+   * that weren't near a moved node. Membership is sticky (a node stays
+   * tracked once enclosed) and geometric (a node dragged into the region
+   * from outside joins automatically) — see {@link trackRegionNodes} to opt
+   * an existing (e.g. hand-drawn) polygon into the same behavior instead of
+   * creating a new one.
    *
    * @param nodeIds Ids of the graph nodes to wrap and track
    * @param options.padding World-units buffer kept around each node (default 20)
-   * @param options.concavity concaveman concavity — lower is more organic/tighter, higher is more convex (default 2)
    * @param options.style Polygon style options
    * @returns The created region polygon
    */
   public createRegion(
     nodeIds: Id[],
-    options?: { padding?: number; concavity?: number; style?: PolygonStyle }
+    options?: { padding?: number; style?: PolygonStyle }
   ): Polygon {
     return this.regions.createRegion(nodeIds, options);
   }
 
   /**
-   * Turn an existing polygon into a live region: it starts reshaping to
-   * keep enclosing whichever nodes are currently inside it (detected
-   * geometrically), and any node dragged in later joins automatically.
+   * Turn an existing polygon into a live region: it starts growing to keep
+   * enclosing whichever nodes are currently inside it (detected
+   * geometrically), and any node dragged in later joins automatically. The
+   * polygon's current ring — hand-drawn or otherwise — is left exactly as
+   * it is; only the local area around a moved member ever changes.
    *
    * @param polygonId Id of the polygon to start tracking
    * @param options.padding World-units buffer kept around each node (default 20)
-   * @param options.concavity concaveman concavity (default 2)
    */
-  public trackRegionNodes(
-    polygonId: Id,
-    options?: { padding?: number; concavity?: number }
-  ): this {
+  public trackRegionNodes(polygonId: Id, options?: { padding?: number }): this {
     this.regions.trackRegionNodes(polygonId, options);
     return this;
   }
