@@ -83,30 +83,25 @@ describe("Draw API", () => {
     );
   });
 
-  it("should select the sticky note and complete drawing immediately", () => {
-    control.startStickyNote(0, 0);
+  it("should select the sticky note and arm the same interactive corner-drag as startBox", () => {
+    // Like startBox/startText, this only arms placement - the user (or
+    // a real mouseup in a browser) still has to complete it, either with
+    // a plain click (default size, see TextHandler.applyDefaultSizeIfEmpty)
+    // or by dragging one out. See test/e2e/stickyNote.test.ts for coverage
+    // of a full click/drag through real Playwright mouse events.
+    assert.doesNotThrow(() => control.startStickyNote(0, 0));
     const [note] = control.getAnnotations().features;
     assert.deepEqual(
       control.getSelectedAnnotations().features.map((f) => f.id),
       [note.id]
     );
-    assert.isFalse(control.isDrawing());
-  });
-
-  it("should drop the sticky note straight into editing without throwing", () => {
-    // This test harness runs Ogma with `renderer: null`, so the overlay
-    // layer TextArea mounts into never gets attached to `document` - the
-    // ghost placeholder rendering itself is only verifiable in a real
-    // browser. This just guards the call chain (getActiveHandler() ->
-    // startEditingText()) doesn't throw.
-    assert.doesNotThrow(() => control.startStickyNote(0, 0));
+    assert.isTrue(control.isDrawing());
   });
 
   it("should suppress viewport pan/drag while placing a sticky note", () => {
-    // Placing a note is a single click with no interactive draw-out phase
-    // (unlike box/arrow/text/polygon, which suppress panning through their
-    // own Handler.startDrawing()) - without this, the same mousedown that
-    // places the note also starts panning the viewport as the mouse moves.
+    // Same mechanism as box/arrow/text/polygon now (Handler.disablePanning,
+    // via TextHandler.startDrawing()) - without it, the same mousedown that
+    // places the note would also pan the viewport as the mouse moves.
     assert.notEqual(ogma.getOptions().interactions?.pan?.enabled, false);
     control.startStickyNote(0, 0);
     assert.equal(ogma.getOptions().interactions?.pan?.enabled, false);

@@ -36,10 +36,21 @@ describe("Sticky notes", () => {
     await session.page.mouse.down();
     await session.page.mouse.up();
 
-    const selectedAfterClick = await session.page.evaluate(
-      () => editor.getSelectedAnnotations().features.length
-    );
-    expect(selectedAfterClick).toBe(1);
+    const afterClick = await session.page.evaluate(() => {
+      const note = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "text");
+      return {
+        selected: editor.getSelectedAnnotations().features.length,
+        width: (note?.properties as { width?: number })?.width,
+        height: (note?.properties as { height?: number })?.height
+      };
+    });
+    expect(afterClick.selected).toBe(1);
+    // Default square size for a plain click, not the 0x0 it's created at -
+    // see TextHandler.applyDefaultSizeIfEmpty.
+    expect(afterClick.width).toBe(160);
+    expect(afterClick.height).toBe(160);
 
     await session.page.keyboard.type("Hello");
 
@@ -90,5 +101,34 @@ describe("Sticky notes", () => {
 
     expect(centerAfter.x).toBeCloseTo(centerBefore.x, 0);
     expect(centerAfter.y).toBeCloseTo(centerBefore.y, 0);
+  }, 10000);
+
+  it("should size to a drag instead of the click default", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableStickyNoteDrawing();
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+    });
+
+    await session.page.mouse.move(pos.x, pos.y);
+    await session.page.mouse.down();
+    // Drag out a corner well past the DRAG_THRESHOLD, and past the 160px
+    // click default - same gesture as dragging a box out.
+    await session.page.mouse.move(pos.x + 300, pos.y + 220, { steps: 10 });
+    await session.page.mouse.up();
+
+    const note = await session.page.evaluate(() => {
+      const feature = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "text");
+      return {
+        width: (feature?.properties as { width?: number })?.width,
+        height: (feature?.properties as { height?: number })?.height
+      };
+    });
+
+    // Screen-to-graph coordinates scale with zoom, so just assert it grew
+    // well past the click default rather than pinning exact pixels.
+    expect(note.width).toBeGreaterThan(160);
+    expect(note.height).toBeGreaterThan(160);
   }, 10000);
 });

@@ -28,8 +28,9 @@ import {
 } from "../types";
 import { findPlace } from "../utils/place-finder";
 
-/** Default width/height (square) a sticky note is dropped at - resizable
- * afterward via the usual text drag handles. */
+/** Width/height (square) a sticky note is dropped at on a plain click (no
+ * drag) - see TextHandler.applyDefaultSizeIfEmpty. Dragging instead sizes
+ * it to match, same as a box. */
 const STICKY_NOTE_SIZE = 160;
 
 /** Miro-style yellow note look: padded, borderless, lightly rounded. Not
@@ -269,9 +270,12 @@ export class Drawing {
   /**
    * Place a plain sticky note - a resizable text box with no connector arrow,
    * like a Miro sticky note - at the given position and select it. It's a
-   * regular `text` annotation (not `fixedSize`), so it gets the usual
-   * corner/edge drag handles once selected: see `TextHandler.detectHandle`
-   * and `renderBoxHandles`.
+   * regular `text` annotation, so it goes through the same interactive
+   * corner-drag `TextHandler.startDrawing()` as `startBox`/`startText`: a
+   * click drops it at the default `STICKY_NOTE_SIZE` square (see
+   * `TextHandler.applyDefaultSizeIfEmpty`); dragging sizes it like any
+   * other box. Either way it isn't `fixedSize`, so it keeps its
+   * corner/edge drag handles afterward too.
    */
   public startStickyNote(
     x: number,
@@ -282,72 +286,25 @@ export class Drawing {
       this.editor.getActiveHandler()!.stopEditing();
     this.control.cancelDrawing();
 
-    // Box/arrow/text/polygon go through Handler.startDrawing(), which both
-    // disables Ogma's own pan-on-drag (Handler.disablePanning) and sets
-    // store.isDragging = true (via the "dragstart" event AnnotationEditor
-    // listens for). Sticky notes place in one click with no handler drag
-    // phase at all, so without replicating both of those:
-    // 1. The same mousedown that places the note would also pan the
-    //    viewport as the held-down mouse moves.
-    // 2. InteractionController.onMouseUp - whose hit-test for this click ran
-    //    at mousedown time, before the note existed, so it found nothing -
-    //    treats the upcoming mouseup as "clicked empty space" and clears
-    //    the selection (`!state.isDragging` is the only thing that guards
-    //    that branch), tearing down the edit session we're about to start
-    //    almost immediately after creating it.
-    // Both are undone on the very next mouseup - there's nothing further to
-    // track.
-    this.ogma.setOptions({
-      interactions: { pan: { enabled: false }, drag: { enabled: false } }
-    });
-    this.store.setState({ isDragging: true });
-    this.ogma.events.once("mouseup", () => {
-      this.ogma.setOptions({
-        interactions: { pan: { enabled: true }, drag: { enabled: true } }
-      });
-      this.store.setState({ isDragging: false });
-
-      // Deferred to this mouseup rather than called synchronously below,
-      // in the same mousedown that placed the note: focusing the new
-      // textarea from inside a mousedown handler loses that race against
-      // the browser's own default mousedown behavior, which (for
-      // whatever element was actually under the pointer - here, Ogma's
-      // container) re-focuses it right after our synchronous JS handlers
-      // finish, stealing focus back before the user can type. box/text
-      // don't hit this: their edit mode only opens on the *following*
-      // mouseup's click handling (TextHandler.onClick), never inside the
-      // placing mousedown itself, so there's no default action left to
-      // race against by the time they call focus().
-      (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
-    });
-
     // Empty content: shows the `placeholder` ghost text (see
     // defaultStickyNoteStyle) via the textarea's native placeholder
     // attribute until the user types, instead of pre-filled content they'd
     // have to select and overwrite.
-    const note = createText(
-      x - STICKY_NOTE_SIZE / 2,
-      y - STICKY_NOTE_SIZE / 2,
-      STICKY_NOTE_SIZE,
-      STICKY_NOTE_SIZE,
-      "",
-      {
-        ...defaultStickyNoteStyle,
-        ...style
-      }
-    );
+    const note = createText(x, y, 0, 0, "", {
+      ...defaultStickyNoteStyle,
+      ...style
+    });
 
-    // Mark this feature as being drawn, then immediately complete the
-    // drawing - sticky notes are dropped at a fixed default size in one
-    // click (resize afterward via the drag handles), no interactive
-    // draw-out step is needed. Setting drawingFeature back to null makes
-    // Control auto-emit EVT_COMPLETE_DRAWING for this id.
     this.store.setState({ drawingFeature: note.id });
     this.control.add(note);
     this.interactions.suppressClicksTemporarily(200);
     this.control.select(note.id);
-    this.store.setState({ drawingFeature: null });
 
+    const handler = this.editor.getActiveHandler() as TextHandler;
+    handler.startDrawing(note.id, x, y, {
+      width: STICKY_NOTE_SIZE,
+      height: STICKY_NOTE_SIZE
+    });
     return this.control;
   }
 

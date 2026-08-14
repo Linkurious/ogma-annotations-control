@@ -234,9 +234,9 @@ When comment drawing is enabled:
 
 Enable sticky note drawing mode with `enableStickyNoteDrawing()`. A sticky
 note is a plain, resizable `text` annotation (Miro-style: padded, colored, no
-connector arrow) dropped at a fixed default size, empty, with a
-"Quick note…" ghost placeholder — unlike a comment, it has no target and
-isn't collapsible.
+connector arrow), empty, with a "Quick note…" ghost placeholder — unlike a
+comment, it has no target and isn't collapsible. It places the same way as
+a box: click for a default square size, or drag to size it yourself.
 
 ```typescript
 addStickyNoteButton.addEventListener("click", () => {
@@ -267,10 +267,13 @@ annotation. See [Text Styles](../styling/text-styles).
 
 When sticky note drawing is enabled:
 
-1. User clicks to drop the note at a fixed default size, already selected
-2. It drops straight into editing - the placeholder is just ghost text
-   (empty content), so typing immediately replaces it, no extra click or
-   selection needed
+1. User clicks to drop the note, already selected - a plain click (no drag)
+   sizes it to a default square; dragging sizes it to match instead, same
+   as a box
+2. On a plain click, it drops straight into editing - the placeholder is
+   just ghost text (empty content), so typing immediately replaces it, no
+   extra click or selection needed (dragging instead needs a follow-up
+   click to start typing, same as text/box)
 3. Because it isn't `fixedSize`, the usual corner/edge drag handles let the
    user resize it afterward, same as a `text` annotation
 

@@ -12,6 +12,7 @@ import {
 } from "../constants";
 import { Store } from "../store";
 import {
+  Box,
   ClientMouseEvent,
   Cursor,
   Id,
@@ -98,10 +99,19 @@ const cornerCursors: Cursor[] = [
   cursors.swResize // bottom-left (3)
 ];
 
+/** Fallback size applied by applyDefaultSizeIfEmpty() when startDrawing()
+ * wasn't given a custom one - matches createBox/createText's own defaults. */
+const DEFAULT_EMPTY_CLICK_WIDTH = 100;
+const DEFAULT_EMPTY_CLICK_HEIGHT = 50;
+
 export class TextHandler extends Handler<Text | Comment, Handle> {
   private links: Links;
   private textEditor: TextArea | null = null;
   private justActivated: boolean = false;
+  // Set by startDrawing() when the caller wants a size other than the
+  // built-in DEFAULT_EMPTY_CLICK_WIDTH/HEIGHT applied on a no-drag click -
+  // see applyDefaultSizeIfEmpty().
+  private pendingDefaultSize: { width: number; height: number } | null = null;
 
   constructor(ogma: Ogma, store: Store, links: Links) {
     super(ogma, store);
@@ -390,6 +400,40 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     return true;
   }
 
+  /**
+   * A click (not drag) completing initial placement leaves box/plain-text
+   * annotations at the 0x0 size `enableBoxDrawing`/`enableTextDrawing`
+   * create them at - invisible, and effectively stuck: their resize
+   * handles collapse to a single point with nothing to grab. Give them a
+   * sensible default size, centered on the click point, same as if the
+   * user had dragged out a small box - `startDrawing()`'s caller can pass
+   * a custom one (e.g. a sticky note's fixed square), otherwise falls back
+   * to DEFAULT_EMPTY_CLICK_WIDTH/HEIGHT. `fixedSize` text/comments don't
+   * need this - they auto-grow to fit content as you type (see
+   * TextArea.updateContent).
+   */
+  private applyDefaultSizeIfEmpty() {
+    const defaultSize = this.pendingDefaultSize;
+    this.pendingDefaultSize = null;
+
+    const annotation = this.getAnnotation();
+    if (!annotation || !(isBox(annotation) || isText(annotation))) return;
+    if (annotation.properties.style?.fixedSize) return;
+    if (annotation.properties.width > 0 && annotation.properties.height > 0)
+      return;
+
+    const width = defaultSize?.width ?? DEFAULT_EMPTY_CLICK_WIDTH;
+    const height = defaultSize?.height ?? DEFAULT_EMPTY_CLICK_HEIGHT;
+    const [cx, cy] = annotation.geometry.coordinates as [number, number];
+    this.store.getState().updateFeature(annotation.id, {
+      properties: { ...annotation.properties, width, height },
+      geometry: {
+        ...annotation.geometry,
+        bbox: [cx - width / 2, cy - height / 2, cx + width / 2, cy + height / 2]
+      }
+    } as Partial<Text | Box>);
+  }
+
   protected onClick = (evt: ClientMouseEvent & { target?: EventTarget | null }) => {
     // A click on a URL inside the content should open the link, not select or
     // edit the annotation. Let native anchor navigation proceed untouched.
@@ -449,6 +493,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     const dy = currentPos.y - (this.dragStartPoint?.y || 0);
     if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
       this.clearDragState();
+      this.applyDefaultSizeIfEmpty();
       this.onClick({
         clientX: evt.clientX,
         clientY: evt.clientY
@@ -502,8 +547,19 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     this.store.setState({ editingFeature: null });
   };
 
-  public startDrawing(id: Id, x: number, y: number) {
+  /**
+   * @param defaultSize Size to fall back to if the user completes
+   * placement with a click instead of dragging one out - see
+   * applyDefaultSizeIfEmpty(). Omit to use DEFAULT_EMPTY_CLICK_WIDTH/HEIGHT.
+   */
+  public startDrawing(
+    id: Id,
+    x: number,
+    y: number,
+    defaultSize?: { width: number; height: number }
+  ) {
     this.annotation = id;
+    this.pendingDefaultSize = defaultSize ?? null;
     // Set up to drag the bottom-right corner (corner index 2)
     this.hoveredHandle = {
       type: HandleType.CORNER,

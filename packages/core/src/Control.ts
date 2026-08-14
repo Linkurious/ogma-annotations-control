@@ -511,15 +511,19 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Enable sticky note drawing mode - drops a plain, resizable text box
    * (empty content, "Quick note…" ghost placeholder, no connector arrow)
    * like a Miro sticky note, unlike `enableCommentDrawing`. It's a regular
-   * `text` annotation, so once placed it gets the usual corner/edge drag
-   * handles to resize it.
+   * `text` annotation, so it's placed the same interactive way as
+   * `enableBoxDrawing`/`enableTextDrawing`: click for a default-size square,
+   * or drag to size it - either way it keeps the usual corner/edge drag
+   * handles to resize it afterward.
    *
    * Call this method when the user clicks an "Add sticky note" button. The
    * control will:
    * 1. Wait for the next mousedown event
-   * 2. Create and place a default-size note at that position, already selected
-   * 3. Drop straight into editing - the placeholder is just ghost text, so
-   *    typing immediately replaces it, no selection needed
+   * 2. Create the note at that position and start the interactive
+   *    corner-drag, already selected
+   * 3. On release: a plain click (no drag) gets a default square size and
+   *    drops straight into editing (the placeholder is just ghost text, so
+   *    typing immediately replaces it); a drag gets sized to match instead
    * 4. Clean up automatically when done
    *
    * @example
@@ -625,14 +629,15 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
-   * **Advanced API:** Programmatically place a sticky note at specific
-   * coordinates, already complete (no interactive draw-out step - resize it
-   * afterward via the usual text drag handles).
+   * **Advanced API:** Programmatically start drawing a sticky note at
+   * specific coordinates - same interactive corner-drag as `startBox`.
+   * You must handle mouse events yourself (or immediately release/complete
+   * it via the same events `enableStickyNoteDrawing` would).
    *
    * **For most use cases, use `enableStickyNoteDrawing()` instead.**
    *
-   * @param x X coordinate for the note's center
-   * @param y Y coordinate for the note's center
+   * @param x X coordinate for the note's top-left corner
+   * @param y Y coordinate for the note's top-left corner
    * @param style Sticky note style options
    * @returns this for chaining
    * @see enableStickyNoteDrawing for the recommended high-level API
