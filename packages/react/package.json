@@ -83,7 +83,7 @@
     "vite": "6.4.3",
     "vite-plugin-dts": "4.5.1",
     "vite-plugin-lib-inject-css": "1.3.0",
-    "vitest": "3.2.6"
+    "vitest": "3.2.7"
   },
   "dependencies": {
     "@linkurious/ogma-annotations": "2.1.0",
