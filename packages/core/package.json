@@ -107,7 +107,7 @@
     "@linkurious/ogma": ">=5.3.11"
   },
   "dependencies": {
-    "@chenglou/pretext": "0.0.7",
+    "@chenglou/pretext": "0.0.8",
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
     "rbush": "4.0.1",
