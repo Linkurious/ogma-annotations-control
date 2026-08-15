@@ -68,8 +68,8 @@
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "2.1.0",
     "@testing-library/react": "16.2.0",
-    "@types/react": "18.3.1",
-    "@types/react-dom": "18.3.1",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
     "@vitejs/plugin-react": "4.5.1",
     "lucide-react": "0.562.0",
     "oxlint": "0.16.0",
