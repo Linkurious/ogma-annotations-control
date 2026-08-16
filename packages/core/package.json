@@ -113,7 +113,7 @@
     "rbush": "4.0.1",
     "vanilla-colorful": "0.7.2",
     "zundo": "2.3.0",
-    "zustand": "5.0.7"
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "2.1.0",
