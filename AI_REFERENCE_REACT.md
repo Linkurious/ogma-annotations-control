@@ -1,7 +1,7 @@
 # Ogma Annotations - React Reference
 
 > React integration with hooks, context provider, and component patterns
-> Auto-generated: 2026-02-20 | Version: 2.x
+> Auto-generated: 2026-08-17 | Version: 2.x
 
 ---
 
@@ -1300,6 +1300,64 @@ function AddCommentButton() {
   }, [editor]);
 
   return <button onClick={handleClick}>Add Comment</button>;
+}
+```
+
+### Sticky Note Drawing
+
+A sticky note is a plain, resizable `text` annotation (Miro-style: padded,
+colored, no connector arrow), empty, with a "Quick note…" ghost placeholder -
+unlike a comment, it has no target arrow. It places the same way as a box:
+click for a default square size, or drag to size it. A plain click also
+drops straight into editing - since the placeholder is just ghost text
+shown via the textarea's native `placeholder` attribute (not real content),
+typing immediately replaces it, no selection needed (dragging instead needs
+a follow-up click to start typing, same as text/box). Because it isn't
+`fixedSize`, it keeps the usual corner/edge drag handles once selected, so
+users can resize it afterward:
+
+```tsx
+function AddStickyNoteButton() {
+  const { editor } = useAnnotationsContext();
+
+  const handleClick = React.useCallback(() => {
+    editor.enableStickyNoteDrawing({
+      background: "#FFEB99",
+      color: "#4A3B00",
+      placeholder: "Jot something down…"
+    });
+  }, [editor]);
+
+  return <button onClick={handleClick}>Add Sticky Note</button>;
+}
+```
+
+### Erasing
+
+Unlike the drawing modes above, erase mode isn't a one-shot draw - once
+enabled, every click on an annotation deletes it immediately, and it stays
+armed across multiple clicks until turned off:
+
+```tsx
+function EraseButton() {
+  const { editor } = useAnnotationsContext();
+  const [active, setActive] = React.useState(false);
+
+  const toggle = React.useCallback(() => {
+    if (editor.isEraseModeActive()) {
+      editor.disableEraseMode();
+      setActive(false);
+    } else {
+      editor.enableEraseMode();
+      setActive(true);
+    }
+  }, [editor]);
+
+  return (
+    <button onClick={toggle} className={active ? "active" : ""}>
+      Erase
+    </button>
+  );
 }
 ```
 

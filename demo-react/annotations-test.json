@@ -374,6 +374,31 @@
           [-100, -80]
         ]
       }
+    },
+    {
+      "id": "text-with-link-example",
+      "type": "Feature",
+      "properties": {
+        "type": "text",
+        "content": "Read the docs at https://doc.linkurious.com to learn more.",
+        "style": {
+          "font": "IBM Plex Sans",
+          "fontSize": 24,
+          "color": "#333333",
+          "background": "#FFFFFF",
+          "strokeWidth": 1,
+          "strokeColor": "#DDDDDD",
+          "strokeType": "plain",
+          "padding": 12,
+          "borderRadius": 8
+        },
+        "width": 360,
+        "height": 90
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-200, 200]
+      }
     }
   ]
 }
