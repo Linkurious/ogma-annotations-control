@@ -296,14 +296,26 @@ export class Links {
     side: Side,
     targetId: Id,
     targetType: TargetType,
-    magnet: Point
+    magnet: Point,
+    // True when `magnet` is already the final bbox-relative fraction this
+    // class itself produces and persists (arrow.properties.link[side].magnet
+    // - what a round-tripped export/import carries) rather than a fresh
+    // absolute point picked up by hit-testing/snapping. Every other target
+    // type stores its magnet as-is either way, so this only matters for
+    // polygon, whose magnet IS an absolute point on the way in but a
+    // relative fraction once stored - without this flag, re-adding a link
+    // straight from its own (already-relative) serialized magnet - as the
+    // import path and re-linking on comment creation both legitimately need
+    // to - would run it through the absolute-to-relative conversion a
+    // second time and corrupt it.
+    alreadyRelative = false
   ) {
     const id = getId();
     const arrowId = arrow.id;
 
     // For polygon annotations, convert absolute magnet to relative coordinates
     let adjustedMagnet = magnet;
-    if (targetType === TARGET_TYPES.POLYGON) {
+    if (targetType === TARGET_TYPES.POLYGON && !alreadyRelative) {
       const state = this.store.getState();
       const annotation = state.getFeature(targetId);
       if (annotation && isPolygon(annotation)) {
@@ -774,19 +786,30 @@ export class Links {
       const arrow = feature as Arrow;
       if (arrow.properties.link?.start) {
         const linkData = arrow.properties.link.start;
-        // Node/edge existence will be checked in add()
+        // Node/edge existence will be checked in add(). The magnet on
+        // arrow.properties.link is always this class's own stored (already
+        // bbox-relative, for polygon) format - never re-convert it.
         this.add(
           arrow,
           SIDE_START,
           linkData.id,
           linkData.type,
-          linkData.magnet!
+          linkData.magnet!,
+          true
         );
       }
       if (arrow.properties.link?.end) {
         const linkData = arrow.properties.link.end;
-        // Node/edge existence will be checked in add()
-        this.add(arrow, SIDE_END, linkData.id, linkData.type, linkData.magnet!);
+        // Node/edge existence will be checked in add(). Same as the start
+        // side above - this magnet is already in stored format.
+        this.add(
+          arrow,
+          SIDE_END,
+          linkData.id,
+          linkData.type,
+          linkData.magnet!,
+          true
+        );
       }
     });
 

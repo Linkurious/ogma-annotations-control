@@ -17,6 +17,7 @@ export abstract class Handler<
   protected ogmaPanningOption: boolean = false;
   protected store: Store;
   protected draggingWasEnabled: boolean = true;
+  private savedDetectOption?: { nodes?: boolean; edges?: boolean };
 
   constructor(ogma: Ogma, store: Store) {
     super();
@@ -85,15 +86,36 @@ export abstract class Handler<
     this.ogmaPanningOption = Boolean(
       this.ogma.getOptions().interactions?.pan?.enabled
     );
+    // While we're dragging one of our own handles, Ogma should not detect
+    // nodes/edges under the pointer at all - otherwise it keeps hovering
+    // them (cursor change, highlight style) even though the drag has
+    // nothing to do with them. options.detect.nodes/edges turns hit-testing
+    // for them off outright (ogma.getHoveredElement() returns null while
+    // it's off), which is cleaner than fighting the cursor/hover-style
+    // options individually and, unlike those, is actually readable back via
+    // getOptions() - so the host app's own detect config survives the drag
+    // untouched.
+    //
+    // A single drag calls this twice (once from the base onDragStart below,
+    // once more from the "missed mousedown" recovery in
+    // Handler.handleMouseMove right after) - only snapshot on the first
+    // call, or the second call would save our own override as if it were
+    // the real options and "restore" to that instead.
+    if (this.savedDetectOption === undefined) {
+      this.savedDetectOption = this.ogma.getOptions().detect ?? {};
+    }
     this.ogma.setOptions({
-      interactions: { pan: { enabled: false }, drag: { enabled: false } }
+      interactions: { pan: { enabled: false }, drag: { enabled: false } },
+      detect: { nodes: false, edges: false }
     });
   };
 
   protected restorePanning = () => {
     this.ogma.setOptions({
-      interactions: { pan: { enabled: true }, drag: { enabled: true } }
+      interactions: { pan: { enabled: true }, drag: { enabled: true } },
+      ...(this.savedDetectOption ? { detect: this.savedDetectOption } : {})
     });
+    this.savedDetectOption = undefined;
   };
 
   handleMouseUp = (evt: MouseEvent): void => {

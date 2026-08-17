@@ -758,7 +758,7 @@ describe("Links", () => {
     });
   });
 
-  describe("manual arrow-tip drag rigidly moves the comment", () => {
+  describe("manual arrow-tip drag stays elastic even with a rigid comment", () => {
     let ogma: ReturnType<typeof createOgma>;
     let control: Control;
 
@@ -772,7 +772,7 @@ describe("Links", () => {
       try { ogma.destroy(); } catch (_) { /* headless */ }
     });
 
-    it("translates the comment by the same offset as the dragged free tip", () => {
+    it("moves only the tip, leaving the comment in place so it can be detached", () => {
       const comment = createComment(200, 0, "review");
       const arrow = createArrow(100, 0, 0, 0);
 
@@ -833,9 +833,11 @@ describe("Links", () => {
       const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
         .coordinates[1];
 
-      // Comment translates by the tip's drag delta.
-      expect(afterComment[0]).toBeCloseTo(beforeComment[0] + 30);
-      expect(afterComment[1]).toBeCloseTo(beforeComment[1] + 40);
+      // The comment (and the arrow's start on it) doesn't move - rigidity
+      // only governs what happens when the node end moves, not a manual
+      // grab of the free tip, which must stay free to detach.
+      expect(afterComment[0]).toBeCloseTo(beforeComment[0]);
+      expect(afterComment[1]).toBeCloseTo(beforeComment[1]);
       // The tip itself lands exactly at the drop point.
       expect(afterEnd[0]).toBeCloseTo(beforeEnd[0] + 30);
       expect(afterEnd[1]).toBeCloseTo(beforeEnd[1] + 40);
@@ -870,16 +872,20 @@ describe("Links", () => {
       const comment2 = createComment(300, 100, "c2");
       const arrow1 = createArrow(100, 0, 100, 0);
       const arrow2 = createArrow(100, 100, 100, 100);
-      // Polygon-target magnets go through Links.add()'s absolute→relative
-      // bbox conversion, so unlike comment/text magnets these must be given
-      // as absolute graph coordinates (here: the polygon's own corners).
+      // arrow.properties.link[side].magnet is always Links' own stored
+      // format - for a polygon target that's the bbox-relative fraction
+      // (Links.add() only converts a *fresh* absolute point to that
+      // fraction; re-adding straight from this already-serialized form, as
+      // control.add() below does for these pre-built arrows, must not
+      // convert it again). The polygon's bbox here is [0,0,100,100], so its
+      // corners (100,0) and (100,100) are relative (1,0) and (1,1).
       arrow1.properties.link = {
         start: { id: comment1.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
-        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 100, y: 0 } }
+        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 1, y: 0 } }
       };
       arrow2.properties.link = {
         start: { id: comment2.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
-        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 100, y: 100 } }
+        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 1, y: 1 } }
       };
 
       control.add(polygon);
