@@ -12,7 +12,8 @@
     "dist/*.mjs",
     "dist/*.js",
     "dist/**/*.css",
-    "dist/types"
+    "dist/types",
+    "src/style.d.ts"
   ],
   "exports": {
     ".": {
@@ -21,17 +22,34 @@
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
+    "./ui": {
+      "types": "./dist/types/ui.d.ts",
+      "import": "./dist/ui.mjs",
+      "require": "./dist/ui.js",
+      "default": "./dist/ui.mjs"
+    },
+    "./ui/styles.css": {
+      "style": {
+        "default": "./dist/ui-styles.css"
+      },
+      "import": {
+        "default": "./dist/ui-styles.css"
+      },
+      "require": {
+        "default": "./dist/ui-styles.css"
+      }
+    },
     "./style.css": {
       "style": {
-        "default": "./src/style.css"
+        "default": "./dist/ogma-annotations.css"
       },
       "import": {
         "types": "./src/style.d.ts",
-        "default": "./src/style.css"
+        "default": "./dist/ogma-annotations.css"
       },
       "require": {
         "types": "./src/style.d.ts",
-        "default": "./src/style.css"
+        "default": "./dist/ogma-annotations.css"
       }
     },
     "./umd": {
@@ -51,6 +69,7 @@
     "bump:minor": "bump2version minor && npm version --no-git-tag-version minor",
     "bump:major": "bump2version major && npm version --no-git-tag-version major",
     "build": "vite build",
+    "postbuild": "cp src/ui/styles.css dist/ui-styles.css",
     "lint": "npx oxlint -c oxlint.json src",
     "lint:ci": "mkdir -p reports && npx oxlint -c oxlint.json -f checkstyle src > reports/checkstyle.xml",
     "types": "tsc --d -emitDeclarationOnly --outDir dist/types",
@@ -92,22 +111,22 @@
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
     "rbush": "4.0.1",
+    "vanilla-colorful": "0.7.2",
     "zundo": "2.3.0",
     "zustand": "5.0.7"
   },
   "devDependencies": {
     "@linkurious/eslint-config-ogma": "2.1.0",
     "oxlint": "0.16.0",
-    "@types/geojson": "7946.0.13",
+    "@types/geojson": "7946.0.16",
     "@types/rbush": "4.0.0",
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
     "playwright": "1.57.0",
-    "typedoc": "0.28.15",
+    "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
-    "vanilla-colorful": "0.7.2",
     "vite": "6.4.3",
     "vite-plugin-dts": "^4.1.0",
     "vitest": "3.2.6",

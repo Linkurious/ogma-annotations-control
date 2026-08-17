@@ -6,6 +6,10 @@
     "module": "es2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "moduleResolution": "Node",
+    "baseUrl": ".",
+    "paths": {
+      "@linkurious/ogma-annotations/ui": ["./src/ui/index.ts"]
+    },
     "strict": true,
     "resolveJsonModule": true,
     "isolatedModules": false,

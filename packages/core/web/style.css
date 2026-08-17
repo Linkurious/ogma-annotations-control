@@ -54,12 +54,6 @@ body {
   cursor: not-allowed;
 }
 
-#controls {
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
 .control-bar.vertical {
   display: flex;
   flex-direction: column;

@@ -1,0 +1,9 @@
+/**
+ * Stylesheet for `@linkurious/ogma-annotations-react/ui`.
+ * Re-exports the shared panel styles from core and adds the toolbar styles.
+ *
+ * Import once in your app:
+ *   import "@linkurious/ogma-annotations-react/ui/styles.css";
+ */
+@import "@linkurious/ogma-annotations/ui/styles.css";
+@import "./toolbar.css";

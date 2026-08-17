@@ -20,6 +20,13 @@
       "require": "./dist/index.js",
       "default": "./dist/index.mjs"
     },
+    "./ui": {
+      "types": "./dist/types/ui.d.ts",
+      "import": "./dist/ui.mjs",
+      "require": "./dist/ui.js",
+      "default": "./dist/ui.mjs"
+    },
+    "./ui/styles.css": "./dist/ui.css",
     "./umd": {
       "types": "./dist/types/index.d.ts",
       "import": "./dist/index.js",
@@ -68,7 +75,7 @@
     "oxlint": "0.16.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "typedoc": "0.28.15",
+    "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
@@ -80,6 +87,7 @@
   },
   "dependencies": {
     "@linkurious/ogma-annotations": "2.1.0",
-    "@linkurious/ogma-react": "5.1.15"
+    "@linkurious/ogma-react": "5.1.15",
+    "vanilla-colorful": "0.7.2"
   }
 }
