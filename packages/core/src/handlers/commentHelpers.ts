@@ -1,5 +1,5 @@
 import { TARGET_TYPES } from "../constants";
-import { Arrow, Id } from "../types";
+import { Annotation, Arrow, Id, isArrow, isComment, isText } from "../types";
 
 /**
  * Helper functions for managing comment-arrow relationships
@@ -7,9 +7,8 @@ import { Arrow, Id } from "../types";
  * These functions provide utilities for:
  * - Checking if an arrow is connected to a comment
  * - Determining if arrow endpoints can be detached from comments
- *
- * Note: The core rule "comments must have at least one arrow" is enforced
- * in store/index.ts removeFeature() method, not here.
+ * - Cascading a comment's delete to its arrows, and blocking deletion of a
+ *   comment's last remaining arrow (store/index.ts:removeFeature uses both)
  */
 
 /**
@@ -97,4 +96,70 @@ export function canDetachArrowEnd(_arrow: Arrow): boolean {
   // For comment arrows (start is comment), the end can be freely retargeted
   // For non-comment arrows, can always detach
   return true;
+}
+
+/**
+ * Ids that removing `id` should take with it: `id` itself, plus every arrow
+ * attached to it when it's a comment or text annotation - deleting the
+ * anchor takes its connectors along, since a detached comment-arrow has
+ * nothing to point at.
+ *
+ * @param features - The full feature map (pre-deletion)
+ * @param id - The id being removed
+ * @returns The complete set of ids to delete
+ */
+export function getCascadeDeleteIds(
+  features: Record<Id, Annotation>,
+  id: Id
+): Set<Id> {
+  const toDelete = new Set<Id>([id]);
+  const feature = features[id];
+  if (!feature) return toDelete;
+
+  if (isComment(feature) || isText(feature)) {
+    Object.values(features).forEach((f) => {
+      if (
+        isArrow(f) &&
+        (f.properties.link?.end?.id === id || f.properties.link?.start?.id === id)
+      ) {
+        toDelete.add(f.id);
+      }
+    });
+  }
+
+  return toDelete;
+}
+
+/**
+ * Comments must always keep at least one arrow. Returns the comment's id
+ * when deleting `arrowId` would leave it with none, so the caller can block
+ * the deletion instead - or `null` when it's safe to proceed.
+ *
+ * @param features - The full feature map (pre-deletion)
+ * @param arrowId - The arrow being removed
+ */
+export function getCommentLeftOrphanedBy(
+  features: Record<Id, Annotation>,
+  arrowId: Id
+): Id | null {
+  const feature = features[arrowId];
+  if (!feature || !isArrow(feature)) return null;
+
+  const commentId =
+    feature.properties.link?.end?.type === TARGET_TYPES.COMMENT
+      ? feature.properties.link.end.id
+      : feature.properties.link?.start?.type === TARGET_TYPES.COMMENT
+        ? feature.properties.link.start.id
+        : null;
+  if (!commentId) return null;
+
+  const hasOtherArrow = Object.values(features).some(
+    (f) =>
+      isArrow(f) &&
+      f.id !== arrowId &&
+      (f.properties.link?.end?.id === commentId ||
+        f.properties.link?.start?.id === commentId)
+  );
+
+  return hasOtherArrow ? null : commentId;
 }

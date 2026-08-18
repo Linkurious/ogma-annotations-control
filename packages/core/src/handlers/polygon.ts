@@ -7,7 +7,8 @@ import {
   EVT_DRAG,
   EVT_COMPLETE_DRAWING,
   handleDetectionThreshold,
-  EVT_DRAG_START
+  EVT_DRAG_START,
+  NONE
 } from "../constants";
 import { Store } from "../store";
 import { ClientMouseEvent, Id, Polygon } from "../types";
@@ -28,6 +29,10 @@ type Handle = {
   point: Point;
   vertexIndex?: number; // For vertex handles
 };
+
+// Distinct from NONE (-1, "nothing hovered") so a body-hover is
+// distinguishable downstream from no hover at all — see polygon.ts:detectHandle.
+const POLYGON_BODY_HANDLE = -2;
 
 export class PolygonHandler extends Handler<Polygon, Handle> {
   private links: Links;
@@ -103,9 +108,12 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
         type: HandleType.BODY,
         point: mousePoint
       };
-      this.store.setState({ hoveredHandle: -1, hoveredFeature: this.annotation });
+      this.store.setState({
+        hoveredHandle: POLYGON_BODY_HANDLE,
+        hoveredFeature: this.annotation
+      });
     } else {
-      this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
+      this.store.setState({ hoveredHandle: NONE, hoveredFeature: null });
       this.hoveredHandle = undefined;
     }
   }
