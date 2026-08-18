@@ -46,8 +46,8 @@ describe("Links", () => {
     links.add(arrow, side, targetId, "node", { x: 0, y: 0 });
 
     // Check that the link was created
-    expect(links["links"].size).toBeGreaterThan(0);
-    expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
+    expect(links["index"]["links"].size).toBeGreaterThan(0);
+    expect(links["index"]["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
   });
 
   // Add a link between an arrow and an edge
@@ -67,9 +67,9 @@ describe("Links", () => {
 
     links.add(arrow, side, targetId, "edge", magnet);
 
-    const linkId = links["linksByArrowId"].get(arrowId)?.[side];
+    const linkId = links["index"]["linksByArrowId"].get(arrowId)?.[side];
     expect(linkId).toBeDefined();
-    const link = links["links"].get(linkId!);
+    const link = links["index"]["links"].get(linkId!);
     expect(link).toBeDefined();
     expect(link?.arrow).toBe(arrowId);
     expect(link?.target).toBe(targetId);
@@ -91,9 +91,9 @@ describe("Links", () => {
 
     links.add(arrow, side, targetId, "text", magnet);
 
-    const linkId = links["linksByArrowId"].get(arrowId)?.[side];
+    const linkId = links["index"]["linksByArrowId"].get(arrowId)?.[side];
     expect(linkId).toBeDefined();
-    const link = links["links"].get(linkId!);
+    const link = links["index"]["links"].get(linkId!);
     expect(link).toBeDefined();
     expect(link?.arrow).toBe(arrowId);
     expect(link?.target).toBe(targetId);
@@ -118,8 +118,8 @@ describe("Links", () => {
 
     links.remove(arrow, side);
 
-    expect(links["links"].size).toBe(0);
-    expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeUndefined();
+    expect(links["index"]["links"].size).toBe(0);
+    expect(links["index"]["linksByArrowId"].get(arrowId)?.[side]).toBeUndefined();
   });
 
   // Remove a non-existing link
@@ -227,7 +227,7 @@ describe("Links", () => {
     if (arrowFeature) control.add(arrowFeature);
 
     // @ts-expect-error - links is private
-    const linksArray = Array.from(control.links.links.values());
+    const linksArray = Array.from(control.links["index"].links.values());
 
     expect(linksArray).toHaveLength(2);
     const [link1, link2] = linksArray;
@@ -249,7 +249,7 @@ describe("Links", () => {
     control.add(LoadLinksMissing as AnnotationCollection);
 
     // @ts-expect-error - links is private
-    const links = Array.from(control.links.links.values());
+    const links = Array.from(control.links["index"].links.values());
     expect(
       links.map((l) => {
         return {

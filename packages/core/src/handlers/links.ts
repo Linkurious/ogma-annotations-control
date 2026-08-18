@@ -1,7 +1,6 @@
 import type {
   Node,
   NodeId,
-  EdgeId,
   NodeList,
   Ogma,
   Point,
@@ -9,17 +8,15 @@ import type {
   Edge,
   EdgesEvent
 } from "@linkurious/ogma";
-import { geometry } from "@linkurious/ogma";
-import { Position } from "geojson";
-import { nanoid as getId } from "nanoid";
 import { Snapping } from "./snapping";
 import { getRigidComment, getRigidFollowComment, translateComment } from "./commentFollow";
-import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
-import { AnnotationState, Store } from "../store";
+import { LinkGeometry } from "./linkGeometry";
+import { LinkIndex, type LinksByArrowId, type MagnetSource } from "./linkIndex";
+import { SIDE_END, SIDE_START } from "../constants";
+import { Store } from "../store";
 import type {
   Arrow,
   Id,
-  Magnet,
   TargetType,
   Link,
   Side,
@@ -28,42 +25,11 @@ import type {
   DeepPartial,
   Comment
 } from "../types";
-import {
-  isBox,
-  isText,
-  isPolygon,
-  isComment,
-  isArrow,
-  getCommentSize
-} from "../types";
-import {
-  getArrowSide,
-  getBoxCenter,
-  getBoxSize,
-  getPolygonBounds,
-  getPolygonCenter,
-  throttle,
-  updateBbox
-} from "../utils/utils";
+import { isBox, isText, isPolygon, isComment, isArrow } from "../types";
+import { getArrowSide, throttle, updateBbox } from "../utils/utils";
 import { add, mul, subtract } from "../utils/vec";
 
-type XYR = { x: number; y: number; radius: number };
-type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
-
-/**
- * How to interpret the `magnet` passed to {@link Links.add}:
- * - "absolute": a fresh point in graph coordinates, e.g. from hit-testing or
- *   snapping. The default — every caller doing a live snap/link wants this.
- * - "stored": already this class's own persisted format
- *   (`arrow.properties.link[side].magnet`) — for a polygon target that's the
- *   bbox-relative fraction `add()` itself produces, for every other target
- *   type it's the same value either way. Passing "absolute" for a magnet
- *   that's actually already-relative would run a polygon's fraction through
- *   the absolute-to-relative conversion a second time and corrupt it — the
- *   case a round-tripped export/import, or re-linking on comment creation,
- *   legitimately hits.
- */
-type MagnetSource = "absolute" | "stored";
+export type { MagnetSource } from "./linkIndex";
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
@@ -74,47 +40,29 @@ const NODE_POSITION_DEBOUNCE_MS = 1;
 // Throttle for the zoom/rotation-driven fixedSize refresh — cheap enough to
 // run near every frame without saturating the main thread.
 const REFRESH_THROTTLE_MS = 20;
-// A node-linked arrow snaps to the node's center once its endpoint gets this
-// close to it (as a fraction of the node's radius), instead of resting on
-// the node's edge.
-const NODE_CENTER_SNAP_RADIUS_FRACTION = 0.5;
+
+type XYR = { x: number; y: number; radius: number };
 
 /**
- * Converts a serialized { x, y } magnet (ExportedLink format) to the typed
- * internal Magnet union. Called once per link in Links.add().
- * For polygons, `raw` must already be bbox-relative (the conversion from
- * absolute graph coords happens in add() before this is called).
- */
-function toMagnet(raw: Point, targetType: TargetType): Magnet {
-  if (targetType === TARGET_TYPES.NODE)
-    return { type: "node", center: raw.x === 0 && raw.y === 0 };
-  if (targetType === TARGET_TYPES.EDGE)
-    return { type: "edge", t: raw.x };
-  if (targetType === TARGET_TYPES.POLYGON)
-    return { type: "polygon", rx: raw.x, ry: raw.y };
-  // text, box, comment — center-relative fraction of dimension
-  return { type: "box", nx: raw.x, ny: raw.y };
-}
-
-/**
- * Class that implements linking between annotation arrows and different items.
- * An arrow can be connected to a text or to a node. It supports double indexing
- * so that you could get the arrow by the id of the text or the id of the node
- * or by the id of the arrow id itself.
- * A node or text can be connected to multiple arrows.
- * An arrow can be connected to only one node or text, but on both ends.
+ * Orchestrates linking between annotation arrows and the things they attach
+ * to (nodes, edges, or other annotations): reacts to store/Ogma events, runs
+ * the live-drag cascade, and schedules commits. The link registry itself
+ * ({@link LinkIndex}) and the snap-point math ({@link LinkGeometry}) are
+ * separate collaborators — see those files for what they own.
+ *
+ * An arrow can be connected to a text or to a node. It supports double
+ * indexing so that you could get the arrow by the id of the text or the id
+ * of the node or by the id of the arrow id itself. A node or text can be
+ * connected to multiple arrows. An arrow can be connected to only one node
+ * or text, but on both ends.
  */
 export class Links {
-  private links: Map<Id, Link> = new Map();
-  private nodeToLink: Map<Id, Set<Id>> = new Map();
-  private edgeToLink: Map<EdgeId, Set<Id>> = new Map();
-  private annotationToLink: Map<Id, Set<Id>> = new Map();
-  private linksByArrowId: LinksByArrowId = new Map();
+  private index: LinkIndex;
+  private geometry: LinkGeometry;
   private store: Store;
   private ogma: Ogma;
   private snapping: Snapping;
   private updatedItems = new Set<Id>();
-  private onLinkCreated?: (arrow: Arrow, link: Link) => void;
   private commitTimeout!: ReturnType<typeof setTimeout>;
   private nodePositionTimeout?: ReturnType<typeof setTimeout>;
 
@@ -127,7 +75,8 @@ export class Links {
     this.ogma = ogma;
     this.store = store;
     this.snapping = snapping;
-    this.onLinkCreated = onLinkCreated;
+    this.index = new LinkIndex(ogma, store, onLinkCreated);
+    this.geometry = new LinkGeometry(ogma, store);
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
     this.store.subscribe(
@@ -192,14 +141,14 @@ export class Links {
     const annotation = state.getFeature(annotationId) as Text;
     if (!annotation) return;
 
-    const links = this.annotationToLink.get(annotationId);
+    const links = this.index.annotationToLink.get(annotationId);
 
     if (!links) return;
 
     const rigidComments = new Set<Id>();
 
     for (const linkId of links) {
-      const link = this.links.get(linkId);
+      const link = this.index.links.get(linkId);
       if (!link) continue;
 
       const committedArrow = state.getFeature(link.arrow) as Arrow;
@@ -236,8 +185,8 @@ export class Links {
       // mode, it should translate along with `annotationId` too, instead of
       // being left behind to stretch elastically.
       const rigidComment = getRigidFollowComment(
-        this.links,
-        this.linksByArrowId,
+        this.index.links,
+        this.index.linksByArrowId,
         this.store,
         link.arrow,
         link
@@ -267,11 +216,11 @@ export class Links {
     annotation = updates
       ? { ...annotation, ...(updates as Annotation) }
       : annotation;
-    const links = this.annotationToLink.get(annotationId);
+    const links = this.index.annotationToLink.get(annotationId);
 
     if (!links) return;
     for (const linkId of links) {
-      const link = this.links.get(linkId);
+      const link = this.index.links.get(linkId);
       if (!link) continue;
 
       let arrow = state.getFeature(link.arrow) as Arrow;
@@ -314,6 +263,7 @@ export class Links {
       }
     }
   }
+
   public add(
     arrow: Arrow,
     side: Side,
@@ -321,104 +271,13 @@ export class Links {
     targetType: TargetType,
     magnet: Point,
     magnetSource: MagnetSource = "absolute"
-  ) {
-    const id = getId();
-    const arrowId = arrow.id;
-
-    // For polygon annotations, convert absolute magnet to relative coordinates
-    let adjustedMagnet = magnet;
-    if (targetType === TARGET_TYPES.POLYGON && magnetSource === "absolute") {
-      const state = this.store.getState();
-      const annotation = state.getFeature(targetId);
-      if (annotation && isPolygon(annotation)) {
-        const bbox = getPolygonBounds(annotation);
-        // Convert absolute coordinates to relative (0-1 range) based on bbox
-        const bboxWidth = bbox[2] - bbox[0];
-        const bboxHeight = bbox[3] - bbox[1];
-        const ox = magnet.x - bbox[0];
-        const oy = magnet.y - bbox[1];
-
-        // Avoid division by zero
-        const relativeX = bboxWidth > 0 ? ox / bboxWidth : 0.5;
-        const relativeY = bboxHeight > 0 ? oy / bboxHeight : 0.5;
-
-        adjustedMagnet = { x: relativeX, y: relativeY };
-      }
-    }
-
-    // create a link — convert the serialized Point to the typed internal Magnet
-    const link: Link = {
-      id,
-      arrow: arrowId,
-      target: targetId,
-      targetType,
-      magnet: toMagnet(adjustedMagnet, targetType),
-      side
-    };
-    if (targetType === TARGET_TYPES.NODE) {
-      const node = this.ogma.getNode(targetId);
-      if (!node) return;
-    }
-    if (targetType === TARGET_TYPES.EDGE) {
-      const edge = this.ogma.getEdge(targetId);
-      if (!edge) return;
-    }
-    // cleanup existing link on that side
-    this.remove(arrow, side);
-    // add it to the links
-    this.links.set(id, link);
-    // add it to the linksByTargetId
-    const map =
-      targetType === TARGET_TYPES.NODE
-        ? this.nodeToLink
-        : targetType === TARGET_TYPES.EDGE
-          ? this.edgeToLink
-          : this.annotationToLink;
-    if (!map.has(targetId)) map.set(targetId, new Set());
-    map.get(targetId)!.add(id);
-
-    // add it to the linksByArrowId
-    if (!this.linksByArrowId.has(arrowId)) {
-      this.linksByArrowId.set(arrowId, {});
-    }
-    this.linksByArrowId.get(arrowId)![side] = id;
-
-    // make it serializable
-    arrow.properties.link = arrow.properties.link || {};
-    arrow.properties.link[side] = {
-      id: targetId,
-      side,
-      type: targetType,
-      magnet: adjustedMagnet
-    };
-
-    // Emit link event if callback is provided
-    if (this.onLinkCreated) {
-      this.onLinkCreated(arrow, link);
-    }
-
-    return this;
+  ): this | undefined {
+    const result = this.index.add(arrow, side, targetId, targetType, magnet, magnetSource);
+    return result ? this : undefined;
   }
 
   public remove(arrow: Arrow | Id, side: Side) {
-    const arrowId = typeof arrow === "object" ? arrow.id : arrow;
-    const id = this.linksByArrowId.get(arrowId)?.[side];
-    if (typeof arrow === "object") {
-      delete arrow.properties.link?.[side];
-    }
-    if (!id) return this;
-    const link = this.links.get(id);
-    if (!link) return this;
-    // remove the link from the links
-    this.links.delete(id);
-    // remove the link from the linksByTargetId
-    this.nodeToLink.get(link.target)?.delete(id);
-    this.edgeToLink.get(link.target as EdgeId)?.delete(id);
-    this.annotationToLink.get(link.target)?.delete(id);
-    // remove the link from the linksByArrowId
-    if (this.linksByArrowId.has(arrowId)) {
-      this.linksByArrowId.get(arrowId)![side] = undefined;
-    }
+    this.index.remove(arrow, side);
     return this;
   }
 
@@ -447,7 +306,7 @@ export class Links {
     const linksToUpdate: LinksByArrowId = new Map();
 
     // Find all links attached to fixedSize annotations
-    this.annotationToLink.forEach((linkIds, annotationId) => {
+    this.index.annotationToLink.forEach((linkIds, annotationId) => {
       const annotation = state.getFeature(annotationId);
       if (!annotation) return;
 
@@ -459,10 +318,10 @@ export class Links {
 
       if (hasFixedSize) {
         linkIds.forEach((linkId) => {
-          const link = this.links.get(linkId);
+          const link = this.index.links.get(linkId);
           if (!link) return;
           const arrowId = link.arrow;
-          linksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+          linksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
         });
       }
     });
@@ -488,14 +347,14 @@ export class Links {
     const ids = nodes.getId();
     const links: LinksByArrowId = new Map();
     ids.forEach((id) => {
-      const nodeLinks = this.nodeToLink.get(id);
+      const nodeLinks = this.index.nodeToLink.get(id);
 
       if (!nodeLinks) return;
       nodeLinks.forEach((linkId) => {
-        const link = this.links.get(linkId);
+        const link = this.index.links.get(linkId);
         if (!link) return;
         const arrowId = link.arrow;
-        links.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
       });
     });
 
@@ -503,14 +362,14 @@ export class Links {
     const edgeLinksToUpdate: LinksByArrowId = new Map();
     const affectedEdges = nodes.getAdjacentEdges();
     affectedEdges.getId().forEach((edgeId) => {
-      const edgeLinks = this.edgeToLink.get(edgeId);
+      const edgeLinks = this.index.edgeToLink.get(edgeId);
       if (!edgeLinks) return;
       edgeLinks.forEach((linkId) => {
-        const link = this.links.get(linkId);
+        const link = this.index.links.get(linkId);
         if (!link) return;
         const arrowId = link.arrow;
-        links.set(arrowId, this.linksByArrowId.get(arrowId)!);
-        edgeLinksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+        edgeLinksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
       });
     });
 
@@ -519,10 +378,10 @@ export class Links {
     const updates: Record<Id, DeepPartial<Annotation>> = {};
     for (let i = 0; i < ids.length; i++) {
       const nodeId = ids[i];
-      const nodeLinks = this.nodeToLink.get(nodeId);
+      const nodeLinks = this.index.nodeToLink.get(nodeId);
       if (!nodeLinks) continue;
       for (const linkId of nodeLinks) {
-        const link = this.links.get(linkId);
+        const link = this.index.links.get(linkId);
         if (!link) continue;
         const arrowId = link.arrow;
         const arrow = this.store.getState().getFeature(arrowId) as Arrow;
@@ -533,10 +392,10 @@ export class Links {
 
         const positionAndRadius = xyr[i];
         // Update the arrow's position
-        const snapPoint = this._getNodeSnapPoint(
+        const snapPoint = this.geometry.getNodeSnapPoint(
           positionAndRadius,
           mul(subtract(end, start), -1),
-          this._isLinkedToCenter(link)
+          this.geometry.isLinkedToCenter(link)
         );
 
         // Rigid-follow: when the arrow's *other* endpoint is attached to a
@@ -545,8 +404,8 @@ export class Links {
         // stretching the line. The arrow keeps its length and angle; the
         // comment translates with the node.
         const comment = getRigidFollowComment(
-          this.links,
-          this.linksByArrowId,
+          this.index.links,
+          this.index.linksByArrowId,
           this.store,
           arrowId,
           link
@@ -588,7 +447,7 @@ export class Links {
 
   private onAddRemoveEdges = (event: EdgesEvent<unknown, unknown>) => {
     const edges = event.edges;
-    if (!edges.size || !this.edgeToLink.size) return;
+    if (!edges.size || !this.index.edgeToLink.size) return;
     const links: LinksByArrowId = new Map();
     // Also update arrows linked to edges connected to these nodes
     const edgeLinksToUpdate: LinksByArrowId = new Map();
@@ -596,14 +455,14 @@ export class Links {
       .getParallelEdges()
       .getId()
       .forEach((edgeId) => {
-        const edgeLinks = this.edgeToLink.get(edgeId);
+        const edgeLinks = this.index.edgeToLink.get(edgeId);
         if (!edgeLinks) return;
         edgeLinks.forEach((linkId) => {
-          const link = this.links.get(linkId);
+          const link = this.index.links.get(linkId);
           if (!link) return;
           const arrowId = link.arrow;
-          links.set(arrowId, this.linksByArrowId.get(arrowId)!);
-          edgeLinksToUpdate.set(arrowId, this.linksByArrowId.get(arrowId)!);
+          links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+          edgeLinksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
         });
       });
     // Update edge links using the general update method
@@ -621,7 +480,7 @@ export class Links {
     this.store.getState().commitLiveUpdates(this.updatedItems);
   };
 
-  update(linksByArrowId: LinksByArrowId = this.linksByArrowId) {
+  update(linksByArrowId: LinksByArrowId = this.index.linksByArrowId) {
     const updates = this._computeArrowUpdates(linksByArrowId);
     const state = this.store.getState();
     state.applyLiveUpdates(updates);
@@ -648,7 +507,7 @@ export class Links {
     linksByArrowId: LinksByArrowId
   ): Record<Id, DeepPartial<Annotation>> {
     const state = this.store.getState();
-    const nodeIds = Array.from(this.nodeToLink.keys());
+    const nodeIds = Array.from(this.index.nodeToLink.keys());
     const nodeIdToIndex = new Map<NodeId, number>();
     nodeIds.forEach((id, i) => nodeIdToIndex.set(id, i));
     const nodes = this.ogma.getNodes(nodeIds);
@@ -662,24 +521,24 @@ export class Links {
 
     linksByArrowId.forEach((links, arrowId) => {
       // case when both sides are linked
-      const start = this.links.get(links.start!);
-      const end = this.links.get(links.end!);
+      const start = this.index.links.get(links.start!);
+      const end = this.index.links.get(links.end!);
       const arrow = state.getFeature(arrowId) as Arrow;
 
       let startPoint = arrow.geometry.coordinates[0];
       let endPoint = arrow.geometry.coordinates[1];
 
       const startCenter = start
-        ? this._resolveLinkCenter(start, xyr, nodeIdToIndex, state)
+        ? this.geometry.resolveLinkCenter(start, xyr, nodeIdToIndex, state)
         : { x: startPoint[0], y: startPoint[1] };
 
       const endCenter = end
-        ? this._resolveLinkCenter(end, xyr, nodeIdToIndex, state)
+        ? this.geometry.resolveLinkCenter(end, xyr, nodeIdToIndex, state)
         : { x: endPoint[0], y: endPoint[1] };
 
       const vec = subtract(endCenter, startCenter);
       if (start) {
-        startPoint = this._resolveLinkPoint(
+        startPoint = this.geometry.resolveLinkPoint(
           start,
           startCenter,
           vec,
@@ -688,7 +547,7 @@ export class Links {
         );
       }
       if (end) {
-        endPoint = this._resolveLinkPoint(
+        endPoint = this.geometry.resolveLinkPoint(
           end,
           endCenter,
           mul(vec, -1),
@@ -792,10 +651,10 @@ export class Links {
         this.remove(arrow, SIDE_END);
       } else {
         // Remove all links associated with this annotation
-        const annotationLinks = this.annotationToLink.get(id);
+        const annotationLinks = this.index.annotationToLink.get(id);
         if (!annotationLinks) return;
         for (const linkId of annotationLinks) {
-          const link = this.links.get(linkId);
+          const link = this.index.links.get(linkId);
           if (!link) continue;
           const arrow = state.getFeature(link.arrow) as Arrow;
           // modify the object if passed
@@ -813,7 +672,7 @@ export class Links {
     const linksToRefresh: LinksByArrowId = new Map();
     for (const id of oldIds) {
       const newFeature = newFeatures[id];
-      if (!newFeature || !this.annotationToLink.has(id)) continue;
+      if (!newFeature || !this.index.annotationToLink.has(id)) continue;
 
       const prevFeature = prevFeatures[id];
       // Coordinates reference changes when geometry is explicitly set (position change).
@@ -832,206 +691,19 @@ export class Links {
 
       if (!positionChanged && !sizeChanged) continue;
 
-      const annotationLinks = this.annotationToLink.get(id)!;
+      const annotationLinks = this.index.annotationToLink.get(id)!;
       for (const linkId of annotationLinks) {
-        const link = this.links.get(linkId);
+        const link = this.index.links.get(linkId);
         if (!link) continue;
         const arrowId = link.arrow;
-        if (this.linksByArrowId.has(arrowId)) {
-          linksToRefresh.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        if (this.index.linksByArrowId.has(arrowId)) {
+          linksToRefresh.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
         }
       }
     }
 
     if (linksToRefresh.size > 0) this._updateAndCommitSync(linksToRefresh);
   };
-
-  private _isLinkedToCenter(link: Link) {
-    return link.magnet.type === "node" && link.magnet.center;
-  }
-
-  /**
-   * The reference point an arrow endpoint pivots around: the node's own
-   * position, a point on a curved/straight edge, or an annotation's center.
-   * Shared by both the start and end side of {@link _computeArrowUpdates}.
-   */
-  private _resolveLinkCenter(
-    link: Link,
-    xyr: XYR[],
-    nodeIdToIndex: Map<NodeId, number>,
-    state: AnnotationState
-  ): Point {
-    if (link.targetType === TARGET_TYPES.NODE)
-      return xyr[nodeIdToIndex.get(link.target)!];
-    if (link.targetType === TARGET_TYPES.EDGE)
-      return this._getEdgeSnapPoint(
-        link.target as EdgeId,
-        (link.magnet as { t: number }).t,
-        true
-      );
-    return this._getAnnotationCenter(state.getFeature(link.target)!);
-  }
-
-  /**
-   * The actual point an arrow endpoint snaps to for `link`, given the
-   * already-resolved center for this side (`center`, from
-   * {@link _resolveLinkCenter}) and the *other* side's center (`otherCenter`,
-   * used to orient box/polygon magnets and pick the node's edge-vs-center
-   * point via `vec`). Shared by both the start and end side of
-   * {@link _computeArrowUpdates}.
-   */
-  private _resolveLinkPoint(
-    link: Link,
-    center: Point,
-    vec: Point,
-    otherCenter: Point,
-    state: AnnotationState
-  ): Position {
-    if (link.targetType === TARGET_TYPES.NODE)
-      return this._getNodeSnapPoint(
-        center as XYR,
-        vec,
-        this._isLinkedToCenter(link)
-      );
-    if (link.targetType === TARGET_TYPES.EDGE)
-      return this._getEdgeSnapPoint(
-        link.target as EdgeId,
-        (link.magnet as { t: number }).t
-      );
-    const annotation = state.getMergedFeature(link.target)!;
-    return this._getAnnotationSnapPoint(annotation, otherCenter, link, state.zoom);
-  }
-
-  private _getAnnotationCenter(annotation: Annotation): Point {
-    if (isPolygon(annotation)) return getPolygonCenter(annotation);
-    return getBoxCenter(annotation as Text);
-  }
-
-  private _getAnnotationSnapPoint(
-    annotation: Annotation,
-    point: Point,
-    link: Link,
-    zoom: number
-  ): Position {
-    // For polygons, the magnet point is stored as relative coordinates (0-1 range)
-    // based on the bounding box, similar to boxes
-    if (isPolygon(annotation)) {
-      const bbox = getPolygonBounds(annotation);
-      // PolygonMagnet: rx/ry are 0-1 fractions of the bbox from top-left
-      const m = link.magnet as { rx: number; ry: number };
-      const x = bbox[0] + m.rx * (bbox[2] - bbox[0]);
-      const y = bbox[1] + m.ry * (bbox[3] - bbox[1]);
-      return [x, y];
-    }
-    return this._getBoxSnapPoint(annotation, point, link, zoom);
-  }
-
-  private _getBoxSnapPoint(
-    box: Annotation,
-    _point: Point,
-    link: Link,
-    zoom: number
-  ): [number, number] {
-    const center = getBoxCenter(box);
-    // Comments use getCommentSize so collapsed mode returns iconSize dimensions
-    let { width, height } = isComment(box)
-      ? getCommentSize(box as Comment)
-      : getBoxSize(box);
-
-    // Handle fixedSize for Text and Comment (comments always have fixedSize)
-    const hasFixedSize =
-      (isText(box) && box.properties.style?.fixedSize) || isComment(box);
-
-    if (hasFixedSize) {
-      width /= zoom;
-      height /= zoom;
-    }
-
-    // Magnet is BoxMagnet: center-relative fractions of width/height
-    const m = link.magnet as { nx: number; ny: number };
-    let offsetX = m.nx * width;
-    let offsetY = m.ny * height;
-
-    // Texts are counter-rotated (but not boxes or comments - they are screen-aligned)
-    if (isText(box) && !isBox(box)) {
-      const { sin, cos } = this.store.getState();
-      // Rotate the offset by the current rotation
-      const rotatedX = offsetX * cos - offsetY * sin;
-      const rotatedY = offsetX * sin + offsetY * cos;
-      offsetX = rotatedX;
-      offsetY = rotatedY;
-    }
-    // Note: Comments use the same box calculation as other fixed-size elements.
-    // The width/height are already converted to graph space above when hasFixedSize is true.
-
-    return [center.x + offsetX, center.y + offsetY];
-  }
-
-  private _getNodeSnapPoint(
-    xyr: XYR,
-    vec: Point,
-    center: boolean
-  ): [number, number] {
-    if (center) return [xyr.x, xyr.y];
-    const dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-    const unit = mul(vec, 1 / dist);
-    const snapPoint =
-      dist < Number(xyr.radius) * NODE_CENTER_SNAP_RADIUS_FRACTION
-        ? { x: xyr.x, y: xyr.y }
-        : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
-    return [snapPoint.x, snapPoint.y];
-  }
-
-  private _getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint: true): Point;
-  private _getEdgeSnapPoint(
-    edgeId: EdgeId,
-    t: number,
-    asPoint?: false
-  ): Position;
-
-  private _getEdgeSnapPoint(
-    edgeId: EdgeId,
-    t: number,
-    asPoint = false
-  ): Position | Point {
-    const edge = this.ogma.getEdge(edgeId);
-    if (!edge) return [0, 0];
-
-    // @ts-expect-error curvature exists on edges
-    const curvature = edge.getAttribute("curvature") as number;
-    const extremities = edge.getExtremities();
-    const positions = extremities.getPosition();
-    const source = positions[0];
-    const target = positions[1];
-
-    if (curvature === 0 || curvature === undefined) {
-      // Straight edge - linear interpolation
-      const res = [
-        source.x + t * (target.x - source.x),
-        source.y + t * (target.y - source.y)
-      ];
-      return asPoint ? { x: res[0], y: res[1] } : res;
-    }
-
-    // Curved edge - use quadratic bezier
-    const cp = geometry.getQuadraticCurveControlPoint(
-      source.x,
-      source.y,
-      target.x,
-      target.y,
-      curvature
-    );
-    const point = geometry.getPointOnQuadraticCurve(
-      t,
-      source.x,
-      source.y,
-      target.x,
-      target.y,
-      cp.x,
-      cp.y
-    );
-    return asPoint ? { x: point.x, y: point.y } : [point.x, point.y];
-  }
 
   public destroy() {
     clearTimeout(this.commitTimeout);
