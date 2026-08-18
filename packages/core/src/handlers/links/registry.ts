@@ -1,10 +1,18 @@
 import type { EdgeId, Ogma, Point } from "@linkurious/ogma";
 import { nanoid as getId } from "nanoid";
-import { TARGET_TYPES } from "../constants";
-import { Store } from "../store";
-import type { Arrow, Id, Magnet, TargetType, Link, Side } from "../types";
-import { isPolygon } from "../types";
-import { getPolygonBounds } from "../utils/utils";
+import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
+import { Store } from "../../store";
+import type {
+  Annotation,
+  Arrow,
+  Id,
+  Magnet,
+  TargetType,
+  Link,
+  Side
+} from "../../types";
+import { isArrow, isPolygon } from "../../types";
+import { getPolygonBounds } from "../../utils/utils";
 
 export type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
@@ -175,5 +183,103 @@ export class LinkIndex {
       this.linksByArrowId.get(arrowId)![side] = undefined;
     }
     return this;
+  }
+
+  /**
+   * Reacts to a store `features` change: adds/removes links for
+   * arrows that were just created/deleted, and reports which existing
+   * links need their arrow geometry refreshed because the annotation they
+   * point at moved or resized programmatically (not via a live drag, which
+   * goes through `Links.updateLinkedArrowsDuringDrag` instead).
+   *
+   * @returns the links whose arrows should be recomputed - empty if none.
+   */
+  syncFromFeatureChange(
+    newFeatures: Record<string, Annotation>,
+    prevFeatures: Record<string, Annotation>
+  ): LinksByArrowId {
+    const state = this.store.getState();
+    const oldIds = new Set(Object.keys(prevFeatures));
+    const newIds = Object.keys(newFeatures).filter((id) => !oldIds.has(id));
+    const removedIds = Object.keys(prevFeatures).filter(
+      (id) => !newFeatures[id]
+    );
+
+    newIds.forEach((id) => {
+      const feature = state.getFeature(id);
+      if (!feature || !isArrow(feature)) return;
+      const arrow = feature as Arrow;
+      if (arrow.properties.link?.start) {
+        const linkData = arrow.properties.link.start;
+        // Node/edge existence will be checked in add(). The magnet on
+        // arrow.properties.link is always this class's own stored (already
+        // bbox-relative, for polygon) format - never re-convert it.
+        this.add(arrow, SIDE_START, linkData.id, linkData.type, linkData.magnet!, "stored");
+      }
+      if (arrow.properties.link?.end) {
+        const linkData = arrow.properties.link.end;
+        // Node/edge existence will be checked in add(). Same as the start
+        // side above - this magnet is already in stored format.
+        this.add(arrow, SIDE_END, linkData.id, linkData.type, linkData.magnet!, "stored");
+      }
+    });
+
+    removedIds.forEach((id) => {
+      const feature = prevFeatures[id];
+      if (isArrow(feature)) {
+        const arrow = feature as Arrow;
+        // Remove all links associated with this arrow
+        this.remove(arrow, SIDE_START);
+        this.remove(arrow, SIDE_END);
+      } else {
+        // Remove all links associated with this annotation
+        const annotationLinks = this.annotationToLink.get(id);
+        if (!annotationLinks) return;
+        for (const linkId of annotationLinks) {
+          const link = this.links.get(linkId);
+          if (!link) continue;
+          const arrow = state.getFeature(link.arrow) as Arrow;
+          // modify the object if passed
+          if (arrow) this.remove(arrow, link.side);
+          else {
+            // otherwise remove by id (happens when deleting the arrow from the state)
+            this.remove(link.arrow, link.side);
+          }
+        }
+      }
+    });
+
+    // Detect programmatic position/size changes in annotations with linked arrows
+    // and report those arrows so the caller can refresh them.
+    const linksToRefresh: LinksByArrowId = new Map();
+    for (const id of oldIds) {
+      const newFeature = newFeatures[id];
+      if (!newFeature || !this.annotationToLink.has(id)) continue;
+
+      const prevFeature = prevFeatures[id];
+      // Coordinates reference changes when geometry is explicitly set (position change).
+      // Properties reference changes when width/height or other layout props change.
+      const positionChanged =
+        prevFeature.geometry.coordinates !== newFeature.geometry.coordinates;
+      const sizeChanged =
+        (prevFeature.properties as { width?: number; height?: number }).width !==
+          (newFeature.properties as { width?: number; height?: number }).width ||
+        (prevFeature.properties as { width?: number; height?: number }).height !==
+          (newFeature.properties as { width?: number; height?: number }).height;
+
+      if (!positionChanged && !sizeChanged) continue;
+
+      const annotationLinks = this.annotationToLink.get(id)!;
+      for (const linkId of annotationLinks) {
+        const link = this.links.get(linkId);
+        if (!link) continue;
+        const arrowId = link.arrow;
+        if (this.linksByArrowId.has(arrowId)) {
+          linksToRefresh.set(arrowId, this.linksByArrowId.get(arrowId)!);
+        }
+      }
+    }
+
+    return linksToRefresh;
   }
 }

@@ -1,17 +1,17 @@
 import type { EdgeId, NodeId, Ogma, Point } from "@linkurious/ogma";
 import { geometry } from "@linkurious/ogma";
 import { Position } from "geojson";
-import { TARGET_TYPES } from "../constants";
-import { AnnotationState, Store } from "../store";
-import type { Annotation, Comment, Link, Text } from "../types";
-import { isBox, isComment, isPolygon, isText, getCommentSize } from "../types";
+import { TARGET_TYPES } from "../../constants";
+import { AnnotationState, Store } from "../../store";
+import type { Annotation, Comment, Link, Text } from "../../types";
+import { isBox, isComment, isPolygon, isText, getCommentSize } from "../../types";
 import {
   getBoxCenter,
   getBoxSize,
   getPolygonBounds,
   getPolygonCenter
-} from "../utils/utils";
-import { add, mul } from "../utils/vec";
+} from "../../utils/utils";
+import { add, mul } from "../../utils/vec";
 
 export type XYR = { x: number; y: number; radius: number };
 

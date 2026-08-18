@@ -3,33 +3,21 @@ import type {
   NodeId,
   NodeList,
   Ogma,
-  Point,
   EdgeList,
   Edge,
   EdgesEvent
 } from "@linkurious/ogma";
-import { Snapping } from "./snapping";
-import { getRigidComment, getRigidFollowComment, translateComment } from "./commentFollow";
-import { LinkGeometry } from "./linkGeometry";
-import { LinkIndex, type LinksByArrowId, type MagnetSource } from "./linkIndex";
-import { SIDE_END, SIDE_START } from "../constants";
-import { Store } from "../store";
-import type {
-  Arrow,
-  Id,
-  TargetType,
-  Link,
-  Side,
-  Text,
-  Annotation,
-  DeepPartial,
-  Comment
-} from "../types";
-import { isBox, isText, isPolygon, isComment, isArrow } from "../types";
-import { getArrowSide, throttle, updateBbox } from "../utils/utils";
-import { add, mul, subtract } from "../utils/vec";
+import { LinkGeometry } from "./geometry";
+import { LinkIndex, type LinksByArrowId } from "./registry";
+import { getRigidComment, getRigidFollowComment, translateComment } from "../commentFollow";
+import { SIDE_END, SIDE_START } from "../../constants";
+import { Store } from "../../store";
+import type { Arrow, Id, Annotation, DeepPartial } from "../../types";
+import { isText, isComment } from "../../types";
+import { getArrowSide, throttle, updateBbox } from "../../utils/utils";
+import { mul, subtract } from "../../utils/vec";
 
-export type { MagnetSource } from "./linkIndex";
+type XYR = { x: number; y: number; radius: number };
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
@@ -41,44 +29,41 @@ const NODE_POSITION_DEBOUNCE_MS = 1;
 // run near every frame without saturating the main thread.
 const REFRESH_THROTTLE_MS = 20;
 
-type XYR = { x: number; y: number; radius: number };
-
 /**
- * Orchestrates linking between annotation arrows and the things they attach
- * to (nodes, edges, or other annotations): reacts to store/Ogma events, runs
- * the live-drag cascade, and schedules commits. The link registry itself
- * ({@link LinkIndex}) and the snap-point math ({@link LinkGeometry}) are
- * separate collaborators — see those files for what they own.
+ * Keeps linked arrows in sync with the things they're attached to, outside
+ * of an interactive drag: reacts to Ogma node/edge changes and to
+ * zoom/rotation (which affects fixedSize annotations' graph-space
+ * dimensions), recomputes affected arrows' endpoints via {@link LinkGeometry},
+ * and schedules the debounced commit that turns those into a single history
+ * entry. Self-registers its Ogma listeners in the constructor and tears them
+ * down in {@link destroy}.
  *
- * An arrow can be connected to a text or to a node. It supports double
- * indexing so that you could get the arrow by the id of the text or the id
- * of the node or by the id of the arrow id itself. A node or text can be
- * connected to multiple arrows. An arrow can be connected to only one node
- * or text, but on both ends.
+ * The interactive-drag cascade (`Links.updateLinkedArrowsDuringDrag` et al.)
+ * is a separate, synchronous path that doesn't go through here — see
+ * `handlers/links/index.ts`.
  */
-export class Links {
+export class LinkSync {
+  private ogma: Ogma;
+  private store: Store;
   private index: LinkIndex;
   private geometry: LinkGeometry;
-  private store: Store;
-  private ogma: Ogma;
-  private snapping: Snapping;
-  private updatedItems = new Set<Id>();
+  private updatedItems: Set<Id>;
   private commitTimeout!: ReturnType<typeof setTimeout>;
   private nodePositionTimeout?: ReturnType<typeof setTimeout>;
 
   constructor(
     ogma: Ogma,
-    snapping: Snapping,
     store: Store,
-    onLinkCreated?: (arrow: Arrow, link: Link) => void
+    index: LinkIndex,
+    geometry: LinkGeometry,
+    updatedItems: Set<Id>
   ) {
     this.ogma = ogma;
     this.store = store;
-    this.snapping = snapping;
-    this.index = new LinkIndex(ogma, store, onLinkCreated);
-    this.geometry = new LinkGeometry(ogma, store);
+    this.index = index;
+    this.geometry = geometry;
+    this.updatedItems = updatedItems;
 
-    this.store.subscribe((state) => state.features, this.onAddArrow);
     this.store.subscribe(
       (state) => ({ zoom: state.zoom, rotation: state.rotation }),
       this.throttledRefresh,
@@ -92,193 +77,6 @@ export class Links {
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
       .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
       .on("viewChanged", this.refresh);
-  }
-
-  /**
-   * Called by handlers during drag operations to update linked arrows.
-   *
-   * Translates every arrow linked to `annotationId` by `displacement`. When
-   * an arrow's *other* end is a comment in "rigid" mode, that comment (and
-   * everything else attached to it) is cascaded through the same
-   * displacement.
-   *
-   * `displacement` is always the *total* offset from the start of the drag
-   * (matching the convention every caller already uses), and every read
-   * here goes through the committed feature plus whatever this same call
-   * has already staged — never the store's own `liveUpdates` bucket, which
-   * can still hold a *previous* drag frame's stale values. Reading that
-   * would compound frame over frame instead of recomputing the absolute
-   * position each time.
-   */
-  public updateLinkedArrowsDuringDrag(
-    annotationId: Id,
-    displacement: Point,
-    liveUpdates?: Record<Id, DeepPartial<Annotation>>
-  ) {
-    // Batch internally even when the caller wants immediate application, so
-    // the rigid-comment cascade below can see updates staged earlier in the
-    // very same call instead of clobbering them.
-    const batched = liveUpdates ?? {};
-    this._collectLinkedArrowUpdates(annotationId, displacement, batched, new Set());
-    if (!liveUpdates) this.store.getState().applyLiveUpdates(batched);
-  }
-
-  /**
-   * Recursive worker for {@link updateLinkedArrowsDuringDrag}. `visited`
-   * bounds the recursion so a link graph can't cause it to revisit an
-   * annotation it already moved.
-   */
-  private _collectLinkedArrowUpdates(
-    annotationId: Id,
-    displacement: Point,
-    liveUpdates: Record<Id, DeepPartial<Annotation>>,
-    visited: Set<Id>
-  ) {
-    if (visited.has(annotationId)) return;
-    visited.add(annotationId);
-
-    const state = this.store.getState();
-    const annotation = state.getFeature(annotationId) as Text;
-    if (!annotation) return;
-
-    const links = this.index.annotationToLink.get(annotationId);
-
-    if (!links) return;
-
-    const rigidComments = new Set<Id>();
-
-    for (const linkId of links) {
-      const link = this.index.links.get(linkId);
-      if (!link) continue;
-
-      const committedArrow = state.getFeature(link.arrow) as Arrow;
-      if (!committedArrow) continue;
-      // An earlier link in this same cascade (e.g. this arrow's other end,
-      // processed via the rigid-comment recursion below) may have already
-      // staged a live update for this arrow — build on top of that instead
-      // of the committed geometry, or we'd clobber it back to its pre-drag
-      // position.
-      const staged = liveUpdates[link.arrow] as Partial<Arrow> | undefined;
-      const baseCoordinates = (staged?.geometry?.coordinates ??
-        committedArrow.geometry.coordinates) as number[][];
-      const sideIndex = link.side === SIDE_START ? 0 : 1;
-      const currentEndPoint = {
-        x: baseCoordinates[sideIndex][0],
-        y: baseCoordinates[sideIndex][1]
-      };
-      const newEndPoint = add(currentEndPoint, displacement);
-
-      // Stage the update for the arrow
-      const updatedGeometry = {
-        ...committedArrow.geometry,
-        coordinates: baseCoordinates.map((coord, idx) => {
-          if (idx === sideIndex) return [newEndPoint.x, newEndPoint.y];
-          return [...coord];
-        })
-      };
-      liveUpdates[link.arrow] = {
-        geometry: updatedGeometry
-      } as Partial<Arrow>;
-      this.updatedItems.add(link.arrow);
-
-      // Rigid-follow: if this arrow's *other* end is a comment in "rigid"
-      // mode, it should translate along with `annotationId` too, instead of
-      // being left behind to stretch elastically.
-      const rigidComment = getRigidFollowComment(
-        this.index.links,
-        this.index.linksByArrowId,
-        this.store,
-        link.arrow,
-        link
-      );
-      if (rigidComment && !visited.has(rigidComment.id))
-        rigidComments.add(rigidComment.id);
-    }
-
-    for (const commentId of rigidComments) {
-      const comment = state.getFeature(commentId) as Comment | undefined;
-      if (!comment) continue;
-      translateComment(comment, displacement, liveUpdates, this.updatedItems);
-
-      // Cascade: move every other arrow attached to this comment too (and,
-      // transitively, anything rigidly attached beyond that).
-      this._collectLinkedArrowUpdates(commentId, displacement, liveUpdates, visited);
-    }
-  }
-  public snapLinkedArrowsDuringDrag(
-    annotationId: Id,
-    liveUpdates?: Record<Id, DeepPartial<Annotation>>
-  ) {
-    const state = this.store.getState();
-    let annotation = state.getFeature(annotationId);
-    if (!annotation) return;
-    const updates = state.liveUpdates[annotationId];
-    annotation = updates
-      ? { ...annotation, ...(updates as Annotation) }
-      : annotation;
-    const links = this.index.annotationToLink.get(annotationId);
-
-    if (!links) return;
-    for (const linkId of links) {
-      const link = this.index.links.get(linkId);
-      if (!link) continue;
-
-      let arrow = state.getFeature(link.arrow) as Arrow;
-      const arrowUpdates = state.liveUpdates[arrow.id];
-      arrow = arrowUpdates ? { ...arrow, ...(arrowUpdates as Arrow) } : arrow;
-      const position =
-        arrow.geometry.coordinates[link.side === SIDE_START ? 0 : 1];
-      const point = {
-        x: position[0],
-        y: position[1]
-      };
-      let snap;
-      if (isText(annotation) || isComment(annotation) || isBox(annotation)) {
-        snap = this.snapping.snapToText(point, [annotation as Text]);
-      } else if (isPolygon(annotation)) {
-        snap = this.snapping.snapToPolygon(point, [annotation]);
-      }
-      if (!snap) continue;
-      const newEndPoint = snap.point;
-      const updatedGeometry = {
-        ...arrow.geometry,
-        coordinates: arrow.geometry.coordinates.map((coord, idx) => {
-          if (
-            (link.side === SIDE_START && idx === 0) ||
-            (link.side === SIDE_END && idx === 1)
-          )
-            return [newEndPoint.x, newEndPoint.y];
-
-          return [...coord];
-        })
-      };
-      if (liveUpdates) {
-        liveUpdates[arrow.id] = {
-          geometry: updatedGeometry
-        } as Partial<Arrow>;
-      } else {
-        state.applyLiveUpdate(arrow.id, {
-          geometry: updatedGeometry
-        } as Partial<Arrow>);
-      }
-    }
-  }
-
-  public add(
-    arrow: Arrow,
-    side: Side,
-    targetId: Id,
-    targetType: TargetType,
-    magnet: Point,
-    magnetSource: MagnetSource = "absolute"
-  ): this | undefined {
-    const result = this.index.add(arrow, side, targetId, targetType, magnet, magnetSource);
-    return result ? this : undefined;
-  }
-
-  public remove(arrow: Arrow | Id, side: Side) {
-    this.index.remove(arrow, side);
-    return this;
   }
 
   public onSetMultipleAttributes = ({
@@ -492,14 +290,12 @@ export class Links {
    * Used when an annotation is moved programmatically (not during a live drag).
    * Wraps changes in batchUpdate so no extra history entry is created.
    */
-  private _updateAndCommitSync(linksByArrowId: LinksByArrowId) {
+  updateAndCommitSync(linksByArrowId: LinksByArrowId) {
     const updates = this._computeArrowUpdates(linksByArrowId);
     if (Object.keys(updates).length === 0) return;
     const state = this.store.getState();
     state.batchUpdate(() => {
-      state.updateFeatures(
-        updates as Record<string, Partial<Annotation>>
-      );
+      state.updateFeatures(updates as Record<string, Partial<Annotation>>);
     });
   }
 
@@ -597,113 +393,6 @@ export class Links {
     clearTimeout(this.commitTimeout);
     this.commitTimeout = setTimeout(this.commit, COMMIT_DEBOUNCE_MS);
   }
-
-  private onAddArrow = (
-    newFeatures: Record<string, Annotation>,
-    prevFeatures: Record<string, Annotation>
-  ) => {
-    const state = this.store.getState();
-    const oldIds = new Set(Object.keys(prevFeatures));
-    const newIds = Object.keys(newFeatures).filter((id) => !oldIds.has(id));
-    const removedIds = Object.keys(prevFeatures).filter(
-      (id) => !newFeatures[id]
-    );
-
-    newIds.forEach((id) => {
-      const feature = state.getFeature(id);
-      if (!feature || !isArrow(feature)) return;
-      const arrow = feature as Arrow;
-      if (arrow.properties.link?.start) {
-        const linkData = arrow.properties.link.start;
-        // Node/edge existence will be checked in add(). The magnet on
-        // arrow.properties.link is always this class's own stored (already
-        // bbox-relative, for polygon) format - never re-convert it.
-        this.add(
-          arrow,
-          SIDE_START,
-          linkData.id,
-          linkData.type,
-          linkData.magnet!,
-          "stored"
-        );
-      }
-      if (arrow.properties.link?.end) {
-        const linkData = arrow.properties.link.end;
-        // Node/edge existence will be checked in add(). Same as the start
-        // side above - this magnet is already in stored format.
-        this.add(
-          arrow,
-          SIDE_END,
-          linkData.id,
-          linkData.type,
-          linkData.magnet!,
-          "stored"
-        );
-      }
-    });
-
-    removedIds.forEach((id) => {
-      const feature = prevFeatures[id];
-      if (isArrow(feature)) {
-        const arrow = feature as Arrow;
-        // Remove all links associated with this arrow
-        this.remove(arrow, SIDE_START);
-        this.remove(arrow, SIDE_END);
-      } else {
-        // Remove all links associated with this annotation
-        const annotationLinks = this.index.annotationToLink.get(id);
-        if (!annotationLinks) return;
-        for (const linkId of annotationLinks) {
-          const link = this.index.links.get(linkId);
-          if (!link) continue;
-          const arrow = state.getFeature(link.arrow) as Arrow;
-          // modify the object if passed
-          if (arrow) this.remove(arrow, link.side);
-          else {
-            // otherwise remove by id (happens when deleting the arrow from the state)
-            this.remove(link.arrow, link.side);
-          }
-        }
-      }
-    });
-
-    // Detect programmatic position/size changes in annotations with linked arrows
-    // and refresh those arrows so they stay connected.
-    const linksToRefresh: LinksByArrowId = new Map();
-    for (const id of oldIds) {
-      const newFeature = newFeatures[id];
-      if (!newFeature || !this.index.annotationToLink.has(id)) continue;
-
-      const prevFeature = prevFeatures[id];
-      // Coordinates reference changes when geometry is explicitly set (position change).
-      // Properties reference changes when width/height or other layout props change.
-      const positionChanged =
-        prevFeature.geometry.coordinates !== newFeature.geometry.coordinates;
-      const sizeChanged =
-        (prevFeature.properties as { width?: number; height?: number })
-          .width !==
-          (newFeature.properties as { width?: number; height?: number })
-            .width ||
-        (prevFeature.properties as { width?: number; height?: number })
-          .height !==
-          (newFeature.properties as { width?: number; height?: number })
-            .height;
-
-      if (!positionChanged && !sizeChanged) continue;
-
-      const annotationLinks = this.index.annotationToLink.get(id)!;
-      for (const linkId of annotationLinks) {
-        const link = this.index.links.get(linkId);
-        if (!link) continue;
-        const arrowId = link.arrow;
-        if (this.index.linksByArrowId.has(arrowId)) {
-          linksToRefresh.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
-        }
-      }
-    }
-
-    if (linksToRefresh.size > 0) this._updateAndCommitSync(linksToRefresh);
-  };
 
   public destroy() {
     clearTimeout(this.commitTimeout);
