@@ -13,8 +13,9 @@ import { geometry } from "@linkurious/ogma";
 import { Position } from "geojson";
 import { nanoid as getId } from "nanoid";
 import { Snapping } from "./snapping";
+import { getRigidComment, getRigidFollowComment, translateComment } from "./commentFollow";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
-import { Store } from "../store";
+import { AnnotationState, Store } from "../store";
 import type {
   Arrow,
   Id,
@@ -33,8 +34,7 @@ import {
   isPolygon,
   isComment,
   isArrow,
-  getCommentSize,
-  isRigidConnector
+  getCommentSize
 } from "../types";
 import {
   getArrowSide,
@@ -49,6 +49,21 @@ import { add, mul, subtract } from "../utils/vec";
 
 type XYR = { x: number; y: number; radius: number };
 type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
+
+/**
+ * How to interpret the `magnet` passed to {@link Links.add}:
+ * - "absolute": a fresh point in graph coordinates, e.g. from hit-testing or
+ *   snapping. The default — every caller doing a live snap/link wants this.
+ * - "stored": already this class's own persisted format
+ *   (`arrow.properties.link[side].magnet`) — for a polygon target that's the
+ *   bbox-relative fraction `add()` itself produces, for every other target
+ *   type it's the same value either way. Passing "absolute" for a magnet
+ *   that's actually already-relative would run a polygon's fraction through
+ *   the absolute-to-relative conversion a second time and corrupt it — the
+ *   case a round-tripped export/import, or re-linking on comment creation,
+ *   legitimately hits.
+ */
+type MagnetSource = "absolute" | "stored";
 
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
@@ -220,7 +235,13 @@ export class Links {
       // Rigid-follow: if this arrow's *other* end is a comment in "rigid"
       // mode, it should translate along with `annotationId` too, instead of
       // being left behind to stretch elastically.
-      const rigidComment = this._getRigidFollowComment(link.arrow, link);
+      const rigidComment = getRigidFollowComment(
+        this.links,
+        this.linksByArrowId,
+        this.store,
+        link.arrow,
+        link
+      );
       if (rigidComment && !visited.has(rigidComment.id))
         rigidComments.add(rigidComment.id);
     }
@@ -228,7 +249,7 @@ export class Links {
     for (const commentId of rigidComments) {
       const comment = state.getFeature(commentId) as Comment | undefined;
       if (!comment) continue;
-      this._translateComment(comment, displacement, liveUpdates);
+      translateComment(comment, displacement, liveUpdates, this.updatedItems);
 
       // Cascade: move every other arrow attached to this comment too (and,
       // transitively, anything rigidly attached beyond that).
@@ -299,25 +320,14 @@ export class Links {
     targetId: Id,
     targetType: TargetType,
     magnet: Point,
-    // True when `magnet` is already the final bbox-relative fraction this
-    // class itself produces and persists (arrow.properties.link[side].magnet
-    // - what a round-tripped export/import carries) rather than a fresh
-    // absolute point picked up by hit-testing/snapping. Every other target
-    // type stores its magnet as-is either way, so this only matters for
-    // polygon, whose magnet IS an absolute point on the way in but a
-    // relative fraction once stored - without this flag, re-adding a link
-    // straight from its own (already-relative) serialized magnet - as the
-    // import path and re-linking on comment creation both legitimately need
-    // to - would run it through the absolute-to-relative conversion a
-    // second time and corrupt it.
-    alreadyRelative = false
+    magnetSource: MagnetSource = "absolute"
   ) {
     const id = getId();
     const arrowId = arrow.id;
 
     // For polygon annotations, convert absolute magnet to relative coordinates
     let adjustedMagnet = magnet;
-    if (targetType === TARGET_TYPES.POLYGON && !alreadyRelative) {
+    if (targetType === TARGET_TYPES.POLYGON && magnetSource === "absolute") {
       const state = this.store.getState();
       const annotation = state.getFeature(targetId);
       if (annotation && isPolygon(annotation)) {
@@ -534,7 +544,13 @@ export class Links {
         // the whole callout (comment + arrow) by the node's delta instead of
         // stretching the line. The arrow keeps its length and angle; the
         // comment translates with the node.
-        const comment = this._getRigidFollowComment(arrowId, link);
+        const comment = getRigidFollowComment(
+          this.links,
+          this.linksByArrowId,
+          this.store,
+          arrowId,
+          link
+        );
         if (comment) {
           const oldNodePoint = coordinates[nodeSideIndex];
           const delta = subtract(
@@ -544,7 +560,7 @@ export class Links {
           coordinates[0] = [coordinates[0][0] + delta.x, coordinates[0][1] + delta.y];
           coordinates[1] = [coordinates[1][0] + delta.x, coordinates[1][1] + delta.y];
 
-          this._translateComment(comment, delta, updates);
+          translateComment(comment, delta, updates, this.updatedItems);
         } else {
           coordinates[nodeSideIndex] = snapPoint;
         }
@@ -654,76 +670,38 @@ export class Links {
       let endPoint = arrow.geometry.coordinates[1];
 
       const startCenter = start
-        ? start.targetType === TARGET_TYPES.NODE
-          ? xyr[nodeIdToIndex.get(start.target)!]
-          : start.targetType === TARGET_TYPES.EDGE
-            ? this._getEdgeSnapPoint(
-                start.target as EdgeId,
-                (start.magnet as { t: number }).t,
-                true
-              )
-            : this._getAnnotationCenter(state.getFeature(start.target)!)
+        ? this._resolveLinkCenter(start, xyr, nodeIdToIndex, state)
         : { x: startPoint[0], y: startPoint[1] };
 
       const endCenter = end
-        ? end.targetType === TARGET_TYPES.NODE
-          ? xyr[nodeIdToIndex.get(end.target)!]
-          : end.targetType === TARGET_TYPES.EDGE
-            ? this._getEdgeSnapPoint(end.target as EdgeId, (end.magnet as { t: number }).t, true)
-            : this._getAnnotationCenter(state.getFeature(end.target)!)
+        ? this._resolveLinkCenter(end, xyr, nodeIdToIndex, state)
         : { x: endPoint[0], y: endPoint[1] };
 
       const vec = subtract(endCenter, startCenter);
       if (start) {
-        if (start.targetType === TARGET_TYPES.NODE) {
-          startPoint = this._getNodeSnapPoint(
-            startCenter as XYR,
-            vec,
-            this._isLinkedToCenter(start)
-          );
-        } else if (start.targetType === TARGET_TYPES.EDGE) {
-          startPoint = this._getEdgeSnapPoint(
-            start.target as EdgeId,
-            (start.magnet as { t: number }).t
-          );
-        } else {
-          const annotation = state.getMergedFeature(start.target)!;
-          startPoint = this._getAnnotationSnapPoint(
-            annotation,
-            endCenter,
-            start,
-            state.zoom
-          );
-        }
+        startPoint = this._resolveLinkPoint(
+          start,
+          startCenter,
+          vec,
+          endCenter,
+          state
+        );
       }
       if (end) {
-        if (end.targetType === TARGET_TYPES.NODE) {
-          endPoint = this._getNodeSnapPoint(
-            endCenter as XYR,
-            mul(vec, -1),
-            this._isLinkedToCenter(end)
-          );
-        } else if (end.targetType === TARGET_TYPES.EDGE) {
-          endPoint = this._getEdgeSnapPoint(
-            end.target as EdgeId,
-            (end.magnet as { t: number }).t
-          );
-        } else {
-          const annotation = state.getMergedFeature(end.target)!;
-          endPoint = this._getAnnotationSnapPoint(
-            annotation,
-            startCenter,
-            end,
-            state.zoom
-          );
-        }
+        endPoint = this._resolveLinkPoint(
+          end,
+          endCenter,
+          mul(vec, -1),
+          startCenter,
+          state
+        );
       }
       // Rigid-follow: when one side is anchored to a comment in "rigid" mode
       // and the *other* side actually moved, translate the comment (and this
       // endpoint) by that delta instead of letting the comment side
       // re-anchor elastically to the nearest point on the box.
-      const startComment = this._getRigidComment(start);
-      const endComment = this._getRigidComment(end);
+      const startComment = getRigidComment(this.store, start);
+      const endComment = getRigidComment(this.store, end);
 
       if (startComment && end) {
         const oldEnd = arrow.geometry.coordinates[1];
@@ -731,7 +709,7 @@ export class Links {
         if (delta.x !== 0 || delta.y !== 0) {
           const oldStart = arrow.geometry.coordinates[0];
           startPoint = [oldStart[0] + delta.x, oldStart[1] + delta.y];
-          this._translateComment(startComment, delta, updates);
+          translateComment(startComment, delta, updates, this.updatedItems);
         }
       } else if (endComment && start) {
         const oldStart = arrow.geometry.coordinates[0];
@@ -739,7 +717,7 @@ export class Links {
         if (delta.x !== 0 || delta.y !== 0) {
           const oldEnd = arrow.geometry.coordinates[1];
           endPoint = [oldEnd[0] + delta.x, oldEnd[1] + delta.y];
-          this._translateComment(endComment, delta, updates);
+          translateComment(endComment, delta, updates, this.updatedItems);
         }
       }
 
@@ -787,7 +765,7 @@ export class Links {
           linkData.id,
           linkData.type,
           linkData.magnet!,
-          true
+          "stored"
         );
       }
       if (arrow.properties.link?.end) {
@@ -800,7 +778,7 @@ export class Links {
           linkData.id,
           linkData.type,
           linkData.magnet!,
-          true
+          "stored"
         );
       }
     });
@@ -873,64 +851,55 @@ export class Links {
   }
 
   /**
-   * Rigid-follow guard: returns the linked Comment when this arrow's *other*
-   * endpoint (relative to `nodeSideLink`) is attached to a comment whose
-   * connector mode is "rigid" (the default). In that case a node drag should
-   * translate the whole callout (comment + arrow) rather than just moving
-   * the node-side endpoint. Returns undefined when the far side isn't a
-   * comment, or the comment opted into "elastic" mode.
+   * The reference point an arrow endpoint pivots around: the node's own
+   * position, a point on a curved/straight edge, or an annotation's center.
+   * Shared by both the start and end side of {@link _computeArrowUpdates}.
    */
-  private _getRigidFollowComment(
-    arrowId: Id,
-    nodeSideLink: Link
-  ): Comment | undefined {
-    const arrowLinks = this.linksByArrowId.get(arrowId);
-    if (!arrowLinks) return undefined;
-
-    // The far side is whichever end isn't the one anchored to the moved node.
-    const farLinkId =
-      nodeSideLink.side === SIDE_START ? arrowLinks.end : arrowLinks.start;
-    if (!farLinkId) return undefined;
-
-    const farLink = this.links.get(farLinkId);
-    if (!farLink || farLink.targetType !== TARGET_TYPES.COMMENT) return undefined;
-
-    return this._getRigidComment(farLink);
+  private _resolveLinkCenter(
+    link: Link,
+    xyr: XYR[],
+    nodeIdToIndex: Map<NodeId, number>,
+    state: AnnotationState
+  ): Point {
+    if (link.targetType === TARGET_TYPES.NODE)
+      return xyr[nodeIdToIndex.get(link.target)!];
+    if (link.targetType === TARGET_TYPES.EDGE)
+      return this._getEdgeSnapPoint(
+        link.target as EdgeId,
+        (link.magnet as { t: number }).t,
+        true
+      );
+    return this._getAnnotationCenter(state.getFeature(link.target)!);
   }
 
   /**
-   * Returns the Comment targeted by `link`, when it's a comment link whose
-   * connector mode is "rigid". Shared eligibility check for both the
-   * node-drag path and the generic (edge / annotation move) path.
+   * The actual point an arrow endpoint snaps to for `link`, given the
+   * already-resolved center for this side (`center`, from
+   * {@link _resolveLinkCenter}) and the *other* side's center (`otherCenter`,
+   * used to orient box/polygon magnets and pick the node's edge-vs-center
+   * point via `vec`). Shared by both the start and end side of
+   * {@link _computeArrowUpdates}.
    */
-  private _getRigidComment(link: Link | undefined): Comment | undefined {
-    if (!link || link.targetType !== TARGET_TYPES.COMMENT) return undefined;
-    const comment = this.store.getState().getFeature(link.target);
-    if (!comment || !isComment(comment)) return undefined;
-    if (!isRigidConnector(comment)) return undefined;
-    return comment;
-  }
-
-  /**
-   * Translate a comment by `delta` and stage the update, mirroring the
-   * rigid-follow handling in `updateFromNodePositions`.
-   */
-  private _translateComment(
-    comment: Comment,
-    delta: Point,
-    updates: Record<Id, DeepPartial<Annotation>>
-  ) {
-    const [cx, cy] = comment.geometry.coordinates as [number, number];
-    const commentUpdate: DeepPartial<Comment> = {
-      ...comment,
-      geometry: {
-        type: "Point",
-        coordinates: [cx + delta.x, cy + delta.y]
-      }
-    };
-    updates[comment.id] = commentUpdate as Annotation;
-    updateBbox(commentUpdate as Comment);
-    this.updatedItems.add(comment.id);
+  private _resolveLinkPoint(
+    link: Link,
+    center: Point,
+    vec: Point,
+    otherCenter: Point,
+    state: AnnotationState
+  ): Position {
+    if (link.targetType === TARGET_TYPES.NODE)
+      return this._getNodeSnapPoint(
+        center as XYR,
+        vec,
+        this._isLinkedToCenter(link)
+      );
+    if (link.targetType === TARGET_TYPES.EDGE)
+      return this._getEdgeSnapPoint(
+        link.target as EdgeId,
+        (link.magnet as { t: number }).t
+      );
+    const annotation = state.getMergedFeature(link.target)!;
+    return this._getAnnotationSnapPoint(annotation, otherCenter, link, state.zoom);
   }
 
   private _getAnnotationCenter(annotation: Annotation): Point {
