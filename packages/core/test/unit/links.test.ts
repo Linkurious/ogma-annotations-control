@@ -949,7 +949,7 @@ describe("Links", () => {
         const arrow = createArrow(100, n * 20, 100, n * 20);
         arrow.properties.link = {
           start: { id: comment.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
-          end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 100, y: 20 * n } }
+          end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 1, y: (20 * n) / 100 } }
         };
         control.add(comment);
         control.add(arrow);
