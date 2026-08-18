@@ -419,8 +419,17 @@ export class InteractionController extends EventTarget {
   destroy() {
     const container = this.ogma.getContainer();
     if (container) {
-      container.removeEventListener("mousemove", this.onMouseMove);
-      container.removeEventListener("click", this.onMouseClick);
+      // removeEventListener only matches a listener registered with the
+      // same capture flag - passing none here defaults to false, so the
+      // capture:true listeners below were silently never actually removed
+      // (a leak, and onMouseDownArm wasn't even attempted). Every flag here
+      // must mirror its addEventListener call in the constructor above.
+      container.removeEventListener("mousemove", this.onMouseMove, true);
+      container.removeEventListener("click", this.onMouseClick, true);
+      container.removeEventListener("mousedown", this.onMouseDownArm, true);
+      container.removeEventListener("mousedown", this.onMouseDown, false);
+      container.removeEventListener("mouseup", this.onMouseUp, true);
+      container.removeEventListener("wheel", this.onWheel, true);
     }
     this.ogma.events.off(this.onNativeDragStart);
     this.ogma.events.off(this.onNativeDragEnd);

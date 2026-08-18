@@ -101,12 +101,21 @@ export abstract class Handler<
     // Handler.handleMouseMove right after) - only snapshot on the first
     // call, or the second call would save our own override as if it were
     // the real options and "restore" to that instead.
+    //
+    // Take an explicit shallow copy rather than `?? {}` on its own: that
+    // still leaves `undefined` (no detect config at all) and `{}` (an
+    // explicitly empty one) indistinguishable, and restoring later by
+    // spreading our own nodes/edges:false *over* this copy - instead of
+    // trusting setOptions() to merge them into whatever detect config is
+    // live at the time - means every other detect flag (nodeTexts,
+    // nodeErrorMargin, ...) round-trips exactly regardless of how a given
+    // Ogma version merges nested option objects internally.
     if (this.savedDetectOption === undefined) {
-      this.savedDetectOption = this.ogma.getOptions().detect ?? {};
+      this.savedDetectOption = { ...(this.ogma.getOptions().detect ?? {}) };
     }
     this.ogma.setOptions({
       interactions: { pan: { enabled: false }, drag: { enabled: false } },
-      detect: { nodes: false, edges: false }
+      detect: { ...this.savedDetectOption, nodes: false, edges: false }
     });
   };
 
