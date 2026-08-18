@@ -8,6 +8,10 @@ import { Store } from "../store";
 import { Comment, Id, ArrowProperties, isArrow } from "../types";
 import { Arrow, createArrow, defaultArrowStyle } from "../types/features/Arrow";
 
+// Below this distance (in graph units) between the drag's start and end
+// point, treat the gesture as a click rather than a drag.
+const CLICK_VS_DRAG_THRESHOLD = 5;
+
 /**
  * Meta-handler for drawing comments with arrows
  *
@@ -121,7 +125,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     let commentX: number;
     let commentY: number;
 
-    if (dragDistance < 5) {
+    if (dragDistance < CLICK_VS_DRAG_THRESHOLD) {
       // Case 1: Click (small distance) - apply offset from start point
       commentX = this.startX + this.offsetX;
       commentY = this.startY + this.offsetY;

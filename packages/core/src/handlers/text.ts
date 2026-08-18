@@ -8,6 +8,7 @@ import {
   COMMENT_MODE_EXPANDED,
   EVT_DRAG,
   cursors,
+  handleDetectionThreshold,
   handleRadius
 } from "../constants";
 import { Store } from "../store";
@@ -126,8 +127,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     const annotation = this.getAnnotation()!;
     const { x, y } = this.clientToCanvas(evt);
     let { width, height } = getBoxSize(annotation);
-    // TODO: detection threshold (state)
-    const margin = 5 / zoom;
+    const margin = handleDetectionThreshold / zoom;
 
     const origin = getBoxCenter(annotation);
     const state = this.store.getState();

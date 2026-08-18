@@ -271,36 +271,9 @@ export class Handles extends Renderer<CanvasLayer> {
     isDrawing: boolean
   ) {
     const coords = feature.geometry.coordinates[0];
-    //const style = feature.properties.style;
 
-    // If drawing, render preview path with straight lines
-    if (isDrawing) {
-      // ctx.save();
-      // ctx.strokeStyle = this.handleStroke;
-      // ctx.lineWidth = style?.strokeWidth || 2;
-      // ctx.setLineDash([5, 5]); // Dashed line for preview
-
-      // ctx.beginPath();
-      // if (coords.length > 0) {
-      //   ctx.moveTo(coords[0][0], coords[0][1]);
-      //   // Draw lines to all points except the closing duplicate
-      //   const pointCount = coords.length - 1; // Exclude closing duplicate
-      //   for (let i = 1; i < pointCount; i++) {
-      //     ctx.lineTo(coords[i][0], coords[i][1]);
-      //   }
-      //   // Close the path if we have at least 3 points
-      //   if (pointCount >= 2) ctx.closePath();
-      // }
-
-      // ctx.setLineDash([]); // Reset dash
-      // ctx.fillStyle = this.polygonFill;
-      // ctx.stroke();
-      // ctx.fill();
-      // ctx.restore();
-
-      // Don't render vertex handles while drawing
-      return;
-    }
+    // Don't render vertex handles while drawing
+    if (isDrawing) return;
 
     // When editing (not drawing), render smooth outline
     if (coords.length > 2) {
@@ -359,32 +332,6 @@ export class Handles extends Renderer<CanvasLayer> {
     }
 
     ctx.closePath();
-  }
-
-  // @ts-expect-error Debug method
-  private renderCenterPoint(
-    feature: Text | Box,
-    ctx: CanvasRenderingContext2D
-  ) {
-    const state = this.store.getState();
-    // debugging - draw center point
-    if (isText(feature)) {
-      const pos = getBoxPosition(
-        feature,
-        feature.properties.style?.fixedSize,
-        state.zoom
-      );
-      const size = getBoxSize(feature);
-      ctx.moveTo(pos.x + size.width / 2 + 5, pos.y + size.height / 2);
-      ctx.arc(
-        pos.x + size.width / 2,
-        pos.y + size.height / 2,
-        5,
-        0,
-        Math.PI * 2,
-        true
-      );
-    }
   }
 
   public destroy(): void {

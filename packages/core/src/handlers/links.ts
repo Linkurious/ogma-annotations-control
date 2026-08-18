@@ -53,6 +53,16 @@ type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
 const COMMIT_DEBOUNCE_MS = 1;
+// Debounce window for updateFromNodePositions: waits one tick so Ogma has
+// finished writing the node's new x/y/radius attributes before we read them.
+const NODE_POSITION_DEBOUNCE_MS = 1;
+// Throttle for the zoom/rotation-driven fixedSize refresh — cheap enough to
+// run near every frame without saturating the main thread.
+const REFRESH_THROTTLE_MS = 20;
+// A node-linked arrow snaps to the node's center once its endpoint gets this
+// close to it (as a fraction of the node's radius), instead of resting on
+// the node's edge.
+const NODE_CENTER_SNAP_RADIUS_FRACTION = 0.5;
 
 /**
  * Converts a serialized { x, y } magnet (ExportedLink format) to the typed
@@ -218,15 +228,7 @@ export class Links {
     for (const commentId of rigidComments) {
       const comment = state.getFeature(commentId) as Comment | undefined;
       if (!comment) continue;
-      const [cx, cy] = comment.geometry.coordinates as [number, number];
-      const commentUpdate: DeepPartial<Comment> = {
-        geometry: {
-          type: "Point" as const,
-          coordinates: [cx + displacement.x, cy + displacement.y]
-        }
-      };
-      liveUpdates[commentId] = commentUpdate as Annotation;
-      this.updatedItems.add(commentId);
+      this._translateComment(comment, displacement, liveUpdates);
 
       // Cascade: move every other arrow attached to this comment too (and,
       // transitively, anything rigidly attached beyond that).
@@ -458,14 +460,14 @@ export class Links {
     if (linksToUpdate.size > 0) this.update(linksToUpdate);
   };
 
-  private throttledRefresh = throttle(() => this.refresh(), 20);
+  private throttledRefresh = throttle(() => this.refresh(), REFRESH_THROTTLE_MS);
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
     // debounce to next tick to get the real coordinates
     clearTimeout(this.nodePositionTimeout);
     this.nodePositionTimeout = setTimeout(
       () => this.updateFromNodePositions(nodes),
-      1
+      NODE_POSITION_DEBOUNCE_MS
     );
   }
 
@@ -542,17 +544,7 @@ export class Links {
           coordinates[0] = [coordinates[0][0] + delta.x, coordinates[0][1] + delta.y];
           coordinates[1] = [coordinates[1][0] + delta.x, coordinates[1][1] + delta.y];
 
-          const [cx, cy] = comment.geometry.coordinates as [number, number];
-          const commentUpdate: DeepPartial<Comment> = {
-            ...comment,
-            geometry: {
-              type: "Point",
-              coordinates: [cx + delta.x, cy + delta.y]
-            }
-          };
-          updates[comment.id] = commentUpdate as Annotation;
-          updateBbox(commentUpdate as Comment);
-          this.updatedItems.add(comment.id);
+          this._translateComment(comment, delta, updates);
         } else {
           coordinates[nodeSideIndex] = snapPoint;
         }
@@ -1015,7 +1007,7 @@ export class Links {
     const dist = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
     const unit = mul(vec, 1 / dist);
     const snapPoint =
-      dist < Number(xyr.radius) / 2
+      dist < Number(xyr.radius) * NODE_CENTER_SNAP_RADIUS_FRACTION
         ? { x: xyr.x, y: xyr.y }
         : add({ x: xyr.x, y: xyr.y }, mul(unit, -Number(xyr.radius)));
     return [snapPoint.x, snapPoint.y];
@@ -1075,6 +1067,9 @@ export class Links {
   public destroy() {
     clearTimeout(this.commitTimeout);
     clearTimeout(this.nodePositionTimeout);
-    this.ogma.events.off(this.onSetMultipleAttributes);
+    this.ogma.events
+      .off(this.onSetMultipleAttributes)
+      .off(this.onAddRemoveEdges)
+      .off(this.refresh);
   }
 }
