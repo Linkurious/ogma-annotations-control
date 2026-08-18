@@ -62,6 +62,27 @@ export class InteractionController extends EventTarget {
         passive: true,
         capture: true
       });
+      // Two listeners, deliberately on different phases:
+      //
+      // - onMouseDownArm (capture:true, fires first): Ogma's own inner
+      //   wrapper stops propagation on mousedown when it lands on a node or
+      //   edge, so a bubble-phase listener on the (outer) container never
+      //   sees that event at all. That silently broke every gesture that
+      //   starts by grabbing an existing annotation handle sitting exactly
+      //   on a node/edge - e.g. detaching a comment connector's node-side
+      //   tip - since the "missed mousedown" recovery in
+      //   Handler.handleMouseMove (base.ts) depends on the
+      //   mousePressed/mousePressPoint state this arms. It does the bare
+      //   minimum so it stays correct regardless of what Ogma does next.
+      // - onMouseDown (capture:false, fires later, possibly not at all on a
+      //   node/edge hit): does hit-testing and selection. This needs the
+      //   *late* timing - e.g. sticky-note placement creates the note from
+      //   Ogma's own internal mousedown handling, and this listener must
+      //   run after that so the note already exists to be found/selected.
+      container.addEventListener("mousedown", this.onMouseDownArm, {
+        passive: true,
+        capture: true
+      });
       container.addEventListener("mousedown", this.onMouseDown, {
         passive: true,
         capture: false
@@ -75,7 +96,25 @@ export class InteractionController extends EventTarget {
         capture: true
       });
     }
+
+    // Ogma's own node dragging doesn't go through this controller's
+    // mousedown/mousemove handling below, so isDragging (which gates hover
+    // updates in onMouseMove) never got set for it - hover stayed live and
+    // kept updating hoveredFeature for the whole gesture. Track native node
+    // drags through Ogma's own events too, so hover - and anything gated on
+    // isDragging - turns off for the duration, same as an annotation drag.
+    this.ogma.events.on("nodesDragStart", this.onNativeDragStart);
+    this.ogma.events.on("nodesDragEnd", this.onNativeDragEnd);
   }
+
+  private onNativeDragStart = () => {
+    this.store.getState().setHoveredFeature(null);
+    this.store.setState({ isDragging: true });
+  };
+
+  private onNativeDragEnd = () => {
+    this.store.setState({ isDragging: false });
+  };
 
   detect(x: number, y: number, thresholdOverride?: number): Annotation | null {
     let result: Annotation | null = null;
@@ -90,8 +129,28 @@ export class InteractionController extends EventTarget {
 
     if (hit.length === 0) return null;
 
+    // Thin/small targets (arrows, comments, texts) take priority over
+    // area-filling ones (boxes, polygons) that happen to also match the
+    // same point - e.g. an arrow endpoint sitting inside a polygon's body
+    // must still resolve to the arrow, not the polygon underneath it,
+    // otherwise clicking/dragging that endpoint is unreachable: the
+    // polygon's much larger hit area wins by pure luck of spatial-index
+    // ordering and steals the selection out from under the arrow.
+    const DETECT_PRIORITY: Record<string, number> = {
+      arrow: 0,
+      comment: 1,
+      text: 1,
+      box: 2,
+      polygon: 2
+    };
+    const ordered = [...hit].sort(
+      (a, b) =>
+        (DETECT_PRIORITY[a.properties.type] ?? 9) -
+        (DETECT_PRIORITY[b.properties.type] ?? 9)
+    );
+
     // narrow phase
-    for (const item of hit) {
+    for (const item of ordered) {
       // spatial index is not reliable in regards to real geometries
       const feature = state.getFeature(item.id)!;
       if (isArrow(feature)) {
@@ -187,6 +246,26 @@ export class InteractionController extends EventTarget {
     // Click event can be ignored if we're handling everything in mousedown/mouseup
   };
 
+  // Capture-phase, fires before Ogma's own handling can stop propagation -
+  // see the registration comment in the constructor. Kept intentionally
+  // minimal: just the mousePressed/mousePressPoint state that
+  // Handler.handleMouseMove (base.ts) needs to recognize a drag starting on
+  // its own handle, even when that handle sits exactly on a node/edge.
+  private onMouseDownArm = (evt: MouseEvent) => {
+    if (Date.now() < this.suppressClickUntil) return;
+    if (isAnnotationLinkTarget(evt.target)) return;
+
+    const screenPoint = clientToContainerPosition(
+      evt,
+      this.ogma.getContainer()
+    );
+    const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
+    this.store.setState({
+      mousePressed: true,
+      mousePressPoint: { x, y }
+    });
+  };
+
   private onMouseDown = (evt: MouseEvent) => {
     if (Date.now() < this.suppressClickUntil)
       return;
@@ -214,12 +293,7 @@ export class InteractionController extends EventTarget {
       hasMoved: false
     };
 
-    // Store mouse press state globally for handlers
     const state = this.store.getState();
-    this.store.setState({
-      mousePressed: true,
-      mousePressPoint: { x, y }
-    });
 
     // If clicking on an already-selected annotation, don't change selection yet
     // (allows dragging multiple selected items)
@@ -345,8 +419,19 @@ export class InteractionController extends EventTarget {
   destroy() {
     const container = this.ogma.getContainer();
     if (container) {
-      container.removeEventListener("mousemove", this.onMouseMove);
-      container.removeEventListener("click", this.onMouseClick);
+      // removeEventListener only matches a listener registered with the
+      // same capture flag - passing none here defaults to false, so the
+      // capture:true listeners below were silently never actually removed
+      // (a leak, and onMouseDownArm wasn't even attempted). Every flag here
+      // must mirror its addEventListener call in the constructor above.
+      container.removeEventListener("mousemove", this.onMouseMove, true);
+      container.removeEventListener("click", this.onMouseClick, true);
+      container.removeEventListener("mousedown", this.onMouseDownArm, true);
+      container.removeEventListener("mousedown", this.onMouseDown, false);
+      container.removeEventListener("mouseup", this.onMouseUp, true);
+      container.removeEventListener("wheel", this.onWheel, true);
     }
+    this.ogma.events.off(this.onNativeDragStart);
+    this.ogma.events.off(this.onNativeDragEnd);
   }
 }
