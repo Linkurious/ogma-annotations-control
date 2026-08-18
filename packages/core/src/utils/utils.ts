@@ -36,6 +36,17 @@ export function createSVGElement<T extends SVGElement>(tag: string): T {
   return document.createElementNS(SVG_NS, tag) as T;
 }
 
+/**
+ * Move `el` to the end of `root`'s children. SVG paint order is DOM order,
+ * so this is how a shape gets raised to the top of its group. Safe to call
+ * every render even when `el` is already last - `appendChild` on an
+ * existing child just re-positions it, it doesn't clone or re-trigger
+ * insertion.
+ */
+export function bringToTop(root: Element, el: Element) {
+  root.appendChild(el);
+}
+
 export function getBbox<T extends Annotation>(b: T) {
   if (!b.geometry.bbox) updateBbox(b);
   return b.geometry.bbox as BBox;

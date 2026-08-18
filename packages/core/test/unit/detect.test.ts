@@ -141,11 +141,13 @@ describe("HitDetector", () => {
       expect(result).toBeNull();
     });
 
-    it("should detect text features within threshold", () => {
+    it("should detect a feature within threshold (arrow overlaps text1 here, and wins)", () => {
       const result = hitDetector.detect(25, 25, 10);
       expect(result).not.toBeNull();
-      // Arrow has higher priority in detection, so if both arrow and text overlap, arrow is returned
-      expect(result?.properties.type).toBe("text");
+      // (25, 25) sits on both text1's box and arrow1's diagonal line. Thin/
+      // point targets (arrows) take priority over area-filling ones (text
+      // boxes, polygons, ...) that happen to overlap the same point.
+      expect(result?.properties.type).toBe("arrow");
     });
 
     it("should detect features at exact coordinates", () => {
@@ -185,7 +187,7 @@ describe("HitDetector", () => {
       // Point on arrow line should detect arrow, not text
       const result = detector.detect(-5, -5, 10);
       expect(result).not.toBeNull();
-      expect(result?.properties.type).toBe("text");
+      expect(result?.properties.type).toBe("arrow");
     });
 
     it('should find text features with "text" type', () => {

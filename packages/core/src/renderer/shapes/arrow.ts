@@ -1,7 +1,7 @@
-import { isCommentArrow } from "../../handlers/commentHelpers";
+import { getCommentLinkId, isCommentArrow } from "../../handlers/comment/helpers";
 import { AnnotationState } from "../../store";
 import { Arrow, Extremity, Id, Point, defaultArrowStyle } from "../../types";
-import { createSVGElement, getArrowEndPoints } from "../../utils/utils";
+import { bringToTop, createSVGElement, getArrowEndPoints } from "../../utils/utils";
 import {
   subtract,
   length,
@@ -136,7 +136,19 @@ export function renderArrow(
     "transform",
     `rotate(${-state.rotation * (180 / Math.PI)})`
   );
-  root.appendChild(lineGroup);
+
+  // A comment and its connecting arrow are one visual annotation - when the
+  // comment gets raised to the top of its group (new/selected, see
+  // renderComment), raise the arrow along with it too, not just the bubble.
+  const commentId = getCommentLinkId(arrow);
+  const isNew = !lineGroup.parentNode || lineGroup.parentNode !== root;
+  if (
+    isNew ||
+    state.selectedFeatures.has(arrow.id) ||
+    (commentId !== undefined && state.selectedFeatures.has(commentId))
+  ) {
+    bringToTop(root, lineGroup);
+  }
   return lineGroup;
 }
 

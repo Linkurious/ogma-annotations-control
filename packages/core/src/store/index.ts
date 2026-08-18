@@ -4,16 +4,15 @@ import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
 import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
+import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comment/helpers";
 import {
   Annotation,
   Bounds,
   ControllerOptions,
   Id,
-  isComment,
   isArrow,
   Point,
-  DeepPartial,
-  isText
+  DeepPartial
 } from "../types";
 import { getAABB } from "../utils/geom";
 
@@ -214,57 +213,23 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               if (!feature) return state;
 
               const { features, liveUpdates } = state;
-              const toDelete = new Set<Id>([id]);
 
-              // If deleting a comment, also delete ALL its arrows
-              if (isComment(feature) || isText(feature)) {
-                // Find all arrows pointing to/from this comment
-                Object.values(features).forEach((f) => {
-                  if (isArrow(f)) {
-                    if (
-                      f.properties.link?.end?.id === id ||
-                      f.properties.link?.start?.id === id
-                    ) {
-                      toDelete.add(f.id);
-                    }
-                  }
-                });
-              }
-
-              // If deleting an arrow that points to a comment, check if it's the last arrow
+              // Comments must keep at least one arrow - block deletion of
+              // the last one instead (see commentHelpers.ts).
               if (isArrow(feature)) {
-                const commentId =
-                  feature.properties.link?.end?.type === "comment"
-                    ? feature.properties.link.end.id
-                    : feature.properties.link?.start?.type === "comment"
-                      ? feature.properties.link.start.id
-                      : null;
-
-                if (commentId) {
-                  // Count arrows connected to this comment
-                  let arrowCount = 0;
-                  Object.values(state.features).forEach((f) => {
-                    if (isArrow(f) && f.id !== id) {
-                      if (
-                        f.properties.link?.end?.id === commentId ||
-                        f.properties.link?.start?.id === commentId
-                      ) {
-                        arrowCount++;
-                      }
-                    }
-                  });
-
-                  // If this is the last arrow, prevent deletion
-                  if (arrowCount === 0) {
-                    // eslint-disable-next-line no-console
-                    console.error(
-                      "Cannot delete last arrow attached to comment. Delete the comment instead."
-                    );
-                    // Return unchanged state to prevent deletion
-                    return state;
-                  }
+                const orphanedComment = getCommentLeftOrphanedBy(features, id);
+                if (orphanedComment) {
+                  // eslint-disable-next-line no-console
+                  console.error(
+                    "Cannot delete last arrow attached to comment. Delete the comment instead."
+                  );
+                  // Return unchanged state to prevent deletion
+                  return state;
                 }
               }
+
+              // Deleting a comment (or text) also deletes all its arrows.
+              const toDelete = getCascadeDeleteIds(features, id);
 
               // Create copies BEFORE any deletions to preserve history correctly
               const newFeatures = { ...features };

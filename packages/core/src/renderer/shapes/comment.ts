@@ -1,7 +1,12 @@
 import { COMMENT_MODE_COLLAPSED, TEXT_LINE_HEIGHT } from "../../constants";
 import { AnnotationState } from "../../store";
 import { Comment, defaultCommentStyle } from "../../types";
-import { brighten, createSVGElement, getBoxCenter } from "../../utils/utils";
+import {
+  bringToTop,
+  brighten,
+  createSVGElement,
+  getBoxCenter
+} from "../../utils/utils";
 import {
   createUrlPattern,
   ANNOTATION_LINK_CLASS
@@ -474,9 +479,13 @@ export function renderComment(
   // Hide the entire SVG group while the textarea editor is active
   g.style.visibility = state.editingFeature === annotation.id ? "hidden" : "";
 
-  // Append to root if not already present
-  if (!g.parentNode || g.parentNode !== root) {
-    root.appendChild(g);
+  // Bring to top: always for a brand-new element (first insertion), and
+  // whenever this comment is selected, so a freshly created comment -
+  // auto-selected right after creation - lands above any pre-existing
+  // comment it overlaps instead of staying wherever it first happened to be
+  // inserted relative to them.
+  if (!g.parentNode || g.parentNode !== root || state.selectedFeatures.has(annotation.id)) {
+    bringToTop(root, g);
   }
 
   return g;

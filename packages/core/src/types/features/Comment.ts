@@ -48,6 +48,15 @@ export interface CommentStyle extends TextStyle {
   shadow?: boolean;
   /** Expand to full width when selected (default: false) */
   expandOnSelect?: boolean;
+
+  /**
+   * Connector-line behavior when the attachment point moves (default: "rigid").
+   * - "rigid": the comment translates by the same offset as the moved
+   *   attachment point — the arrow keeps its length/angle, whole callout moves.
+   * - "elastic": the comment stays put; the arrow re-anchors to the nearest
+   *   point on the comment box, so the line can stretch/rotate.
+   */
+  connectorMode?: "rigid" | "elastic";
 }
 
 /**
@@ -177,7 +186,10 @@ export const defaultCommentStyle: CommentStyle = {
   expandOnSelect: false,
 
   // Fixed size (always screen-aligned)
-  fixedSize: true
+  fixedSize: true,
+
+  // Connector line behavior
+  connectorMode: "rigid"
 };
 
 /**
@@ -370,6 +382,19 @@ export function calculateCommentZoomThreshold(
 
   // Clamp between reasonable bounds (0.1 to 1.0)
   return Math.max(0.1, Math.min(1.0, threshold));
+}
+
+/**
+ * Whether a comment's connector line should rigidly follow its attachment
+ * point (translate the comment by the same offset) rather than elastically
+ * re-anchoring to the nearest point on the comment box.
+ *
+ * @param comment - Comment annotation
+ * @returns True unless the comment's style explicitly sets `connectorMode: "elastic"`
+ */
+export function isRigidConnector(comment: Comment): boolean {
+  const style = { ...defaultCommentStyle, ...comment.properties.style };
+  return (style.connectorMode ?? "rigid") !== "elastic";
 }
 
 /**

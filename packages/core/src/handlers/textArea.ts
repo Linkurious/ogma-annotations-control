@@ -12,6 +12,14 @@ import {
 } from "../types";
 import { getBoxSize } from "../utils/utils";
 
+// Send-button dimensions in screen pixels (before effectiveScale), and the
+// fallback minimum height for fixed-size auto-grow when the style doesn't
+// specify one.
+const SEND_BUTTON_SIZE = 24;
+const SEND_BUTTON_PADDING = 4;
+const SEND_BUTTON_ICON_SIZE = 16;
+const DEFAULT_MIN_HEIGHT = 50;
+
 export class TextArea {
   private layer: Overlay;
   private textarea: HTMLTextAreaElement;
@@ -247,8 +255,8 @@ export class TextArea {
     // Scale button via width/height to maintain same screen size regardless of zoom
     // (transform: scale() doesn't affect layout, causing a gap in the grid)
     if (this.sendButton) {
-      const buttonSize = 24 * effectiveScale;
-      const buttonPadding = 4 * effectiveScale;
+      const buttonSize = SEND_BUTTON_SIZE * effectiveScale;
+      const buttonPadding = SEND_BUTTON_PADDING * effectiveScale;
       this.sendButton.style.width = `${buttonSize}px`;
       this.sendButton.style.height = `${buttonSize}px`;
       this.sendButton.style.padding = `${buttonPadding}px`;
@@ -257,7 +265,7 @@ export class TextArea {
         ".ogma-send-button-icon"
       ) as HTMLElement;
       if (icon) {
-        const iconSize = 16 * effectiveScale;
+        const iconSize = SEND_BUTTON_ICON_SIZE * effectiveScale;
         icon.style.width = `${iconSize}px`;
         icon.style.height = `${iconSize}px`;
       }
@@ -329,10 +337,10 @@ export class TextArea {
         : 0;
       const requiredHeight = textareaScrollHeight + padding * 2 + sendButtonHeight;
 
-      // Get minimum height from style (default to 50px if not specified)
+      // Get minimum height from style (default if not specified)
       const minHeight =
         (annotation.properties.style as { minHeight?: number })?.minHeight ||
-        50;
+        DEFAULT_MIN_HEIGHT;
       newHeight = Math.max(minHeight, requiredHeight);
 
       // For comments, don't adjust center position on autogrow - grow around center

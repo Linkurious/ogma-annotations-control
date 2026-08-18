@@ -1,0 +1,405 @@
+import type {
+  Node,
+  NodeId,
+  NodeList,
+  Ogma,
+  EdgeList,
+  Edge,
+  EdgesEvent
+} from "@linkurious/ogma";
+import { LinkGeometry } from "./geometry";
+import { LinkIndex, type LinksByArrowId } from "./registry";
+import { getRigidComment, getRigidFollowComment, translateComment } from "../comment/follow";
+import { SIDE_END, SIDE_START } from "../../constants";
+import { Store } from "../../store";
+import type { Arrow, Id, Annotation, DeepPartial } from "../../types";
+import { isText, isComment } from "../../types";
+import { getArrowSide, throttle, updateBbox } from "../../utils/utils";
+import { mul, subtract } from "../../utils/vec";
+
+type XYR = { x: number; y: number; radius: number };
+
+const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
+
+const COMMIT_DEBOUNCE_MS = 1;
+// Debounce window for updateFromNodePositions: waits one tick so Ogma has
+// finished writing the node's new x/y/radius attributes before we read them.
+const NODE_POSITION_DEBOUNCE_MS = 1;
+// Throttle for the zoom/rotation-driven fixedSize refresh — cheap enough to
+// run near every frame without saturating the main thread.
+const REFRESH_THROTTLE_MS = 20;
+
+/**
+ * Keeps linked arrows in sync with the things they're attached to, outside
+ * of an interactive drag: reacts to Ogma node/edge changes and to
+ * zoom/rotation (which affects fixedSize annotations' graph-space
+ * dimensions), recomputes affected arrows' endpoints via {@link LinkGeometry},
+ * and schedules the debounced commit that turns those into a single history
+ * entry. Self-registers its Ogma listeners in the constructor and tears them
+ * down in {@link destroy}.
+ *
+ * The interactive-drag cascade (`Links.updateLinkedArrowsDuringDrag` et al.)
+ * is a separate, synchronous path that doesn't go through here — see
+ * `handlers/links/index.ts`.
+ */
+export class LinkSync {
+  private ogma: Ogma;
+  private store: Store;
+  private index: LinkIndex;
+  private geometry: LinkGeometry;
+  private updatedItems: Set<Id>;
+  private commitTimeout!: ReturnType<typeof setTimeout>;
+  private nodePositionTimeout?: ReturnType<typeof setTimeout>;
+
+  constructor(
+    ogma: Ogma,
+    store: Store,
+    index: LinkIndex,
+    geometry: LinkGeometry,
+    updatedItems: Set<Id>
+  ) {
+    this.ogma = ogma;
+    this.store = store;
+    this.index = index;
+    this.geometry = geometry;
+    this.updatedItems = updatedItems;
+
+    this.store.subscribe(
+      (state) => ({ zoom: state.zoom, rotation: state.rotation }),
+      this.throttledRefresh,
+      {
+        equalityFn: (a, b) => a.zoom === b.zoom && a.rotation === b.rotation
+      }
+    );
+
+    this.ogma.events
+      // @ts-expect-error private event
+      .on("setMultipleAttributes", this.onSetMultipleAttributes)
+      .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
+      .on("viewChanged", this.refresh);
+  }
+
+  public onSetMultipleAttributes = ({
+    elements,
+    updatedAttributes
+  }: {
+    elements: Node | NodeList | Edge | EdgeList;
+    updatedAttributes: string[];
+  }) => {
+    const attributesSet = new Set(updatedAttributes);
+    if (
+      !elements.isNode ||
+      (!attributesSet.has("x") &&
+        !attributesSet.has("y") &&
+        !attributesSet.has("radius"))
+    )
+      return;
+    this.requestUpdateFromNodePositions(elements.toList() as NodeList);
+  };
+
+  public refresh = () => {
+    // When zoom changes, fixedSize text annotations change their graph-space dimensions
+    // We need to recalculate all links attached to fixedSize texts
+    const state = this.store.getState();
+    const linksToUpdate: LinksByArrowId = new Map();
+
+    // Find all links attached to fixedSize annotations
+    this.index.annotationToLink.forEach((linkIds, annotationId) => {
+      const annotation = state.getFeature(annotationId);
+      if (!annotation) return;
+
+      // Check if this is a text with fixedSize enabled or a comment (comments always have fixedSize)
+      // (only text and comments have fixedSize, boxes have scaled property instead)
+      const hasFixedSize =
+        (isText(annotation) && annotation.properties.style?.fixedSize) ||
+        isComment(annotation); // Comments always have fixedSize
+
+      if (hasFixedSize) {
+        linkIds.forEach((linkId) => {
+          const link = this.index.links.get(linkId);
+          if (!link) return;
+          const arrowId = link.arrow;
+          linksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+        });
+      }
+    });
+
+    if (linksToUpdate.size > 0) this.update(linksToUpdate);
+  };
+
+  private throttledRefresh = throttle(() => this.refresh(), REFRESH_THROTTLE_MS);
+
+  private requestUpdateFromNodePositions(nodes: NodeList) {
+    // debounce to next tick to get the real coordinates
+    clearTimeout(this.nodePositionTimeout);
+    this.nodePositionTimeout = setTimeout(
+      () => this.updateFromNodePositions(nodes),
+      NODE_POSITION_DEBOUNCE_MS
+    );
+  }
+
+  private updateFromNodePositions(nodes: NodeList) {
+    // The debounced call can fire after the nodes (or the whole graph) have been
+    // removed; bail out rather than reading attributes off a destroyed list.
+    if (!nodes.size) return;
+    const ids = nodes.getId();
+    const links: LinksByArrowId = new Map();
+    ids.forEach((id) => {
+      const nodeLinks = this.index.nodeToLink.get(id);
+
+      if (!nodeLinks) return;
+      nodeLinks.forEach((linkId) => {
+        const link = this.index.links.get(linkId);
+        if (!link) return;
+        const arrowId = link.arrow;
+        links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+      });
+    });
+
+    // Also update arrows linked to edges connected to these nodes
+    const edgeLinksToUpdate: LinksByArrowId = new Map();
+    const affectedEdges = nodes.getAdjacentEdges();
+    affectedEdges.getId().forEach((edgeId) => {
+      const edgeLinks = this.index.edgeToLink.get(edgeId);
+      if (!edgeLinks) return;
+      edgeLinks.forEach((linkId) => {
+        const link = this.index.links.get(linkId);
+        if (!link) return;
+        const arrowId = link.arrow;
+        links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+        edgeLinksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+      });
+    });
+
+    const xyr = nodes.getAttributes(XYR_ATTRIBUTES) as XYR[];
+    const state = this.store.getState();
+    const updates: Record<Id, DeepPartial<Annotation>> = {};
+    for (let i = 0; i < ids.length; i++) {
+      const nodeId = ids[i];
+      const nodeLinks = this.index.nodeToLink.get(nodeId);
+      if (!nodeLinks) continue;
+      for (const linkId of nodeLinks) {
+        const link = this.index.links.get(linkId);
+        if (!link) continue;
+        const arrowId = link.arrow;
+        const arrow = this.store.getState().getFeature(arrowId) as Arrow;
+        const coordinates = arrow.geometry.coordinates.slice();
+        const end = getArrowSide(arrow, SIDE_END);
+        const start = getArrowSide(arrow, SIDE_START);
+        const nodeSideIndex = link.side === SIDE_START ? 0 : 1;
+
+        const positionAndRadius = xyr[i];
+        // Update the arrow's position
+        const snapPoint = this.geometry.getNodeSnapPoint(
+          positionAndRadius,
+          mul(subtract(end, start), -1),
+          this.geometry.isLinkedToCenter(link)
+        );
+
+        // Rigid-follow: when the arrow's *other* endpoint is attached to a
+        // comment in "rigid" mode (the default), dragging the node carries
+        // the whole callout (comment + arrow) by the node's delta instead of
+        // stretching the line. The arrow keeps its length and angle; the
+        // comment translates with the node.
+        const comment = getRigidFollowComment(
+          this.index.links,
+          this.index.linksByArrowId,
+          this.store,
+          arrowId,
+          link
+        );
+        if (comment) {
+          const oldNodePoint = coordinates[nodeSideIndex];
+          const delta = subtract(
+            { x: snapPoint[0], y: snapPoint[1] },
+            { x: oldNodePoint[0], y: oldNodePoint[1] }
+          );
+          coordinates[0] = [coordinates[0][0] + delta.x, coordinates[0][1] + delta.y];
+          coordinates[1] = [coordinates[1][0] + delta.x, coordinates[1][1] + delta.y];
+
+          translateComment(comment, delta, updates, this.updatedItems);
+        } else {
+          coordinates[nodeSideIndex] = snapPoint;
+        }
+
+        updates[arrowId] = {
+          ...arrow,
+          geometry: {
+            coordinates
+          }
+        } as Arrow;
+        this.updatedItems.add(arrowId);
+        updateBbox(updates[arrowId] as Arrow);
+      }
+    }
+    state.applyLiveUpdates(updates);
+
+    // Update edge links using the general update method
+    if (edgeLinksToUpdate.size > 0) {
+      this.update(edgeLinksToUpdate);
+      return; // update() will call requestCommit()
+    }
+
+    this.requestCommit();
+  }
+
+  private onAddRemoveEdges = (event: EdgesEvent<unknown, unknown>) => {
+    const edges = event.edges;
+    if (!edges.size || !this.index.edgeToLink.size) return;
+    const links: LinksByArrowId = new Map();
+    // Also update arrows linked to edges connected to these nodes
+    const edgeLinksToUpdate: LinksByArrowId = new Map();
+    edges
+      .getParallelEdges()
+      .getId()
+      .forEach((edgeId) => {
+        const edgeLinks = this.index.edgeToLink.get(edgeId);
+        if (!edgeLinks) return;
+        edgeLinks.forEach((linkId) => {
+          const link = this.index.links.get(linkId);
+          if (!link) return;
+          const arrowId = link.arrow;
+          links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+          edgeLinksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+        });
+      });
+    // Update edge links using the general update method
+    if (edgeLinksToUpdate.size === 0) return;
+    this.update(edgeLinksToUpdate);
+  };
+
+  private commit = () => {
+    const state = this.store.getState();
+    state.batchUpdate(this.commitLiveUpdates);
+    this.updatedItems.clear();
+  };
+
+  private commitLiveUpdates = () => {
+    this.store.getState().commitLiveUpdates(this.updatedItems);
+  };
+
+  update(linksByArrowId: LinksByArrowId = this.index.linksByArrowId) {
+    const updates = this._computeArrowUpdates(linksByArrowId);
+    const state = this.store.getState();
+    state.applyLiveUpdates(updates);
+    this.requestCommit();
+  }
+
+  /**
+   * Compute and synchronously commit arrow position updates for the given links.
+   * Used when an annotation is moved programmatically (not during a live drag).
+   * Wraps changes in batchUpdate so no extra history entry is created.
+   */
+  updateAndCommitSync(linksByArrowId: LinksByArrowId) {
+    const updates = this._computeArrowUpdates(linksByArrowId);
+    if (Object.keys(updates).length === 0) return;
+    const state = this.store.getState();
+    state.batchUpdate(() => {
+      state.updateFeatures(updates as Record<string, Partial<Annotation>>);
+    });
+  }
+
+  private _computeArrowUpdates(
+    linksByArrowId: LinksByArrowId
+  ): Record<Id, DeepPartial<Annotation>> {
+    const state = this.store.getState();
+    const nodeIds = Array.from(this.index.nodeToLink.keys());
+    const nodeIdToIndex = new Map<NodeId, number>();
+    nodeIds.forEach((id, i) => nodeIdToIndex.set(id, i));
+    const nodes = this.ogma.getNodes(nodeIds);
+    const xyr = nodes.getAttributes(["x", "y", "radius"]) as {
+      x: number;
+      y: number;
+      radius: number;
+    }[];
+
+    const updates: Record<Id, DeepPartial<Annotation>> = {};
+
+    linksByArrowId.forEach((links, arrowId) => {
+      // case when both sides are linked
+      const start = this.index.links.get(links.start!);
+      const end = this.index.links.get(links.end!);
+      const arrow = state.getFeature(arrowId) as Arrow;
+
+      let startPoint = arrow.geometry.coordinates[0];
+      let endPoint = arrow.geometry.coordinates[1];
+
+      const startCenter = start
+        ? this.geometry.resolveLinkCenter(start, xyr, nodeIdToIndex, state)
+        : { x: startPoint[0], y: startPoint[1] };
+
+      const endCenter = end
+        ? this.geometry.resolveLinkCenter(end, xyr, nodeIdToIndex, state)
+        : { x: endPoint[0], y: endPoint[1] };
+
+      const vec = subtract(endCenter, startCenter);
+      if (start) {
+        startPoint = this.geometry.resolveLinkPoint(
+          start,
+          startCenter,
+          vec,
+          endCenter,
+          state
+        );
+      }
+      if (end) {
+        endPoint = this.geometry.resolveLinkPoint(
+          end,
+          endCenter,
+          mul(vec, -1),
+          startCenter,
+          state
+        );
+      }
+      // Rigid-follow: when one side is anchored to a comment in "rigid" mode
+      // and the *other* side actually moved, translate the comment (and this
+      // endpoint) by that delta instead of letting the comment side
+      // re-anchor elastically to the nearest point on the box.
+      const startComment = getRigidComment(this.store, start);
+      const endComment = getRigidComment(this.store, end);
+
+      if (startComment && end) {
+        const oldEnd = arrow.geometry.coordinates[1];
+        const delta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        if (delta.x !== 0 || delta.y !== 0) {
+          const oldStart = arrow.geometry.coordinates[0];
+          startPoint = [oldStart[0] + delta.x, oldStart[1] + delta.y];
+          translateComment(startComment, delta, updates, this.updatedItems);
+        }
+      } else if (endComment && start) {
+        const oldStart = arrow.geometry.coordinates[0];
+        const delta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        if (delta.x !== 0 || delta.y !== 0) {
+          const oldEnd = arrow.geometry.coordinates[1];
+          endPoint = [oldEnd[0] + delta.x, oldEnd[1] + delta.y];
+          translateComment(endComment, delta, updates, this.updatedItems);
+        }
+      }
+
+      updates[arrow.id] = {
+        properties: arrow.properties,
+        geometry: {
+          coordinates: [startPoint, endPoint]
+        }
+      } as Annotation;
+      updateBbox(updates[arrow.id] as Arrow);
+      this.updatedItems.add(arrow.id);
+    });
+
+    return updates;
+  }
+
+  private requestCommit() {
+    clearTimeout(this.commitTimeout);
+    this.commitTimeout = setTimeout(this.commit, COMMIT_DEBOUNCE_MS);
+  }
+
+  public destroy() {
+    clearTimeout(this.commitTimeout);
+    clearTimeout(this.nodePositionTimeout);
+    this.ogma.events
+      .off(this.onSetMultipleAttributes)
+      .off(this.onAddRemoveEdges)
+      .off(this.refresh);
+  }
+}
