@@ -141,6 +141,11 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
         };
       }
     } else if (handle.type === HandleType.END) {
+      // Manually dragging the free tip is a normal, elastic drag - even when
+      // the other end is pinned to a rigid comment. It must stay free to
+      // detach from its current target and be dropped somewhere else (or on
+      // nothing); rigidity only governs what happens when the *node* moves
+      // (see links.ts), not this handle.
       newCoordinates[1] = [point.x, point.y];
       if (this.snap) {
         link.end = {

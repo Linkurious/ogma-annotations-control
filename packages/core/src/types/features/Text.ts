@@ -21,6 +21,13 @@ export interface TextStyle extends BoxStyle {
   borderRadius?: number;
   /** When true, text maintains constant size regardless of zoom level */
   fixedSize?: boolean;
+  /**
+   * Ghost text shown (via the textarea's native `placeholder` attribute)
+   * while `content` is empty - disappears the instant the user types, no
+   * selection/focus tricks needed. Overrides the global
+   * `ControllerOptions.textPlaceholder` for this annotation.
+   */
+  placeholder?: string;
 }
 
 export interface TextProperties extends Omit<BoxProperties, "type"> {

@@ -256,6 +256,8 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
       ?.forEach((h) => (h as (...a: unknown[]) => void)(...args));
   };
 
+  let eraseActive = false;
+
   const control = {
     on,
     off,
@@ -268,9 +270,13 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
     getSelectedAnnotations: () => selected,
     enableArrowDrawing: vi.fn(),
     enableCommentDrawing: vi.fn(),
+    enableStickyNoteDrawing: vi.fn(),
     enableBoxDrawing: vi.fn(),
     enableTextDrawing: vi.fn(),
-    enablePolygonDrawing: vi.fn()
+    enablePolygonDrawing: vi.fn(),
+    isEraseModeActive: () => eraseActive,
+    enableEraseMode: vi.fn(() => (eraseActive = true)),
+    disableEraseMode: vi.fn(() => (eraseActive = false))
   };
 
   return {
@@ -286,7 +292,11 @@ describe("ui/AnnotationToolbar", () => {
   const empty = { type: "FeatureCollection", features: [] } as AnnotationCollection;
 
   function createToolbar(
-    options?: Partial<{ placement: string; orientation: string }>,
+    options?: Partial<{
+      placement: string;
+      orientation: string;
+      deleteMode: "select" | "erase" | "both";
+    }>,
     selected: AnnotationCollection = empty
   ) {
     const fake = createFakeToolbarControl(selected);
@@ -345,6 +355,74 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
+  it("arms sticky note drawing and marks the button active until drawing ends", () => {
+    const { toolbar, control, emit } = createToolbar();
+    const stickyButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Add sticky note"]'
+    )!;
+
+    stickyButton.click();
+    expect(control.enableStickyNoteDrawing).toHaveBeenCalled();
+    expect(stickyButton.classList.contains("active")).toBe(true);
+
+    emit("completeDrawing", { id: "s1" });
+    expect(stickyButton.classList.contains("active")).toBe(false);
+
+    toolbar.destroy();
+  });
+
+  it("toggles erase mode on and off from the same button", () => {
+    const { toolbar, control } = createToolbar();
+    const eraseButton = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Erase (click annotations to delete them)"]'
+    )!;
+
+    eraseButton.click();
+    expect(control.enableEraseMode).toHaveBeenCalledTimes(1);
+    expect(eraseButton.classList.contains("active")).toBe(true);
+
+    eraseButton.click();
+    expect(control.disableEraseMode).toHaveBeenCalledTimes(1);
+    expect(eraseButton.classList.contains("active")).toBe(false);
+
+    toolbar.destroy();
+  });
+
+  it("shows only erase by default", () => {
+    const { toolbar } = createToolbar();
+    expect(
+      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+    ).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).toBeNull();
+    toolbar.destroy();
+  });
+
+  it("shows both delete controls when deleteMode is both", () => {
+    const fake = createFakeToolbarControl(empty);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      deleteMode: "both"
+    });
+    expect(
+      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+    ).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    toolbar.destroy();
+  });
+
+  it("hides the erase button when deleteMode is select", () => {
+    const fake = createFakeToolbarControl(empty);
+    const toolbar = new AnnotationToolbar({
+      control: fake.control as unknown as Control,
+      deleteMode: "select"
+    });
+    expect(
+      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+    ).toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    toolbar.destroy();
+  });
+
   it("reflects canUndo/canRedo and calls undo/redo on click", () => {
     const { toolbar, control, emit, setUndoable, setRedoable } = createToolbar();
     const undoButton = document.querySelector<HTMLButtonElement>(
@@ -376,7 +454,7 @@ describe("ui/AnnotationToolbar", () => {
       type: "FeatureCollection",
       features: [{ id: "a1" }]
     } as unknown as AnnotationCollection;
-    const { toolbar, control } = createToolbar({}, selected);
+    const { toolbar, control } = createToolbar({ deleteMode: "both" }, selected);
     const deleteButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Delete selected"]'
     )!;
@@ -388,7 +466,7 @@ describe("ui/AnnotationToolbar", () => {
   });
 
   it("does not call remove when the selection is empty", () => {
-    const { toolbar, control } = createToolbar();
+    const { toolbar, control } = createToolbar({ deleteMode: "both" });
     const deleteButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Delete selected"]'
     )!;

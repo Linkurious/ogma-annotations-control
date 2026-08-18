@@ -562,6 +562,68 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   /**
+   * Enable sticky note drawing mode - drops a plain, resizable text box
+   * (empty content, "Quick note…" ghost placeholder, no connector arrow)
+   * like a Miro sticky note, unlike `enableCommentDrawing`. It's a regular
+   * `text` annotation, so it's placed the same interactive way as
+   * `enableBoxDrawing`/`enableTextDrawing`: click for a default-size square,
+   * or drag to size it - either way it keeps the usual corner/edge drag
+   * handles to resize it afterward.
+   *
+   * Call this method when the user clicks an "Add sticky note" button. The
+   * control will:
+   * 1. Wait for the next mousedown event
+   * 2. Create the note at that position and start the interactive
+   *    corner-drag, already selected
+   * 3. On release: a plain click (no drag) gets a default square size, a
+   *    drag gets sized to match instead - either way it drops straight
+   *    into editing (the placeholder is just ghost text, so typing
+   *    immediately replaces it)
+   * 4. Clean up automatically when done
+   *
+   * @example
+   * ```ts
+   * addStickyNoteButton.addEventListener('click', () => {
+   *   control.enableStickyNoteDrawing({ background: '#FFEB99' });
+   * });
+   * ```
+   *
+   * @param style Sticky note style options (merged over the sticky note defaults)
+   * @returns this for chaining
+   * @see startStickyNote for low-level programmatic control
+   */
+  public enableStickyNoteDrawing(
+    style?: Partial<Text["properties"]["style"]>
+  ): this {
+    this.drawing.enableStickyNoteDrawing(style);
+    return this;
+  }
+
+  /**
+   * Enable erase mode: every click on an annotation deletes it immediately.
+   * Stays armed across multiple clicks until `disableEraseMode()` is called,
+   * or another drawing tool is enabled / `cancelDrawing()` is called.
+   *
+   * @returns this for chaining
+   * @see disableEraseMode to turn erase mode off
+   */
+  public enableEraseMode(): this {
+    this.drawing.enableEraseMode();
+    return this;
+  }
+
+  /** Turn erase mode off. No-op if it isn't active. */
+  public disableEraseMode(): this {
+    this.drawing.disableEraseMode();
+    return this;
+  }
+
+  /** Whether erase mode is currently active. */
+  public isEraseModeActive(): boolean {
+    return this.drawing.isEraseModeActive();
+  }
+
+  /**
    * Place a pre-created annotation by moving it with the cursor.
    * The annotation follows the mouse until the user clicks to place it.
    * Press Escape to cancel.
@@ -618,6 +680,29 @@ export class Control extends EventEmitter<FeatureEvents> {
     }
   ): this {
     this.drawing.startComment(x, y, comment, options);
+    return this;
+  }
+
+  /**
+   * **Advanced API:** Programmatically start drawing a sticky note at
+   * specific coordinates - same interactive corner-drag as `startBox`.
+   * You must handle mouse events yourself (or immediately release/complete
+   * it via the same events `enableStickyNoteDrawing` would).
+   *
+   * **For most use cases, use `enableStickyNoteDrawing()` instead.**
+   *
+   * @param x X coordinate for the note's top-left corner
+   * @param y Y coordinate for the note's top-left corner
+   * @param style Sticky note style options
+   * @returns this for chaining
+   * @see enableStickyNoteDrawing for the recommended high-level API
+   */
+  public startStickyNote(
+    x: number,
+    y: number,
+    style?: Partial<Text["properties"]["style"]>
+  ): this {
+    this.drawing.startStickyNote(x, y, style);
     return this;
   }
 

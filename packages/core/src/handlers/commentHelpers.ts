@@ -1,5 +1,5 @@
 import { TARGET_TYPES } from "../constants";
-import { Arrow } from "../types";
+import { Arrow, Id } from "../types";
 
 /**
  * Helper functions for managing comment-arrow relationships
@@ -32,6 +32,26 @@ export function isCommentArrow(arrow: Arrow): boolean {
     link.start?.type === TARGET_TYPES.COMMENT ||
     link.end?.type === TARGET_TYPES.COMMENT
   );
+}
+
+/**
+ * Get the id of the comment an arrow is connected to, if any.
+ *
+ * A comment is one visual annotation together with the arrow that connects
+ * it - callers that raise a comment's z-order (e.g. bringing a newly
+ * created/selected comment to the front) should raise this arrow along with
+ * it, not just the comment bubble.
+ *
+ * @param arrow - The arrow feature to check
+ * @returns The linked comment's id, or undefined if the arrow isn't attached
+ * to a comment
+ */
+export function getCommentLinkId(arrow: Arrow): Id | undefined {
+  const link = arrow.properties.link;
+  if (!link) return undefined;
+  if (link.start?.type === TARGET_TYPES.COMMENT) return link.start.id;
+  if (link.end?.type === TARGET_TYPES.COMMENT) return link.end.id;
+  return undefined;
 }
 
 /**
