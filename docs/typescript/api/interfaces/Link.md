@@ -27,11 +27,10 @@ id of the text the arrow is attached to
 ### magnet
 
 ```ts
-magnet: Point;
+magnet: Magnet;
 ```
 
-On which point relative to topleft corner the arrow is tighten, in case of
-node, a 0 vector represents the center, otherwise it can be deduced from the arrow itself
+Typed snap point — semantics depend on targetType, see Magnet union.
 
 ***
 

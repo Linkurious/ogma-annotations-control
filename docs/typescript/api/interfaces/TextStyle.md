@@ -84,6 +84,19 @@ optional padding: number;
 
 padding around the text
 
+### placeholder?
+
+```ts
+optional placeholder: string;
+```
+
+Ghost text shown (via the textarea's native `placeholder` attribute)
+while `content` is empty - disappears the instant the user types, no
+selection/focus tricks needed. Overrides the global
+`ControllerOptions.textPlaceholder` for this annotation.
+
+***
+
 ### scaled?
 
 ```ts
