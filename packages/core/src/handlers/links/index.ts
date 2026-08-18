@@ -1,6 +1,6 @@
 import type { Ogma, Point } from "@linkurious/ogma";
 import { Snapping } from "../snapping";
-import { getRigidFollowComment, translateComment } from "../commentFollow";
+import { getRigidFollowComment, translateComment } from "../comment/follow";
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId, type MagnetSource } from "./registry";
 import { LinkSync } from "./sync";

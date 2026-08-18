@@ -9,7 +9,7 @@ import type {
 } from "@linkurious/ogma";
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId } from "./registry";
-import { getRigidComment, getRigidFollowComment, translateComment } from "../commentFollow";
+import { getRigidComment, getRigidFollowComment, translateComment } from "../comment/follow";
 import { SIDE_END, SIDE_START } from "../../constants";
 import { Store } from "../../store";
 import type { Arrow, Id, Annotation, DeepPartial } from "../../types";

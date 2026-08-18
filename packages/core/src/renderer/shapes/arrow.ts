@@ -1,4 +1,4 @@
-import { getCommentLinkId, isCommentArrow } from "../../handlers/commentHelpers";
+import { getCommentLinkId, isCommentArrow } from "../../handlers/comment/helpers";
 import { AnnotationState } from "../../store";
 import { Arrow, Extremity, Id, Point, defaultArrowStyle } from "../../types";
 import { bringToTop, createSVGElement, getArrowEndPoints } from "../../utils/utils";
