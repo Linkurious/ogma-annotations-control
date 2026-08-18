@@ -4,7 +4,7 @@ import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
 import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
-import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/commentHelpers";
+import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comment/helpers";
 import {
   Annotation,
   Bounds,

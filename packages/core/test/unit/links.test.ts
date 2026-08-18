@@ -46,8 +46,8 @@ describe("Links", () => {
     links.add(arrow, side, targetId, "node", { x: 0, y: 0 });
 
     // Check that the link was created
-    expect(links["links"].size).toBeGreaterThan(0);
-    expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
+    expect(links["registry"]["links"].size).toBeGreaterThan(0);
+    expect(links["registry"]["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
   });
 
   // Add a link between an arrow and an edge
@@ -67,9 +67,9 @@ describe("Links", () => {
 
     links.add(arrow, side, targetId, "edge", magnet);
 
-    const linkId = links["linksByArrowId"].get(arrowId)?.[side];
+    const linkId = links["registry"]["linksByArrowId"].get(arrowId)?.[side];
     expect(linkId).toBeDefined();
-    const link = links["links"].get(linkId!);
+    const link = links["registry"]["links"].get(linkId!);
     expect(link).toBeDefined();
     expect(link?.arrow).toBe(arrowId);
     expect(link?.target).toBe(targetId);
@@ -91,9 +91,9 @@ describe("Links", () => {
 
     links.add(arrow, side, targetId, "text", magnet);
 
-    const linkId = links["linksByArrowId"].get(arrowId)?.[side];
+    const linkId = links["registry"]["linksByArrowId"].get(arrowId)?.[side];
     expect(linkId).toBeDefined();
-    const link = links["links"].get(linkId!);
+    const link = links["registry"]["links"].get(linkId!);
     expect(link).toBeDefined();
     expect(link?.arrow).toBe(arrowId);
     expect(link?.target).toBe(targetId);
@@ -118,8 +118,8 @@ describe("Links", () => {
 
     links.remove(arrow, side);
 
-    expect(links["links"].size).toBe(0);
-    expect(links["linksByArrowId"].get(arrowId)?.[side]).toBeUndefined();
+    expect(links["registry"]["links"].size).toBe(0);
+    expect(links["registry"]["linksByArrowId"].get(arrowId)?.[side]).toBeUndefined();
   });
 
   // Remove a non-existing link
@@ -227,7 +227,7 @@ describe("Links", () => {
     if (arrowFeature) control.add(arrowFeature);
 
     // @ts-expect-error - links is private
-    const linksArray = Array.from(control.links.links.values());
+    const linksArray = Array.from(control.links["registry"].links.values());
 
     expect(linksArray).toHaveLength(2);
     const [link1, link2] = linksArray;
@@ -249,7 +249,7 @@ describe("Links", () => {
     control.add(LoadLinksMissing as AnnotationCollection);
 
     // @ts-expect-error - links is private
-    const links = Array.from(control.links.links.values());
+    const links = Array.from(control.links["registry"].links.values());
     expect(
       links.map((l) => {
         return {
@@ -437,7 +437,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       const expandedEnd = control
         .getAnnotation<Arrow>(arrow.id)!
@@ -447,7 +447,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       const collapsedEnd = control
         .getAnnotation<Arrow>(arrow.id)!
@@ -493,7 +493,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       const beforeStart = control.getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[0].slice();
@@ -508,13 +508,13 @@ describe("Links", () => {
       // assertion doesn't depend on the internal debounce timer.
       ogma.getNode("node1")!.setAttributes({ y: 100 });
       // @ts-expect-error updateFromNodePositions is private (bypasses the setTimeout debounce)
-      control.links.updateFromNodePositions(ogma.getNodes(["node1"]));
+      control.links["sync"].updateFromNodePositions(ogma.getNodes(["node1"]));
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
       // Cancel the debounced duplicate scheduled by setAttributes so it can't
       // translate the comment a second time after the assertions.
       // @ts-expect-error nodePositionTimeout is private
-      clearTimeout(control.links.nodePositionTimeout);
+      clearTimeout(control.links["sync"].nodePositionTimeout);
 
       const afterStart = control.getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[0];
@@ -560,7 +560,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       const beforeComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -571,11 +571,11 @@ describe("Links", () => {
 
       ogma.getNode("node1")!.setAttributes({ y: 100 });
       // @ts-expect-error updateFromNodePositions is private
-      control.links.updateFromNodePositions(ogma.getNodes(["node1"]));
+      control.links["sync"].updateFromNodePositions(ogma.getNodes(["node1"]));
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
       // @ts-expect-error nodePositionTimeout is private
-      clearTimeout(control.links.nodePositionTimeout);
+      clearTimeout(control.links["sync"].nodePositionTimeout);
 
       const afterComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -618,7 +618,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       const beforeComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -626,11 +626,11 @@ describe("Links", () => {
 
       ogma.getNode("node1")!.setAttributes({ y: 100 });
       // @ts-expect-error updateFromNodePositions is private
-      control.links.updateFromNodePositions(ogma.getNodes(["node1"]));
+      control.links["sync"].updateFromNodePositions(ogma.getNodes(["node1"]));
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
       // @ts-expect-error nodePositionTimeout is private
-      clearTimeout(control.links.nodePositionTimeout);
+      clearTimeout(control.links["sync"].nodePositionTimeout);
 
       const afterComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -677,7 +677,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       const beforeComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -686,11 +686,11 @@ describe("Links", () => {
       // Move node2 so the edge midpoint shifts from (100,0) to (100,100).
       ogma.getNode("node2")!.setAttributes({ y: 200 });
       // @ts-expect-error updateFromNodePositions is private
-      control.links.updateFromNodePositions(ogma.getNodes(["node2"]));
+      control.links["sync"].updateFromNodePositions(ogma.getNodes(["node2"]));
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
       // @ts-expect-error nodePositionTimeout is private
-      clearTimeout(control.links.nodePositionTimeout);
+      clearTimeout(control.links["sync"].nodePositionTimeout);
 
       const afterComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -785,7 +785,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       control.select(arrow.id);
 
@@ -896,7 +896,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       control.select(polygon.id);
       // @ts-expect-error editor is private
@@ -957,7 +957,7 @@ describe("Links", () => {
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
-      control.links.commit();
+      control.links["sync"].commit();
 
       control.select(polygon.id);
       // @ts-expect-error editor is private

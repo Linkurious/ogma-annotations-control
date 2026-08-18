@@ -1,9 +1,9 @@
 import type { Point } from "@linkurious/ogma";
-import { SIDE_START, TARGET_TYPES } from "../constants";
-import { Store } from "../store";
-import type { Annotation, Comment, DeepPartial, Id, Link } from "../types";
-import { isComment, isRigidConnector } from "../types";
-import { updateBbox } from "../utils/utils";
+import { SIDE_START, TARGET_TYPES } from "../../constants";
+import { Store } from "../../store";
+import type { Annotation, Comment, DeepPartial, Id, Link } from "../../types";
+import { isComment, isRigidConnector } from "../../types";
+import { updateBbox } from "../../utils/utils";
 
 /**
  * The subset of {@link Links}' bookkeeping this module needs. Kept as plain

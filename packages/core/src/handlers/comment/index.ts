@@ -1,12 +1,12 @@
 import { Ogma } from "@linkurious/ogma";
-import { ArrowHandler } from "./arrow";
-import { Handler } from "./base";
-import { Links } from "./links";
-import { Snapping } from "./snapping";
-import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
-import { Store } from "../store";
-import { Comment, Id, ArrowProperties, isArrow } from "../types";
-import { Arrow, createArrow, defaultArrowStyle } from "../types/features/Arrow";
+import { ArrowHandler } from "../arrow";
+import { Handler } from "../base";
+import { Links } from "../links";
+import { Snapping } from "../snapping";
+import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
+import { Store } from "../../store";
+import { Comment, Id, ArrowProperties, isArrow } from "../../types";
+import { Arrow, createArrow, defaultArrowStyle } from "../../types/features/Arrow";
 
 // Below this distance (in graph units) between the drag's start and end
 // point, treat the gesture as a click rather than a drag.
