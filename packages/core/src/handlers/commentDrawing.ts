@@ -197,10 +197,10 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     // If there was a link at the original arrow start, it's now at the end.
     // existingStartLink.magnet is already this class's own stored format
     // (for a polygon target, the bbox-relative fraction the add() call
-    // inside snapArrowStart() above just computed) - alreadyRelative=true
+    // inside snapArrowStart() above just computed) - magnetSource: "stored"
     // passes it straight through instead of re-running the absolute-point
     // conversion on an already-relative value, which would corrupt it (see
-    // Links.add()'s doc comment on that parameter).
+    // Links.add()'s MagnetSource doc comment).
     if (existingStartLink && existingStartLink.magnet) {
       this.links.add(
         arrow,
@@ -208,7 +208,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
         existingStartLink.id,
         existingStartLink.type,
         existingStartLink.magnet,
-        true
+        "stored"
       );
     }
 
