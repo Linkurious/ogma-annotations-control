@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-08-17 | Version: 2.x
+> Auto-generated: 2026-08-18 | Version: 2.x
 
 ---
 
@@ -2544,6 +2544,20 @@ optional color: string;
 ```
 
 text color: #f00, yellow...
+
+### connectorMode?
+
+```ts
+optional connectorMode: "rigid" | "elastic";
+```
+
+Connector-line behavior when the attachment point moves (default: "rigid").
+- "rigid": the comment translates by the same offset as the moved
+  attachment point — the arrow keeps its length/angle, whole callout moves.
+- "elastic": the comment stays put; the arrow re-anchors to the nearest
+  point on the comment box, so the line can stretch/rotate.
+
+***
 
 ### expandOnSelect?
 
