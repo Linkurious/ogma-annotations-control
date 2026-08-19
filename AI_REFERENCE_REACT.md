@@ -1,7 +1,7 @@
 # Ogma Annotations - React Reference
 
 > React integration with hooks, context provider, and component patterns
-> Auto-generated: 2026-08-18 | Version: 2.x
+> Auto-generated: 2026-08-19 | Version: 2.x
 
 ---
 
