@@ -22,9 +22,6 @@ export function renderText(
 ) {
   const { width, height } = getTextSize(annotation);
 
-  // TODO: edited element is rendered in DOM
-  //if (id === this.selectedId) continue;
-
   const {
     color = defaultTextStyle.color,
     strokeColor = defaultTextStyle.strokeColor,

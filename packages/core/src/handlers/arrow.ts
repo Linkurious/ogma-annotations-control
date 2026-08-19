@@ -3,7 +3,7 @@ import { Handler } from "./base";
 import {
   canDetachArrowEnd,
   canDetachArrowStart,
-} from "./commentHelpers";
+} from "./comment/helpers";
 import { handleDrag } from "./dragging";
 import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";

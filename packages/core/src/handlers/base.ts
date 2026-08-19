@@ -111,7 +111,7 @@ export abstract class Handler<
     // nodeErrorMargin, ...) round-trips exactly regardless of how a given
     // Ogma version merges nested option objects internally.
     if (this.savedDetectOption === undefined) {
-      this.savedDetectOption = { ...(this.ogma.getOptions().detect ?? {}) };
+      this.savedDetectOption = { ...this.ogma.getOptions().detect };
     }
     this.ogma.setOptions({
       interactions: { pan: { enabled: false }, drag: { enabled: false } },

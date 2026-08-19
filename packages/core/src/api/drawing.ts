@@ -4,7 +4,7 @@ import { cursors, EVT_ADD, EVT_CLICK } from "../constants";
 import type { Control } from "../Control";
 import { AnnotationEditor } from "../handlers";
 import { ArrowHandler } from "../handlers/arrow";
-import { CommentDrawingHandler } from "../handlers/commentDrawing";
+import { CommentDrawingHandler } from "../handlers/comment";
 import { Links } from "../handlers/links";
 import { PolygonHandler } from "../handlers/polygon";
 import { TextHandler } from "../handlers/text";

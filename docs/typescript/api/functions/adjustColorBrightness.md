@@ -4,7 +4,8 @@
 function adjustColorBrightness(color, amount): RgbaColor;
 ```
 
-Automatically lightens or darkens a color (hex or rgba) for highlight purposes.
+Adjusts the brightness of a color (hex or rgba) based on its perceived luminance.
+For bright colors, the adjustment is applied as darkening; for dark colors, as lightening.
 
 ## Parameters
 
@@ -18,10 +19,14 @@ Color string in hex (#RRGGBB or #RGB) or rgba format
 
 `number`
 
-Amount to lighten/darken (default 20 for lighter and -10 for darker)
+Adjustment factor between -1 and 1:
+  - Positive values (0 to 1): lighten dark colors, darken bright colors
+  - Negative values (-1 to 0): darken dark colors, lighten bright colors
+  - 0: no change
+  - Example: 0.2 applies a 20% adjustment, -0.1 applies a -10% adjustment
 
 ## Returns
 
 [`RgbaColor`](../type-aliases/RgbaColor.md)
 
-Highlighted color in rgba format
+Adjusted color in rgba format

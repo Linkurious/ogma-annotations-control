@@ -60,6 +60,20 @@ optional color: string;
 
 text color: #f00, yellow...
 
+### connectorMode?
+
+```ts
+optional connectorMode: "rigid" | "elastic";
+```
+
+Connector-line behavior when the attachment point moves (default: "rigid").
+- "rigid": the comment translates by the same offset as the moved
+  attachment point — the arrow keeps its length/angle, whole callout moves.
+- "elastic": the comment stays put; the arrow re-anchors to the nearest
+  point on the comment box, so the line can stretch/rotate.
+
+***
+
 ### expandOnSelect?
 
 ```ts
@@ -171,6 +185,17 @@ optional padding: number;
 ```
 
 padding around the text
+
+### placeholder?
+
+```ts
+optional placeholder: string;
+```
+
+Ghost text shown (via the textarea's native `placeholder` attribute)
+while `content` is empty - disappears the instant the user types, no
+selection/focus tricks needed. Overrides the global
+`ControllerOptions.textPlaceholder` for this annotation.
 
 ### scaled?
 

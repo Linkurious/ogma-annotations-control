@@ -902,7 +902,10 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events.off(this.onRotate).off(this.onZoom);
+    this.ogma.events
+      .off(this.onRotate)
+      .off(this.onZoom)
+      .off(this.onLayout);
     this.links.destroy();
     this.regions.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());

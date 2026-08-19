@@ -1,12 +1,16 @@
 import { Ogma } from "@linkurious/ogma";
-import { ArrowHandler } from "./arrow";
-import { Handler } from "./base";
-import { Links } from "./links";
-import { Snapping } from "./snapping";
-import { SIDE_END, SIDE_START, TARGET_TYPES } from "../constants";
-import { Store } from "../store";
-import { Comment, Id, ArrowProperties, isArrow } from "../types";
-import { Arrow, createArrow, defaultArrowStyle } from "../types/features/Arrow";
+import { ArrowHandler } from "../arrow";
+import { Handler } from "../base";
+import { Links } from "../links";
+import { Snapping } from "../snapping";
+import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
+import { Store } from "../../store";
+import { Comment, Id, ArrowProperties, isArrow } from "../../types";
+import { Arrow, createArrow, defaultArrowStyle } from "../../types/features/Arrow";
+
+// Below this distance (in graph units) between the drag's start and end
+// point, treat the gesture as a click rather than a drag.
+const CLICK_VS_DRAG_THRESHOLD = 5;
 
 /**
  * Meta-handler for drawing comments with arrows
@@ -121,7 +125,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     let commentX: number;
     let commentY: number;
 
-    if (dragDistance < 5) {
+    if (dragDistance < CLICK_VS_DRAG_THRESHOLD) {
       // Case 1: Click (small distance) - apply offset from start point
       commentX = this.startX + this.offsetX;
       commentY = this.startY + this.offsetY;
@@ -193,10 +197,10 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     // If there was a link at the original arrow start, it's now at the end.
     // existingStartLink.magnet is already this class's own stored format
     // (for a polygon target, the bbox-relative fraction the add() call
-    // inside snapArrowStart() above just computed) - alreadyRelative=true
+    // inside snapArrowStart() above just computed) - magnetSource: "stored"
     // passes it straight through instead of re-running the absolute-point
     // conversion on an already-relative value, which would corrupt it (see
-    // Links.add()'s doc comment on that parameter).
+    // Links.add()'s MagnetSource doc comment).
     if (existingStartLink && existingStartLink.magnet) {
       this.links.add(
         arrow,
@@ -204,7 +208,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
         existingStartLink.id,
         existingStartLink.type,
         existingStartLink.magnet,
-        true
+        "stored"
       );
     }
 
