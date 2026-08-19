@@ -6,8 +6,6 @@
   "scripts": {
     "e2e:test": "npm run test:e2e -ws --if-present",
     "test": "npm run test:unit -ws --if-present",
-    "test:matrix": "node scripts/test-ogma-matrix.mjs",
-    "e2e:matrix": "node scripts/test-ogma-matrix.mjs --e2e",
     "e2e:deps": "vitest run -c test/vitest.config.mts",
     "test:unit": "npm run test:unit -ws --if-present",
     "publish:packages": "npm publish -ws",
