@@ -5,18 +5,28 @@
  * afterwards regardless of outcome.
  *
  * Usage:
- *   node scripts/test-ogma-matrix.mjs                    # default matrix
+ *   node scripts/test-ogma-matrix.mjs                    # default: [floor, latest]
+ *   node scripts/test-ogma-matrix.mjs --floor             # only the peer floor (packages/core's peerDependencies)
+ *   node scripts/test-ogma-matrix.mjs --latest             # only the "latest" dist-tag
  *   node scripts/test-ogma-matrix.mjs --versions=5.3.11,6.0.8,latest
  *   node scripts/test-ogma-matrix.mjs --e2e              # also run e2e tests
  *   node scripts/test-ogma-matrix.mjs --skip-build        # skip the build step
  *
- * Wired into package.json as:
- *   npm run test:matrix   -> node scripts/test-ogma-matrix.mjs
- *   npm run e2e:matrix    -> node scripts/test-ogma-matrix.mjs --e2e
+ * Wired into root package.json as separate `test:`/`e2e:`-prefixed scripts
+ * (see below) so the CI shared library's script-prefix auto-discovery picks
+ * each one up as its own step/stage with its own pass/fail, instead of one
+ * opaque step that loops internally:
+ *   npm run test:ogma-floor    -> --floor
+ *   npm run test:ogma-latest   -> --latest
+ *   npm run e2e:ogma-floor     -> --floor --e2e
+ *   npm run e2e:ogma-latest    -> --latest --e2e
+ *
+ * `ogma:matrix` / `ogma:e2e-matrix` (no test:/e2e: prefix, so CI won't also
+ * auto-run them and duplicate the above) run the full default matrix in one
+ * command, for local use.
  *
  * Deliberately kept separate from the plain `test`/`e2e:test` scripts so
  * everyday local runs stay fast (one version, whatever's in the lockfile).
- * CI can opt into the full matrix by calling these directly.
  */
 import { execFileSync } from "child_process";
 import { readFileSync } from "fs";
@@ -37,10 +47,18 @@ function readPeerFloor() {
 }
 
 function parseArgs(argv) {
-  const args = { e2e: false, skipBuild: false, versions: null };
+  const args = {
+    e2e: false,
+    skipBuild: false,
+    versions: null,
+    floor: false,
+    latest: false
+  };
   for (const arg of argv) {
     if (arg === "--e2e") args.e2e = true;
     else if (arg === "--skip-build") args.skipBuild = true;
+    else if (arg === "--floor") args.floor = true;
+    else if (arg === "--latest") args.latest = true;
     else if (arg.startsWith("--versions=")) {
       args.versions = arg
         .slice("--versions=".length)
@@ -74,7 +92,10 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
 
   const floor = readPeerFloor();
-  const versions = args.versions ?? [floor, "latest"].filter(Boolean);
+  const versions = args.versions
+    ?? (args.floor && !args.latest ? [floor].filter(Boolean)
+      : args.latest && !args.floor ? ["latest"]
+        : [floor, "latest"].filter(Boolean));
 
   if (versions.length === 0) {
     console.error(
