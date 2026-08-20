@@ -21,6 +21,12 @@
  * node_modules/@linkurious/ogma for that already-downloaded copy on
  * disk - no network call, no auth, at swap time.
  *
+ * Restore is filesystem-only too (copy the original dir aside before
+ * swapping, copy it back after), not `npm ci` - this step may run in the
+ * same unauthenticated stage as the swap, and `npm ci` would need to
+ * re-fetch the tarball that was just deleted, hitting the exact problem
+ * the alias was built to avoid.
+ *
  * Keep the alias in package.json's devDependencies in sync with
  * packages/core's peerDependencies floor if that ever changes.
  *
@@ -45,6 +51,7 @@ const ROOT = path.resolve(__dirname, "..");
 
 const ALIAS_DIR = path.join(ROOT, "node_modules/ogma-5-3-11");
 const TARGET_DIR = path.join(ROOT, "node_modules/@linkurious/ogma");
+const BACKUP_DIR = path.join(ROOT, "node_modules/.ogma-normal-backup");
 
 function run(command, args) {
   console.log(`\n$ ${command} ${args.join(" ")}`);
@@ -72,15 +79,32 @@ function swapInFloorVersion() {
         `(the floor version is pulled in as the "ogma-5-3-11" devDependency).`
     );
   }
+  if (!existsSync(TARGET_DIR)) {
+    throw new Error(
+      `${TARGET_DIR} doesn't exist - nothing to back up. Run \`npm ci\` at the repo root first.`
+    );
+  }
   const version = readAliasedVersion();
-  console.log(`\nSwapping in @linkurious/ogma@${version} (from ${ALIAS_DIR})...`);
+  console.log(`\nBacking up the normally-installed @linkurious/ogma to ${BACKUP_DIR}...`);
+  rmSync(BACKUP_DIR, { recursive: true, force: true });
+  cpSync(TARGET_DIR, BACKUP_DIR, { recursive: true });
+
+  console.log(`Swapping in @linkurious/ogma@${version} (from ${ALIAS_DIR})...`);
   rmSync(TARGET_DIR, { recursive: true, force: true });
   cpSync(ALIAS_DIR, TARGET_DIR, { recursive: true });
 }
 
 function restore() {
-  console.log("\nRestoring the normally-installed @linkurious/ogma version...");
-  run("npm", ["ci"]);
+  if (!existsSync(BACKUP_DIR)) {
+    console.error(
+      `\nNo backup found at ${BACKUP_DIR} - nothing to restore (swap probably never ran).`
+    );
+    return;
+  }
+  console.log("\nRestoring the normally-installed @linkurious/ogma from backup...");
+  rmSync(TARGET_DIR, { recursive: true, force: true });
+  cpSync(BACKUP_DIR, TARGET_DIR, { recursive: true });
+  rmSync(BACKUP_DIR, { recursive: true, force: true });
 }
 
 async function main() {
