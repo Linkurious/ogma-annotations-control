@@ -39,6 +39,7 @@ export class BrowserSession {
     });
     this.page = await this.browser.newPage();
     await this.page.goto(`http://localhost:${this.port}`);
+    await this.waitForReady();
   }
 
   async close() {
@@ -57,6 +58,22 @@ export class BrowserSession {
   }
   async refresh() {
     await this.page.reload();
+    await this.waitForReady();
+  }
+
+  /**
+   * `page.goto`/`page.reload()` resolving (even on the `load` event, which
+   * is supposed to wait for module-script execution) isn't a reliable
+   * guarantee that the demo page's own bootstrap script has actually run
+   * and defined its globals (createOgma et al.) - under CPU contention
+   * (e.g. several e2e test files building their own preview server
+   * concurrently in CI), that gap has been wide enough to lose the race,
+   * causing a `createOgma is not defined` failure in whatever runs right
+   * after. Wait for the actual readiness signal instead of trusting the
+   * navigation lifecycle event.
+   */
+  private async waitForReady() {
+    await this.page.waitForFunction(() => typeof createOgma === "function");
   }
 }
 
