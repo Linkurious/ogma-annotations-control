@@ -100,8 +100,13 @@ describe("Anchor follow", () => {
       return { node, coords: arrow.geometry.coordinates as number[][] };
     }, arrowId);
 
-    expect(after.node.x).toBeCloseTo(150, 0);
-    expect(after.node.y).toBeCloseTo(75, 0);
+    // Coarse sanity check that the drag actually landed roughly where
+    // aimed - not pixel-exact, since the interpolated mouse-move steps can
+    // land a few units short under CI's slower/less consistent event
+    // timing. The real assertion (below) is relative to wherever the node
+    // actually ended up, not this target.
+    expect(after.node.x).toBeCloseTo(150, -1);
+    expect(after.node.y).toBeCloseTo(75, -1);
 
     // The endpoint that was at the node's old centre must now sit at the
     // node's new centre.

@@ -6,6 +6,17 @@ export default defineConfig({
     globalSetup: ["./test/print-ogma-build.mts"],
     // Browser-driven e2e tests start a Playwright/WebSocket session; retry
     // once to absorb transient connection/timing flakiness under CI load.
-    retry: 2
+    retry: 2,
+    // Each file spins up its own Chromium + vite preview server. Running
+    // every file concurrently (vitest's default) piles those up at once -
+    // fine locally, but on a constrained CI agent the resulting CPU/memory
+    // contention makes every test dramatically slower (a test that takes
+    // ~6s locally took 47s in CI), and once the suite runs long enough to
+    // hit CI's own step timeout, the whole process gets interrupted and
+    // every in-flight/pending test fails at once ("Target page, context or
+    // browser has been closed") regardless of its own correctness. Running
+    // files one at a time trades some local wall-clock time for not
+    // falling off that cliff.
+    fileParallelism: false
   }
 });
