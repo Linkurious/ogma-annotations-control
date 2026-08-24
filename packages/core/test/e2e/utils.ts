@@ -13,6 +13,8 @@ declare global {
   let editor: import("../../src").Control;
   let createArrow: typeof import("../../src").createArrow;
   let createPolygon: typeof import("../../src").createPolygon;
+  let createText: typeof import("../../src").createText;
+  let demoStyles: import("./pages/types").DemoStyles;
 }
 
 export class BrowserSession {
@@ -21,7 +23,15 @@ export class BrowserSession {
   public page!: Page;
   public port!: number;
 
-  async start(headless = true, options: InlineConfig = {}) {
+  // Overridable at the CLI without touching any test file:
+  //   E2E_HEADFUL=1 npx vitest run -c test/e2e/vitest.config.mts <file>
+  //   E2E_SLOWMO=500 npx vitest run -c test/e2e/vitest.config.mts <file>
+  // The explicit `headless` param still wins over the env var when a test
+  // passes one deliberately (e.g. session.start(false)).
+  async start(
+    headless = process.env.E2E_HEADFUL !== "1",
+    options: InlineConfig = {}
+  ) {
     this.port = await getPort();
     await build({
       root: "test/e2e/pages",
@@ -35,7 +45,7 @@ export class BrowserSession {
     this.browser = await chromium.launch({
       headless,
       devtools: false,
-      slowMo: 100
+      slowMo: Number(process.env.E2E_SLOWMO ?? 100)
     });
     this.page = await this.browser.newPage();
     await this.page.goto(`http://localhost:${this.port}`);

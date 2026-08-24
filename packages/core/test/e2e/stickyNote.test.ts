@@ -64,7 +64,7 @@ describe("Sticky notes", () => {
     // Deselecting (e.g. clicking elsewhere) is what actually ends the edit
     // session and commits the live update into the annotation's real
     // content - a bare DOM blur() only syncs into liveUpdates.
-    await session.page.evaluate(() => editor.unselect());
+    await session.page.evaluate(() => { editor.unselect(); });
 
     const content = await session.page.evaluate(() => {
       const note = editor
