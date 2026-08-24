@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
 import type { Point } from "geojson";
-import { BrowserSession } from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Comments", () => {
   const session = new BrowserSession();
@@ -14,6 +14,7 @@ describe("Comments", () => {
   });
 
   beforeEach(async () => {
+    captureScreenshotOnTestEnd(session, "comment");
     await session.refresh();
     await session.page.evaluate(async () => {
       const ogma = createOgma({});

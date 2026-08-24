@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession } from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Annotation creation", () => {
   const session = new BrowserSession();
@@ -13,6 +13,7 @@ describe("Annotation creation", () => {
   });
 
   beforeEach(async () => {
+    captureScreenshotOnTestEnd(session, "creation");
     await session.refresh();
     await session.page.evaluate(async () => {
       createOgma({});

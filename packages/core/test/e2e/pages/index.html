@@ -10,6 +10,13 @@
     #graph-container {
       width: 512px;
       height: 512px;
+      /* Ogma's HTML overlay layer (used for text/box/comment bodies) isn't
+         clipped to the container by itself - a note dragged out large
+         enough, or placed near the edge, visibly spills onto the blank
+         page past this box otherwise. overflow doesn't affect the content
+         box's size/position (unlike border/padding), so this is safe for
+         the e2e tests' pixel-exact screen<->graph coordinate math. */
+      overflow: hidden;
     }
 
     body {
