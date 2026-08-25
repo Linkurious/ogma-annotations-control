@@ -622,4 +622,62 @@ describe("Comments", () => {
     });
     expect(content).toBe("existing note - updated");
   }, 10000);
+
+  // Regression test: typing enough lines to auto-grow the comment box must
+  // move the connector's box-side endpoint along with it, live, not just
+  // once the edit session ends. TextArea.updateContent()'s auto-grow only
+  // ever writes to store.liveUpdates (never state.features), which every
+  // other link-follow path is blind to (LinkSync's setMultipleAttributes/
+  // addEdges/removeEdges listeners, and Links.onAddArrow's state.features
+  // subscriber) - LinkSync.onEditingLiveUpdate is the one path that reacts
+  // to it, scoped to state.editingFeature specifically so it can't overlap
+  // with the separate interactive-drag cascade.
+  it("should keep the connector attached to a growing comment box while typing", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      // On node n1, so the arrow's far end has a fixed reference point.
+      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+    });
+    await drawComment(session, pos);
+
+    const readLiveEndpoint = () =>
+      session.page.evaluate(() => {
+        // Reach past the public API for the *live* (not yet committed)
+        // merged state - same precedent as the internal-state reads in
+        // test/unit/links.test.ts.
+        const state = (editor as any)["store"].getState();
+        const feats = editor.getAnnotations().features;
+        const comment = feats.find((f) => f.properties.type === "comment")!;
+        const arrow = feats.find((f) => f.properties.type === "arrow")!;
+        const liveComment = state.getMergedFeature(comment.id);
+        const liveArrow = state.getMergedFeature(arrow.id);
+        return {
+          commentHeight: (liveComment.properties as { height: number }).height,
+          // The arrow's node-side endpoint is coordinates[1] here (see
+          // "should create comment on node"); the comment-side one is [0].
+          arrowBoxEnd: liveArrow.geometry.coordinates[0] as number[]
+        };
+      });
+
+    const before = await readLiveEndpoint();
+
+    // Grow the box across several lines - well past one auto-grow step.
+    for (let i = 0; i < 4; i++) {
+      await session.page.keyboard.type(`line ${i}`);
+      await session.page.keyboard.press("Enter");
+    }
+
+    const after = await readLiveEndpoint();
+
+    // The box actually grew - otherwise this test isn't exercising anything.
+    expect(after.commentHeight).toBeGreaterThan(before.commentHeight + 20);
+
+    // The connector's box-side endpoint must have moved along with the
+    // growing edge, live - not stayed frozen at its pre-typing position.
+    const moved = Math.hypot(
+      after.arrowBoxEnd[0] - before.arrowBoxEnd[0],
+      after.arrowBoxEnd[1] - before.arrowBoxEnd[1]
+    );
+    expect(moved).toBeGreaterThan(10);
+  }, 10000);
 });
