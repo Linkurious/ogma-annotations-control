@@ -81,6 +81,15 @@ export class TextArea {
       },
       LAYERS.EDITOR
     );
+    // The `LAYERS.EDITOR > LAYERS.SHAPES` index passed above doesn't
+    // actually control stacking order by itself - the Shapes SVG layer
+    // (arrows/comments, including this annotation's own connector) is
+    // created once, early, at Control construction, while this overlay is
+    // created fresh per edit session, much later; layers otherwise just
+    // append in creation order, so without this the long-lived shapes
+    // layer paints over this one regardless of its higher LAYERS index,
+    // leaving the connector visually on top of the box while editing.
+    this.layer.moveToTop();
     this.textarea = this.layer.element.querySelector("textarea")!;
     this.textarea.setAttribute("wrap", "on");
     this.textarea.setAttribute("spellcheck", "false");

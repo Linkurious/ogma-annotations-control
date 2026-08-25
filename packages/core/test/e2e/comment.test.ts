@@ -722,4 +722,51 @@ describe("Comments", () => {
     expect(afterSend.hasTextarea).toBe(false);
     expect(afterSend.content).toBe("line1\nline2");
   }, 10000);
+
+  // Regression test: while a comment is being edited, its connector line
+  // must render *behind* the box, not on top of it. LAYERS.EDITOR is a
+  // higher index than LAYERS.SHAPES, but that index alone doesn't control
+  // DOM stacking order - the shapes SVG layer is created once, early, at
+  // Control construction, while the editor overlay is created fresh per
+  // edit session, much later; layers otherwise just append in creation
+  // order, so without an explicit moveToTop() the long-lived shapes layer
+  // ends up DOM-after (visually above) the freshly-created editor overlay.
+  it("should render the connector behind the box while editing, not on top of it", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    const stackOrder = await session.page.evaluate(() => {
+      const editorDiv = document.querySelector(".ogma-annotation-text-editor");
+      // The shapes layer is the one with the demo comment/arrow purple
+      // (#3A03CF) baked into its rule defs - distinct from e.g. the send
+      // button icon's own little inline svg, which lives inside the editor
+      // overlay itself rather than being a stacking sibling of it.
+      const shapesSvg = Array.from(
+        document.querySelectorAll("#graph-container svg")
+      ).find(
+        (svg) =>
+          !svg.closest(".ogma-annotation-text-editor") &&
+          svg.innerHTML.includes("3A03CF")
+      );
+      if (!editorDiv || !shapesSvg) {
+        return { editorFound: !!editorDiv, shapesSvgFound: !!shapesSvg };
+      }
+      const rel = editorDiv.compareDocumentPosition(shapesSvg);
+      return {
+        editorFound: true,
+        shapesSvgFound: true,
+        // DOCUMENT_POSITION_FOLLOWING (4): shapesSvg comes after editorDiv
+        // in the DOM, i.e. paints on top of it - the bug this guards
+        // against.
+        shapesPaintsOverEditor: !!(rel & Node.DOCUMENT_POSITION_FOLLOWING)
+      };
+    });
+
+    expect(stackOrder.editorFound).toBe(true);
+    expect(stackOrder.shapesSvgFound).toBe(true);
+    expect(stackOrder.shapesPaintsOverEditor).toBe(false);
+  }, 10000);
 });
