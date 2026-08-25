@@ -680,4 +680,46 @@ describe("Comments", () => {
     );
     expect(moved).toBeGreaterThan(10);
   }, 10000);
+
+  it("should send on Cmd/Ctrl+Enter, and keep plain Enter as a newline", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    await session.page.keyboard.type("line1");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.type("line2");
+
+    // Plain Enter must not have sent - still editing, both lines present.
+    const midEdit = await session.page.evaluate(() => ({
+      hasTextarea: !!document.querySelector("textarea"),
+      value: document.querySelector("textarea")?.value
+    }));
+    expect(midEdit.hasTextarea).toBe(true);
+    expect(midEdit.value).toBe("line1\nline2");
+
+    // Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) - the modifier that
+    // actually reaches the page depends on the OS Playwright runs on, so
+    // press both; whichever one is native is what a real user would send.
+    await session.page.keyboard.down("Meta");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.up("Meta");
+    await session.page.keyboard.down("Control");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.up("Control");
+
+    const afterSend = await session.page.evaluate(() => {
+      const comment = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "comment");
+      return {
+        hasTextarea: !!document.querySelector("textarea"),
+        content: (comment?.properties as { content?: string })?.content
+      };
+    });
+    expect(afterSend.hasTextarea).toBe(false);
+    expect(afterSend.content).toBe("line1\nline2");
+  }, 10000);
 });
