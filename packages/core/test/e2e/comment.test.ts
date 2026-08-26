@@ -769,4 +769,58 @@ describe("Comments", () => {
     expect(stackOrder.shapesSvgFound).toBe(true);
     expect(stackOrder.shapesPaintsOverEditor).toBe(false);
   }, 10000);
+
+  // Regression test: creating a comment must never commit a state where the
+  // comment exists but its connector still points at whatever the arrow's
+  // draw gesture originally snapped to (its own start point, an unrelated
+  // node/edge, or nothing) instead of the comment - i.e. no torn frame
+  // where the box is visible with its connector's free end "in the void".
+  // CommentDrawingHandler.onArrowComplete used to add the comment and
+  // correct the arrow's link in two separate store commits; this asserts
+  // the invariant directly (every features snapshot is internally
+  // consistent) rather than trying to catch a bad paint in a screenshot,
+  // which isn't reliable at this timescale.
+  it("should never commit a comment before its connector is linked to it", async () => {
+    const pos = await session.page.evaluate(() => {
+      // Record every `features` snapshot the store goes through - most
+      // reliable way to catch a torn intermediate commit, independent of
+      // render/paint timing.
+      (window as any).__snapshots = [];
+      (editor as any)["store"].subscribe(
+        (s: any) => s.features,
+        (features: any) => {
+          // Deep clone - some features get mutated in place by later steps
+          // of the same gesture (e.g. the comment/arrow objects
+          // CommentDrawingHandler holds direct references to), so pushing
+          // the live reference would let a later mutation retroactively
+          // "fix" what this snapshot looks like once read back afterwards.
+          (window as any).__snapshots.push(
+            JSON.parse(JSON.stringify(features))
+          );
+        }
+      );
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    const result = await session.page.evaluate(() => {
+      const snapshots = (window as any).__snapshots as Record<string, any>[];
+      const torn = snapshots.find((features) => {
+        const comment = Object.values(features).find(
+          (f: any) => f.properties.type === "comment"
+        ) as any;
+        const arrow = Object.values(features).find(
+          (f: any) => f.properties.type === "arrow"
+        ) as any;
+        if (!comment || !arrow) return false;
+        const link = arrow.properties.link?.start ?? arrow.properties.link?.end;
+        return !link || link.id !== comment.id || link.type !== "comment";
+      });
+      return { snapshotCount: snapshots.length, torn: torn ?? null };
+    });
+
+    expect(result.snapshotCount).toBeGreaterThan(0);
+    expect(result.torn).toBeNull();
+  }, 10000);
 });
