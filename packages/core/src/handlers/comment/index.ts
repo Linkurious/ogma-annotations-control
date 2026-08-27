@@ -70,15 +70,16 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       ...this.arrowStyle?.style
     });
 
-    // Add arrow to store
-    this.store.getState().addFeature(arrow);
-    this.store.setState({ drawingFeature: arrow.id });
+    this.store.getState().batchUpdate(() => {
+      // Add arrow to store
+      this.store.getState().addFeature(arrow);
+      this.store.setState({ drawingFeature: arrow.id });
+      // Activate ArrowHandler by selecting the arrow
+      this.store.getState().setSelectedFeatures([arrow.id]);
+    });
 
     // Listen for arrow completion
     this.arrowHandler.addEventListener("dragend", this.onArrowComplete);
-
-    // Activate ArrowHandler by selecting the arrow
-    this.store.getState().setSelectedFeatures([arrow.id]);
 
     // Start arrow drawing - ArrowHandler takes over
     this.arrowHandler.startDrawing(arrow.id, x, y);
