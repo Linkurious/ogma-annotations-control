@@ -42,6 +42,12 @@ const REFRESH_THROTTLE_MS = 20;
  * The interactive-drag cascade (`Links.updateLinkedArrowsDuringDrag` et al.)
  * is a separate, synchronous path that doesn't go through here — see
  * `handlers/links/index.ts`.
+ *
+ * Geo mode is handled as a derived, render-only overlay on top of that:
+ * node-link geometry in `state.features` is always the source of truth, so
+ * every recompute this class does while geo mode is transitioning or on
+ * stays in `liveUpdates` and is never committed — see `onGeoModeChanged`,
+ * `geoOverlayActive`, and `commitBlocked`.
  */
 export class LinkSync {
   private ogma: Ogma;
@@ -51,6 +57,20 @@ export class LinkSync {
   private updatedItems: Set<Id>;
   private commitTimeout!: ReturnType<typeof setTimeout>;
   private nodePositionTimeout?: ReturnType<typeof setTimeout>;
+  // Whether the `geoEnabled`/`geoDisabled`-driven overlay (`onGeoModeChanged`)
+  // is currently sitting in `liveUpdates`. `ogma.geo.enabled()` flips the
+  // instant `.toggle()`/`.enable()`/`.disable()` is *called*, but that event
+  // pair - where the overlay actually gets pushed or cleared - only fires
+  // once the transition's camera animation finishes, up to `duration`ms
+  // later. Neither signal alone is safe to gate commits on: `enabled()`
+  // alone leaves a window, on the way *out* of geo mode, where it already
+  // reads false while the overlay is still the stale geo-projected one
+  // (not cleared until the delayed event); this flag alone leaves the
+  // mirror window on the way *in*, where node x/y are already
+  // geo-projected (empirically, synchronously with the `enabled()` flip)
+  // but the flag hasn't been set yet. `commitBlocked` below ORs both, so
+  // the unsafe window is the union of the two, with no gap on either side.
+  private geoOverlayActive = false;
 
   constructor(
     ogma: Ogma,
@@ -64,6 +84,11 @@ export class LinkSync {
     this.index = index;
     this.geometry = geometry;
     this.updatedItems = updatedItems;
+    // Defensive: if this is constructed while geo mode is already on (e.g.
+    // `Control` created after `ogma.geo.enable()`), start as if the overlay
+    // is active - the alternative is a spurious commit of geo-projected
+    // coordinates the very first time something moves a linked node.
+    this.geoOverlayActive = ogma.geo.enabled();
 
     this.store.subscribe(
       (state) => ({ zoom: state.zoom, rotation: state.rotation }),
@@ -103,8 +128,47 @@ export class LinkSync {
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
       .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
       .on("removeNodes", this.onRemoveNodes)
-      .on("viewChanged", this.refresh);
+      .on("viewChanged", this.refresh)
+      .on(["geoEnabled", "geoDisabled"], this.onGeoModeChanged);
   }
+
+  /**
+   * Node-link mode is the source of truth: `state.features` always holds
+   * graph-space (node-link) geometry, geo mode never writes into it. Geo
+   * mode is *derived* - purely a render-time overlay, applied and dropped
+   * through the same `liveUpdates` mechanism already used for in-progress
+   * drags and live text auto-grow (see the class doc comment).
+   *
+   * On `geoEnabled`, Ogma has already rewritten every node's x/y to its
+   * projected position - push one live (uncommitted) recompute so linked
+   * arrows visually track it. On `geoDisabled`, node x/y are back to their
+   * node-link values, which is exactly what `features` already holds (it
+   * was never touched while geo mode was on) - just drop the overlay
+   * rather than recomputing, and every linked arrow snaps back to its real
+   * geometry for free.
+   *
+   * Everything else that can move a node while geo mode is active (a real
+   * layout, or dragging with `disableNodeDragging: false`) still funnels
+   * through `onSetMultipleAttributes`/`update()` below, which are gated the
+   * same way - see `requestCommit`'s geo check.
+   */
+  private onGeoModeChanged = () => {
+    this.geoOverlayActive = this.ogma.geo.enabled();
+    if (this.index.linksByArrowId.size === 0) return;
+    const arrowIds = Array.from(this.index.linksByArrowId.keys());
+    if (this.geoOverlayActive) {
+      const updates = this._computeArrowUpdates(this.index.linksByArrowId);
+      this.store.getState().applyLiveUpdates(updates);
+    } else {
+      this.store.getState().clearLiveUpdates(arrowIds);
+      // `_computeArrowUpdates` (called above, on the way in) unconditionally
+      // marks every arrow it touches as `updatedItems` - drop them now that
+      // their overlay is gone, so a later, unrelated commit doesn't pick
+      // these ids up again (belt-and-suspenders on top of the `ids in
+      // liveUpdates` filter in `commitLiveUpdates` itself).
+      arrowIds.forEach((id) => this.updatedItems.delete(id));
+    }
+  };
 
   public onSetMultipleAttributes = ({
     elements,
@@ -389,11 +453,22 @@ export class LinkSync {
    * Compute and synchronously commit arrow position updates for the given links.
    * Used when an annotation is moved programmatically (not during a live drag).
    * Wraps changes in batchUpdate so no extra history entry is created.
+   *
+   * While a geo overlay is active, `batchUpdate` only suppresses the *undo
+   * history* entry - `updateFeatures` still writes straight into
+   * `state.features`, which would commit a geo-projected position as if it
+   * were node-link truth. Fall back to the same live-overlay-only path as
+   * every other geo-aware recompute in this class instead (see
+   * `onGeoModeChanged`/`requestCommit`).
    */
   updateAndCommitSync(linksByArrowId: LinksByArrowId) {
     const updates = this._computeArrowUpdates(linksByArrowId);
     if (Object.keys(updates).length === 0) return;
     const state = this.store.getState();
+    if (this.commitBlocked()) {
+      state.applyLiveUpdates(updates);
+      return;
+    }
     state.batchUpdate(() => {
       state.updateFeatures(updates as Record<string, Partial<Annotation>>);
     });
@@ -490,8 +565,19 @@ export class LinkSync {
   }
 
   private requestCommit() {
+    // Geo mode is derived, never committed - see `onGeoModeChanged`. Any
+    // node-position-triggered recompute that happens while geo mode is on
+    // (drag, layout) must stay a live overlay only.
+    if (this.commitBlocked()) return;
     clearTimeout(this.commitTimeout);
     this.commitTimeout = setTimeout(this.commit, COMMIT_DEBOUNCE_MS);
+  }
+
+  // See `geoOverlayActive`'s doc comment - neither `ogma.geo.enabled()` nor
+  // the delayed geoEnabled/geoDisabled-driven flag is safe to gate on
+  // alone; this is unsafe for the union of both signals' windows.
+  private commitBlocked(): boolean {
+    return this.ogma.geo.enabled() || this.geoOverlayActive;
   }
 
   public destroy() {
@@ -501,6 +587,7 @@ export class LinkSync {
       .off(this.onSetMultipleAttributes)
       .off(this.onAddRemoveEdges)
       .off(this.onRemoveNodes)
-      .off(this.refresh);
+      .off(this.refresh)
+      .off(this.onGeoModeChanged);
   }
 }
