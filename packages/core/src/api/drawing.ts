@@ -295,10 +295,12 @@ export class Drawing {
       ...style
     });
 
-    this.store.setState({ drawingFeature: note.id });
-    this.control.add(note);
+    this.store.getState().batchUpdate(() => {
+      this.store.setState({ drawingFeature: note.id });
+      this.control.add(note);
+      this.control.select(note.id);
+    });
     this.interactions.suppressClicksTemporarily(200);
-    this.control.select(note.id);
 
     const handler = this.editor.getActiveHandler() as TextHandler;
     handler.startDrawing(note.id, x, y, {
@@ -396,7 +398,9 @@ export class Drawing {
     this.control.cancelDrawing();
 
     // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: comment.id });
+    this.store.getState().batchUpdate(() => {
+      this.store.setState({ drawingFeature: comment.id });
+    });
 
     this.interactions.suppressClicksTemporarily(200);
     // Create and use the comment drawing handler
@@ -423,13 +427,14 @@ export class Drawing {
 
   public startBox(x: number, y: number, box?: Box): Control {
     if (!box) box = createBox(x, y);
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: box.id });
-
-    // Add the box annotation
-    this.control.add(box);
+    this.store.getState().batchUpdate(() => {
+      // Mark this feature as being drawn
+      this.store.setState({ drawingFeature: box!.id });
+      // Add the box annotation
+      this.control.add(box!);
+      this.control.select(box!.id);
+    });
     this.interactions.suppressClicksTemporarily(200);
-    this.control.select(box.id);
 
     // Get the text handler (box uses the same handler as text)
     const handler = this.editor.getActiveHandler()!;
@@ -444,13 +449,14 @@ export class Drawing {
       this.editor.getActiveHandler()!.stopEditing();
     this.control.cancelDrawing();
 
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: arrow.id });
-
-    // Add the arrow annotation
-    this.control.add(arrow);
+    this.store.getState().batchUpdate(() => {
+      // Mark this feature as being drawn
+      this.store.setState({ drawingFeature: arrow!.id });
+      // Add the arrow annotation
+      this.control.add(arrow!);
+      this.control.select(arrow!.id);
+    });
     this.interactions.suppressClicksTemporarily(200);
-    this.control.select(arrow.id);
 
     // Get the arrow handler
     const handler = this.editor.getActiveHandler()!;
@@ -460,13 +466,14 @@ export class Drawing {
 
   public startText(x: number, y: number, text?: Text): Control {
     if (!text) text = createText(x, y);
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: text.id });
-
-    // Add the text annotation
-    this.control.add(text);
+    this.store.getState().batchUpdate(() => {
+      // Mark this feature as being drawn
+      this.store.setState({ drawingFeature: text!.id });
+      // Add the text annotation
+      this.control.add(text!);
+      this.control.select(text!.id);
+    });
     this.interactions.suppressClicksTemporarily(200);
-    this.control.select(text.id);
 
     // Get the text handler
     const handler = this.editor.getActiveHandler()!;
@@ -475,13 +482,14 @@ export class Drawing {
   }
 
   public startPolygon(x: number, y: number, polygon: Polygon): Control {
-    // Mark this feature as being drawn
-    this.store.setState({ drawingFeature: polygon.id });
-
-    // Add the polygon annotation
-    this.control.add(polygon);
+    this.store.getState().batchUpdate(() => {
+      // Mark this feature as being drawn
+      this.store.setState({ drawingFeature: polygon.id });
+      // Add the polygon annotation
+      this.control.add(polygon);
+      this.control.select(polygon.id);
+    });
     this.interactions.suppressClicksTemporarily(200);
-    this.control.select(polygon.id);
 
     // Get the polygon handler
     const handler = this.editor.getActiveHandler()!;

@@ -39,6 +39,10 @@ export class TextArea {
     const showSendButton =
       isComment(annotationData) && (state.options?.showSendButton ?? true);
     const sendButtonIcon = state.options?.sendButtonIcon || "";
+    const isMac =
+      typeof navigator !== "undefined" &&
+      /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    const sendShortcutLabel = isMac ? "⌘Enter" : "Ctrl+Enter";
     const placeholderText =
       annotationData.properties.style?.placeholder ||
       state.options?.textPlaceholder ||
@@ -63,7 +67,7 @@ export class TextArea {
           <textarea wrap="on" name="annotation-text--input" spellcheck="false" placeholder="${placeholderText}"></textarea>
           ${
             showSendButton
-              ? `<button class="ogma-send-button" type="button" title="Send">
+              ? `<button class="ogma-send-button" type="button" title="Send (${sendShortcutLabel})">
             <span class="ogma-send-button-icon">${sendButtonIcon}</span>
           </button>`
               : ""
@@ -77,6 +81,15 @@ export class TextArea {
       },
       LAYERS.EDITOR
     );
+    // The `LAYERS.EDITOR > LAYERS.SHAPES` index passed above doesn't
+    // actually control stacking order by itself - the Shapes SVG layer
+    // (arrows/comments, including this annotation's own connector) is
+    // created once, early, at Control construction, while this overlay is
+    // created fresh per edit session, much later; layers otherwise just
+    // append in creation order, so without this the long-lived shapes
+    // layer paints over this one regardless of its higher LAYERS index,
+    // leaving the connector visually on top of the box while editing.
+    this.layer.moveToTop();
     this.textarea = this.layer.element.querySelector("textarea")!;
     this.textarea.setAttribute("wrap", "on");
     this.textarea.setAttribute("spellcheck", "false");
@@ -304,6 +317,20 @@ export class TextArea {
     evt.stopPropagation();
   };
   private onKeydown = (evt: KeyboardEvent) => {
+    // Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) sends, mirroring the
+    // send button - plain Enter still inserts a newline, since comments
+    // are multi-line. Only meaningful where a send button actually exists
+    // (comments with showSendButton) and there's content to send - matches
+    // the button's own disabled-when-empty guard.
+    if (
+      (evt.metaKey || evt.ctrlKey) &&
+      evt.key === "Enter" &&
+      this.sendButton &&
+      !this.sendButton.disabled
+    ) {
+      evt.preventDefault();
+      this.send();
+    }
     evt.stopPropagation();
   };
 
@@ -409,12 +436,16 @@ export class TextArea {
     evt.preventDefault();
     evt.stopPropagation();
     if (!this.sendButton || this.sendButton.disabled) return;
+    this.send();
+  };
 
+  // Shared by the send button's click and the Cmd/Ctrl+Enter shortcut.
+  private send() {
     this.updateContent();
     // Commit changes and close editor
     this.textarea.blur();
     this.onSendHandler();
-  };
+  }
 
   private updateSendButtonState() {
     if (!this.sendButton) return;

@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
 import type { Point } from "geojson";
-import { BrowserSession } from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Comments", () => {
   const session = new BrowserSession();
@@ -14,6 +14,7 @@ describe("Comments", () => {
   });
 
   beforeEach(async () => {
+    captureScreenshotOnTestEnd(session, "comment");
     await session.refresh();
     await session.page.evaluate(async () => {
       const ogma = createOgma({});
@@ -57,7 +58,7 @@ describe("Comments", () => {
 
   it("should create comment on void", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Far from any node or edge (off-diagonal from the n1-n2 edge)
       return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
     });
@@ -72,7 +73,7 @@ describe("Comments", () => {
 
   it("should create comment on node", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // On node n1 at (-100, -100)
       return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
     });
@@ -88,7 +89,7 @@ describe("Comments", () => {
 
   it("should create comment on edge", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Midpoint of edge e1 between (-100,-100) and (100,100) is (0,0)
       return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
     });
@@ -120,7 +121,7 @@ describe("Comments", () => {
       editor.add(polygon);
       editor.unselect();
 
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Center of the polygon
       return ogma.view.graphToScreenCoordinates({ x: 105, y: -75 });
     });
@@ -141,14 +142,14 @@ describe("Comments", () => {
   it("should create a second comment at its own coordinate, not the first's", async () => {
     // First comment, drawn near graph centre at (-40, -40).
     const firstPos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       return ogma.view.graphToScreenCoordinates({ x: -40, y: -40 });
     });
     await drawComment(session, firstPos);
 
     // Second comment, drawn at a different on-screen graph point (40, 40).
     const secondPos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       return ogma.view.graphToScreenCoordinates({ x: 40, y: 40 });
     });
     await drawComment(session, secondPos);
@@ -181,7 +182,7 @@ describe("Comments", () => {
   // stay detached - not snap back or drag the whole comment along with it.
   it("should detach the arrow's node end when dragged away by hand", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // On node n1 at (-100, -100)
       return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
     });
@@ -252,7 +253,7 @@ describe("Comments", () => {
   // host app's own detect config survives the drag untouched.
   it("should turn off node/edge detection while dragging a comment over a node", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Far from any node, so this comment's connector doesn't attach to n1.
       return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
     });
@@ -330,7 +331,7 @@ describe("Comments", () => {
       editor.add(polygon);
       editor.unselect();
 
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Inside the polygon, so the arrow's free end snaps to it.
       return ogma.view.graphToScreenCoordinates({ x: 105, y: -75 });
     });
@@ -406,7 +407,7 @@ describe("Comments", () => {
     });
 
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50 });
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       return ogma.view.graphToScreenCoordinates({ x: 105, y: -75 });
     });
     await drawComment(session, pos);
@@ -530,5 +531,296 @@ describe("Comments", () => {
     // The endpoint actually moved with the drag, not left behind at (0, 0).
     expect(after[0]).not.toBeCloseTo(0, 0);
     expect(after[1]).not.toBeCloseTo(0, 0);
+  }, 10000);
+
+  // Regression / clarity: a freshly drawn comment drops straight into edit
+  // mode - see Drawing.startComment's onCommentCreated callback, which
+  // calls startEditingText() the instant the comment is added. There's no
+  // separate "now click to add text" step; the textarea is already focused
+  // by the time the draw gesture ends.
+  it("should drop straight into edit mode after drawing, ready to type", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    // The textarea exists and already has focus - no extra click needed.
+    const focused = await session.page.evaluate(
+      () => document.activeElement?.tagName === "TEXTAREA"
+    );
+    expect(focused).toBe(true);
+
+    await session.page.keyboard.type("first draft");
+    const liveValue = await session.page.evaluate(
+      () => document.querySelector("textarea")?.value
+    );
+    expect(liveValue).toBe("first draft");
+
+    // Deselecting commits the live textarea value into the real content.
+    await session.page.evaluate(() => { editor.unselect(); });
+    const content = await session.page.evaluate(() => {
+      const comment = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "comment");
+      return (comment?.properties as { content?: string })?.content;
+    });
+    expect(content).toBe("first draft");
+  }, 10000);
+
+  // Regression / clarity: re-opening an ALREADY-CREATED comment needs two
+  // separate clicks - the first click only selects it (TextHandler.onClick's
+  // justActivated gate deliberately skips entering edit mode on the very
+  // click that selected the comment), the second click is what actually
+  // enters edit mode. This is the "am I editing or adding text" ambiguity -
+  // asserting each click's effect on its own makes the two-step gesture
+  // explicit and catches a regression either way (edit firing too early on
+  // the select click, or never firing on the second click).
+  it("should require a second click to edit an already-selected comment, prefilled with its existing content", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+    await session.page.keyboard.type("existing note");
+    await session.page.evaluate(() => { editor.unselect(); });
+
+    const commentScreen = await session.page.evaluate(() => {
+      const comment = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "comment") as any;
+      const [cx, cy] = comment.geometry.coordinates;
+      return ogma.view.graphToScreenCoordinates({ x: cx, y: cy });
+    });
+
+    // First click: selects only. No textarea yet - this click must not be
+    // mistaken for "entering edit mode".
+    await session.page.mouse.click(commentScreen.x, commentScreen.y);
+    const afterFirstClick = await session.page.evaluate(() => ({
+      selected: editor.getSelectedAnnotations().features.length,
+      hasTextarea: !!document.querySelector("textarea")
+    }));
+    expect(afterFirstClick.selected).toBe(1);
+    expect(afterFirstClick.hasTextarea).toBe(false);
+
+    // Second click: now it actually enters edit mode, pre-filled with the
+    // existing content (this is "editing", not "adding" fresh blank text).
+    await session.page.mouse.click(commentScreen.x, commentScreen.y);
+    const prefilled = await session.page.evaluate(
+      () => document.querySelector("textarea")?.value
+    );
+    expect(prefilled).toBe("existing note");
+
+    // Appending text edits the existing content in place.
+    await session.page.keyboard.type(" - updated");
+    await session.page.evaluate(() => { editor.unselect(); });
+    const content = await session.page.evaluate(() => {
+      const comment = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "comment");
+      return (comment?.properties as { content?: string })?.content;
+    });
+    expect(content).toBe("existing note - updated");
+  }, 10000);
+
+  // Regression test: typing enough lines to auto-grow the comment box must
+  // move the connector's box-side endpoint along with it, live, not just
+  // once the edit session ends. TextArea.updateContent()'s auto-grow only
+  // ever writes to store.liveUpdates (never state.features), which every
+  // other link-follow path is blind to (LinkSync's setMultipleAttributes/
+  // addEdges/removeEdges listeners, and Links.onAddArrow's state.features
+  // subscriber) - LinkSync.onEditingLiveUpdate is the one path that reacts
+  // to it, scoped to state.editingFeature specifically so it can't overlap
+  // with the separate interactive-drag cascade.
+  it("should keep the connector attached to a growing comment box while typing", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      // On node n1, so the arrow's far end has a fixed reference point.
+      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+    });
+    await drawComment(session, pos);
+
+    const readLiveEndpoint = () =>
+      session.page.evaluate(() => {
+        // Reach past the public API for the *live* (not yet committed)
+        // merged state - same precedent as the internal-state reads in
+        // test/unit/links.test.ts.
+        const state = (editor as any)["store"].getState();
+        const feats = editor.getAnnotations().features;
+        const comment = feats.find((f) => f.properties.type === "comment")!;
+        const arrow = feats.find((f) => f.properties.type === "arrow")!;
+        const liveComment = state.getMergedFeature(comment.id);
+        const liveArrow = state.getMergedFeature(arrow.id);
+        return {
+          commentHeight: (liveComment.properties as { height: number }).height,
+          // The arrow's node-side endpoint is coordinates[1] here (see
+          // "should create comment on node"); the comment-side one is [0].
+          arrowBoxEnd: liveArrow.geometry.coordinates[0] as number[]
+        };
+      });
+
+    const before = await readLiveEndpoint();
+
+    // Grow the box across several lines - well past one auto-grow step.
+    for (let i = 0; i < 4; i++) {
+      await session.page.keyboard.type(`line ${i}`);
+      await session.page.keyboard.press("Enter");
+    }
+
+    const after = await readLiveEndpoint();
+
+    // The box actually grew - otherwise this test isn't exercising anything.
+    expect(after.commentHeight).toBeGreaterThan(before.commentHeight + 20);
+
+    // The connector's box-side endpoint must have moved along with the
+    // growing edge, live - not stayed frozen at its pre-typing position.
+    const moved = Math.hypot(
+      after.arrowBoxEnd[0] - before.arrowBoxEnd[0],
+      after.arrowBoxEnd[1] - before.arrowBoxEnd[1]
+    );
+    expect(moved).toBeGreaterThan(10);
+  }, 10000);
+
+  it("should send on Cmd/Ctrl+Enter, and keep plain Enter as a newline", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    await session.page.keyboard.type("line1");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.type("line2");
+
+    // Plain Enter must not have sent - still editing, both lines present.
+    const midEdit = await session.page.evaluate(() => ({
+      hasTextarea: !!document.querySelector("textarea"),
+      value: document.querySelector("textarea")?.value
+    }));
+    expect(midEdit.hasTextarea).toBe(true);
+    expect(midEdit.value).toBe("line1\nline2");
+
+    // Cmd+Enter (Mac) / Ctrl+Enter (Windows/Linux) - the modifier that
+    // actually reaches the page depends on the OS Playwright runs on, so
+    // press both; whichever one is native is what a real user would send.
+    await session.page.keyboard.down("Meta");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.up("Meta");
+    await session.page.keyboard.down("Control");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.up("Control");
+
+    const afterSend = await session.page.evaluate(() => {
+      const comment = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "comment");
+      return {
+        hasTextarea: !!document.querySelector("textarea"),
+        content: (comment?.properties as { content?: string })?.content
+      };
+    });
+    expect(afterSend.hasTextarea).toBe(false);
+    expect(afterSend.content).toBe("line1\nline2");
+  }, 10000);
+
+  // Regression test: while a comment is being edited, its connector line
+  // must render *behind* the box, not on top of it. LAYERS.EDITOR is a
+  // higher index than LAYERS.SHAPES, but that index alone doesn't control
+  // DOM stacking order - the shapes SVG layer is created once, early, at
+  // Control construction, while the editor overlay is created fresh per
+  // edit session, much later; layers otherwise just append in creation
+  // order, so without an explicit moveToTop() the long-lived shapes layer
+  // ends up DOM-after (visually above) the freshly-created editor overlay.
+  it("should render the connector behind the box while editing, not on top of it", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    const stackOrder = await session.page.evaluate(() => {
+      const editorDiv = document.querySelector(".ogma-annotation-text-editor");
+      // The shapes layer is the one with the demo comment/arrow purple
+      // (#3A03CF) baked into its rule defs - distinct from e.g. the send
+      // button icon's own little inline svg, which lives inside the editor
+      // overlay itself rather than being a stacking sibling of it.
+      const shapesSvg = Array.from(
+        document.querySelectorAll("#graph-container svg")
+      ).find(
+        (svg) =>
+          !svg.closest(".ogma-annotation-text-editor") &&
+          svg.innerHTML.includes("3A03CF")
+      );
+      if (!editorDiv || !shapesSvg) {
+        return { editorFound: !!editorDiv, shapesSvgFound: !!shapesSvg };
+      }
+      const rel = editorDiv.compareDocumentPosition(shapesSvg);
+      return {
+        editorFound: true,
+        shapesSvgFound: true,
+        // DOCUMENT_POSITION_FOLLOWING (4): shapesSvg comes after editorDiv
+        // in the DOM, i.e. paints on top of it - the bug this guards
+        // against.
+        shapesPaintsOverEditor: !!(rel & Node.DOCUMENT_POSITION_FOLLOWING)
+      };
+    });
+
+    expect(stackOrder.editorFound).toBe(true);
+    expect(stackOrder.shapesSvgFound).toBe(true);
+    expect(stackOrder.shapesPaintsOverEditor).toBe(false);
+  }, 10000);
+
+  // Regression test: creating a comment must never commit a state where the
+  // comment exists but its connector still points at whatever the arrow's
+  // draw gesture originally snapped to (its own start point, an unrelated
+  // node/edge, or nothing) instead of the comment - i.e. no torn frame
+  // where the box is visible with its connector's free end "in the void".
+  // CommentDrawingHandler.onArrowComplete used to add the comment and
+  // correct the arrow's link in two separate store commits; this asserts
+  // the invariant directly (every features snapshot is internally
+  // consistent) rather than trying to catch a bad paint in a screenshot,
+  // which isn't reliable at this timescale.
+  it("should never commit a comment before its connector is linked to it", async () => {
+    const pos = await session.page.evaluate(() => {
+      // Record every `features` snapshot the store goes through - most
+      // reliable way to catch a torn intermediate commit, independent of
+      // render/paint timing.
+      (window as any).__snapshots = [];
+      (editor as any)["store"].subscribe(
+        (s: any) => s.features,
+        (features: any) => {
+          // Deep clone - some features get mutated in place by later steps
+          // of the same gesture (e.g. the comment/arrow objects
+          // CommentDrawingHandler holds direct references to), so pushing
+          // the live reference would let a later mutation retroactively
+          // "fix" what this snapshot looks like once read back afterwards.
+          (window as any).__snapshots.push(
+            JSON.parse(JSON.stringify(features))
+          );
+        }
+      );
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+
+    const result = await session.page.evaluate(() => {
+      const snapshots = (window as any).__snapshots as Record<string, any>[];
+      const torn = snapshots.find((features) => {
+        const comment = Object.values(features).find(
+          (f: any) => f.properties.type === "comment"
+        ) as any;
+        const arrow = Object.values(features).find(
+          (f: any) => f.properties.type === "arrow"
+        ) as any;
+        if (!comment || !arrow) return false;
+        const link = arrow.properties.link?.start ?? arrow.properties.link?.end;
+        return !link || link.id !== comment.id || link.type !== "comment";
+      });
+      return { snapshotCount: snapshots.length, torn: torn ?? null };
+    });
+
+    expect(result.snapshotCount).toBeGreaterThan(0);
+    expect(result.torn).toBeNull();
   }, 10000);
 });

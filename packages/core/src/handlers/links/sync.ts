@@ -5,7 +5,8 @@ import type {
   Ogma,
   EdgeList,
   Edge,
-  EdgesEvent
+  EdgesEvent,
+  NodesEvent
 } from "@linkurious/ogma";
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId } from "./registry";
@@ -72,10 +73,36 @@ export class LinkSync {
       }
     );
 
+    // A comment/text box auto-grows live while its textarea is being typed
+    // into (TextArea.updateContent -> applyLiveUpdate, per keystroke) - that
+    // never touches `state.features`, so the `setMultipleAttributes`/
+    // `onAddRemoveEdges`-driven paths above (and the commit-triggered
+    // `onAddArrow` in Links) never see it, and a linked arrow's endpoint
+    // would otherwise sit frozen at wherever the box was when editing
+    // started until the edit session ends and commits. React to the live
+    // update directly, scoped to the annotation currently being edited
+    // (`editingFeature`) specifically to avoid overlapping with the
+    // separate, already-correct interactive-drag cascade in
+    // `Links.updateLinkedArrowsDuringDrag` - dragging never sets
+    // `editingFeature`, so this and that path can't both fire for the same
+    // gesture.
+    this.store.subscribe(
+      (state) => ({
+        editing: state.editingFeature,
+        liveUpdates: state.liveUpdates
+      }),
+      this.onEditingLiveUpdate,
+      {
+        equalityFn: (a, b) =>
+          a.editing === b.editing && a.liveUpdates === b.liveUpdates
+      }
+    );
+
     this.ogma.events
       // @ts-expect-error private event
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
       .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
+      .on("removeNodes", this.onRemoveNodes)
       .on("viewChanged", this.refresh);
   }
 
@@ -95,6 +122,36 @@ export class LinkSync {
     )
       return;
     this.requestUpdateFromNodePositions(elements.toList() as NodeList);
+  };
+
+  // Re-entrancy guard: applying the recomputed arrow endpoint below is
+  // itself a `state.liveUpdates` write, which would otherwise immediately
+  // re-trigger this same subscriber.
+  private applyingEditingLiveUpdate = false;
+
+  private onEditingLiveUpdate = ({ editing }: { editing: Id | null }) => {
+    if (!editing || this.applyingEditingLiveUpdate) return;
+    const linkIds = this.index.annotationToLink.get(editing);
+    if (!linkIds || linkIds.size === 0) return;
+
+    const linksToUpdate: LinksByArrowId = new Map();
+    linkIds.forEach((linkId) => {
+      const link = this.index.links.get(linkId);
+      if (!link) return;
+      const arrowId = link.arrow;
+      linksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+    });
+    if (linksToUpdate.size === 0) return;
+
+    const updates = this._computeArrowUpdates(linksToUpdate);
+    if (Object.keys(updates).length === 0) return;
+
+    this.applyingEditingLiveUpdate = true;
+    try {
+      this.store.getState().applyLiveUpdates(updates);
+    } finally {
+      this.applyingEditingLiveUpdate = false;
+    }
   };
 
   public refresh = () => {
@@ -268,6 +325,49 @@ export class LinkSync {
     this.update(edgeLinksToUpdate);
   };
 
+  /**
+   * A removed node leaves its links dangling otherwise: the registry
+   * (`nodeToLink` etc.) has no listener for node removal, so an arrow's
+   * `properties.link` would keep pointing at an id that no longer resolves
+   * to anything - harmless until something re-reads it (e.g. a future
+   * `updateFromNodePositions` pass, or a re-export/re-import round trip).
+   * Detach the link (same shape as a manual "drag the endpoint away"
+   * detach) rather than deleting the arrow - the annotation stays exactly
+   * where it last was, just no longer tracked.
+   */
+  private onRemoveNodes = ({ nodes }: NodesEvent<unknown, unknown>) => {
+    const removedIds = nodes.getId();
+    if (!removedIds.length) return;
+    const state = this.store.getState();
+    const updates: Record<Id, Arrow> = {};
+
+    removedIds.forEach((nodeId) => {
+      const linkIds = this.index.nodeToLink.get(nodeId);
+      if (!linkIds) return;
+      // index.remove() mutates this same Set as we go - snapshot first.
+      Array.from(linkIds).forEach((linkId) => {
+        const link = this.index.links.get(linkId);
+        if (!link) return;
+        const arrowId = link.arrow;
+        // Reuse the same clone if both sides of this arrow got detached in
+        // this pass (both ends linked to nodes removed in the same batch).
+        const arrow = updates[arrowId] ?? (state.getFeature(arrowId) as Arrow);
+        if (!arrow) return;
+        const clone: Arrow = {
+          ...arrow,
+          properties: { ...arrow.properties, link: { ...arrow.properties.link } }
+        };
+        this.index.remove(clone, link.side);
+        updates[arrowId] = clone;
+      });
+    });
+
+    if (Object.keys(updates).length === 0) return;
+    state.batchUpdate(() => {
+      state.updateFeatures(updates as Record<Id, Partial<Annotation>>);
+    });
+  };
+
   private commit = () => {
     const state = this.store.getState();
     state.batchUpdate(this.commitLiveUpdates);
@@ -400,6 +500,7 @@ export class LinkSync {
     this.ogma.events
       .off(this.onSetMultipleAttributes)
       .off(this.onAddRemoveEdges)
+      .off(this.onRemoveNodes)
       .off(this.refresh);
   }
 }

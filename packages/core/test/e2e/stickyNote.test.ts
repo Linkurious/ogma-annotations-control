@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession } from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Sticky notes", () => {
   const session = new BrowserSession();
@@ -13,6 +13,7 @@ describe("Sticky notes", () => {
   });
 
   beforeEach(async () => {
+    captureScreenshotOnTestEnd(session, "stickyNote");
     await session.refresh();
     await session.page.evaluate(async () => {
       const ogma = createOgma({});
@@ -21,11 +22,19 @@ describe("Sticky notes", () => {
     });
   });
 
+  // Each test below places its note at its own on-screen spot (rather than
+  // all four landing on the same centre point) purely so a headful run
+  // (E2E_HEADFUL=1) is easy to tell apart test-to-test at a glance - the
+  // two plain-click tests would otherwise look identical up to the point
+  // they diverge, and likewise the two drag-out ones.
+
   it("should stay selected and editable after a plain click (no drag)", async () => {
-    const pos = await session.page.evaluate(() => {
-      editor.enableStickyNoteDrawing();
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
-    });
+    await session.page.evaluate(() => editor.enableStickyNoteDrawing());
+    // Default click-size square (160x160) is centred on the click point -
+    // stay well clear of the container edges. A plain screen-space point
+    // (no graph-coordinate conversion needed, since we're not placing
+    // relative to anything in the graph).
+    const pos = { x: 110, y: 110 };
 
     // A plain click: no intermediate mouse.move steps, so this is a single
     // mousedown+mouseup with no drag - exactly the case that used to get
@@ -64,7 +73,7 @@ describe("Sticky notes", () => {
     // Deselecting (e.g. clicking elsewhere) is what actually ends the edit
     // session and commits the live update into the annotation's real
     // content - a bare DOM blur() only syncs into liveUpdates.
-    await session.page.evaluate(() => editor.unselect());
+    await session.page.evaluate(() => { editor.unselect(); });
 
     const content = await session.page.evaluate(() => {
       const note = editor
@@ -77,10 +86,8 @@ describe("Sticky notes", () => {
   }, 10000);
 
   it("should not pan the viewport while placing the note", async () => {
-    const pos = await session.page.evaluate(() => {
-      editor.enableStickyNoteDrawing();
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
-    });
+    await session.page.evaluate(() => editor.enableStickyNoteDrawing());
+    const pos = { x: 400, y: 110 };
 
     const centerBefore = await session.page.evaluate(() =>
       ogma.view.getCenter()
@@ -104,10 +111,10 @@ describe("Sticky notes", () => {
   }, 10000);
 
   it("should size to a drag instead of the click default", async () => {
-    const pos = await session.page.evaluate(() => {
-      editor.enableStickyNoteDrawing();
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
-    });
+    await session.page.evaluate(() => editor.enableStickyNoteDrawing());
+    // Top-left anchor for a +300/+220 drag - stays inside the 512x512
+    // container (500,300 endpoint) instead of spilling past its edge.
+    const pos = { x: 100, y: 40 };
 
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();
@@ -135,10 +142,10 @@ describe("Sticky notes", () => {
   it("should drop into editing after a drag too, not just a plain click", async () => {
     // Unlike box/text, sticky notes drop into editing after either
     // completion path - see startDrawing()'s autoEditAfterDrag.
-    const pos = await session.page.evaluate(() => {
-      editor.enableStickyNoteDrawing();
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
-    });
+    await session.page.evaluate(() => editor.enableStickyNoteDrawing());
+    // Top-left anchor for a +200/+150 drag - stays inside the container
+    // (endpoint 480,360) and clear of the other tests' spots above.
+    const pos = { x: 280, y: 210 };
 
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();
