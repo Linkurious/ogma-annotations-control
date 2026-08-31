@@ -136,12 +136,32 @@ export class InteractionController extends EventTarget {
     // otherwise clicking/dragging that endpoint is unreachable: the
     // polygon's much larger hit area wins by pure luck of spatial-index
     // ordering and steals the selection out from under the arrow.
+    //
+    // Comments specifically outrank arrows, though (texts don't - see
+    // below): a comment's arrow is rigid-linked with its start endpoint
+    // snapped right at/inside the comment box (getRigidComment/
+    // translateComment), so the arrow's thin hit-test band routinely
+    // overlaps the comment's own (much larger) rectangular hit area -
+    // detectComment delegates straight to detectText's full width/height
+    // box. Arrow-first there meant clicking inside a visible comment box
+    // could resolve to its own connector line instead - dragging the
+    // comment then actually dragged the arrow, detaching it from its node.
+    // A user aiming at the box they can see should always get the box, not
+    // a thin line hidden underneath it.
+    //
+    // Texts stay behind arrows, unlike comments: an arrow can end at/near
+    // a text the same way, but nothing forces the overlap the way a
+    // comment's own rigid-linked connector does, and flipping this tier
+    // for texts too would make an arrow endpoint that merely happens to
+    // sit inside some unrelated text's box unreachable - the exact
+    // regression this priority scheme exists to prevent, just with "text"
+    // in place of "polygon".
     const DETECT_PRIORITY: Record<string, number> = {
-      arrow: 0,
-      comment: 1,
-      text: 1,
-      box: 2,
-      polygon: 2
+      comment: 0,
+      arrow: 1,
+      text: 2,
+      box: 3,
+      polygon: 3
     };
     const ordered = [...hit].sort(
       (a, b) =>
