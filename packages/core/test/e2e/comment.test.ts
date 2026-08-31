@@ -381,12 +381,9 @@ describe("Comments", () => {
     expect(after.comment[1]).toBeCloseTo(before.comment[1] - 40, 0);
   }, 10000);
 
-  // Same rigid-follow guarantee as the polygon-drag test above, but for the
-  // path a real Ogma layout goes through (Control.onLayout -> Links.update()
-  // -> LinkSync's _computeArrowUpdates), which is a different code path from
-  // an interactive drag (Links.updateLinkedArrowsDuringDrag) - nothing before
-  // this asserted the layout path preserves a comment's exact offset from
-  // its linked node rather than just "the arrow stays close to the node".
+  // Same rigid-follow guarantee as the polygon-drag test above, but through
+  // a real Ogma layout (Control.onLayout -> Links.update()) instead of an
+  // interactive drag - a different code path, previously untested.
   it("should keep a comment at the exact same offset from its node after a real layout run", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });

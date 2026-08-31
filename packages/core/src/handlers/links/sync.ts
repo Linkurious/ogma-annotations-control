@@ -58,19 +58,12 @@ export class LinkSync {
   // into a single recompute - see requestUpdateFromNodePositions for why
   // this waits for Ogma's next rendered frame rather than a fixed timeout.
   private nodePositionFrameHandler?: () => void;
-  // Whether the `geoEnabled`/`geoDisabled`-driven overlay (`onGeoModeChanged`)
-  // is currently sitting in `liveUpdates`. `ogma.geo.enabled()` flips the
-  // instant `.toggle()`/`.enable()`/`.disable()` is *called*, but that event
-  // pair - where the overlay actually gets pushed or cleared - only fires
-  // once the transition's camera animation finishes, up to `duration`ms
-  // later. Neither signal alone is safe to gate commits on: `enabled()`
-  // alone leaves a window, on the way *out* of geo mode, where it already
-  // reads false while the overlay is still the stale geo-projected one
-  // (not cleared until the delayed event); this flag alone leaves the
-  // mirror window on the way *in*, where node x/y are already
-  // geo-projected (empirically, synchronously with the `enabled()` flip)
-  // but the flag hasn't been set yet. `commitBlocked` below ORs both, so
-  // the unsafe window is the union of the two, with no gap on either side.
+  // Whether the geo overlay (onGeoModeChanged) is currently in liveUpdates.
+  // Not redundant with `ogma.geo.enabled()`: that getter flips the instant
+  // `.toggle()` is *called*, but the geoEnabled/geoDisabled events - where
+  // the overlay is actually pushed/cleared - only fire once the
+  // transition's camera animation finishes. `commitBlocked` ORs both so
+  // there's no gap on either side of that lag.
   private geoOverlayActive = false;
   // Zoom last seen outside geo mode - geo's zoom convention is unrelated,
   // so this is the reference scale for reconstructing a rigid-linked
@@ -142,24 +135,11 @@ export class LinkSync {
   }
 
   /**
-   * Node-link mode is the source of truth: `state.features` always holds
-   * graph-space (node-link) geometry, geo mode never writes into it. Geo
-   * mode is *derived* - purely a render-time overlay, applied and dropped
-   * through the same `liveUpdates` mechanism already used for in-progress
-   * drags and live text auto-grow (see the class doc comment).
-   *
-   * On `geoEnabled`, Ogma has already rewritten every node's x/y to its
-   * projected position - push one live (uncommitted) recompute so linked
-   * arrows visually track it. On `geoDisabled`, node x/y are back to their
-   * node-link values, which is exactly what `features` already holds (it
-   * was never touched while geo mode was on) - just drop the overlay
-   * rather than recomputing, and every linked arrow snaps back to its real
-   * geometry for free.
-   *
-   * Everything else that can move a node while geo mode is active (a real
-   * layout, or dragging with `disableNodeDragging: false`) still funnels
-   * through `onSetMultipleAttributes`/`update()` below, which are gated the
-   * same way - see `requestCommit`'s geo check.
+   * geoEnabled: Ogma has already rewritten every node's x/y to its
+   * projected position - push one live (uncommitted) recompute (see class
+   * doc for why it's live-only). geoDisabled: node-link values are exactly
+   * what `features` already holds, so just drop the overlay and every
+   * linked arrow snaps back for free.
    */
   private onGeoModeChanged = () => {
     this.geoOverlayActive = this.ogma.geo.enabled();
@@ -170,11 +150,8 @@ export class LinkSync {
       this.store.getState().applyLiveUpdates(updates);
     } else {
       this.store.getState().clearLiveUpdates(arrowIds);
-      // `_computeArrowUpdates` (called above, on the way in) unconditionally
-      // marks every arrow it touches as `updatedItems` - drop them now that
-      // their overlay is gone, so a later, unrelated commit doesn't pick
-      // these ids up again (belt-and-suspenders on top of the `ids in
-      // liveUpdates` filter in `commitLiveUpdates` itself).
+      // Also drop from updatedItems - defense in depth alongside
+      // commitLiveUpdates' own "ids still in liveUpdates" filter.
       arrowIds.forEach((id) => this.updatedItems.delete(id));
     }
   };
@@ -261,22 +238,12 @@ export class LinkSync {
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
     // Wait for Ogma's next rendered frame before reading node positions,
-    // not a fixed setTimeout - an *animated* move (any setMultipleAttributes
-    // call with `duration > 0`, e.g. a layout) doesn't write the node's
-    // x/y attributes synchronously: Ogma queues that write and only
-    // actually applies it from inside its own per-frame animation-
-    // processing step, which runs on the browser's very next
-    // requestAnimationFrame tick - a 1ms setTimeout reliably wins that
-    // race and reads the STALE pre-move position, computing a no-op
-    // recompute. That's why a linked arrow used to sit frozen at a node's
-    // old position for a layout's entire animation, only catching up once
-    // `layoutEnd` (Control.onLayout) commits the true final geometry at
-    // the very end - it looked like the arrow "detached" for the whole
-    // transition. Anchoring to `frame` instead guarantees the read
-    // happens after Ogma has actually written the position for this tick,
-    // for animated and instant (duration: 0, e.g. a real mouse drag)
-    // moves alike - `frame` fires on every rendered frame regardless of
-    // what triggered the redraw.
+    // not a fixed setTimeout: an *animated* setMultipleAttributes call
+    // (duration > 0, e.g. a layout) queues its x/y write for the next
+    // rAF tick instead of applying it synchronously, so a 1ms timeout can
+    // win that race and read the stale pre-move position - a linked arrow
+    // would then sit frozen until layoutEnd's final commit. `frame` fires
+    // after the write lands either way, animated or instant.
     if (this.nodePositionFrameHandler) {
       this.ogma.events.off(this.nodePositionFrameHandler);
     }
@@ -503,16 +470,12 @@ export class LinkSync {
   }
 
   /**
-   * A rigid-linked comment's offset from its anchor is a graph-space
-   * quantity chosen to look right at whatever zoom was active when it was
-   * placed. That's fine for a node-link move (translating by the anchor's
-   * raw delta keeps the offset exact, and node-link zoom stays in a
-   * comparable range) - but geo mode's zoom is a different convention
-   * entirely (observed 64 vs. ~3 for the same demo), so applying that same
-   * raw delta blows the offset up by the mismatch. Rescales it back to
-   * what it'd look like at the current (geo) zoom instead, using
-   * `lastNodeLinkZoom` as the reference scale the offset was chosen at.
-   * A no-op outside geo mode.
+   * Rescales a rigid-follow delta for geo mode. The comment's graph-space
+   * offset from its anchor was chosen to look right at node-link zoom
+   * (~3, say); geo's zoom is a different convention (observed 64) with no
+   * relation to that, so translating by the anchor's raw delta keeps the
+   * offset graph-exact but visually explodes it. `lastNodeLinkZoom` is the
+   * reference scale the offset was chosen at. No-op outside geo mode.
    */
   private _geoRigidFollowDelta(
     rawDelta: { x: number; y: number },

@@ -252,22 +252,13 @@ describe("Anchor follow", () => {
     }
   }, 15000);
 
-  // Regression test for a real UX bug: a node-linked arrow used to sit
-  // frozen at the node's *old* position for the whole duration of an
-  // *animated* layout (duration > 0), only snapping to the correct spot
-  // once layoutEnd fired at the very end - looking like the connector had
-  // detached for the whole transition. Root cause: an animated
-  // setMultipleAttributes call doesn't write the node's x/y attributes
-  // synchronously - Ogma queues that write and only applies it from
-  // inside its own per-frame animation processing, on the next rendered
-  // frame - so LinkSync's old fixed 1ms setTimeout reliably read the
-  // stale pre-move position and computed a no-op. Fixed by anchoring the
-  // debounced read to Ogma's own "frame" event instead (see
-  // requestUpdateFromNodePositions in links/sync.ts).
-  //
-  // Samples every rendered frame from inside the page (a round-trip
-  // page.evaluate per frame would be too slow/imprecise for this) to
-  // check *when*, not just *whether*, the arrow catches up.
+  // Regression test: an animated layout's setMultipleAttributes doesn't
+  // write x/y synchronously (Ogma queues it for the next rendered frame),
+  // so LinkSync's old fixed 1ms setTimeout read stale positions and a
+  // linked arrow sat frozen until layoutEnd's final commit (see
+  // requestUpdateFromNodePositions in links/sync.ts). Samples every
+  // rendered frame from inside the page (round-trip page.evaluate calls
+  // are too slow/imprecise here) to check *when* the arrow catches up.
   it("should keep a node-linked arrow tracking closely during an animated layout, not just at its end", async () => {
     const samples = await session.page.evaluate(async () => {
       createOgma({});

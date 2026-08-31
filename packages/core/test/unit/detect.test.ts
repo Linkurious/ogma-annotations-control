@@ -601,14 +601,9 @@ describe("HitDetector", () => {
       expect((result as Comment).properties.content).toBe("Expanded comment");
     });
 
-    // Regression test: a comment's connecting arrow is rigid-linked with
-    // its start endpoint snapped right at/inside the comment box
-    // (getRigidComment/translateComment), so the two routinely overlap at
-    // the exact point a user clicks to grab the comment. Before this fix,
-    // arrow had blanket priority over comment - clicking inside a visible
-    // comment box could resolve to its own connector line instead, and
-    // dragging the comment then actually dragged the arrow, detaching it
-    // from its node.
+    // Regression test: a comment's arrow routinely overlaps the comment's
+    // own box (see DETECT_PRIORITY in interaction/index.ts) - dragging the
+    // comment used to be able to grab the arrow instead, detaching it.
     it("should prefer a comment over its own overlapping connecting arrow", () => {
       const comment = createComment(100, 100, "Has an arrow underneath");
       comment.properties.mode = "expanded";

@@ -80,34 +80,18 @@ const control = new Control(ogma);
 const GROUP = ["Brussels", "Amsterdam", "Cologne"];
 const ANCHOR = "Paris";
 
-// --- Node-link view: force layout, deliberately unrelated to geography ----
-//
-// Run *before* building any annotation below. The dataset's authored x/y
-// (used only as a force-layout seed) spans a much wider, differently-scaled
-// range than the tight cluster the algorithm settles on - building
-// annotations off the pre-layout positions, then running the layout after,
-// would drag them arbitrarily far via the arrow's node-follow (and any
-// fixed graph-unit offset, like the callout's below, would no longer be
-// anywhere near "150 screen pixels" once the zoom-to-fit settles). Doing
-// annotations after the layout is also just how a real user would build
-// this scene - annotating the graph as currently shown, not as it used to
-// be laid out.
+// Run the layout *before* building any annotation - the dataset's authored
+// x/y is just a force-layout seed on a much wider scale than the cluster
+// it settles into, so annotating first and laying out after would drag
+// everything arbitrarily far via the arrow's node-follow.
 await ogma.layouts.force({ locate: true });
 
-// --- Callout: comment + arrow linked to a live graph node -----------------
-//
-// This is the part the plugin already models end-to-end: a comment with an
-// arrow whose end is `control.link()`-ed to a node. `LinkSync` keeps the
-// arrow's node-side endpoint pinned to that node whenever the node moves -
-// drag, layout, or a geo mode toggle (see `LinkSync.onGeoModeChanged`: the
-// toggle is treated as a derived, render-only overlay, never committed
-// into node-link geometry - toggle the checkbox and watch this arrow
-// track Paris, then toggle back and see it's exactly where it started).
-//
-// The callout's offset from the node is expressed in *screen* pixels and
-// converted through the current zoom, same idea as the reference example's
-// `u = 1/zoom` - a raw graph-unit offset would land some arbitrary distance
-// away depending on how zoomed-in the current layout happens to be.
+// Callout: comment + arrow linked to a live node via `control.link()`.
+// `LinkSync` keeps the arrow pinned to the node through drags, layouts,
+// and geo toggles (a render-only overlay, never committed - toggle the
+// checkbox and it tracks, then returns to its exact original spot).
+// Offset is in *screen* pixels, divided by zoom - a raw graph-unit offset
+// would land some arbitrary distance away depending on current zoom.
 const anchor = ogma.getNode(ANCHOR)!;
 const { x: ax, y: ay } = anchor.getPosition();
 const zoom = ogma.view.getZoom();
@@ -129,18 +113,12 @@ control.add(comment);
 control.add(arrow);
 control.link(arrow.id, anchor, SIDE_END);
 
-// --- Group box: NOT wired to follow the group (yet) ------------------------
-//
-// The reference example's box around [Brussels, Amsterdam, Cologne] is
-// recomputed from `ogma.getNodes(GROUP).getBoundingBox()` on every draw -
-// a box that lives around a *set* of nodes, not one. This plugin has no
-// such link today (that's #134: region shapes following a group of
-// contained nodes - and it'll need implementing for every shape that can
-// wrap a region, not just polygons: boxes today, circles once that shape
-// exists), so this box is placed once at start-up and left static - it
-// will visibly drift off the cluster after the force layout runs and
-// again after any geo toggle. Left in deliberately, as the second half of
-// the gap this example exists to demonstrate, not fixed here.
+// Group box: NOT wired to follow the group (yet). This plugin has no link
+// for "box wraps a *set* of nodes" today - that's #134, and it'll need
+// implementing for every region shape (boxes, polygons, circles later),
+// not just one. Placed once and left static on purpose, as the other half
+// of the gap this example demonstrates - it'll drift off the cluster
+// after the layout runs and again after any geo toggle.
 const bb = ogma.getNodes(GROUP).getBoundingBox();
 const groupBox = createBox(bb.minX - 40, bb.minY - 40, bb.width + 80, bb.height + 80, {
   strokeColor: "#e8346d",
@@ -149,18 +127,11 @@ const groupBox = createBox(bb.minX - 40, bb.minY - 40, bb.width + 80, bb.height 
 });
 control.add(groupBox);
 
-// --- Plain node-to-node arrow, no comment on either end --------------------
-//
-// Isolates the case that mattered for finding the gap in the first place:
-// an arrow linked directly to two nodes, with no comment (fixedSize
-// annotation) on either end. `LinkSync.refresh()` (the `viewChanged`
-// listener) only walks annotations that are text-with-fixedSize or
-// comments to decide what to recompute - a bare node-to-node arrow isn't
-// reachable through that path at all. Before `LinkSync.onGeoModeChanged`
-// existed, this arrow silently froze at its old node-link coordinates on
-// a geo toggle while the comment's arrow above (reachable via the
-// fixedSize path, by coincidence) kept following - now both track
-// correctly, through the same `geoEnabled`/`geoDisabled`-driven overlay.
+// Plain node-to-node arrow, no comment on either end - the case that
+// originally exposed the geo-mode gap: `LinkSync.refresh()`'s viewChanged
+// path only recomputes fixedSize (text/comment) targets, so a bare arrow
+// like this wasn't reachable from it and silently froze on a geo toggle.
+// Now tracks correctly via the same geoEnabled/geoDisabled overlay.
 const london = ogma.getNode("London")!;
 const routeArrow = createArrow(
   london.getPosition().x,

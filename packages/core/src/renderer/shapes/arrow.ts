@@ -81,21 +81,12 @@ export function renderArrow(
   const style = arrow.properties.style || defaultArrowStyle;
   const { tail, strokeWidth = 0, head, strokeColor, strokeType } = style;
   const vec = subtract(end, start);
-  // Comment arrows are always pixel-constant (UI chrome, not graph
-  // content), so `strokeWidth` etc. are divided by zoom to hold their
-  // on-screen size steady - same idea as a comment's own fixedSize. A
-  // plain arrow instead scales *with* the graph by design (its thickness
-  // is meaningful graph-space content, same as an edge you'd draw at a
-  // deliberate size) - correct in node-link mode, where `state.zoom` is a
-  // moderate camera scale factor a stroke width was sanely chosen against.
-  // Geo mode's zoom is a different convention entirely (Leaflet tile
-  // zoom - commonly 1-20, but can run much higher) with no relationship to
-  // the scale a plain arrow's `strokeWidth` was chosen at, so treating it
-  // as "scales with content" there just balloons the stroke by however
-  // much larger that number happens to be. Fall back to the same
-  // pixel-constant treatment as comment arrows while geo mode is active -
-  // this only takes effect during geo mode, so ordinary node-link zoom
-  // scaling is unaffected.
+  // Comment arrows are pixel-constant UI chrome (strokeWidth etc. divided
+  // by zoom). A plain arrow scales *with* the graph instead, by design -
+  // correct in node-link mode, but geo's zoom convention (Leaflet tile
+  // zoom, can run into the tens+) has no relation to the scale a
+  // strokeWidth was chosen at, so it balloons the stroke. Same
+  // pixel-constant treatment while geo is active; node-link is unaffected.
   const zoom = isCommentArrow(arrow) || isGeoActive ? 1 / state.zoom : 1;
 
   const tipLength =
