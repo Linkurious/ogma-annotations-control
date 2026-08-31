@@ -23,9 +23,6 @@ type XYR = { x: number; y: number; radius: number };
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
 const COMMIT_DEBOUNCE_MS = 1;
-// Debounce window for updateFromNodePositions: waits one tick so Ogma has
-// finished writing the node's new x/y/radius attributes before we read them.
-const NODE_POSITION_DEBOUNCE_MS = 1;
 // Throttle for the zoom/rotation-driven fixedSize refresh — cheap enough to
 // run near every frame without saturating the main thread.
 const REFRESH_THROTTLE_MS = 20;
@@ -56,7 +53,11 @@ export class LinkSync {
   private geometry: LinkGeometry;
   private updatedItems: Set<Id>;
   private commitTimeout!: ReturnType<typeof setTimeout>;
-  private nodePositionTimeout?: ReturnType<typeof setTimeout>;
+  // Pending "read node positions" callback, coalescing a burst of
+  // setMultipleAttributes calls (many per drag, or one per animated layout)
+  // into a single recompute - see requestUpdateFromNodePositions for why
+  // this waits for Ogma's next rendered frame rather than a fixed timeout.
+  private nodePositionFrameHandler?: () => void;
   // Whether the `geoEnabled`/`geoDisabled`-driven overlay (`onGeoModeChanged`)
   // is currently sitting in `liveUpdates`. `ogma.geo.enabled()` flips the
   // instant `.toggle()`/`.enable()`/`.disable()` is *called*, but that event
@@ -251,12 +252,31 @@ export class LinkSync {
   private throttledRefresh = throttle(() => this.refresh(), REFRESH_THROTTLE_MS);
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
-    // debounce to next tick to get the real coordinates
-    clearTimeout(this.nodePositionTimeout);
-    this.nodePositionTimeout = setTimeout(
-      () => this.updateFromNodePositions(nodes),
-      NODE_POSITION_DEBOUNCE_MS
-    );
+    // Wait for Ogma's next rendered frame before reading node positions,
+    // not a fixed setTimeout - an *animated* move (any setMultipleAttributes
+    // call with `duration > 0`, e.g. a layout) doesn't write the node's
+    // x/y attributes synchronously: Ogma queues that write and only
+    // actually applies it from inside its own per-frame animation-
+    // processing step, which runs on the browser's very next
+    // requestAnimationFrame tick - a 1ms setTimeout reliably wins that
+    // race and reads the STALE pre-move position, computing a no-op
+    // recompute. That's why a linked arrow used to sit frozen at a node's
+    // old position for a layout's entire animation, only catching up once
+    // `layoutEnd` (Control.onLayout) commits the true final geometry at
+    // the very end - it looked like the arrow "detached" for the whole
+    // transition. Anchoring to `frame` instead guarantees the read
+    // happens after Ogma has actually written the position for this tick,
+    // for animated and instant (duration: 0, e.g. a real mouse drag)
+    // moves alike - `frame` fires on every rendered frame regardless of
+    // what triggered the redraw.
+    if (this.nodePositionFrameHandler) {
+      this.ogma.events.off(this.nodePositionFrameHandler);
+    }
+    this.nodePositionFrameHandler = () => {
+      this.nodePositionFrameHandler = undefined;
+      this.updateFromNodePositions(nodes);
+    };
+    this.ogma.events.once("frame", this.nodePositionFrameHandler);
   }
 
   private updateFromNodePositions(nodes: NodeList) {
@@ -582,7 +602,9 @@ export class LinkSync {
 
   public destroy() {
     clearTimeout(this.commitTimeout);
-    clearTimeout(this.nodePositionTimeout);
+    if (this.nodePositionFrameHandler) {
+      this.ogma.events.off(this.nodePositionFrameHandler);
+    }
     this.ogma.events
       .off(this.onSetMultipleAttributes)
       .off(this.onAddRemoveEdges)
