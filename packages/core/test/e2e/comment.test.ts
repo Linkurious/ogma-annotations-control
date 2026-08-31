@@ -381,6 +381,64 @@ describe("Comments", () => {
     expect(after.comment[1]).toBeCloseTo(before.comment[1] - 40, 0);
   }, 10000);
 
+  // Same rigid-follow guarantee as the polygon-drag test above, but for the
+  // path a real Ogma layout goes through (Control.onLayout -> Links.update()
+  // -> LinkSync's _computeArrowUpdates), which is a different code path from
+  // an interactive drag (Links.updateLinkedArrowsDuringDrag) - nothing before
+  // this asserted the layout path preserves a comment's exact offset from
+  // its linked node rather than just "the arrow stays close to the node".
+  it("should keep a comment at the exact same offset from its node after a real layout run", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      // On node n1 at (-100, -100)
+      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+    });
+    await drawComment(session, pos);
+    await session.page.waitForTimeout(150);
+
+    const before = await session.page.evaluate(() => {
+      const feats = editor.getAnnotations().features;
+      const comment = feats.find((f) => f.properties.type === "comment") as any;
+      const node = ogma.getNode("n1")!.getPosition();
+      return {
+        offset: [comment.geometry.coordinates[0] - node.x, comment.geometry.coordinates[1] - node.y],
+        node
+      };
+    });
+
+    const after = await session.page.evaluate(async () => {
+      // Collapse both nodes to the same spot first so grid() is guaranteed
+      // to actually move n1 to a distinct cell, rather than possibly
+      // recomputing the exact same 2-node layout it already happens to be
+      // in (n1/n2 start pre-spread at (-100,-100)/(100,100), which grid()
+      // can legitimately reproduce verbatim for just two nodes).
+      ogma.getNodes(["n1", "n2"]).setAttributes({ x: 0, y: 0 });
+      await ogma.layouts.grid({ duration: 0 });
+      // Past LinkSync's commit debounce, same as the layoutEnd test in
+      // anchorFollow.test.ts - the resolved layout promise only guarantees
+      // node positions are set, not that the resulting rigid-follow commit
+      // has landed yet.
+      await new Promise((r) => setTimeout(r, 50));
+      const feats = editor.getAnnotations().features;
+      const comment = feats.find((f) => f.properties.type === "comment") as any;
+      const node = ogma.getNode("n1")!.getPosition();
+      return {
+        offset: [comment.geometry.coordinates[0] - node.x, comment.geometry.coordinates[1] - node.y],
+        node
+      };
+    });
+
+    // Sanity: grid() actually moved n1, otherwise this test would pass
+    // trivially without exercising the rigid-follow translation at all.
+    expect(
+      Math.abs(after.node.x - before.node.x) > 1 ||
+        Math.abs(after.node.y - before.node.y) > 1
+    ).toBe(true);
+
+    expect(after.offset[0]).toBeCloseTo(before.offset[0], 5);
+    expect(after.offset[1]).toBeCloseTo(before.offset[1], 5);
+  }, 10000);
+
   // Regression test: exporting a polygon-attached comment and re-importing
   // that exact export (a save/reload cycle) must not corrupt the link -
   // dragging the polygon afterward must still rigidly carry the comment.
