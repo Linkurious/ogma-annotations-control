@@ -72,6 +72,10 @@ export class LinkSync {
   // but the flag hasn't been set yet. `commitBlocked` below ORs both, so
   // the unsafe window is the union of the two, with no gap on either side.
   private geoOverlayActive = false;
+  // Zoom last seen outside geo mode - geo's zoom convention is unrelated,
+  // so this is the reference scale for reconstructing a rigid-linked
+  // comment's screen offset under geo (see onGeoModeChanged).
+  private lastNodeLinkZoom = 1;
 
   constructor(
     ogma: Ogma,
@@ -90,10 +94,14 @@ export class LinkSync {
     // is active - the alternative is a spurious commit of geo-projected
     // coordinates the very first time something moves a linked node.
     this.geoOverlayActive = ogma.geo.enabled();
+    if (!this.geoOverlayActive) this.lastNodeLinkZoom = ogma.view.getZoom();
 
     this.store.subscribe(
       (state) => ({ zoom: state.zoom, rotation: state.rotation }),
-      this.throttledRefresh,
+      (value) => {
+        if (!this.ogma.geo.enabled()) this.lastNodeLinkZoom = value.zoom;
+        this.throttledRefresh();
+      },
       {
         equalityFn: (a, b) => a.zoom === b.zoom && a.rotation === b.rotation
       }
@@ -494,6 +502,32 @@ export class LinkSync {
     });
   }
 
+  /**
+   * A rigid-linked comment's offset from its anchor is a graph-space
+   * quantity chosen to look right at whatever zoom was active when it was
+   * placed. That's fine for a node-link move (translating by the anchor's
+   * raw delta keeps the offset exact, and node-link zoom stays in a
+   * comparable range) - but geo mode's zoom is a different convention
+   * entirely (observed 64 vs. ~3 for the same demo), so applying that same
+   * raw delta blows the offset up by the mismatch. Rescales it back to
+   * what it'd look like at the current (geo) zoom instead, using
+   * `lastNodeLinkZoom` as the reference scale the offset was chosen at.
+   * A no-op outside geo mode.
+   */
+  private _geoRigidFollowDelta(
+    rawDelta: { x: number; y: number },
+    anchorOld: number[],
+    commentOld: number[]
+  ): { x: number; y: number } {
+    if (!this.ogma.geo.enabled()) return rawDelta;
+    const scale = this.lastNodeLinkZoom / this.ogma.view.getZoom();
+    const offset = subtract(
+      { x: commentOld[0], y: commentOld[1] },
+      { x: anchorOld[0], y: anchorOld[1] }
+    );
+    return subtract(rawDelta, mul(offset, 1 - scale));
+  }
+
   private _computeArrowUpdates(
     linksByArrowId: LinksByArrowId
   ): Record<Id, DeepPartial<Annotation>> {
@@ -549,23 +583,26 @@ export class LinkSync {
       // Rigid-follow: when one side is anchored to a comment in "rigid" mode
       // and the *other* side actually moved, translate the comment (and this
       // endpoint) by that delta instead of letting the comment side
-      // re-anchor elastically to the nearest point on the box.
+      // re-anchor elastically to the nearest point on the box. Under geo
+      // mode the raw delta is rescaled first - see _geoRigidFollowDelta.
       const startComment = getRigidComment(this.store, start);
       const endComment = getRigidComment(this.store, end);
 
       if (startComment && end) {
         const oldEnd = arrow.geometry.coordinates[1];
-        const delta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        const oldStart = arrow.geometry.coordinates[0];
+        const rawDelta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        const delta = this._geoRigidFollowDelta(rawDelta, oldEnd, oldStart);
         if (delta.x !== 0 || delta.y !== 0) {
-          const oldStart = arrow.geometry.coordinates[0];
           startPoint = [oldStart[0] + delta.x, oldStart[1] + delta.y];
           translateComment(startComment, delta, updates, this.updatedItems);
         }
       } else if (endComment && start) {
         const oldStart = arrow.geometry.coordinates[0];
-        const delta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        const oldEnd = arrow.geometry.coordinates[1];
+        const rawDelta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        const delta = this._geoRigidFollowDelta(rawDelta, oldStart, oldEnd);
         if (delta.x !== 0 || delta.y !== 0) {
-          const oldEnd = arrow.geometry.coordinates[1];
           endPoint = [oldEnd[0] + delta.x, oldEnd[1] + delta.y];
           translateComment(endComment, delta, updates, this.updatedItems);
         }
