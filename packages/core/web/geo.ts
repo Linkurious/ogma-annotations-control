@@ -80,6 +80,20 @@ const control = new Control(ogma);
 const GROUP = ["Brussels", "Amsterdam", "Cologne"];
 const ANCHOR = "Paris";
 
+// --- Node-link view: force layout, deliberately unrelated to geography ----
+//
+// Run *before* building any annotation below. The dataset's authored x/y
+// (used only as a force-layout seed) spans a much wider, differently-scaled
+// range than the tight cluster the algorithm settles on - building
+// annotations off the pre-layout positions, then running the layout after,
+// would drag them arbitrarily far via the arrow's node-follow (and any
+// fixed graph-unit offset, like the callout's below, would no longer be
+// anywhere near "150 screen pixels" once the zoom-to-fit settles). Doing
+// annotations after the layout is also just how a real user would build
+// this scene - annotating the graph as currently shown, not as it used to
+// be laid out.
+await ogma.layouts.force({ locate: true });
+
 // --- Callout: comment + arrow linked to a live graph node -----------------
 //
 // This is the part the plugin already models end-to-end: a comment with an
@@ -89,13 +103,20 @@ const ANCHOR = "Paris";
 // toggle is treated as a derived, render-only overlay, never committed
 // into node-link geometry - toggle the checkbox and watch this arrow
 // track Paris, then toggle back and see it's exactly where it started).
+//
+// The callout's offset from the node is expressed in *screen* pixels and
+// converted through the current zoom, same idea as the reference example's
+// `u = 1/zoom` - a raw graph-unit offset would land some arbitrary distance
+// away depending on how zoomed-in the current layout happens to be.
 const anchor = ogma.getNode(ANCHOR)!;
 const { x: ax, y: ay } = anchor.getPosition();
+const zoom = ogma.view.getZoom();
+const calloutOffsetPx = 150;
 const { comment, arrow } = createCommentWithArrow(
   ax,
   ay,
-  ax - 150,
-  ay - 150,
+  ax - calloutOffsetPx / zoom,
+  ay - calloutOffsetPx / zoom,
   "HQ · Paris",
   {
     commentStyle: {
@@ -151,9 +172,6 @@ const routeArrow = createArrow(
 control.add(routeArrow);
 control.link(routeArrow.id, london, SIDE_START);
 control.link(routeArrow.id, anchor, SIDE_END);
-
-// --- Node-link view: force layout, deliberately unrelated to geography ----
-await ogma.layouts.force({ locate: true });
 
 // --- Geo / node-link switch -------------------------------------------------
 const toggle = document.getElementById("geoToggle") as HTMLInputElement;
