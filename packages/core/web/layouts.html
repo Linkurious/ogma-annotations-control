@@ -8,7 +8,7 @@
         height: 100vh;
         position: absolute;
       }
-      #panel {
+      #status {
         position: absolute;
         top: 10px;
         left: 10px;
@@ -16,40 +16,16 @@
         background: #fff;
         border: 1px solid #ddd;
         border-radius: 6px;
-        padding: 10px 14px;
+        padding: 6px 10px;
         font-family: sans-serif;
         font-size: 13px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      #panel button {
-        font: inherit;
-        padding: 6px 10px;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        background: #f5f5f5;
-        cursor: pointer;
-      }
-      #panel button:hover {
-        background: #ececec;
-      }
-      #panel button:disabled {
-        opacity: 0.5;
-        cursor: default;
-      }
-      #status {
         color: #666;
       }
     </style>
   </head>
   <body>
     <div id="graph-container"></div>
-    <div id="panel">
-      <button id="hierarchical">Hierarchical layout</button>
-      <button id="force">Force layout</button>
-      <span id="status">7 nodes, 1 comment each</span>
-    </div>
+    <span id="status">7 nodes, 1 comment each</span>
     <script type="module" src="layouts.ts"></script>
   </body>
 </html>

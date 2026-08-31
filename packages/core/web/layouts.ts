@@ -1,5 +1,6 @@
 import Ogma from "@linkurious/ogma";
 import type { RawGraph } from "@linkurious/ogma";
+import { GUI } from "@linkurious/ogma-ui-kit/gui";
 import { Control, createCommentWithArrow, SIDE_END } from "../src";
 import "./style.css";
 
@@ -104,26 +105,33 @@ nodes.forEach((node, i) => {
 
 // --- GUI: apply a real layout, watch every comment follow its node ---------
 const status = document.getElementById("status")!;
-const hierarchicalBtn = document.getElementById("hierarchical") as HTMLButtonElement;
-const forceBtn = document.getElementById("force") as HTMLButtonElement;
 
 async function runLayout(name: string, run: () => Promise<unknown>) {
-  hierarchicalBtn.disabled = true;
-  forceBtn.disabled = true;
+  hierarchicalController.disable();
+  forceController.disable();
   status.textContent = `running ${name} layout…`;
   await run();
   status.textContent = `${name} layout applied - comments followed`;
-  hierarchicalBtn.disabled = false;
-  forceBtn.disabled = false;
+  hierarchicalController.enable();
+  forceController.enable();
 }
 
-hierarchicalBtn.addEventListener("click", () =>
-  runLayout("hierarchical", () =>
-    ogma.layouts.hierarchical({ direction: "TB", duration: 500, locate: true })
-  )
-);
-forceBtn.addEventListener("click", () =>
-  runLayout("force", () => ogma.layouts.force({ duration: 500, locate: true }))
-);
+// lil-gui (what ogma-ui-kit/gui wraps) renders a function property as a
+// clickable button - same pattern the reference geo-annotations example
+// uses for its mode toggle, just with actions instead of a settings object.
+const actions = {
+  hierarchicalLayout: () =>
+    runLayout("hierarchical", () =>
+      ogma.layouts.hierarchical({ direction: "TB", duration: 500, locate: true })
+    ),
+  forceLayout: () =>
+    runLayout("force", () => ogma.layouts.force({ duration: 500, locate: true }))
+};
+
+const gui = new GUI();
+const hierarchicalController = gui
+  .add(actions, "hierarchicalLayout")
+  .name("Hierarchical layout");
+const forceController = gui.add(actions, "forceLayout").name("Force layout");
 
 Object.assign(window, { ogma, control });
