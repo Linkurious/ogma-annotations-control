@@ -331,7 +331,13 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             set({
               features: updatedFeatures,
               liveUpdates: remainingLiveUpdates,
-              isDragging: false,
+              // Only declare dragging over once nothing else is still
+              // live - a scoped commit (e.g. a comment auto-grow finalize)
+              // must not end an unrelated drag that's still in progress.
+              isDragging:
+                Object.keys(remainingLiveUpdates).length === 0
+                  ? false
+                  : get().isDragging,
               lastChangedFeatures: changedFeatureIds // Track which features changed
             });
           },

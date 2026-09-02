@@ -69,6 +69,9 @@ export class LinkSync {
   // so this is the reference scale for reconstructing a rigid-linked
   // comment's screen offset under geo (see onGeoModeChanged).
   private lastNodeLinkZoom = 1;
+  // Ids applyLiveUpdates was last called with from onGeoModeChanged's geo
+  // branch - the exact set to clear on the way back out.
+  private lastGeoOverlayIds: Id[] = [];
 
   constructor(
     ogma: Ogma,
@@ -86,13 +89,13 @@ export class LinkSync {
     // `Control` created after `ogma.geo.enable()`), start as if the overlay
     // is active - the alternative is a spurious commit of geo-projected
     // coordinates the very first time something moves a linked node.
-    this.geoOverlayActive = ogma.geo.enabled();
+    this.geoOverlayActive = this.geoEnabled();
     if (!this.geoOverlayActive) this.lastNodeLinkZoom = ogma.view.getZoom();
 
     this.store.subscribe(
       (state) => ({ zoom: state.zoom, rotation: state.rotation }),
       (value) => {
-        if (!this.ogma.geo.enabled()) this.lastNodeLinkZoom = value.zoom;
+        if (!this.geoEnabled()) this.lastNodeLinkZoom = value.zoom;
         this.throttledRefresh();
       },
       {
@@ -142,17 +145,22 @@ export class LinkSync {
    * linked arrow snaps back for free.
    */
   private onGeoModeChanged = () => {
-    this.geoOverlayActive = this.ogma.geo.enabled();
+    this.geoOverlayActive = this.geoEnabled();
     if (this.index.linksByArrowId.size === 0) return;
-    const arrowIds = Array.from(this.index.linksByArrowId.keys());
     if (this.geoOverlayActive) {
       const updates = this._computeArrowUpdates(this.index.linksByArrowId);
+      // Remember exactly what got overlaid - _computeArrowUpdates stages
+      // rigid-follow comments (translateComment) alongside arrows, so
+      // this can be a superset of linksByArrowId's arrow ids. Clearing
+      // only the arrow ids on the way out left comment overlays stuck.
+      this.lastGeoOverlayIds = Object.keys(updates);
       this.store.getState().applyLiveUpdates(updates);
     } else {
-      this.store.getState().clearLiveUpdates(arrowIds);
+      this.store.getState().clearLiveUpdates(this.lastGeoOverlayIds);
       // Also drop from updatedItems - defense in depth alongside
       // commitLiveUpdates' own "ids still in liveUpdates" filter.
-      arrowIds.forEach((id) => this.updatedItems.delete(id));
+      this.lastGeoOverlayIds.forEach((id) => this.updatedItems.delete(id));
+      this.lastGeoOverlayIds = [];
     }
   };
 
@@ -475,14 +483,17 @@ export class LinkSync {
    * (~3, say); geo's zoom is a different convention (observed 64) with no
    * relation to that, so translating by the anchor's raw delta keeps the
    * offset graph-exact but visually explodes it. `lastNodeLinkZoom` is the
-   * reference scale the offset was chosen at. No-op outside geo mode.
+   * reference scale the offset was chosen at. No-op outside geo mode -
+   * gated on `geoOverlayActive`, same signal the rest of this class
+   * treats as authoritative for "is geo mode's overlay live right now"
+   * (see that field's doc comment), not a fresh `ogma.geo.enabled()` read.
    */
   private _geoRigidFollowDelta(
     rawDelta: { x: number; y: number },
     anchorOld: number[],
     commentOld: number[]
   ): { x: number; y: number } {
-    if (!this.ogma.geo.enabled()) return rawDelta;
+    if (!this.geoOverlayActive) return rawDelta;
     const scale = this.lastNodeLinkZoom / this.ogma.view.getZoom();
     const offset = subtract(
       { x: commentOld[0], y: commentOld[1] },
@@ -593,11 +604,23 @@ export class LinkSync {
     this.commitTimeout = setTimeout(this.commit, COMMIT_DEBOUNCE_MS);
   }
 
-  // See `geoOverlayActive`'s doc comment - neither `ogma.geo.enabled()` nor
-  // the delayed geoEnabled/geoDisabled-driven flag is safe to gate on
-  // alone; this is unsafe for the union of both signals' windows.
+  // See `geoOverlayActive`'s doc comment - neither the getter nor the
+  // delayed geoEnabled/geoDisabled-driven flag is safe to gate on alone;
+  // this is unsafe for the union of both signals' windows.
   private commitBlocked(): boolean {
-    return this.ogma.geo.enabled() || this.geoOverlayActive;
+    return this.geoEnabled() || this.geoOverlayActive;
+  }
+
+  // `ogma.geo.enabled()` can throw when the geo module never finished
+  // initializing (observed in the jsdom-based unit test harness) or
+  // Ogma's mid-teardown - same crash Shapes.isGeoActive() guards against.
+  // Every raw read of the getter in this class goes through here instead.
+  private geoEnabled(): boolean {
+    try {
+      return this.ogma.geo.enabled();
+    } catch {
+      return false;
+    }
   }
 
   public destroy() {
