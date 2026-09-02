@@ -74,13 +74,20 @@ export function renderArrow(
   minArrowHeight: number,
   maxArrowHeight: number,
   chachedElement: SVGGElement | undefined,
-  state: AnnotationState
+  state: AnnotationState,
+  isGeoActive = false
 ) {
   const { start, end } = getArrowEndPoints(arrow);
   const style = arrow.properties.style || defaultArrowStyle;
   const { tail, strokeWidth = 0, head, strokeColor, strokeType } = style;
   const vec = subtract(end, start);
-  const zoom = isCommentArrow(arrow) ? 1 / state.zoom : 1;
+  // Comment arrows are pixel-constant UI chrome (strokeWidth etc. divided
+  // by zoom). A plain arrow scales *with* the graph instead, by design -
+  // correct in node-link mode, but geo's zoom convention (Leaflet tile
+  // zoom, can run into the tens+) has no relation to the scale a
+  // strokeWidth was chosen at, so it balloons the stroke. Same
+  // pixel-constant treatment while geo is active; node-link is unaffected.
+  const zoom = isCommentArrow(arrow) || isGeoActive ? 1 / state.zoom : 1;
 
   const tipLength =
     getArrowHeight(arrow, strokeWidth, minArrowHeight, maxArrowHeight) * zoom;

@@ -108,6 +108,7 @@ export class Shapes extends Renderer<SVGLayer> {
     const shapesRoot = this.shapesRoot!;
 
     const state = this.store.getState();
+    const isGeoActive = this.isGeoActive();
 
     // Get viewport bounds for culling
     const viewportBounds = this.getViewportBounds();
@@ -152,7 +153,8 @@ export class Shapes extends Renderer<SVGLayer> {
           state.options.minArrowHeight,
           state.options.maxArrowHeight,
           existingElement,
-          state
+          state,
+          isGeoActive
         );
       }
       if (existingElement) this.features.set(feature.id, existingElement);
@@ -226,6 +228,19 @@ export class Shapes extends Renderer<SVGLayer> {
     16,
     true
   );
+
+  // `ogma.geo.enabled()` can throw in environments where the geo module
+  // never got a chance to fully initialize (observed in the jsdom-based
+  // unit test harness, and plausible for a destroyed/mid-teardown Ogma
+  // instance a stray rAF-scheduled render fires against) - default to
+  // "not active" rather than let a render pass crash over this.
+  private isGeoActive(): boolean {
+    try {
+      return this.ogma.geo.enabled();
+    } catch {
+      return false;
+    }
+  }
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;

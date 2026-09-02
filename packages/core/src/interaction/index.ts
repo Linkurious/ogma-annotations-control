@@ -129,19 +129,23 @@ export class InteractionController extends EventTarget {
 
     if (hit.length === 0) return null;
 
-    // Thin/small targets (arrows, comments, texts) take priority over
-    // area-filling ones (boxes, polygons) that happen to also match the
-    // same point - e.g. an arrow endpoint sitting inside a polygon's body
-    // must still resolve to the arrow, not the polygon underneath it,
-    // otherwise clicking/dragging that endpoint is unreachable: the
-    // polygon's much larger hit area wins by pure luck of spatial-index
-    // ordering and steals the selection out from under the arrow.
+    // Thin/small targets take priority over area-filling ones that happen
+    // to overlap the same point (e.g. an arrow endpoint inside a polygon
+    // must resolve to the arrow, not the polygon underneath it). Comments
+    // are the one exception above arrows: a comment's own rigid-linked
+    // connector routinely overlaps its (much larger) box right where a
+    // user clicks to grab it, so arrow-first meant dragging the comment
+    // could drag the connector instead, detaching it. Texts don't get the
+    // same bump - nothing forces a text/arrow overlap the way a comment's
+    // rigid link does, and bumping texts too would make an arrow endpoint
+    // that merely sits inside an unrelated text unreachable, the exact
+    // regression this priority order exists to prevent.
     const DETECT_PRIORITY: Record<string, number> = {
-      arrow: 0,
-      comment: 1,
-      text: 1,
-      box: 2,
-      polygon: 2
+      comment: 0,
+      arrow: 1,
+      text: 2,
+      box: 3,
+      polygon: 3
     };
     const ordered = [...hit].sort(
       (a, b) =>

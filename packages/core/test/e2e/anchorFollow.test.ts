@@ -252,6 +252,82 @@ describe("Anchor follow", () => {
     }
   }, 15000);
 
+  // Regression test: an animated layout's setMultipleAttributes doesn't
+  // write x/y synchronously (Ogma queues it for the next rendered frame),
+  // so LinkSync's old fixed 1ms setTimeout read stale positions and a
+  // linked arrow sat frozen until layoutEnd's final commit (see
+  // requestUpdateFromNodePositions in links/sync.ts). Samples every
+  // rendered frame from inside the page (round-trip page.evaluate calls
+  // are too slow/imprecise here) to check *when* the arrow catches up.
+  it("should keep a node-linked arrow tracking closely during an animated layout, not just at its end", async () => {
+    const samples = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.addNodes(
+        ["a", "b", "c", "d", "e", "f"].map((id) => ({
+          id,
+          attributes: { x: 0, y: 0, radius: 10 }
+        }))
+      );
+      createEditor();
+      const arrow = createArrow(0, 0, 0, 0);
+      editor.add(arrow);
+      editor.link(arrow.id, ogma.getNode("a")!, "end");
+
+      const recorded: {
+        elapsed: number;
+        nodeX: number;
+        nodeY: number;
+        arrowEndX: number;
+        arrowEndY: number;
+      }[] = [];
+      const start = performance.now();
+      const handler = () => {
+        const node = ogma.getNode("a")!.getPosition();
+        const ann = editor.getAnnotation(arrow.id) as any;
+        const end = ann.geometry.coordinates[1];
+        recorded.push({
+          elapsed: performance.now() - start,
+          nodeX: node.x,
+          nodeY: node.y,
+          arrowEndX: end[0],
+          arrowEndY: end[1]
+        });
+      };
+      ogma.events.on("frame", handler);
+      await ogma.layouts.grid({ duration: 300 });
+      // A few extra frames past layoutEnd for the final commit's own
+      // debounce to land, same reasoning as the layoutEnd test above.
+      await new Promise((r) => setTimeout(r, 100));
+      ogma.events.off(handler);
+      return recorded;
+    });
+
+    // Sanity: this actually captured a real, multi-frame animation - not
+    // a single instant jump (which would make the rest of this trivially
+    // pass without exercising anything).
+    expect(samples.length).toBeGreaterThan(5);
+
+    const dist = (s: (typeof samples)[number]) =>
+      Math.hypot(s.nodeX - s.arrowEndX, s.nodeY - s.arrowEndY);
+
+    const finalNode = samples[samples.length - 1];
+    // First sample where the node's model position has (essentially)
+    // reached its final spot - per the root cause above, this happens
+    // almost immediately (next frame), well before the animation's
+    // visual tween or `duration` elapses.
+    const settledIndex = samples.findIndex(
+      (s) =>
+        Math.hypot(s.nodeX - finalNode.nodeX, s.nodeY - finalNode.nodeY) < 0.5
+    );
+    expect(settledIndex).toBeGreaterThanOrEqual(0);
+
+    // The arrow should catch up within a handful of frames after that -
+    // not stay frozen until the very last sample, which is what the bug
+    // looked like before this fix.
+    const checkIndex = Math.min(settledIndex + 3, samples.length - 1);
+    expect(dist(samples[checkIndex])).toBeLessThan(2);
+  }, 15000);
+
   it("should not throw and should follow when many nodes move together in a single batched update", async () => {
     // Simulates a layout-like bulk reposition without a real layout
     // algorithm: one `setAttributes` call across a whole NodeList, which is

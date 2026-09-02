@@ -23,9 +23,6 @@ type XYR = { x: number; y: number; radius: number };
 const XYR_ATTRIBUTES: ["x", "y", "radius"] = ["x", "y", "radius"] as const;
 
 const COMMIT_DEBOUNCE_MS = 1;
-// Debounce window for updateFromNodePositions: waits one tick so Ogma has
-// finished writing the node's new x/y/radius attributes before we read them.
-const NODE_POSITION_DEBOUNCE_MS = 1;
 // Throttle for the zoom/rotation-driven fixedSize refresh — cheap enough to
 // run near every frame without saturating the main thread.
 const REFRESH_THROTTLE_MS = 20;
@@ -42,6 +39,12 @@ const REFRESH_THROTTLE_MS = 20;
  * The interactive-drag cascade (`Links.updateLinkedArrowsDuringDrag` et al.)
  * is a separate, synchronous path that doesn't go through here — see
  * `handlers/links/index.ts`.
+ *
+ * Geo mode is handled as a derived, render-only overlay on top of that:
+ * node-link geometry in `state.features` is always the source of truth, so
+ * every recompute this class does while geo mode is transitioning or on
+ * stays in `liveUpdates` and is never committed — see `onGeoModeChanged`,
+ * `geoOverlayActive`, and `commitBlocked`.
  */
 export class LinkSync {
   private ogma: Ogma;
@@ -50,7 +53,25 @@ export class LinkSync {
   private geometry: LinkGeometry;
   private updatedItems: Set<Id>;
   private commitTimeout!: ReturnType<typeof setTimeout>;
-  private nodePositionTimeout?: ReturnType<typeof setTimeout>;
+  // Pending "read node positions" callback, coalescing a burst of
+  // setMultipleAttributes calls (many per drag, or one per animated layout)
+  // into a single recompute - see requestUpdateFromNodePositions for why
+  // this waits for Ogma's next rendered frame rather than a fixed timeout.
+  private nodePositionFrameHandler?: () => void;
+  // Whether the geo overlay (onGeoModeChanged) is currently in liveUpdates.
+  // Not redundant with `ogma.geo.enabled()`: that getter flips the instant
+  // `.toggle()` is *called*, but the geoEnabled/geoDisabled events - where
+  // the overlay is actually pushed/cleared - only fire once the
+  // transition's camera animation finishes. `commitBlocked` ORs both so
+  // there's no gap on either side of that lag.
+  private geoOverlayActive = false;
+  // Zoom last seen outside geo mode - geo's zoom convention is unrelated,
+  // so this is the reference scale for reconstructing a rigid-linked
+  // comment's screen offset under geo (see onGeoModeChanged).
+  private lastNodeLinkZoom = 1;
+  // Ids applyLiveUpdates was last called with from onGeoModeChanged's geo
+  // branch - the exact set to clear on the way back out.
+  private lastGeoOverlayIds: Id[] = [];
 
   constructor(
     ogma: Ogma,
@@ -64,10 +85,19 @@ export class LinkSync {
     this.index = index;
     this.geometry = geometry;
     this.updatedItems = updatedItems;
+    // Defensive: if this is constructed while geo mode is already on (e.g.
+    // `Control` created after `ogma.geo.enable()`), start as if the overlay
+    // is active - the alternative is a spurious commit of geo-projected
+    // coordinates the very first time something moves a linked node.
+    this.geoOverlayActive = this.geoEnabled();
+    if (!this.geoOverlayActive) this.lastNodeLinkZoom = ogma.view.getZoom();
 
     this.store.subscribe(
       (state) => ({ zoom: state.zoom, rotation: state.rotation }),
-      this.throttledRefresh,
+      (value) => {
+        if (!this.geoEnabled()) this.lastNodeLinkZoom = value.zoom;
+        this.throttledRefresh();
+      },
       {
         equalityFn: (a, b) => a.zoom === b.zoom && a.rotation === b.rotation
       }
@@ -103,8 +133,36 @@ export class LinkSync {
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
       .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
       .on("removeNodes", this.onRemoveNodes)
-      .on("viewChanged", this.refresh);
+      .on("viewChanged", this.refresh)
+      .on(["geoEnabled", "geoDisabled"], this.onGeoModeChanged);
   }
+
+  /**
+   * geoEnabled: Ogma has already rewritten every node's x/y to its
+   * projected position - push one live (uncommitted) recompute (see class
+   * doc for why it's live-only). geoDisabled: node-link values are exactly
+   * what `features` already holds, so just drop the overlay and every
+   * linked arrow snaps back for free.
+   */
+  private onGeoModeChanged = () => {
+    this.geoOverlayActive = this.geoEnabled();
+    if (this.index.linksByArrowId.size === 0) return;
+    if (this.geoOverlayActive) {
+      const updates = this._computeArrowUpdates(this.index.linksByArrowId);
+      // Remember exactly what got overlaid - _computeArrowUpdates stages
+      // rigid-follow comments (translateComment) alongside arrows, so
+      // this can be a superset of linksByArrowId's arrow ids. Clearing
+      // only the arrow ids on the way out left comment overlays stuck.
+      this.lastGeoOverlayIds = Object.keys(updates);
+      this.store.getState().applyLiveUpdates(updates);
+    } else {
+      this.store.getState().clearLiveUpdates(this.lastGeoOverlayIds);
+      // Also drop from updatedItems - defense in depth alongside
+      // commitLiveUpdates' own "ids still in liveUpdates" filter.
+      this.lastGeoOverlayIds.forEach((id) => this.updatedItems.delete(id));
+      this.lastGeoOverlayIds = [];
+    }
+  };
 
   public onSetMultipleAttributes = ({
     elements,
@@ -187,12 +245,21 @@ export class LinkSync {
   private throttledRefresh = throttle(() => this.refresh(), REFRESH_THROTTLE_MS);
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
-    // debounce to next tick to get the real coordinates
-    clearTimeout(this.nodePositionTimeout);
-    this.nodePositionTimeout = setTimeout(
-      () => this.updateFromNodePositions(nodes),
-      NODE_POSITION_DEBOUNCE_MS
-    );
+    // Wait for Ogma's next rendered frame before reading node positions,
+    // not a fixed setTimeout: an *animated* setMultipleAttributes call
+    // (duration > 0, e.g. a layout) queues its x/y write for the next
+    // rAF tick instead of applying it synchronously, so a 1ms timeout can
+    // win that race and read the stale pre-move position - a linked arrow
+    // would then sit frozen until layoutEnd's final commit. `frame` fires
+    // after the write lands either way, animated or instant.
+    if (this.nodePositionFrameHandler) {
+      this.ogma.events.off(this.nodePositionFrameHandler);
+    }
+    this.nodePositionFrameHandler = () => {
+      this.nodePositionFrameHandler = undefined;
+      this.updateFromNodePositions(nodes);
+    };
+    this.ogma.events.once("frame", this.nodePositionFrameHandler);
   }
 
   private updateFromNodePositions(nodes: NodeList) {
@@ -389,14 +456,50 @@ export class LinkSync {
    * Compute and synchronously commit arrow position updates for the given links.
    * Used when an annotation is moved programmatically (not during a live drag).
    * Wraps changes in batchUpdate so no extra history entry is created.
+   *
+   * While a geo overlay is active, `batchUpdate` only suppresses the *undo
+   * history* entry - `updateFeatures` still writes straight into
+   * `state.features`, which would commit a geo-projected position as if it
+   * were node-link truth. Fall back to the same live-overlay-only path as
+   * every other geo-aware recompute in this class instead (see
+   * `onGeoModeChanged`/`requestCommit`).
    */
   updateAndCommitSync(linksByArrowId: LinksByArrowId) {
     const updates = this._computeArrowUpdates(linksByArrowId);
     if (Object.keys(updates).length === 0) return;
     const state = this.store.getState();
+    if (this.commitBlocked()) {
+      state.applyLiveUpdates(updates);
+      return;
+    }
     state.batchUpdate(() => {
       state.updateFeatures(updates as Record<string, Partial<Annotation>>);
     });
+  }
+
+  /**
+   * Rescales a rigid-follow delta for geo mode. The comment's graph-space
+   * offset from its anchor was chosen to look right at node-link zoom
+   * (~3, say); geo's zoom is a different convention (observed 64) with no
+   * relation to that, so translating by the anchor's raw delta keeps the
+   * offset graph-exact but visually explodes it. `lastNodeLinkZoom` is the
+   * reference scale the offset was chosen at. No-op outside geo mode -
+   * gated on `geoOverlayActive`, same signal the rest of this class
+   * treats as authoritative for "is geo mode's overlay live right now"
+   * (see that field's doc comment), not a fresh `ogma.geo.enabled()` read.
+   */
+  private _geoRigidFollowDelta(
+    rawDelta: { x: number; y: number },
+    anchorOld: number[],
+    commentOld: number[]
+  ): { x: number; y: number } {
+    if (!this.geoOverlayActive) return rawDelta;
+    const scale = this.lastNodeLinkZoom / this.ogma.view.getZoom();
+    const offset = subtract(
+      { x: commentOld[0], y: commentOld[1] },
+      { x: anchorOld[0], y: anchorOld[1] }
+    );
+    return subtract(rawDelta, mul(offset, 1 - scale));
   }
 
   private _computeArrowUpdates(
@@ -454,23 +557,26 @@ export class LinkSync {
       // Rigid-follow: when one side is anchored to a comment in "rigid" mode
       // and the *other* side actually moved, translate the comment (and this
       // endpoint) by that delta instead of letting the comment side
-      // re-anchor elastically to the nearest point on the box.
+      // re-anchor elastically to the nearest point on the box. Under geo
+      // mode the raw delta is rescaled first - see _geoRigidFollowDelta.
       const startComment = getRigidComment(this.store, start);
       const endComment = getRigidComment(this.store, end);
 
       if (startComment && end) {
         const oldEnd = arrow.geometry.coordinates[1];
-        const delta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        const oldStart = arrow.geometry.coordinates[0];
+        const rawDelta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        const delta = this._geoRigidFollowDelta(rawDelta, oldEnd, oldStart);
         if (delta.x !== 0 || delta.y !== 0) {
-          const oldStart = arrow.geometry.coordinates[0];
           startPoint = [oldStart[0] + delta.x, oldStart[1] + delta.y];
           translateComment(startComment, delta, updates, this.updatedItems);
         }
       } else if (endComment && start) {
         const oldStart = arrow.geometry.coordinates[0];
-        const delta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        const oldEnd = arrow.geometry.coordinates[1];
+        const rawDelta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        const delta = this._geoRigidFollowDelta(rawDelta, oldStart, oldEnd);
         if (delta.x !== 0 || delta.y !== 0) {
-          const oldEnd = arrow.geometry.coordinates[1];
           endPoint = [oldEnd[0] + delta.x, oldEnd[1] + delta.y];
           translateComment(endComment, delta, updates, this.updatedItems);
         }
@@ -490,17 +596,43 @@ export class LinkSync {
   }
 
   private requestCommit() {
+    // Geo mode is derived, never committed - see `onGeoModeChanged`. Any
+    // node-position-triggered recompute that happens while geo mode is on
+    // (drag, layout) must stay a live overlay only.
+    if (this.commitBlocked()) return;
     clearTimeout(this.commitTimeout);
     this.commitTimeout = setTimeout(this.commit, COMMIT_DEBOUNCE_MS);
   }
 
+  // See `geoOverlayActive`'s doc comment - neither the getter nor the
+  // delayed geoEnabled/geoDisabled-driven flag is safe to gate on alone;
+  // this is unsafe for the union of both signals' windows.
+  private commitBlocked(): boolean {
+    return this.geoEnabled() || this.geoOverlayActive;
+  }
+
+  // `ogma.geo.enabled()` can throw when the geo module never finished
+  // initializing (observed in the jsdom-based unit test harness) or
+  // Ogma's mid-teardown - same crash Shapes.isGeoActive() guards against.
+  // Every raw read of the getter in this class goes through here instead.
+  private geoEnabled(): boolean {
+    try {
+      return this.ogma.geo.enabled();
+    } catch {
+      return false;
+    }
+  }
+
   public destroy() {
     clearTimeout(this.commitTimeout);
-    clearTimeout(this.nodePositionTimeout);
+    if (this.nodePositionFrameHandler) {
+      this.ogma.events.off(this.nodePositionFrameHandler);
+    }
     this.ogma.events
       .off(this.onSetMultipleAttributes)
       .off(this.onAddRemoveEdges)
       .off(this.onRemoveNodes)
-      .off(this.refresh);
+      .off(this.refresh)
+      .off(this.onGeoModeChanged);
   }
 }

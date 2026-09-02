@@ -125,6 +125,13 @@ export interface AnnotationState {
   applyLiveUpdates: (updates: Record<Id, DeepPartial<Annotation>>) => void;
   commitLiveUpdates: (ids?: Set<Id>) => void;
   cancelLiveUpdates: () => void;
+  // Drop specific ids' live overlay without committing them into `features`
+  // and without touching any other id's overlay - unlike `cancelLiveUpdates`
+  // (which clears everything) or `commitLiveUpdates` (which writes into
+  // history). Used to snap a feature back to its already-correct committed
+  // geometry once whatever was overlaying it stops applying (e.g. geo mode
+  // switching off - see `LinkSync`'s geoEnabled/geoDisabled handling).
+  clearLiveUpdates: (ids: Id[]) => void;
 
   addFeature: (feature: Annotation) => void;
   removeFeature: (id: Id) => void;
@@ -289,14 +296,20 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             });
           },
 
-          // Commit all live updates - single history entry!
+          // Commit live updates - single history entry! `ids` scopes which
+          // overlay entries get folded into `features` (and removed from
+          // `liveUpdates`) - anything else's still-open overlay (e.g. a
+          // concurrent drag, or a geo-mode overlay - see `LinkSync`) must
+          // survive untouched. Omitting `ids` commits everything, same as
+          // before.
           commitLiveUpdates: (ids?: Set<Id>) => {
             const { features, liveUpdates } = get();
             const updatedFeatures = { ...features };
             const changedFeatureIds: Id[] = [];
 
-            const keys = Object.keys(liveUpdates);
-            if (!ids) ids = new Set(keys);
+            const keys = ids
+              ? Array.from(ids).filter((id) => id in liveUpdates)
+              : Object.keys(liveUpdates);
 
             // Merge live updates into features and track changes
             keys.forEach((id) => {
@@ -310,10 +323,21 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               }
             });
 
+            // Only the ids just committed leave `liveUpdates` - anything
+            // else's overlay (a different in-flight interaction) stays.
+            const remainingLiveUpdates = { ...liveUpdates };
+            keys.forEach((id) => delete remainingLiveUpdates[id]);
+
             set({
               features: updatedFeatures,
-              liveUpdates: {},
-              isDragging: false,
+              liveUpdates: remainingLiveUpdates,
+              // Only declare dragging over once nothing else is still
+              // live - a scoped commit (e.g. a comment auto-grow finalize)
+              // must not end an unrelated drag that's still in progress.
+              isDragging:
+                Object.keys(remainingLiveUpdates).length === 0
+                  ? false
+                  : get().isDragging,
               lastChangedFeatures: changedFeatureIds // Track which features changed
             });
           },
@@ -323,6 +347,14 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               liveUpdates: {},
               isDragging: false
             }),
+
+          clearLiveUpdates: (ids) => {
+            set((state) => {
+              const newLiveUpdates = { ...state.liveUpdates };
+              for (const id of ids) delete newLiveUpdates[id];
+              return { liveUpdates: newLiveUpdates };
+            });
+          },
 
           // Regular update - creates history entry
           updateFeature: (id, updates) =>

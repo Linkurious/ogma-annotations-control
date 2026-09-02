@@ -8,7 +8,8 @@
     "moduleResolution": "Node",
     "baseUrl": ".",
     "paths": {
-      "@linkurious/ogma-annotations/ui": ["./src/ui/index.ts"]
+      "@linkurious/ogma-annotations/ui": ["./src/ui/index.ts"],
+      "@linkurious/ogma-ui-kit/gui": ["../../node_modules/@linkurious/ogma-ui-kit/dist/gui/index.d.ts"]
     },
     "strict": true,
     "resolveJsonModule": true,
