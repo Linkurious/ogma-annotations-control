@@ -22,6 +22,7 @@ export type IconName =
   | "circle-dashed"
   | "type"
   | "italic"
+  | "bold"
   | "code"
   | "trash"
   | "undo"
@@ -35,7 +36,8 @@ export type IconName =
   | "camera"
   | "rotate-cw"
   | "rotate-ccw"
-  | "minimize";
+  | "minimize"
+  | "user";
 
 /** Inner SVG markup for each icon (paths only; no <svg> wrapper). */
 export const ICON_PATHS: Record<IconName, string> = {
@@ -53,6 +55,8 @@ export const ICON_PATHS: Record<IconName, string> = {
   type: '<path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/>',
   italic:
     '<line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/>',
+  bold: '<path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/>',
+  user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   code: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
   trash:
     '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',

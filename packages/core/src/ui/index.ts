@@ -16,6 +16,33 @@ export type {
   DeleteMode
 } from "./AnnotationToolbar";
 
+export { TextAnnotationToolbar } from "./FloatingTextToolbar";
+export type { TextAnnotationToolbarOptions } from "./FloatingTextToolbar";
+export { AnnotationStyleToolbar } from "./toolbar/AnnotationStyleToolbar";
+export type { AnnotationStyleToolbarOptions } from "./toolbar/AnnotationStyleToolbar";
+export {
+  TextStyleToolbar,
+  DEFAULT_TOOLBAR_FONTS,
+  DEFAULT_TOOLBAR_FONT_SIZES
+} from "./toolbar/TextStyleToolbar";
+export type { TextStyleToolbarOptions } from "./toolbar/TextStyleToolbar";
+export { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyleToolbar";
+export { STICKY_SWATCHES } from "./toolbar/swatches";
+export type { Swatch } from "./toolbar/swatches";
+export type { ToolbarCell, ToolbarCellContext } from "./toolbar/cells/contract";
+export type {
+  ToolbarItem,
+  ToolbarButtonItem,
+  ToolbarDropdownItem,
+  ToolbarDropdownOption,
+  ToolbarSeparatorItem,
+  ToolbarCustomItem
+} from "./toolbar/cells/types";
+export { ButtonItemCell } from "./toolbar/cells/buttonItem";
+export { DropdownItemCell } from "./toolbar/cells/dropdownItem";
+export { ColorCell } from "./toolbar/cells/color";
+export type { ColorCellOptions } from "./toolbar/cells/color";
+
 export * from "./config";
 export * from "./color";
 export * from "./icons";

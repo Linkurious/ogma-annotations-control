@@ -531,7 +531,7 @@ input:checked + .toggle-slider:before {
 .annotation-toolbar .separator {
   border-left: 1px solid #ccc;
   margin: 0 4px;
-  height: 20px;
+  height: 44px;
   display: inline-block;
   vertical-align: middle;
 }
@@ -570,4 +570,260 @@ input:checked + .toggle-slider:before {
 
 .annotation-toolbar [data-tooltip]:hover::after {
   opacity: 1;
+}
+
+/* --- Floating text-annotation toolbar (TextAnnotationToolbar) ---
+   Anchored above the selected Text/sticky-note annotation via an Ogma
+   overlay layer, not docked like `.annotation-panel`/`.annotation-toolbar`
+   above. `.annotation-style-toolbar-anchor` is the element handed to
+   `ogma.layers.addOverlay()` - Ogma writes its own `transform`
+   (translate/rotate/scale) onto it directly on every pan/zoom/rotate, so it
+   must stay zero-size and untouched by our own CSS `transform`.
+   `.annotation-style-toolbar` (the actual visible pill, a child of the
+   anchor) carries all the positioning that's ours to set - centered
+   horizontally and lifted fully above the anchor point - plus every visual
+   rule. Keeping the two separate is what avoids fighting Ogma for control
+   of one element's `transform` property.
+
+   z-index: this overlay is a sibling of every other Ogma layer inside the
+   same container (Shapes, the resize-Handles canvas, a TextArea edit
+   overlay) - without an explicit z-index it paints in creation order,
+   which (Handles is created once, early, at Control construction, long
+   before any selection) puts it *underneath* the note it's editing and
+   the resize handles around it. `Handles` (`renderer/handles.ts`) hits the
+   same problem the other way and fixes it the same way: a permanent CSS
+   z-index, no reordering. 1000 is Handles' own value (to stay above a
+   TextArea edit overlay); this needs to beat *that*, hence 1100. */
+.annotation-style-toolbar-anchor {
+  position: relative;
+  width: 0;
+  height: 0;
+  z-index: 1100;
+}
+
+.annotation-style-toolbar {
+  --oa-toolbar-bg: #ffffff;
+  --oa-toolbar-radius: 12px;
+  --oa-toolbar-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+  --oa-toolbar-divider: #d5d7da;
+  --oa-toolbar-tooltip-bg: #303030;
+  --oa-toolbar-tooltip-fg: #ffffff;
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+
+  display: flex;
+  align-items: stretch;
+  height: 44px;
+  background: var(--oa-toolbar-bg);
+  border-radius: var(--oa-toolbar-radius);
+  box-shadow: var(--oa-toolbar-shadow);
+}
+
+.oa-toolbar-divider {
+  align-self: center;
+  width: 1px;
+  height: 44px;
+  background: var(--oa-toolbar-divider);
+}
+
+.oa-toolbar-cell {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: var(--oa-text-color, #333);
+  position: relative; /* tooltip anchor, same as .annotation-toolbar [data-tooltip] */
+  padding: 12px;
+}
+
+.oa-toolbar-cell:hover {
+  background: var(--oa-control-bg, #eee);
+}
+
+.oa-toolbar-cell:first-child {
+  border-top-left-radius: var(--oa-toolbar-radius);
+  border-bottom-left-radius: var(--oa-toolbar-radius);
+}
+
+.oa-toolbar-cell:last-child {
+  border-top-right-radius: var(--oa-toolbar-radius);
+  border-bottom-right-radius: var(--oa-toolbar-radius);
+}
+
+.oa-toolbar-cell.active {
+  color: var(--oa-accent, #3a03cf);
+}
+
+.oa-toolbar-cell-danger:hover {
+  color: #d92d20;
+}
+
+/* Hover tooltip - same attribute/behavior as .annotation-toolbar
+   [data-tooltip], styled to the Figma spec's dark pill + pointer triangle. */
+.annotation-style-toolbar [data-tooltip]::after,
+.annotation-style-toolbar [data-tooltip]::before {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%) translateY(-6px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.annotation-style-toolbar [data-tooltip]::after {
+  content: attr(data-tooltip);
+  background: var(--oa-toolbar-tooltip-bg);
+  color: var(--oa-toolbar-tooltip-fg);
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.annotation-style-toolbar [data-tooltip]::before {
+  content: "";
+  bottom: calc(100% - 2px);
+  border: 4px solid transparent;
+  border-top-color: var(--oa-toolbar-tooltip-bg);
+}
+
+.annotation-style-toolbar [data-tooltip]:hover::after,
+.annotation-style-toolbar [data-tooltip]:hover::before {
+  opacity: 1;
+}
+
+/* Dropdown cells (Color, Font family, Font size) */
+.oa-toolbar-dropdown-trigger {
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--oa-text-color, #333);
+}
+
+.oa-toolbar-dropdown:hover .oa-toolbar-dropdown-trigger {
+  background: var(--oa-control-bg, #eee);
+}
+
+.oa-toolbar-dropdown-label:empty {
+  display: none;
+}
+
+.oa-toolbar-dropdown-chevron {
+  display: inline-flex;
+  transition: transform 0.15s;
+}
+
+.oa-toolbar-dropdown.open .oa-toolbar-dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.oa-toolbar-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--oa-toolbar-bg);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 1;
+}
+
+.oa-toolbar-dropdown.open .oa-toolbar-dropdown-panel {
+  display: block;
+}
+
+.oa-toolbar-dropdown-option {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+  border-radius: 4px;
+  color: var(--oa-text-color, #333);
+}
+
+.oa-toolbar-dropdown-option:hover {
+  background: var(--oa-control-bg, #eee);
+}
+
+/* Color cell */
+.oa-toolbar-swatch {
+  --oa-swatch-fill: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--oa-swatch-fill);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.oa-toolbar-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  gap: 4px;
+}
+
+.oa-toolbar-swatch-cell {
+  --oa-swatch-fill: #fff;
+  --oa-swatch-stroke: #ccc;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.oa-toolbar-swatch-cell::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--oa-swatch-fill);
+  border: 1px solid var(--oa-swatch-stroke);
+}
+
+.oa-toolbar-more-colors {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  border-top: 1px solid var(--oa-toolbar-divider);
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 4px 0;
+  font-size: 13px;
+  color: var(--oa-muted-color, #666);
+  text-align: center;
+}
+
+.oa-toolbar-more-colors:hover {
+  color: var(--oa-text-color, #333);
+}
+
+.oa-toolbar-more-colors-host {
+  margin-top: 8px;
 }

@@ -2,7 +2,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { Ogma } from "@linkurious/ogma";
-import { AnnotationPanel, AnnotationToolbar } from "@linkurious/ogma-annotations/ui";
+import {
+  AnnotationPanel,
+  AnnotationToolbar,
+  TextAnnotationToolbar
+} from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
 import {
   Control,
@@ -20,6 +24,8 @@ class App {
   private annotationPanel: AnnotationPanel | null = null;
   // @ts-expect-error Used for debugging
   private annotationToolbar: AnnotationToolbar | null = null;
+  // @ts-expect-error Used for debugging
+  private textAnnotationToolbar: TextAnnotationToolbar | null = null;
   private buttons: {
     centerView: HTMLButtonElement;
     rotateCW: HTMLButtonElement;
@@ -93,6 +99,7 @@ class App {
     this.setupKeyboardShortcuts();
     this.setupAnnotationPanel();
     this.setupAnnotationToolbar();
+    this.setupTextAnnotationToolbar();
   }
 
   private setupControlListeners() {
@@ -242,6 +249,16 @@ class App {
       control: this.control,
       onJsonExport: handleJsonExport,
       onSvgExport: handleSvgExport
+    });
+  }
+
+  /** Floating, per-selection style pill for Text annotations and sticky
+   * notes - anchored above the selection instead of docked like
+   * `AnnotationPanel`. Both are wired up here so they can be compared side
+   * by side: selecting a Text/sticky note shows both. */
+  private setupTextAnnotationToolbar() {
+    this.textAnnotationToolbar = new TextAnnotationToolbar({
+      control: this.control
     });
   }
 

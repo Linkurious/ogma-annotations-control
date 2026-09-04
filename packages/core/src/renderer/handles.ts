@@ -53,6 +53,27 @@ export class Handles extends Renderer<CanvasLayer> {
       this.refresh
     );
     ogma.events.on("zoom", this.refresh);
+
+    // TextArea (handlers/textArea.ts) moves its edit overlay to the very
+    // top of Ogma's layer stack when it opens, which also buries this
+    // long-lived Handles canvas layer underneath it - resize handles
+    // become invisible while editing a note's text (still functionally
+    // draggable - detectHandle() is driven by pointer-position math, not
+    // DOM hit-testing - just invisible, painted behind the note).
+    //
+    // Reordering via Ogma's own moveTo()/moveToTop() was tried first, but
+    // it re-appends every layer's DOM node (Ogma rebuilds the whole layer
+    // container on any reorder), which blurs the just-focused textarea
+    // living in the overlay layer and, disruptively, also appears to
+    // perturb the undo/redo history (extra entries got recorded around a
+    // plain text creation in e2e testing - root cause not pinned down, but
+    // reordering many-layers-at-once for a purely cosmetic fix isn't worth
+    // that risk). A plain CSS z-index on this element sidesteps all of it -
+    // Ogma already makes each layer `position: absolute` for its own
+    // internal stacking, so a permanently-set, sufficiently high z-index
+    // keeps Handles above whatever overlay opens later without moving,
+    // rebuilding, or touching any other layer or the store.
+    this.layer.element.style.zIndex = "1000";
   }
 
   private refresh = () => {

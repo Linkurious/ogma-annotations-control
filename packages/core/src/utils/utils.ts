@@ -68,6 +68,20 @@ export function getBoxSize<T extends Annotation>(t: T) {
   };
 }
 
+export const MIN_FONT_SCALE = 0.4;
+export const MAX_FONT_SCALE = 4;
+
+/** fontSize * fontScale, the number to actually render/edit at. Shared by
+ * the SVG renderer (text.ts) and the live-edit overlay (textArea.ts) so
+ * both stay in sync. fontScale absent/undefined is a no-op (×1). */
+export function getEffectiveFontSize(
+  fontSize: number | string | undefined,
+  fontScale: number | undefined
+): number {
+  const n = parseFloat((fontSize ?? "").toString());
+  return (Number.isFinite(n) ? n : 0) * (fontScale ?? 1);
+}
+
 export function getBoxPosition<T extends Annotation>(
   t: T,
   fixedSize: boolean = false,

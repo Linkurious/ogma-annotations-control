@@ -244,6 +244,33 @@ export class Control extends EventEmitter<FeatureEvents> {
   };
 
   /**
+   * The underlying Ogma instance this controller was created with. Needed by
+   * UI built on top of `Control`'s public API (e.g. `TextAnnotationToolbar`)
+   * that must mount its own `ogma.layers.addOverlay(...)` layer rather than
+   * going through a renderer/handler internal to `Control`.
+   */
+  public getOgma(): Ogma {
+    return this.ogma;
+  }
+
+  /**
+   * Current global annotation-rotation angle (radians) - see
+   * `TextStyle`/`Handles`' `counterRotation`. Needed alongside `getZoom()` by
+   * `TextAnnotationToolbar` to anchor its pill above a (possibly rotated)
+   * Text box's world-space bounds.
+   */
+  public getRotation(): number {
+    return this.store.getState().rotation;
+  }
+
+  /** Current zoom level - needed by `TextAnnotationToolbar` to convert a
+   * `fixedSize` Text annotation's screen-pixel dimensions back to graph
+   * units for its anchor-point math (same conversion `Handles` does). */
+  public getZoom(): number {
+    return this.store.getState().zoom;
+  }
+
+  /**
    * Set the options for the controller
    * @param options new Options
    * @returns the updated options
