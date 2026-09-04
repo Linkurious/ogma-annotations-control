@@ -160,6 +160,57 @@ describe("Sticky notes", () => {
     expect(typedValue).toBe("Dragged");
   }, 10000);
 
+  it("keeps resize handles visible on top of the note while it's being edited", async () => {
+    // Regression test: a plain click both selects a sticky note and drops
+    // it straight into edit mode (see the first test above), opening the
+    // TextArea overlay. Ogma stacks layers in DOM/creation order by
+    // default, and the overlay - created fresh per edit session - always
+    // moves itself to the very top of that stack when it opens (see
+    // handlers/textArea.ts's own moveToTop() call), which used to also
+    // bury the long-lived Handles canvas layer (created once, early, at
+    // Control construction) underneath it - handles were still
+    // functionally draggable (detectHandle() is driven by pointer-position
+    // math, not DOM hit-testing), just invisible, painted behind the note.
+    //
+    // The fix (renderer/handles.ts) sets a permanent, high CSS z-index on
+    // the Handles canvas element instead of reordering layers - Ogma's own
+    // moveTo()/moveToTop() rebuilds the entire layer container on every
+    // call, which both blurs whatever's focused (the note's textarea) and,
+    // per e2e testing, perturbed the undo/redo history - so this asserts
+    // the actual mechanism (z-index), not DOM order, which is deliberately
+    // left untouched by the fix.
+    await session.page.evaluate(() => editor.enableStickyNoteDrawing());
+    const pos = { x: 200, y: 200 };
+
+    await session.page.mouse.move(pos.x, pos.y);
+    await session.page.mouse.down();
+    await session.page.mouse.up();
+
+    // Clear of the click-suppression window a drag-end sets (see
+    // InteractionController.suppressClicksTemporarily).
+    await session.page.waitForTimeout(150);
+
+    const zIndex = await session.page.evaluate(() => {
+      const editorEl = document.querySelector(
+        ".ogma-annotation-text-editor"
+      ) as HTMLElement | null;
+      const handlesEl = document.querySelector(
+        ".ogma-canvas-layer"
+      ) as HTMLElement | null;
+      const z = (el: HTMLElement | null) =>
+        el ? parseFloat(getComputedStyle(el).zIndex) || 0 : NaN;
+      return { editor: z(editorEl), handles: z(handlesEl) };
+    });
+
+    // Both must actually have been found - the note is still in edit mode
+    // at this point, and Handles is a long-lived layer.
+    expect(Number.isNaN(zIndex.editor)).toBe(false);
+    expect(Number.isNaN(zIndex.handles)).toBe(false);
+    // Higher z-index = painted on top - handles must sit above the note's
+    // edit overlay, not below it.
+    expect(zIndex.handles).toBeGreaterThan(zIndex.editor);
+  }, 10000);
+
   it("scales font size with the box on resize, and compounds across resizes", async () => {
     // Placed directly via createText/editor.add (mirrors createText usage in
     // anchorFollow.test.ts) rather than the interactive placement gesture -
