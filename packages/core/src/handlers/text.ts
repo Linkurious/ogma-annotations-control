@@ -23,7 +23,12 @@ import {
   isComment,
   isText
 } from "../types";
-import { getBoxCenter, getBoxSize } from "../utils/utils";
+import {
+  getBoxCenter,
+  getBoxSize,
+  MIN_FONT_SCALE,
+  MAX_FONT_SCALE
+} from "../utils/utils";
 import { isAnnotationLinkTarget } from "../utils/rendering";
 import { dot } from "../utils/vec";
 
@@ -272,6 +277,31 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     );
   }
 
+  /** Folds this drag tick's incremental size change into style.fontScale,
+   * when the annotation opted in via scaleFontOnResize. width/height are
+   * the box's size *before* this tick (already computed by the caller via
+   * getBoxSize); newWidth/newHeight are its size after. Guards on both
+   * being positive so the very first placement drag (0×0 -> dragged size,
+   * see startDrawing()) leaves fontScale untouched. */
+  private nextStyleWithFontScale(
+    original: Text | Comment,
+    width: number,
+    height: number,
+    newWidth: number,
+    newHeight: number
+  ) {
+    const style = original.properties.style;
+    if (!style?.scaleFontOnResize) return style;
+    if (width <= 0 || height <= 0 || newWidth <= 0 || newHeight <= 0)
+      return style;
+    const incremental = Math.sqrt((newWidth / width) * (newHeight / height));
+    const fontScale = Math.min(
+      MAX_FONT_SCALE,
+      Math.max(MIN_FONT_SCALE, (style.fontScale ?? 1) * incremental)
+    );
+    return { ...style, fontScale };
+  }
+
   private dragCorner(
     original: Text | Comment,
     delta: Point,
@@ -319,7 +349,14 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       properties: {
         ...original.properties,
         width: newWidth,
-        height: newHeight
+        height: newHeight,
+        style: this.nextStyleWithFontScale(
+          original,
+          width,
+          height,
+          newWidth,
+          newHeight
+        )
       },
       geometry: {
         type: original.geometry.type,
@@ -383,7 +420,14 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       properties: {
         ...original.properties,
         width: newWidth,
-        height: newHeight
+        height: newHeight,
+        style: this.nextStyleWithFontScale(
+          original,
+          width,
+          height,
+          newWidth,
+          newHeight
+        )
       },
       geometry: {
         type: original.geometry.type,

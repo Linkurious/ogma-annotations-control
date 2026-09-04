@@ -159,4 +159,129 @@ describe("Sticky notes", () => {
     );
     expect(typedValue).toBe("Dragged");
   }, 10000);
+
+  it("scales font size with the box on resize, and compounds across resizes", async () => {
+    // Placed directly via createText/editor.add (mirrors createText usage in
+    // anchorFollow.test.ts) rather than the interactive placement gesture -
+    // a plain click/drag placement also opens an edit-mode textarea overlay
+    // (autoEditAfterDrag), which would intercept the corner-handle mousedown
+    // below before it ever reaches TextHandler's resize-detection.
+    const setup = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.view.locateGraph();
+      createEditor();
+      await ogma.view.setZoom(1);
+
+      // Top-left corner at (-80,-80) -> a 160x160 box centred on the
+      // origin, matching the sticky note default size/fontSize
+      // (defaultStickyNoteStyle) with scaleFontOnResize opted in directly.
+      const text = createText(-80, -80, 160, 160, "Hello there, sticky note", {
+        fontSize: 18,
+        scaleFontOnResize: true
+      });
+      editor.add(text);
+      editor.select(text.id);
+
+      return {
+        id: text.id,
+        center: ogma.view.graphToScreenCoordinates({ x: 0, y: 0 }),
+        corner: ogma.view.graphToScreenCoordinates({ x: 80, y: 80 })
+      };
+    });
+
+    // Clear of the click-suppression window a drag-end sets (see
+    // InteractionController.suppressClicksTemporarily) - same guard used in
+    // comment.test.ts's own handle/body-drag tests.
+    await session.page.waitForTimeout(150);
+
+    const dx = setup.corner.x - setup.center.x;
+    const dy = setup.corner.y - setup.center.y;
+
+    await session.page.mouse.move(setup.corner.x, setup.corner.y);
+    await session.page.mouse.down();
+    // Small engage move first (mirrors Handler.handleMouseMove recognizing
+    // a drag starting), then out to roughly double the box size - twice as
+    // far from centre as the starting corner.
+    await session.page.mouse.move(
+      setup.corner.x + dx * 0.1,
+      setup.corner.y + dy * 0.1,
+      { steps: 3 }
+    );
+    await session.page.mouse.move(
+      setup.center.x + dx * 2,
+      setup.center.y + dy * 2,
+      { steps: 10 }
+    );
+    await session.page.mouse.up();
+
+    const afterFirstResize = await session.page.evaluate((id) => {
+      const note = editor
+        .getAnnotations()
+        .features.find((f) => f.id === id) as any;
+      const textEl = document.querySelector(".annotation-text text");
+      return {
+        width: note?.properties?.width,
+        height: note?.properties?.height,
+        fontScale: note?.properties?.style?.fontScale,
+        svgFontSize: textEl
+          ? parseFloat(textEl.getAttribute("font-size") || "0")
+          : undefined
+      };
+    }, setup.id);
+
+    // Grew well past the original 160x160, and the font grew with it
+    // (instead of the text staying pinned at 18px and rewrapping/truncating).
+    expect(afterFirstResize.width).toBeGreaterThan(160);
+    expect(afterFirstResize.height).toBeGreaterThan(160);
+    expect(afterFirstResize.fontScale).toBeGreaterThan(1);
+    expect(afterFirstResize.svgFontSize).toBeCloseTo(
+      18 * afterFirstResize.fontScale!,
+      0
+    );
+
+    // Resize again from the note's new corner - the factor should compound
+    // across drags, not reset to 1 each time.
+    const setup2 = await session.page.evaluate((id) => {
+      const note = editor
+        .getAnnotations()
+        .features.find((f) => f.id === id) as any;
+      const [cx, cy] = note.geometry.coordinates;
+      const { width, height } = note.properties;
+      return {
+        center: ogma.view.graphToScreenCoordinates({ x: cx, y: cy }),
+        corner: ogma.view.graphToScreenCoordinates({
+          x: cx + width / 2,
+          y: cy + height / 2
+        })
+      };
+    }, setup.id);
+
+    await session.page.waitForTimeout(150);
+
+    const dx2 = setup2.corner.x - setup2.center.x;
+    const dy2 = setup2.corner.y - setup2.center.y;
+
+    await session.page.mouse.move(setup2.corner.x, setup2.corner.y);
+    await session.page.mouse.down();
+    await session.page.mouse.move(
+      setup2.corner.x + dx2 * 0.1,
+      setup2.corner.y + dy2 * 0.1,
+      { steps: 3 }
+    );
+    await session.page.mouse.move(
+      setup2.center.x + dx2 * 1.5,
+      setup2.center.y + dy2 * 1.5,
+      { steps: 10 }
+    );
+    await session.page.mouse.up();
+
+    const secondFontScale = await session.page.evaluate((id) => {
+      const note = editor
+        .getAnnotations()
+        .features.find((f) => f.id === id) as any;
+      return note?.properties?.style?.fontScale;
+    }, setup.id);
+
+    expect(secondFontScale).toBeGreaterThan(afterFirstResize.fontScale!);
+  }, 15000);
 });

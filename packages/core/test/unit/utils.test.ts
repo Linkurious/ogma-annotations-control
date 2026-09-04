@@ -11,7 +11,8 @@ import { describe, it, assert } from "vitest";
 import {
   AnnotationCollection,
   getAnnotationsBounds,
-  getCoordinates
+  getCoordinates,
+  getEffectiveFontSize
 } from "../../src";
 
 import Set1 from "../fixtures/set1.json";
@@ -325,5 +326,20 @@ describe("getCoordinates", () => {
     } as Feature<Point>;
     const coords = getCoordinates(feature);
     assert.deepEqual(coords, [[5, 5]]);
+  });
+});
+
+describe("getEffectiveFontSize", () => {
+  it("returns fontSize unchanged when fontScale is undefined", () => {
+    assert.strictEqual(getEffectiveFontSize(18, undefined), 18);
+  });
+
+  it("multiplies fontSize by fontScale", () => {
+    assert.strictEqual(getEffectiveFontSize(18, 2), 36);
+  });
+
+  it("returns 0 for a non-finite fontSize", () => {
+    assert.strictEqual(getEffectiveFontSize(undefined, 2), 0);
+    assert.strictEqual(getEffectiveFontSize("not-a-number", 2), 0);
   });
 });
