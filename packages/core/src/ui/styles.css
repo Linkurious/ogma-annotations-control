@@ -531,7 +531,7 @@ input:checked + .toggle-slider:before {
 .annotation-toolbar .separator {
   border-left: 1px solid #ccc;
   margin: 0 4px;
-  height: 20px;
+  height: 44px;
   display: inline-block;
   vertical-align: middle;
 }
@@ -625,7 +625,7 @@ input:checked + .toggle-slider:before {
 .oa-toolbar-divider {
   align-self: center;
   width: 1px;
-  height: 24px;
+  height: 44px;
   background: var(--oa-toolbar-divider);
 }
 
@@ -633,17 +633,27 @@ input:checked + .toggle-slider:before {
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
   color: var(--oa-text-color, #333);
   position: relative; /* tooltip anchor, same as .annotation-toolbar [data-tooltip] */
+  padding: 12px;
 }
 
 .oa-toolbar-cell:hover {
   background: var(--oa-control-bg, #eee);
+}
+
+.oa-toolbar-cell:first-child {
+  border-top-left-radius: var(--oa-toolbar-radius);
+  border-bottom-left-radius: var(--oa-toolbar-radius);
+}
+
+.oa-toolbar-cell:last-child {
+  border-top-right-radius: var(--oa-toolbar-radius);
+  border-bottom-right-radius: var(--oa-toolbar-radius);
 }
 
 .oa-toolbar-cell.active {
@@ -695,7 +705,7 @@ input:checked + .toggle-slider:before {
   border: none;
   background: transparent;
   cursor: pointer;
-  padding: 0 12px;
+  padding: 0;
   display: flex;
   align-items: center;
   gap: 4px;

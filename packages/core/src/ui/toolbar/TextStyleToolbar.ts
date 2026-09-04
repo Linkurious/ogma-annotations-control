@@ -74,7 +74,6 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         // cell also uses this same item shape with numbers.
         onSelect: (value, c) => c.updateStyle({ font: `${value}` })
       },
-      { kind: "separator" },
       {
         kind: "dropdown",
         title: "Font size",
