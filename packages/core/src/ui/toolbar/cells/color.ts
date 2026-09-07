@@ -54,6 +54,7 @@ export class ColorCell implements ToolbarCell {
       const cell = document.createElement("button");
       cell.type = "button";
       cell.className = "oa-toolbar-swatch-cell";
+      cell.classList.toggle("oa-toolbar-swatch-cell-transparent", s.fill === "transparent");
       cell.title = s.fill;
       cell.style.setProperty("--oa-swatch-fill", s.fill);
       cell.style.setProperty("--oa-swatch-stroke", s.stroke);
@@ -110,6 +111,7 @@ export class ColorCell implements ToolbarCell {
     const current =
       annotation.properties.style?.background || defaultTextStyle.background!;
     this.swatch.style.setProperty("--oa-swatch-fill", current);
+    this.swatch.classList.toggle("oa-toolbar-swatch-transparent", current === "transparent");
   }
 
   public destroy(): void {

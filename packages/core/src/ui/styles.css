@@ -767,6 +767,24 @@ input:checked + .toggle-slider:before {
   border: 1px solid var(--oa-swatch-stroke);
 }
 
+/* "transparent" swatch - a checkerboard circle instead of a solid fill
+   (which, for `background: transparent`, would be indistinguishable from
+   an empty/missing swatch against the white cell/trigger behind it). Same
+   "no fill" convention `ui/config.ts`'s `BACKGROUNDS` already uses for the
+   docked `AnnotationPanel`, just drawn instead of dashed-bordered since
+   these swatches are filled circles, not outlined ones. */
+.oa-toolbar-swatch-transparent,
+.oa-toolbar-swatch-cell-transparent::after {
+  background-image: conic-gradient(
+    #ccc 90deg,
+    transparent 90deg 180deg,
+    #ccc 180deg 270deg,
+    transparent 270deg
+  );
+  background-size: 8px 8px;
+  background-color: #fff;
+}
+
 .oa-toolbar-more-colors {
   display: block;
   width: 100%;

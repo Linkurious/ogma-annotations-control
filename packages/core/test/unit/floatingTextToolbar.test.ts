@@ -14,7 +14,8 @@ import {
   DEFAULT_TOOLBAR_FONTS,
   TextAnnotationToolbar,
   ButtonItemCell,
-  DropdownItemCell
+  DropdownItemCell,
+  ColorCell
 } from "../../src/ui";
 import type { ToolbarCellContext } from "../../src/ui/toolbar/cells/contract";
 import type { ToolbarButtonItem, ToolbarDropdownItem } from "../../src/ui/toolbar/cells/types";
@@ -81,12 +82,13 @@ describe("types/features/Text - isStickyNote", () => {
 });
 
 describe("ui/toolbar/swatches", () => {
-  it("exposes the Figma-extracted fill/stroke pairs", () => {
+  it("exposes the Figma-extracted fill/stroke pairs, plus a transparent option", () => {
     expect(STICKY_SWATCHES.length).toBeGreaterThan(0);
     STICKY_SWATCHES.forEach((s) => {
-      expect(s.fill).toMatch(/^#[0-9A-F]{6}$/i);
+      expect(s.fill).toMatch(/^#[0-9A-F]{6}$|^transparent$/i);
       expect(s.stroke).toMatch(/^#[0-9A-F]{6}$/i);
     });
+    expect(STICKY_SWATCHES.some((s) => s.fill === "transparent")).toBe(true);
   });
 });
 
@@ -160,6 +162,42 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     option.click();
 
     expect(onSelect).toHaveBeenCalledWith(24, ctx);
+  });
+
+  it("ColorCell gives the transparent swatch a checkerboard marker class and picks it correctly", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { background: "#FFE49B" });
+    const { ctx } = fakeCellContext(text);
+    const cell = new ColorCell(ctx, { swatches: STICKY_SWATCHES });
+
+    const cells = cell.element.querySelectorAll<HTMLButtonElement>(
+      ".oa-toolbar-swatch-cell"
+    );
+    const transparentCell = Array.from(cells).find(
+      (c) => c.title === "transparent"
+    )!;
+    expect(transparentCell).toBeTruthy();
+    expect(
+      transparentCell.classList.contains("oa-toolbar-swatch-cell-transparent")
+    ).toBe(true);
+    // Every other swatch is a real color, so none should carry the marker.
+    cells.forEach((c) => {
+      if (c !== transparentCell) {
+        expect(
+          c.classList.contains("oa-toolbar-swatch-cell-transparent")
+        ).toBe(false);
+      }
+    });
+
+    transparentCell.click();
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ background: "transparent" });
+
+    // The trigger's own swatch indicator picks up the marker too once the
+    // annotation's background actually is transparent.
+    cell.update(ctx.getAnnotation());
+    const trigger = cell.element.querySelector(".oa-toolbar-swatch")!;
+    expect(trigger.classList.contains("oa-toolbar-swatch-transparent")).toBe(
+      true
+    );
   });
 
   it("real Text/StickyNote item lists (via TextStyleToolbar) expose bold/author/delete/font tooltips", () => {

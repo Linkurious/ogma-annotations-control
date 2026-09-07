@@ -6,14 +6,20 @@
  * palette, not an MRU list.
  *
  * The export only fully captured 8 fill/stroke pairs for what reads as a
- * 3x3(+) grid - the 9th cell (a color, or a "more colors" affordance) is
- * unconfirmed. `ColorCell` opens the existing `vanilla-colorful` picker
- * (see `colorPicker.ts`) as a secondary "more colors" popover, so a missing
- * 9th swatch here isn't a functional gap, just an incomplete visual match.
+ * 3x3(+) grid - the 9th cell (a color, or a "more colors" affordance) was
+ * unconfirmed, so a `"transparent"` swatch (a checkerboard circle in the CSS
+ * - see `.oa-toolbar-swatch-cell-transparent` in `styles.css`, same "no
+ * fill" convention `ui/config.ts`'s `BACKGROUNDS` already uses for the
+ * docked `AnnotationPanel`) fills that slot. `ColorCell` opens the existing
+ * `vanilla-colorful` picker (see `colorPicker.ts`) as a secondary "more
+ * colors" popover for anything not in this fixed set.
  */
 export interface Swatch {
   /** Fill color, used as both the swatch circle's fill and the annotation's
-   * `color`/`background` style value when picked. */
+   * `color`/`background` style value when picked. The CSS keyword
+   * `"transparent"` is a valid value here - `ColorCell` gives it a
+   * checkerboard swatch instead of a solid (indistinguishable-from-empty)
+   * circle. */
   fill: string;
   /** 1px ring stroke color around the swatch circle. */
   stroke: string;
@@ -27,5 +33,6 @@ export const STICKY_SWATCHES: Swatch[] = [
   { fill: "#C7F7EF", stroke: "#8CD9CC" },
   { fill: "#99D6FF", stroke: "#5CA5D6" },
   { fill: "#D1C7FA", stroke: "#9B8CD9" },
-  { fill: "#C3DAFE", stroke: "#668ECC" }
+  { fill: "#C3DAFE", stroke: "#668ECC" },
+  { fill: "transparent", stroke: "#CCCCCC" }
 ];
