@@ -574,24 +574,33 @@ input:checked + .toggle-slider:before {
   position: absolute;
   left: 50%;
   bottom: 100%;
-  transform: translateX(-50%) translateY(-6px);
+  transform: translateX(-50%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.15s;
+  z-index: 99;
 }
 
+/* margin-bottom (not `bottom: calc(100% - Npx)` + a shared translateY) so
+   the pill and the triangle below it stack with a clean, exact seam - the
+   triangle's `border` trick makes its box 0-height, so its margin-bottom
+   directly sets the gap between the pill's bottom edge and the target;
+   getting this via two competing `bottom`/`transform` offsets previously
+   left the triangle's flat top 2px inside the pill's own box, where the
+   pill (painted after, per pseudo-element order) covered all but a sliver
+   of it - functionally invisible. */
 .annotation-toolbar [data-tooltip]::after,
 .annotation-style-toolbar [data-tooltip]::after,
 .add-menu [data-tooltip]::after,
 .view-controls [data-tooltip]::after {
   content: attr(data-tooltip);
+  margin-bottom: 14px;
   background: var(--oa-tooltip-bg, #303030);
   color: var(--oa-tooltip-fg, #ffffff);
   white-space: nowrap;
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 4px;
-  z-index: 99;
 }
 
 .annotation-toolbar [data-tooltip]::before,
@@ -599,10 +608,9 @@ input:checked + .toggle-slider:before {
 .add-menu [data-tooltip]::before,
 .view-controls [data-tooltip]::before {
   content: "";
-  bottom: calc(100% - 2px);
+  margin-bottom: 4px;
   border: 4px solid transparent;
   border-top-color: var(--oa-tooltip-bg, #303030);
-  z-index: 99;
 }
 
 .annotation-toolbar [data-tooltip]:hover::after,
