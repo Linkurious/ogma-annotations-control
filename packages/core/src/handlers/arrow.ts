@@ -4,7 +4,7 @@ import {
   canDetachArrowEnd,
   canDetachArrowStart,
 } from "./comment/helpers";
-import { handleDrag, dragSelectionAlong } from "./dragging";
+import { handleDrag } from "./dragging";
 import { Links } from "./links";
 import { Snap, Snapping } from "./snapping";
 import {
@@ -127,7 +127,6 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       const dy = point.y - handle.point.y;
       // Move arrow body and connected annotations
       handleDrag(this.store, this.links, annotation.id, { x: dx, y: dy }, true);
-      dragSelectionAlong(this.store, this.links, annotation.id, { x: dx, y: dy });
       this.dispatchEvent(event);
       return;
     }

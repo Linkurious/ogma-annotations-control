@@ -5,67 +5,53 @@ import { Control, createText, createBox } from "../../src";
 import { createStore, Store } from "../../src/store";
 import { Links } from "../../src/handlers/links";
 import { Snapping } from "../../src/handlers/snapping";
-import { handleMultiDrag, dragSelectionAlong } from "../../src/handlers/dragging";
+import { handleDrag } from "../../src/handlers/dragging";
 import { EVT_MOUSEDOWN_ANNOTATION } from "../../src/constants";
 
-describe("multi-select drag: dragging.ts helpers", () => {
+describe("handleDrag: carries the rest of a multi-selection along", () => {
   let store: Store;
   let links: Links;
 
   beforeEach(() => {
     const ogma = createOgma();
     store = createStore();
-    // Snapping isn't exercised by these code paths (only arrow endpoint
+    // Snapping isn't exercised by this code path (only arrow endpoint
     // dragging uses it) - mock it out the same way links.test.ts does.
     const mockSnapping = {} as unknown as Snapping;
     links = new Links(ogma, mockSnapping, store);
   });
 
-  it("handleMultiDrag moves every given annotation by the same displacement", () => {
+  it("moves only the dragged annotation when it's not part of a multi-selection", () => {
     const a = createText(0, 0, 50, 50, "a"); // center [25, 25]
-    const b = createBox(100, 100, 50, 50); // center [125, 125]
-    store.getState().addFeature(a);
-    store.getState().addFeature(b);
-
-    handleMultiDrag(store, links, [a.id, b.id], { x: 10, y: -5 });
-
-    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([35, 20]);
-    expect(store.getState().liveUpdates[b.id]?.geometry?.coordinates).toEqual([135, 120]);
-  });
-
-  it("dragSelectionAlong is a no-op when the primary id isn't part of a multi-selection", () => {
-    const a = createText(0, 0, 50, 50, "a");
     store.getState().addFeature(a);
     store.getState().setSelectedFeatures([a.id]);
 
-    dragSelectionAlong(store, links, a.id, { x: 10, y: 10 });
+    handleDrag(store, links, a.id, { x: 10, y: -5 });
 
-    expect(store.getState().liveUpdates[a.id]).toBeUndefined();
+    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([35, 20]);
   });
 
-  it("dragSelectionAlong moves the rest of a multi-selection, not the primary id itself", () => {
+  it("moves every selected annotation by the same displacement", () => {
     const a = createText(0, 0, 50, 50, "a"); // center [25, 25]
     const b = createBox(100, 100, 50, 50); // center [125, 125]
     store.getState().addFeature(a);
     store.getState().addFeature(b);
     store.getState().setSelectedFeatures([a.id, b.id]);
 
-    dragSelectionAlong(store, links, a.id, { x: 10, y: 10 });
+    handleDrag(store, links, a.id, { x: 10, y: -5 });
 
-    // The caller is expected to move the primary id itself via handleDrag -
-    // dragSelectionAlong only carries the *rest* of the selection along.
-    expect(store.getState().liveUpdates[a.id]).toBeUndefined();
-    expect(store.getState().liveUpdates[b.id]?.geometry?.coordinates).toEqual([135, 135]);
+    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([35, 20]);
+    expect(store.getState().liveUpdates[b.id]?.geometry?.coordinates).toEqual([135, 120]);
   });
 
-  it("dragSelectionAlong ignores ids outside the current selection", () => {
+  it("ignores annotations outside the current selection", () => {
     const a = createText(0, 0, 50, 50, "a");
     const b = createBox(100, 100, 50, 50);
     store.getState().addFeature(a);
     store.getState().addFeature(b);
     store.getState().setSelectedFeatures([a.id]); // b never got selected
 
-    dragSelectionAlong(store, links, a.id, { x: 10, y: 10 });
+    handleDrag(store, links, a.id, { x: 10, y: 10 });
 
     expect(store.getState().liveUpdates[b.id]).toBeUndefined();
   });
@@ -93,12 +79,8 @@ describe("multi-select drag: same-type handler arming", () => {
     }
   });
 
-  // "text", "box" and "comment" annotations each share a single Handler
-  // instance for their type (see AnnotationEditor's constructor), so two
-  // selected annotations of the *same* type contend over one instance's
-  // single `annotation` field. These guard the fixes in
-  // AnnotationEditor.editFeature/stopEditingFeature and
-  // Handler.isAnnotation against that instance being stomped.
+  // Same-type annotations (two texts here) share one Handler instance -
+  // see AnnotationEditor's constructor.
   it("selecting a second same-type annotation re-arms the shared handler onto it", () => {
     const a = createText(0, 0, 50, 50, "a");
     const b = createText(200, 200, 50, 50, "b");

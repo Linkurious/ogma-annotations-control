@@ -210,13 +210,9 @@ export abstract class Handler<
     const container: HTMLElement | null = this.ogma.getContainer();
     const win = container ? getBrowserWindow() || container : null;
 
-    // Always remove first, even when about to re-add: setAnnotation can be
-    // called again while already active, e.g. re-arming this shared
-    // per-type handler onto a different same-type sibling mid
-    // multi-selection (see AnnotationEditor's "mousedown-annotation"
-    // handling) - without this, each re-arm piled on another copy of these
-    // listeners, so a single mousemove fired handleMouseMove once per prior
-    // arm.
+    // Remove before re-adding: setAnnotation can be called again while
+    // already active (re-arming onto another same-type sibling), and
+    // without this each call would pile on another copy of these listeners.
     if (container && win) {
       win.removeEventListener("mousemove", this.handleMouseMove);
       win.removeEventListener("mouseup", this.handleMouseUp);
@@ -238,9 +234,7 @@ export abstract class Handler<
     }
   }
 
-  /** Is `id` the annotation this handler is currently armed on? Used to
-   * avoid stomping a same-type sibling's state - see AnnotationEditor's
-   * stopEditingFeature/mousedown-annotation handling. */
+  /** Is `id` the annotation this handler is currently armed on? */
   isAnnotation(id: Id): boolean {
     return this.annotation === id;
   }

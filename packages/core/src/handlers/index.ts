@@ -66,24 +66,18 @@ export class AnnotationEditor extends EventTarget {
         this.interaction.suppressClicksTemporarily();
       }) as unknown as EventListener);
     });
-    // A type's handler instance is shared by every annotation of that type,
-    // so it tracks only one id at a time - see the comment at this event's
-    // dispatch site. Re-arm on every annotation mousedown, not just newly
-    // selected ones: clicking an already-selected sibling to drag it
-    // doesn't change selectedFeatures at all, so the subscription below
-    // (which only fires on newly selected/unselected ids) would otherwise
-    // never see it.
+    // Clicking an already-selected sibling to drag it doesn't change
+    // selectedFeatures, so the subscription below wouldn't re-arm its
+    // handler on its own - do it here too. Only when actually switching id:
+    // re-arming a comment onto itself would reset TextHandler's
+    // justActivated and break its double-click-to-edit gate.
     this.interaction.addEventListener(EVT_MOUSEDOWN_ANNOTATION, ((
       evt: CustomEvent<{ id: Id }>
     ) => {
       const id = evt.detail.id;
       const feature = this.store.getState().features[id];
-      if (!feature) return;
-      const handler = this.handlers.get(feature.properties.type);
-      if (handler && !handler.isAnnotation(id)) {
-        this.setActiveHandler(feature.properties.type);
-        handler.setAnnotation(feature as Text);
-      }
+      const handler = feature && this.handlers.get(feature.properties.type);
+      if (handler && !handler.isAnnotation(id)) this.editFeature(id);
     }) as EventListener);
 
     this.store.subscribe(
@@ -112,11 +106,8 @@ export class AnnotationEditor extends EventTarget {
     const handlerType = feature.properties.type;
     const handler = this.handlers.get(handlerType);
 
-    // A same-type handler instance is shared across annotations of that
-    // type (see the constructor). If it's currently armed on a *different*
-    // still-selected sibling - e.g. deselecting one of two selected texts -
-    // stopping it here would wrongly kill that sibling's active editing
-    // state instead of the one actually being deselected.
+    // Only stop it if it's still tracking this id - it may already be
+    // armed on a different, still-selected same-type sibling.
     if (handler && handler.isAnnotation(id)) handler.stopEditing();
   }
 

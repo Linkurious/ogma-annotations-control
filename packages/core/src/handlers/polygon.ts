@@ -1,6 +1,6 @@
 import { Ogma, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
-import { handleDrag, dragSelectionAlong } from "./dragging";
+import { handleDrag } from "./dragging";
 import { Links } from "./links";
 import {
   cursors,
@@ -265,7 +265,6 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
     if (this.hoveredHandle.type === HandleType.BODY) {
       // Move entire polygon using handleDrag
       handleDrag(this.store, this.links, polygon.id, { x: dx, y: dy });
-      dragSelectionAlong(this.store, this.links, polygon.id, { x: dx, y: dy });
     } else if (
       this.hoveredHandle.type === HandleType.VERTEX &&
       this.hoveredHandle.vertexIndex !== undefined
