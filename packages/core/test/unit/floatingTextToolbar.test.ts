@@ -292,6 +292,16 @@ describe("ui/TextAnnotationToolbar", () => {
       document.querySelector('[data-tooltip="Show author"]')
     ).not.toBeNull();
 
+    // 5 groups - [Color] [Font, Size] [Bold] [author toggle] [Delete], Font
+    // and Size sharing a group with no divider between them - means
+    // exactly 4 separators. Not 3 (the author toggle landing with no
+    // divider on one side) or 5 (two stacked before Delete), both of which
+    // the off-by-one in StickyNoteStyleToolbar's insertion index used to
+    // produce depending on which side of the split kept the pre-existing
+    // separator.
+    const pill = document.querySelector(".annotation-style-toolbar")!;
+    expect(pill.querySelectorAll(".oa-toolbar-separator").length).toBe(4);
+
     toolbar.destroy();
   });
 

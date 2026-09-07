@@ -9,9 +9,14 @@ import { TextStyleToolbar } from "./TextStyleToolbar";
 export class StickyNoteStyleToolbar extends TextStyleToolbar {
   protected getItems(ctx: ToolbarCellContext): ToolbarItem[] {
     const items = super.getItems(ctx);
-    // The base list ends in [..., separator, Delete] - insert the author
-    // toggle (plus its own separator) right before that pair.
-    const deleteAt = items.length - 2;
+    // The base list ends in [..., separator, Bold, separator, Delete] -
+    // split right before Delete itself (not before that last separator),
+    // so the existing separator becomes the Bold/author-toggle divider and
+    // only the new one we add here separates the toggle from Delete. Off
+    // by one here previously either doubled up the divider before Delete
+    // or dropped the one before the toggle, depending on which side of the
+    // insertion carried it.
+    const deleteAt = items.length - 1;
     const authorToggle: ToolbarItem[] = [
       {
         kind: "button",
