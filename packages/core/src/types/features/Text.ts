@@ -21,6 +21,15 @@ export interface TextStyle extends BoxStyle {
   borderRadius?: number;
   /** When true, text maintains constant size regardless of zoom level */
   fixedSize?: boolean;
+  /** Opt-in: when true, corner/edge-drag resize also updates fontScale, so
+   * the rendered font size scales with the box instead of the text
+   * rewrapping/truncating. Only set by defaultStickyNoteStyle. */
+  scaleFontOnResize?: boolean;
+  /** Accumulated multiplier applied to fontSize at render time:
+   * effectiveFontSize = fontSize * (fontScale ?? 1). Updated incrementally
+   * by TextHandler's corner/edge drag when scaleFontOnResize is true;
+   * absent (≡ 1) for every annotation that doesn't opt in. */
+  fontScale?: number;
   /**
    * Ghost text shown (via the textarea's native `placeholder` attribute)
    * while `content` is empty - disappears the instant the user types, no

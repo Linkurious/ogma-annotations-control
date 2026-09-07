@@ -48,7 +48,10 @@ const defaultStickyNoteStyle: Partial<Text["properties"]["style"]> = {
   // Ghost text via the textarea's native placeholder - shown while content
   // is empty, gone the instant the user types. No selection/focus tricks
   // needed, unlike pre-filling real content the user has to overwrite.
-  placeholder: "Quick note…"
+  placeholder: "Quick note…",
+  // Corner/edge-drag resize also scales the rendered font (see
+  // TextStyle.scaleFontOnResize/fontScale) instead of rewrapping the text.
+  scaleFontOnResize: true
 };
 
 /**

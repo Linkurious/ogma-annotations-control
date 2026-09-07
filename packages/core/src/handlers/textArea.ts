@@ -10,7 +10,7 @@ import {
   isComment,
   defaultCommentStyle
 } from "../types";
-import { getBoxSize } from "../utils/utils";
+import { getBoxSize, getEffectiveFontSize } from "../utils/utils";
 
 // Send-button dimensions in screen pixels (before effectiveScale), and the
 // fallback minimum height for fixed-size auto-grow when the style doesn't
@@ -217,7 +217,8 @@ export class TextArea {
       color,
       background = defaults.background,
       padding = 0,
-      fixedSize = defaults.fixedSize
+      fixedSize = defaults.fixedSize,
+      fontScale
     } = annotation.properties.style || defaults;
     const textArea = this.textarea;
     const editorEl = this.layer.element as HTMLElement;
@@ -225,7 +226,8 @@ export class TextArea {
     // effectiveScale is 1 for both paths: fixedSize (scaled:false) uses screen pixels
     // directly; non-fixedSize (scaled:true) passes graph units and Ogma applies zoom.
     const effectiveScale = 1;
-    const scaledFontSize = parseFloat(fontSize!.toString()) * effectiveScale;
+    const effectiveFontSize = getEffectiveFontSize(fontSize, fontScale);
+    const scaledFontSize = effectiveFontSize * effectiveScale;
     const scaledPadding = padding * effectiveScale;
 
     // Style the parent container
