@@ -497,8 +497,9 @@ input:checked + .toggle-slider:before {
   display: flex;
   align-items: center;
   flex-direction: row;
-  gap: 4px;
-  padding: 5px;
+  gap: 3px;
+  padding: 0 4px;
+  min-height: 40px;
 }
 
 .annotation-toolbar[data-orientation="vertical"] {
@@ -511,8 +512,8 @@ input:checked + .toggle-slider:before {
    trigger). `position: relative` doubles as the tooltip's anchor. */
 .oa-toolbar-button {
   position: relative;
-  margin: 2px;
-  padding: 5px;
+  margin: 1px;
+  padding: 4px;
   border: 1px solid transparent;
   cursor: pointer;
   border-radius: 5px;
@@ -543,20 +544,23 @@ input:checked + .toggle-slider:before {
   color: #d92d20;
 }
 
+/* `align-self: stretch` (not a hardcoded height) so the divider always
+   matches the bar's actual height - driven by `.oa-toolbar-bar`'s
+   `min-height: 40px` today, but this way it can't fall out of sync if that
+   number ever changes. */
 .oa-toolbar-separator {
   border-left: 1px solid var(--oa-toolbar-divider, #ccc);
-  margin: 0 4px;
-  height: 44px;
-  display: inline-block;
-  vertical-align: middle;
+  margin: 0 3px;
+  align-self: stretch;
 }
 
 .annotation-toolbar[data-orientation="vertical"] .oa-toolbar-separator {
   border-left: none;
   border-top: 1px solid var(--oa-toolbar-divider, #ccc);
+  align-self: auto;
   width: 20px;
   height: 0;
-  margin: 4px 0;
+  margin: 3px 0;
 }
 
 /* Tooltips, shown on hover via the `data-tooltip` attribute - one
