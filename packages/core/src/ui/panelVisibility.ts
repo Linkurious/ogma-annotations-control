@@ -55,6 +55,13 @@ export function attachPanelVisibility(
   // that clicking straight from one annotation to another also fires (see
   // its own comment below).
   let shown: Annotation | null = null;
+  // The id of whatever is actually selected right now, independent of
+  // pending/shown - a drag hides the panel (see `handleDragStart`) without
+  // the selection itself changing, so this is what `showPending` falls
+  // back to on `dragend` to reveal the *same* annotation again (at its new
+  // position/size) instead of silently staying hidden because nothing was
+  // freshly "pending". Cleared only on a real deselect or a multi-select.
+  let selectedId: string | number | null = null;
   let showTimer: ReturnType<typeof setTimeout> | null = null;
 
   const clearTimer = () => {
@@ -70,6 +77,14 @@ export function attachPanelVisibility(
       shown = pending;
       onShow(pending);
       pending = null;
+      return;
+    }
+    if (!shown && selectedId != null) {
+      const ann = control.getAnnotation(selectedId);
+      if (ann) {
+        shown = ann;
+        onShow(ann);
+      }
     }
   };
 
@@ -86,6 +101,7 @@ export function attachPanelVisibility(
       const ann = control.getAnnotation(sel.ids[0]);
       if (!ann) return;
 
+      selectedId = sel.ids[0];
       pending = ann as Annotation;
 
       if (control.isDrawing()) {
@@ -102,10 +118,16 @@ export function attachPanelVisibility(
       // cancels the timer first and avoids a show/hide flicker.
       showTimer = setTimeout(showPending, SHOW_DELAY_MS);
     } else {
+      selectedId = null;
       hide();
     }
   };
 
+  // A move *and* a resize both fire dragstart/dragend around the drag
+  // (verified against the real interaction, not just the generic move
+  // case) - hide for its duration either way, `selectedId` staying set is
+  // what lets `showPending` on `dragend` bring it back at the new
+  // position/size afterward instead of leaving it hidden for good.
   const handleDragStart = () => hide();
 
   const handleUnselect = (evt: { ids: (string | number)[] }) => {
@@ -120,6 +142,7 @@ export function attachPanelVisibility(
     // pending timer / already-shown panel alone.
     const current = pending ?? shown;
     if (current && !evt.ids.includes(current.id)) return;
+    selectedId = null;
     hide();
   };
 

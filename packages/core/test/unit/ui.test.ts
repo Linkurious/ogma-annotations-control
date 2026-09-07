@@ -141,6 +141,46 @@ describe("ui/panelVisibility", () => {
     expect(onShow).not.toHaveBeenCalled();
   });
 
+  it("reappears on dragend after a drag on an already-shown annotation (move or resize)", () => {
+    // Regression test: dragging an annotation that's already selected and
+    // showing (not switching selection) used to leave the panel hidden for
+    // good - `dragstart` cleared `pending`, so `dragend`'s `showPending`
+    // had nothing to show and no-op'd.
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenCalledTimes(1);
+
+    emit("dragstart"); // resize or move - same event either way
+    expect(onHide).toHaveBeenCalledTimes(1);
+
+    emit("dragend");
+    expect(onShow).toHaveBeenCalledTimes(2);
+    expect(onShow).toHaveBeenLastCalledWith(annotation);
+    // Only shown once for this one dragend, not re-triggered again by a
+    // trailing `click` some interactions also fire.
+    emit("click");
+    expect(onShow).toHaveBeenCalledTimes(2);
+  });
+
+  it("a real deselect during/after a drag does not fall back to reshowing", () => {
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    emit("dragstart");
+    emit("unselect", { ids: ["a1"] }); // e.g. deleted mid-drag
+    emit("dragend");
+    expect(onShow).toHaveBeenCalledTimes(1); // just the original show
+  });
+
   it("hides on a multi-selection", () => {
     const { control, emit } = createFakeControl(annotation);
     const onShow = vi.fn();
