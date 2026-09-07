@@ -50,6 +50,11 @@ export function attachPanelVisibility(
 ): () => void {
   // The annotation selected but not yet shown, and a timer that reveals it.
   let pending: Annotation | null = null;
+  // The annotation `onShow` was last called with (cleared on hide) - lets
+  // `handleUnselect` tell a real deselect apart from the stale `unselect`
+  // that clicking straight from one annotation to another also fires (see
+  // its own comment below).
+  let shown: Annotation | null = null;
   let showTimer: ReturnType<typeof setTimeout> | null = null;
 
   const clearTimer = () => {
@@ -62,9 +67,17 @@ export function attachPanelVisibility(
   const showPending = () => {
     clearTimer();
     if (pending) {
+      shown = pending;
       onShow(pending);
       pending = null;
     }
+  };
+
+  const hide = () => {
+    clearTimer();
+    pending = null;
+    shown = null;
+    onHide();
   };
 
   const handleSelect = (sel: { ids: (string | number)[] }) => {
@@ -89,21 +102,25 @@ export function attachPanelVisibility(
       // cancels the timer first and avoids a show/hide flicker.
       showTimer = setTimeout(showPending, SHOW_DELAY_MS);
     } else {
-      pending = null;
-      onHide();
+      hide();
     }
   };
 
-  const handleDragStart = () => {
-    clearTimer();
-    pending = null;
-    onHide();
-  };
+  const handleDragStart = () => hide();
 
-  const handleUnselect = () => {
-    clearTimer();
-    pending = null;
-    onHide();
+  const handleUnselect = (evt: { ids: (string | number)[] }) => {
+    // Clicking straight from one selected annotation to another fires
+    // `select` for the *new* one first, then `unselect` for the old one
+    // (not the more intuitive other way around) - so by the time this
+    // runs, `pending`/`shown` may already be the new annotation, and this
+    // `unselect` is stale: it's not "nothing is selected anymore", it's
+    // fallout from the old selection losing out to the new one. Only treat
+    // it as a real deselect when it actually names our own pending/shown
+    // annotation - otherwise ignore it and leave the newer selection's
+    // pending timer / already-shown panel alone.
+    const current = pending ?? shown;
+    if (current && !evt.ids.includes(current.id)) return;
+    hide();
   };
 
   control.on("select", handleSelect);

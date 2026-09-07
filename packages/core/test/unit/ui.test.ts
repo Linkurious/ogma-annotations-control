@@ -52,8 +52,12 @@ describe("ui/icons", () => {
   });
 });
 
-/** Minimal fake Control implementing the structural slice the panel needs. */
-function createFakeControl(annotation: Annotation) {
+/** Minimal fake Control implementing the structural slice the panel needs.
+ * Accepts one or more annotations - `getAnnotation` looks up by id (falling
+ * back to the first one for an unrecognized id, matching the old
+ * single-annotation behavior's leniency) so tests can exercise switching
+ * selection between two different annotations, not just toggling one. */
+function createFakeControl(...annotations: Annotation[]) {
   const handlers = new Map<string, Set<(...args: never[]) => void>>();
   let drawing = false;
 
@@ -81,7 +85,8 @@ function createFakeControl(annotation: Annotation) {
       control.on(event, wrapped);
       return control;
     },
-    getAnnotation: () => annotation,
+    getAnnotation: (id) =>
+      annotations.find((a) => a.id === id) ?? annotations[0],
     isDrawing: () => drawing
   };
 
@@ -159,6 +164,43 @@ describe("ui/panelVisibility", () => {
     expect(onShow).not.toHaveBeenCalled(); // no timer while drawing
     emit("completeDrawing");
     expect(onShow).toHaveBeenCalledWith(annotation);
+  });
+
+  it("shows the new annotation when selecting directly from one to another", () => {
+    // Ogma fires `select` for the new annotation, then `unselect` for the
+    // old one (not the other way around) - regression test for that
+    // `unselect` stomping the just-armed show for the new selection.
+    const a = { id: "a1" } as unknown as Annotation;
+    const b = { id: "b1" } as unknown as Annotation;
+    const { control, emit } = createFakeControl(a, b);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenLastCalledWith(a);
+
+    emit("select", { ids: ["b1"] });
+    emit("unselect", { ids: ["a1"] }); // stale - superseded by the select above
+    expect(onHide).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenLastCalledWith(b);
+    expect(onHide).not.toHaveBeenCalled();
+  });
+
+  it("still hides on a real deselect (unselect with no superseding select)", () => {
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenCalledWith(annotation);
+
+    emit("unselect", { ids: ["a1"] });
+    expect(onHide).toHaveBeenCalledTimes(1);
   });
 
   it("detach removes every registered listener and pending timer", () => {
