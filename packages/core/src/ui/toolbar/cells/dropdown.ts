@@ -16,7 +16,9 @@ import { svgIcon } from "../../icons";
  * own click and doesn't need the host toolbar involved.
  */
 export interface ToolbarDropdown {
-  /** Root element - `.oa-toolbar-cell.oa-toolbar-dropdown`, insert this. */
+  /** Root element - `.oa-toolbar-dropdown`, insert this. Purely a
+   * popover-positioning wrapper; all visible button styling is on the
+   * trigger (an `.oa-toolbar-button`) inside it. */
   element: HTMLElement;
   /** Replaces the trigger's label text (icon and chevron stay put). */
   setLabel(label: string): void;
@@ -30,12 +32,12 @@ export function createToolbarDropdown(
   initialLabel: string
 ): ToolbarDropdown {
   const element = document.createElement("div");
-  element.className = "oa-toolbar-cell oa-toolbar-dropdown";
-  element.dataset.tooltip = tooltip;
+  element.className = "oa-toolbar-dropdown";
 
   const trigger = document.createElement("button");
   trigger.type = "button";
-  trigger.className = "oa-toolbar-dropdown-trigger";
+  trigger.className = "oa-toolbar-button oa-toolbar-dropdown-trigger";
+  trigger.dataset.tooltip = tooltip;
 
   const label = document.createElement("span");
   label.className = "oa-toolbar-dropdown-label";

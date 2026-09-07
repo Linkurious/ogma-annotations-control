@@ -84,7 +84,7 @@ export abstract class AnnotationStyleToolbar<
     this.anchor.className = "annotation-style-toolbar-anchor";
 
     this.root = document.createElement("div");
-    this.root.className = "annotation-style-toolbar";
+    this.root.className = "annotation-style-toolbar oa-toolbar oa-toolbar-bar";
     this.anchor.appendChild(this.root);
     // Same guard as AnnotationPanel/AnnotationToolbar: don't let clicks
     // inside the pill reach Ogma's own interaction handlers (which would
@@ -148,7 +148,7 @@ export abstract class AnnotationStyleToolbar<
     items.forEach((item) => {
       if (item.kind === "separator") {
         const divider = document.createElement("span");
-        divider.className = "oa-toolbar-divider";
+        divider.className = "oa-toolbar-separator";
         this.root.appendChild(divider);
         return;
       }

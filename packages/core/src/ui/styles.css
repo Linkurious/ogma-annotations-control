@@ -481,12 +481,22 @@ input:checked + .toggle-slider:before {
   display: none;
 }
 
-/* --- Annotation Toolbar (AnnotationToolbar) ---
-   Drawing/undo-redo toolbar. Shares the placement rules above with
-   `.annotation-panel`; only its own button/orientation styling lives here. */
-.annotation-toolbar {
+/* --- Shared horizontal-toolbar system ---
+   `.oa-toolbar` is a bare marker class every toolbar bar in both packages
+   carries alongside its own root class (`.annotation-toolbar`,
+   `.annotation-style-toolbar`, React's `.add-menu`/`.view-controls`) -
+   it sets no properties of its own, it just wires up the shared tooltip
+   system below with a single selector instead of a 4-way list. `AddMenu`/
+   `ViewControls` keep their own bar layout and button visuals entirely
+   (`packages/react/src/ui/toolbar.css`) - only the marker is shared with
+   them. `.oa-toolbar-bar` is the actual shared bar layout, a *second*
+   class added only where core's own two toolbars want to look/behave
+   alike (row of small inset buttons) - kept separate from the marker so
+   applying it can't leak into `AddMenu`/`ViewControls`'s different design. */
+.oa-toolbar-bar {
   display: flex;
   align-items: center;
+  flex-direction: row;
   gap: 4px;
   padding: 5px;
 }
@@ -495,82 +505,79 @@ input:checked + .toggle-slider:before {
   flex-direction: column;
 }
 
-.annotation-toolbar:not([data-orientation]),
-.annotation-toolbar[data-orientation="horizontal"] {
-  flex-direction: row;
-}
-
-.annotation-toolbar button {
+/* Small inset button - used for every plain toolbar action/toggle
+   (AnnotationToolbar's drawing/undo/redo/erase/delete buttons,
+   TextAnnotationToolbar's Bold/Delete/author-toggle cells, a dropdown's
+   trigger). `position: relative` doubles as the tooltip's anchor. */
+.oa-toolbar-button {
+  position: relative;
   margin: 2px;
   padding: 5px;
   border: 1px solid transparent;
   cursor: pointer;
   border-radius: 5px;
   background: transparent;
-  color: var(--oa-muted-color);
+  color: var(--oa-muted-color, #666);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
 }
 
-.annotation-toolbar button:hover {
-  background: var(--oa-control-bg);
-  color: var(--oa-text-color);
+.oa-toolbar-button:hover {
+  background: var(--oa-control-bg, #eee);
+  color: var(--oa-text-color, #333);
 }
 
-.annotation-toolbar button.active {
-  background: var(--oa-accent);
+.oa-toolbar-button.active {
+  background: var(--oa-accent, #3a03cf);
   color: #fff;
 }
 
-.annotation-toolbar button:disabled {
+.oa-toolbar-button:disabled {
   color: #aaa;
   cursor: not-allowed;
 }
 
-.annotation-toolbar .separator {
-  border-left: 1px solid #ccc;
+.oa-toolbar-button-danger:hover {
+  color: #d92d20;
+}
+
+.oa-toolbar-separator {
+  border-left: 1px solid var(--oa-toolbar-divider, #ccc);
   margin: 0 4px;
   height: 44px;
   display: inline-block;
   vertical-align: middle;
 }
 
-.annotation-toolbar[data-orientation="vertical"] .separator {
+.annotation-toolbar[data-orientation="vertical"] .oa-toolbar-separator {
   border-left: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--oa-toolbar-divider, #ccc);
   width: 20px;
   height: 0;
   margin: 4px 0;
 }
 
 /* Tooltips, shown on hover via the `data-tooltip` attribute - one
-   definition shared by every toolbar in both packages (vanilla
-   `AnnotationToolbar`/`TextAnnotationToolbar` here, React's `AddMenu`/
-   `ViewControls` - which import this stylesheet wholesale, see
-   `packages/react/src/ui/styles.css` - add no tooltip CSS of their own).
-   Previously each had its own near-duplicate block (slightly different
-   colors/radius/offsets); worth keeping as one so they can't drift out of
-   sync with each other, or - as happened once - collide when a scoped and
-   an unscoped copy both matched the same element and fought over
-   properties neither set (see the git history on this block for that).
-   Dark pill + pointer triangle, matching the Figma "Sticky Note Toolbar"
-   spec that `TextAnnotationToolbar`'s cells were originally built against. */
-.annotation-toolbar [data-tooltip],
-.annotation-style-toolbar [data-tooltip],
-.add-menu [data-tooltip],
-.view-controls [data-tooltip] {
+   definition shared by every toolbar in both packages (anything carrying
+   `.oa-toolbar`; React's `AddMenu`/`ViewControls` import this stylesheet
+   wholesale, see `packages/react/src/ui/styles.css`, and add no tooltip CSS
+   of their own). Previously each toolbar had its own near-duplicate block
+   (slightly different colors/radius/offsets, addressed by an earlier
+   4-selector-list version of this comment); worth keeping as one rule set
+   so they can't drift out of sync, or - as happened once - collide when a
+   scoped and an unscoped copy both matched the same element and fought
+   over properties neither set (see the git history on this block for
+   that). Dark pill + pointer triangle, matching the Figma "Sticky Note
+   Toolbar" spec `TextAnnotationToolbar`'s cells were originally built
+   against. */
+.oa-toolbar [data-tooltip] {
   position: relative;
 }
 
-.annotation-toolbar [data-tooltip]::after,
-.annotation-toolbar [data-tooltip]::before,
-.annotation-style-toolbar [data-tooltip]::after,
-.annotation-style-toolbar [data-tooltip]::before,
-.add-menu [data-tooltip]::after,
-.add-menu [data-tooltip]::before,
-.view-controls [data-tooltip]::after,
-.view-controls [data-tooltip]::before {
+.oa-toolbar [data-tooltip]::after,
+.oa-toolbar [data-tooltip]::before {
   position: absolute;
   left: 50%;
   bottom: 100%;
@@ -589,10 +596,7 @@ input:checked + .toggle-slider:before {
    left the triangle's flat top 2px inside the pill's own box, where the
    pill (painted after, per pseudo-element order) covered all but a sliver
    of it - functionally invisible. */
-.annotation-toolbar [data-tooltip]::after,
-.annotation-style-toolbar [data-tooltip]::after,
-.add-menu [data-tooltip]::after,
-.view-controls [data-tooltip]::after {
+.oa-toolbar [data-tooltip]::after {
   content: attr(data-tooltip);
   margin-bottom: 14px;
   background: var(--oa-tooltip-bg, #303030);
@@ -603,24 +607,15 @@ input:checked + .toggle-slider:before {
   border-radius: 4px;
 }
 
-.annotation-toolbar [data-tooltip]::before,
-.annotation-style-toolbar [data-tooltip]::before,
-.add-menu [data-tooltip]::before,
-.view-controls [data-tooltip]::before {
+.oa-toolbar [data-tooltip]::before {
   content: "";
   margin-bottom: 4px;
   border: 4px solid transparent;
   border-top-color: var(--oa-tooltip-bg, #303030);
 }
 
-.annotation-toolbar [data-tooltip]:hover::after,
-.annotation-toolbar [data-tooltip]:hover::before,
-.annotation-style-toolbar [data-tooltip]:hover::after,
-.annotation-style-toolbar [data-tooltip]:hover::before,
-.add-menu [data-tooltip]:hover::after,
-.add-menu [data-tooltip]:hover::before,
-.view-controls [data-tooltip]:hover::after,
-.view-controls [data-tooltip]:hover::before {
+.oa-toolbar [data-tooltip]:hover::after,
+.oa-toolbar [data-tooltip]:hover::before {
   opacity: 1;
 }
 
@@ -657,79 +652,26 @@ input:checked + .toggle-slider:before {
   --oa-toolbar-bg: #ffffff;
   --oa-toolbar-radius: 12px;
   --oa-toolbar-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
-  --oa-toolbar-divider: #d5d7da;
 
   position: absolute;
   left: 0;
   top: 0;
   transform: translate(-50%, -100%);
 
-  display: flex;
-  align-items: stretch;
-  height: 44px;
   background: var(--oa-toolbar-bg);
   border-radius: var(--oa-toolbar-radius);
   box-shadow: var(--oa-toolbar-shadow);
 }
 
-.oa-toolbar-divider {
-  align-self: center;
-  width: 1px;
-  height: 44px;
-  background: var(--oa-toolbar-divider);
+/* The dropdown cells' (Color, Font family, Font size) outer wrapper - just
+   a popover-positioning context, all visible styling is on
+   `.oa-toolbar-dropdown-trigger` (an `.oa-toolbar-button`) inside it. */
+.oa-toolbar-dropdown {
+  position: relative;
 }
 
-.oa-toolbar-cell {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: var(--oa-text-color, #333);
-  position: relative; /* tooltip anchor - see the shared [data-tooltip] rules above */
-  padding: 12px;
-}
-
-.oa-toolbar-cell:hover {
-  background: var(--oa-control-bg, #eee);
-}
-
-.oa-toolbar-cell:first-child {
-  border-top-left-radius: var(--oa-toolbar-radius);
-  border-bottom-left-radius: var(--oa-toolbar-radius);
-}
-
-.oa-toolbar-cell:last-child {
-  border-top-right-radius: var(--oa-toolbar-radius);
-  border-bottom-right-radius: var(--oa-toolbar-radius);
-}
-
-.oa-toolbar-cell.active {
-  color: var(--oa-accent, #3a03cf);
-}
-
-.oa-toolbar-cell-danger:hover {
-  color: #d92d20;
-}
-
-/* Dropdown cells (Color, Font family, Font size) */
 .oa-toolbar-dropdown-trigger {
-  height: 100%;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
   font-size: 14px;
-  color: var(--oa-text-color, #333);
-}
-
-.oa-toolbar-dropdown:hover .oa-toolbar-dropdown-trigger {
-  background: var(--oa-control-bg, #eee);
 }
 
 .oa-toolbar-dropdown-label:empty {
@@ -826,7 +768,7 @@ input:checked + .toggle-slider:before {
   width: 100%;
   margin-top: 8px;
   border: none;
-  border-top: 1px solid var(--oa-toolbar-divider);
+  border-top: 1px solid var(--oa-toolbar-divider, #ccc);
   background: transparent;
   cursor: pointer;
   padding: 8px 4px 0;

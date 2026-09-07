@@ -128,7 +128,7 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const cell = new ButtonItemCell(ctx, item);
 
     expect(cell.element.dataset.tooltip).toBe("Bold");
-    expect(cell.element.classList.contains("oa-toolbar-cell-danger")).toBe(true);
+    expect(cell.element.classList.contains("oa-toolbar-button-danger")).toBe(true);
 
     cell.element.click();
     expect(action).toHaveBeenCalledWith(ctx);
