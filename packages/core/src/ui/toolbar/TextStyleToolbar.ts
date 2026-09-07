@@ -4,7 +4,7 @@ import {
   AnnotationStyleToolbar,
   type AnnotationStyleToolbarOptions
 } from "./AnnotationStyleToolbar";
-import { ColorCell } from "./cells/color";
+import { ColorCell, type ColorCellOptions } from "./cells/color";
 import type { ToolbarCellContext } from "./cells/contract";
 import type { ToolbarDropdownOption, ToolbarItem } from "./cells/types";
 import { STICKY_SWATCHES, type Swatch } from "./swatches";
@@ -41,6 +41,10 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
   fontSizes?: number[];
   /** Color cell's swatch-grid palette - defaults to `STICKY_SWATCHES`. */
   swatches?: Swatch[];
+  /** Bring your own color picker: called instead of opening the built-in
+   * `vanilla-colorful` popover when the color cell's "More colors…" is
+   * clicked. See `ColorCellOptions.onMoreColors` for the full contract. */
+  onMoreColors?: ColorCellOptions["onMoreColors"];
 }
 
 /** Floating style pill for a plain Text annotation: Color, Font family,
@@ -49,18 +53,19 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
  * with an author-visibility cell.
  *
  * The built-in items are declarative `ToolbarItem`s (see `cells/types.ts`),
- * built from `this.options` - override `fonts`/`fontSizes`/`swatches` at
- * construction to reconfigure them without subclassing. */
+ * built from `this.options` - override `fonts`/`fontSizes`/`swatches`/
+ * `onMoreColors` at construction to reconfigure them without subclassing. */
 export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOptions> {
   protected getItems(_ctx: ToolbarCellContext): ToolbarItem[] {
     const fonts = this.options.fonts ?? DEFAULT_TOOLBAR_FONTS;
     const fontSizes = this.options.fontSizes ?? DEFAULT_TOOLBAR_FONT_SIZES;
     const swatches = this.options.swatches ?? STICKY_SWATCHES;
+    const onMoreColors = this.options.onMoreColors;
 
     return [
       {
         kind: "custom",
-        build: (c) => new ColorCell(c, { swatches })
+        build: (c) => new ColorCell(c, { swatches, onMoreColors })
       },
       { kind: "separator" },
       {

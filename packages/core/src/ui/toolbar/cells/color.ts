@@ -10,6 +10,21 @@ export interface ColorCellOptions {
   /** Fixed swatch-grid palette - defaults to `STICKY_SWATCHES`
    * (`TextStyleToolbar`'s `swatches` option), overridable per instance. */
   swatches: Swatch[];
+  /**
+   * Called instead of opening the built-in `vanilla-colorful` popover when
+   * "More colors…" is clicked - use this to hand off to your own color
+   * picker (a native `<input type="color">`, a design-system component,
+   * whatever) instead of the bundled one. Read the current color via
+   * `ctx.getAnnotation().properties.style?.background`, and call
+   * `ctx.updateStyle({ background: yourPickedColor })` (as many times as
+   * you like, e.g. live while the user drags in your own picker) to apply
+   * it - same `ToolbarCellContext` every other cell action gets.
+   * `anchor` is the "More colors…" button itself, there to position your
+   * own popover against if you want to anchor it the same place the
+   * built-in one would have opened. This toolbar's own popover closes
+   * right before this is called either way.
+   */
+  onMoreColors?: (ctx: ToolbarCellContext, anchor: HTMLElement) => void;
 }
 
 /**
@@ -25,19 +40,22 @@ export interface ColorCellOptions {
  * "More colors…" cell at the end opens the existing `vanilla-colorful`
  * picker (`colorPicker.ts`) as a secondary popover, so this doesn't
  * reimplement a full color picker - it wraps the one `AnnotationPanel`
- * already uses.
+ * already uses - unless the host supplies `onMoreColors`, in which case
+ * that's called instead and the built-in picker never gets built at all.
  */
 export class ColorCell implements ToolbarCell {
   public readonly element: HTMLElement;
   private dropdown: ToolbarDropdown;
   private swatch: HTMLElement;
+  private more: HTMLButtonElement;
   private morePicker: RgbaColorPicker | null = null;
   private morePickerHost: HTMLElement | null = null;
 
   constructor(
     private ctx: ToolbarCellContext,
-    { swatches }: ColorCellOptions
+    private options: ColorCellOptions
   ) {
+    const { swatches } = options;
     this.dropdown = createToolbarDropdown("Color", "");
     this.element = this.dropdown.element;
     this.element.classList.add("oa-toolbar-color-cell");
@@ -67,15 +85,15 @@ export class ColorCell implements ToolbarCell {
     });
     this.dropdown.panel.appendChild(grid);
 
-    const more = document.createElement("button");
-    more.type = "button";
-    more.className = "oa-toolbar-more-colors";
-    more.textContent = "More colors…";
-    more.addEventListener("click", (e) => {
+    this.more = document.createElement("button");
+    this.more.type = "button";
+    this.more.className = "oa-toolbar-more-colors";
+    this.more.textContent = "More colors…";
+    this.more.addEventListener("click", (e) => {
       e.stopPropagation();
       this.openMorePicker();
     });
-    this.dropdown.panel.appendChild(more);
+    this.dropdown.panel.appendChild(this.more);
   }
 
   private pick(color: string) {
@@ -83,6 +101,11 @@ export class ColorCell implements ToolbarCell {
   }
 
   private openMorePicker() {
+    if (this.options.onMoreColors) {
+      this.dropdown.close();
+      this.options.onMoreColors(this.ctx, this.more);
+      return;
+    }
     if (this.morePickerHost) {
       this.closeMorePicker();
       return;

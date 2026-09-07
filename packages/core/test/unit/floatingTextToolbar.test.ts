@@ -200,6 +200,27 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     );
   });
 
+  it("ColorCell calls onMoreColors instead of opening the built-in picker when provided", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { background: "#FFE49B" });
+    const { ctx } = fakeCellContext(text);
+    const onMoreColors = vi.fn();
+    const cell = new ColorCell(ctx, { swatches: STICKY_SWATCHES, onMoreColors });
+
+    const moreBtn = cell.element.querySelector<HTMLButtonElement>(
+      ".oa-toolbar-more-colors"
+    )!;
+    moreBtn.click();
+
+    expect(onMoreColors).toHaveBeenCalledWith(ctx, moreBtn);
+    // The built-in vanilla-colorful popover must not have been built.
+    expect(cell.element.querySelector(".oa-toolbar-more-colors-host")).toBeNull();
+
+    // The host is expected to call ctx.updateStyle itself - simulate that
+    // and confirm it lands the same way a built-in pick would.
+    onMoreColors.mock.calls[0][0].updateStyle({ background: "#123456" });
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ background: "#123456" });
+  });
+
   it("real Text/StickyNote item lists (via TextStyleToolbar) expose bold/author/delete/font tooltips", () => {
     // Exercised end-to-end (real tooltips in the mounted pill) in the
     // ui/TextAnnotationToolbar block below - this just checks the default

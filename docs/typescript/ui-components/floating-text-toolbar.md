@@ -79,7 +79,40 @@ const textToolbar = new TextAnnotationToolbar({
   grid (`fill` becomes the note's `background`; `stroke` is the swatch's
   ring color). Defaults to `STICKY_SWATCHES`. A "More colors…" entry always
   stays available underneath the grid, opening the full color picker
-  regardless of what you pass here.
+  regardless of what you pass here — unless you pass `onMoreColors`.
+
+Bring your own color picker instead of the bundled `vanilla-colorful` one
+by passing `onMoreColors` — it's called instead of opening the built-in
+popover when "More colors…" is clicked, so you can show your own UI (a
+native `<input type="color">`, a design-system component, an app-wide
+color-picker modal, whatever) and apply the result yourself:
+
+```ts
+new TextAnnotationToolbar({
+  control,
+  onMoreColors: (ctx, anchor) => {
+    const current = ctx.getAnnotation().properties.style?.background;
+    const input = document.createElement("input");
+    input.type = "color";
+    input.value = current?.startsWith("#") ? current : "#ffffff";
+    input.addEventListener("input", () => {
+      ctx.updateStyle({ background: input.value });
+    });
+    // `anchor` is the "More colors…" button - position your own popover
+    // against it if you want to open in the same place the built-in one
+    // would have.
+    anchor.after(input);
+    input.click();
+  }
+});
+```
+
+`ctx` is the same context object every cell action gets — read the current
+color from `ctx.getAnnotation().properties.style?.background`, and call
+`ctx.updateStyle({ background: ... })` (as many times as you like, e.g.
+live while the user drags in your own picker) to apply a pick. The
+toolbar's own swatch-grid popover closes right before `onMoreColors` runs
+either way, so there's no double-popover to manage.
 
 Import the defaults from `@linkurious/ogma-annotations/ui` if you want to
 extend rather than replace them:
@@ -109,6 +142,7 @@ new TextAnnotationToolbar({
 | `fonts` | `ToolbarDropdownOption[]` _(optional)_ | Font-family dropdown options. Defaults to `DEFAULT_TOOLBAR_FONTS`. |
 | `fontSizes` | `number[]` _(optional)_ | Font-size dropdown presets. Defaults to `DEFAULT_TOOLBAR_FONT_SIZES`. |
 | `swatches` | `Swatch[]` _(optional)_ | Color cell's swatch-grid palette. Defaults to `STICKY_SWATCHES`. |
+| `onMoreColors` | `(ctx, anchor: HTMLElement) => void` _(optional)_ | Called instead of opening the built-in color picker when "More colors…" is clicked - hand off to your own picker. |
 
 ## Methods
 
@@ -122,8 +156,8 @@ A sticky note isn't a separate annotation type — it's a `Text` created via
 `control.enableStickyNoteDrawing()`. The toolbar tells them apart with
 `isStickyNote()` (exported from the main package entry, next to `isText`)
 and shows the extra author-visibility cell only for those. `fonts`/
-`fontSizes`/`swatches` apply to both — there's no separate option set for
-sticky notes.
+`fontSizes`/`swatches`/`onMoreColors` apply to both — there's no separate
+option set for sticky notes.
 
 The author toggle only flips a `showAuthor` display flag on the
 annotation's style for now; it doesn't render an author name anywhere yet
