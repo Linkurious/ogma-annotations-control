@@ -239,7 +239,11 @@ class App {
 
   private setupAnnotationPanel() {
     this.annotationPanel = new AnnotationPanel({
-      control: this.control
+      control: this.control,
+      // Text/sticky notes are handled by TextAnnotationToolbar (see
+      // setupTextAnnotationToolbar) - excluding "text" here keeps the
+      // docked panel from also popping up for the same selection.
+      enabledTypes: ["arrow", "box", "comment", "polygon"]
     });
   }
 
@@ -254,8 +258,9 @@ class App {
 
   /** Floating, per-selection style pill for Text annotations and sticky
    * notes - anchored above the selection instead of docked like
-   * `AnnotationPanel`. Both are wired up here so they can be compared side
-   * by side: selecting a Text/sticky note shows both. */
+   * `AnnotationPanel`. `setupAnnotationPanel` excludes "text" from the
+   * docked panel's `enabledTypes` so the two don't both show for the same
+   * selection. */
   private setupTextAnnotationToolbar() {
     this.textAnnotationToolbar = new TextAnnotationToolbar({
       control: this.control

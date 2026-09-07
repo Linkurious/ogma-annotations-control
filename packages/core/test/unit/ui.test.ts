@@ -11,6 +11,7 @@ import {
   type PanelVisibilityControl
 } from "../../src/ui";
 import type { Annotation, AnnotationCollection, Control } from "../../src";
+import { createText } from "../../src";
 
 describe("ui/color", () => {
   it("seeds three default recent colors with the first active", () => {
@@ -231,6 +232,43 @@ describe("ui/AnnotationPanel layout", () => {
     panel.setPlacement("bottom");
     expect(root.getAttribute("data-placement")).toBe("bottom");
 
+    panel.destroy();
+  });
+});
+
+describe("ui/AnnotationPanel enabledTypes", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function displayOf(panel: AnnotationPanel) {
+    return (document.querySelector(".annotation-panel") as HTMLElement).style
+      .display;
+  }
+
+  it("shows every annotation kind by default", () => {
+    const text = createText(0, 0, 100, 50, "Hi");
+    const { control, emit } = createFakeControl(text as unknown as Annotation);
+    const panel = new AnnotationPanel({ control: control as unknown as Control });
+
+    emit("select", { ids: [text.id] });
+    vi.runAllTimers();
+
+    expect(displayOf(panel)).toBe("block");
+    panel.destroy();
+  });
+
+  it("stays hidden for a type excluded via enabledTypes", () => {
+    const text = createText(0, 0, 100, 50, "Hi");
+    const { control, emit } = createFakeControl(text as unknown as Annotation);
+    const panel = new AnnotationPanel({
+      control: control as unknown as Control,
+      enabledTypes: ["arrow", "box", "comment", "polygon"]
+    });
+
+    emit("select", { ids: [text.id] });
+    vi.runAllTimers();
+
+    expect(displayOf(panel)).toBe("none");
     panel.destroy();
   });
 });

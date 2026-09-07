@@ -55,3 +55,8 @@ export {
   DEFAULT_PANEL_ORIENTATION
 } from "./layout";
 export type { PanelPlacement, PanelOrientation } from "./layout";
+export {
+  ALL_PANEL_ANNOTATION_TYPES,
+  classifyPanelAnnotationType
+} from "./panelTypes";
+export type { PanelAnnotationType } from "./panelTypes";
