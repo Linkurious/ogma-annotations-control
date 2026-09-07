@@ -124,6 +124,31 @@ describe("Multi-select drag", () => {
     expect(selected).toEqual([bId]);
   }, 10000);
 
+  // Regression: onMouseDown adds a not-yet-selected ctrl/meta click to the
+  // selection right away so a drag that follows without releasing still
+  // moves it - if onMouseUp's ctrl/meta click-completion doesn't know that
+  // already happened, it undoes the add on release, leaving the annotation
+  // moved but not selected.
+  it("Ctrl/Cmd+press-and-drag on an unselected annotation both moves and selects it", async () => {
+    const { aId, aScreen } = await addTwoBoxes();
+    const before = await coordsOf(aId);
+
+    await session.page.keyboard.down("Meta");
+    await session.page.keyboard.down("Control");
+    await dragBy(aScreen, 40, -20);
+    await session.page.keyboard.up("Control");
+    await session.page.keyboard.up("Meta");
+
+    const after = await coordsOf(aId);
+    expect(after[0] - before[0]).toBeCloseTo(40, -1);
+    expect(after[1] - before[1]).toBeCloseTo(-20, -1);
+
+    const selected = await session.page.evaluate(() =>
+      editor.getSelectedAnnotations().features.map((f) => f.id)
+    );
+    expect(selected).toEqual([aId]);
+  }, 10000);
+
   it("dragging the most-recently-selected member of a multi-selection moves the whole group", async () => {
     const { aId, bId, aScreen, bScreen } = await addTwoBoxes();
     const before = { a: await coordsOf(aId), b: await coordsOf(bId) };

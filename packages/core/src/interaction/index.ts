@@ -39,6 +39,12 @@ export class InteractionController extends EventTarget {
     screenX: number;
     screenY: number;
     hasMoved: boolean;
+    // Was `annotation` selected before this gesture started? onMouseDown
+    // below adds a not-yet-selected ctrl/meta click to the selection right
+    // away, so a drag that follows without releasing still moves it - if
+    // onMouseUp's click-completion then toggled ctrl/meta again unconditionally,
+    // it would immediately undo that same add on a plain click release.
+    wasSelected: boolean;
   } | null = null;
 
   private readonly DRAG_THRESHOLD = 3; // pixels
@@ -292,21 +298,29 @@ export class InteractionController extends EventTarget {
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y);
     const state = this.store.getState();
+    const wasSelected = annotation
+      ? state.selectedFeatures.has(annotation.id)
+      : false;
 
     // Record what was clicked, but don't select yet
     this.mouseDownState = {
       annotation,
       screenX: evt.clientX,
       screenY: evt.clientY,
-      hasMoved: false
+      hasMoved: false,
+      wasSelected
     };
 
-    // A plain click on a not-yet-selected annotation selects it immediately,
-    // so its handler is already tracking it in time for a drag that follows
-    // without releasing. Ctrl/meta toggling is handled entirely on mouseup
-    // instead (see there) - toggling here too would race it.
-    if (annotation && !evt.ctrlKey && !evt.metaKey && !state.selectedFeatures.has(annotation.id)) {
-      state.setSelectedFeatures([annotation.id]);
+    // A not-yet-selected annotation is selected immediately, so its handler
+    // is already tracking it in time for a drag that follows without
+    // releasing (see wasSelected above for why onMouseUp doesn't also
+    // toggle it on a ctrl/meta click).
+    if (annotation && !wasSelected) {
+      if (evt.ctrlKey || evt.metaKey) {
+        state.toggleSelection(annotation.id);
+      } else {
+        state.setSelectedFeatures([annotation.id]);
+      }
     }
 
     // Each annotation type shares one Handler instance across every
@@ -346,10 +360,11 @@ export class InteractionController extends EventTarget {
       const annotation = this.mouseDownState.annotation;
 
       if (annotation) {
-        // Ctrl/meta toggling lives entirely here, not in onMouseDown - a
-        // single source of truth for it, so it can't double-toggle.
+        // A ctrl/meta click toggles the *pre-gesture* selection state:
+        // onMouseDown already added it above if it wasn't selected before -
+        // toggling again here would immediately undo that add.
         if (evt.ctrlKey || evt.metaKey) {
-          state.toggleSelection(annotation.id);
+          if (this.mouseDownState.wasSelected) state.toggleSelection(annotation.id);
         } else if (!state.selectedFeatures.has(annotation.id)) {
           state.setSelectedFeatures([annotation.id]);
         }
