@@ -1,6 +1,6 @@
 import { Ogma, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
-import { handleDrag } from "./dragging";
+import { handleDrag, dragSelectionAlong } from "./dragging";
 import { Links } from "./links";
 import { TextArea } from "./textArea";
 import {
@@ -256,6 +256,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     } else if (handle.type === HandleType.BODY) {
       // Body drag: use handleDrag to move annotation and update linked arrows
       handleDrag(this.store, this.links, annotation.id, delta);
+      dragSelectionAlong(this.store, this.links, annotation.id, delta);
       if (this.textEditor) this.textEditor.update();
     }
 

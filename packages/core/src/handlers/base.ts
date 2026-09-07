@@ -206,30 +206,43 @@ export abstract class Handler<
   }
 
   setAnnotation(annotation: T | null): void {
+    // Guard against null container (e.g., in headless tests)
+    const container: HTMLElement | null = this.ogma.getContainer();
+    const win = container ? getBrowserWindow() || container : null;
+
+    // Always remove first, even when about to re-add: setAnnotation can be
+    // called again while already active, e.g. re-arming this shared
+    // per-type handler onto a different same-type sibling mid
+    // multi-selection (see AnnotationEditor's "mousedown-annotation"
+    // handling) - without this, each re-arm piled on another copy of these
+    // listeners, so a single mousemove fired handleMouseMove once per prior
+    // arm.
+    if (container && win) {
+      win.removeEventListener("mousemove", this.handleMouseMove);
+      win.removeEventListener("mouseup", this.handleMouseUp);
+      container.removeEventListener("mousedown", this.handleMouseDown, true);
+      win.removeEventListener("click", this.onClick as EventListener, true);
+    }
+
     this.annotation = annotation ? annotation.id : null;
     if (this.annotation !== null) {
-      // Guard against null container (e.g., in headless tests)
-      const container: HTMLElement | null = this.ogma.getContainer();
-      if (container) {
-        const win = getBrowserWindow() || container;
+      if (container && win) {
         win.addEventListener("mousemove", this.handleMouseMove);
         win.addEventListener("mouseup", this.handleMouseUp, false);
         container.addEventListener("mousedown", this.handleMouseDown, true);
         win.addEventListener("click", this.onClick as EventListener, true);
       }
     } else {
-      // Guard against null container (e.g., in headless tests)
-      const container: HTMLElement | null = this.ogma.getContainer();
-      if (container) {
-        const win = getBrowserWindow() || container;
-        win.removeEventListener("mousemove", this.handleMouseMove);
-        win.removeEventListener("mouseup", this.handleMouseUp);
-        container.removeEventListener("mousedown", this.handleMouseDown);
-        win.removeEventListener("click", this.onClick as EventListener);
-      }
       this.clearDragState();
       this.setCursor(cursors.default);
     }
+  }
+
+  /** Is `id` the annotation this handler is currently armed on? Used to
+   * avoid stomping a same-type sibling's state - see AnnotationEditor's
+   * stopEditingFeature/mousedown-annotation handling. */
+  isAnnotation(id: Id): boolean {
+    return this.annotation === id;
   }
 
   getAnnotation(withLiveUpdates?: boolean): T | undefined {

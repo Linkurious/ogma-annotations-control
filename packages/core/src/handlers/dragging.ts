@@ -1,7 +1,7 @@
 import type { Point } from "@linkurious/ogma";
 import { Links } from "./links";
 import { TARGET_TYPES } from "../constants";
-import { Store } from "../store";
+import { Store, AnnotationState } from "../store";
 import type {
   Annotation,
   Arrow,
@@ -28,6 +28,75 @@ export function handleDrag(
   moveConnected: boolean = false
 ) {
   const state = store.getState();
+  const liveUpdates: Record<Id, DeepPartial<Annotation>> = {};
+  applyDragToAnnotation(state, links, annotationId, displacement, moveConnected, liveUpdates);
+  state.applyLiveUpdates(liveUpdates);
+}
+
+/**
+ * Moves every id in `annotationIds` by the same `displacement`, in a single
+ * live-update batch. Used to drag a whole multi-selection together: the
+ * annotation actually grabbed still goes through {@link handleDrag} (so it
+ * keeps its own moveConnected behavior), while this moves the rest of the
+ * selection alongside it - each by the same plain translation, plus
+ * whatever arrows are linked to it (same as a normal single-annotation
+ * drag), regardless of whether those linked arrows are themselves part of
+ * the selection.
+ */
+export function handleMultiDrag(
+  store: Store,
+  links: Links,
+  annotationIds: Id[],
+  displacement: Point
+) {
+  const state = store.getState();
+  const liveUpdates: Record<Id, DeepPartial<Annotation>> = {};
+  for (const annotationId of annotationIds) {
+    applyDragToAnnotation(state, links, annotationId, displacement, false, liveUpdates);
+  }
+  state.applyLiveUpdates(liveUpdates);
+}
+
+/**
+ * When `primaryId` (the annotation a drag actually started on) is part of a
+ * multi-selection, moves every *other* selected id by the same
+ * `displacement` too - so grabbing any one member of a multi-selection
+ * drags the whole group together. No-op when `primaryId` isn't selected, or
+ * is the only thing selected. Called alongside the primary annotation's own
+ * (unchanged) drag handling in text.ts/arrow.ts/polygon.ts, so the grabbed
+ * annotation keeps its usual moveConnected/snap behavior - only the rest of
+ * the selection goes through the plain translation in {@link handleMultiDrag}.
+ */
+export function dragSelectionAlong(
+  store: Store,
+  links: Links,
+  primaryId: Id,
+  displacement: Point
+) {
+  const selected = store.getState().selectedFeatures;
+  if (selected.size < 2 || !selected.has(primaryId)) return;
+  const others: Id[] = [];
+  selected.forEach((id) => {
+    if (id !== primaryId) others.push(id);
+  });
+  if (others.length) handleMultiDrag(store, links, others, displacement);
+}
+
+/**
+ * Shared worker behind {@link handleDrag} and {@link handleMultiDrag}:
+ * computes the live-update(s) for moving a single annotation by
+ * `displacement` and writes them into the caller-supplied `liveUpdates`
+ * accumulator (rather than applying immediately), so multiple annotations
+ * can be moved in one batched `applyLiveUpdates` call.
+ */
+function applyDragToAnnotation(
+  state: AnnotationState,
+  links: Links,
+  annotationId: Id,
+  displacement: Point,
+  moveConnected: boolean,
+  liveUpdates: Record<Id, DeepPartial<Annotation>>
+) {
   const annotation = state.getFeature(annotationId);
   if (!annotation) return;
 
@@ -51,7 +120,6 @@ export function handleDrag(
     annotationsToMove.add(annotation.id);
   }
 
-  const liveUpdates: Record<Id, DeepPartial<Annotation>> = {};
   // Move all annotations
   for (const id of annotationsToMove) {
     const target = state.getFeature(id);
@@ -90,8 +158,6 @@ export function handleDrag(
       }
     } as Partial<Arrow>;
   }
-  state.applyLiveUpdates(liveUpdates);
-
 }
 
 /**

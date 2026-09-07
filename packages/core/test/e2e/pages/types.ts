@@ -2,6 +2,7 @@ import { Ogma, OgmaParameters } from "@linkurious/ogma";
 import {
   Control,
   createArrow,
+  createBox,
   createPolygon,
   createText,
   type Arrow,
@@ -32,6 +33,7 @@ export interface AugmentedWindow {
   createOgma: <T extends OgmaParameters>(options: T) => Ogma;
   createEditor: () => Control;
   createArrow: typeof createArrow;
+  createBox: typeof createBox;
   createPolygon: typeof createPolygon;
   createText: typeof createText;
   demoStyles: DemoStyles;

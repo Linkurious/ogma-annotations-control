@@ -5,7 +5,7 @@ import { Links } from "./links";
 import { PolygonHandler } from "./polygon";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
-import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
+import { EVT_DRAG_END, EVT_DRAG_START, EVT_MOUSEDOWN_ANNOTATION } from "../constants";
 import { InteractionController } from "../interaction/index";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
@@ -66,6 +66,26 @@ export class AnnotationEditor extends EventTarget {
         this.interaction.suppressClicksTemporarily();
       }) as unknown as EventListener);
     });
+    // A type's handler instance is shared by every annotation of that type,
+    // so it tracks only one id at a time - see the comment at this event's
+    // dispatch site. Re-arm on every annotation mousedown, not just newly
+    // selected ones: clicking an already-selected sibling to drag it
+    // doesn't change selectedFeatures at all, so the subscription below
+    // (which only fires on newly selected/unselected ids) would otherwise
+    // never see it.
+    this.interaction.addEventListener(EVT_MOUSEDOWN_ANNOTATION, ((
+      evt: CustomEvent<{ id: Id }>
+    ) => {
+      const id = evt.detail.id;
+      const feature = this.store.getState().features[id];
+      if (!feature) return;
+      const handler = this.handlers.get(feature.properties.type);
+      if (handler && !handler.isAnnotation(id)) {
+        this.setActiveHandler(feature.properties.type);
+        handler.setAnnotation(feature as Text);
+      }
+    }) as EventListener);
+
     this.store.subscribe(
       (state) => state.selectedFeatures,
       (current, previous) => {
@@ -92,7 +112,12 @@ export class AnnotationEditor extends EventTarget {
     const handlerType = feature.properties.type;
     const handler = this.handlers.get(handlerType);
 
-    if (handler) handler.stopEditing();
+    // A same-type handler instance is shared across annotations of that
+    // type (see the constructor). If it's currently armed on a *different*
+    // still-selected sibling - e.g. deselecting one of two selected texts -
+    // stopping it here would wrongly kill that sibling's active editing
+    // state instead of the one actually being deselected.
+    if (handler && handler.isAnnotation(id)) handler.stopEditing();
   }
 
   public editFeature(id: Id) {
