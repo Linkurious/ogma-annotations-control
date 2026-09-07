@@ -652,6 +652,26 @@ input:checked + .toggle-slider:before {
   z-index: 1100;
 }
 
+/* Slide-up-and-fade on appear. A fresh `.annotation-style-toolbar` element
+   is created every time the pill (re)appears (see `AnnotationStyleToolbar`
+   - `TextAnnotationToolbar` destroys and recreates it, never reuses one
+   across a hide/show), so this just replays naturally on each mount - no
+   JS needed. Only animates `transform`/`opacity`, which are exclusively
+   this element's own (Ogma only ever touches its parent
+   `.annotation-style-toolbar-anchor`'s transform - see that rule's own
+   comment), so there's nothing here to fight for control of either
+   property. */
+@keyframes oa-toolbar-pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 6px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
 .annotation-style-toolbar {
   --oa-toolbar-bg: #ffffff;
   --oa-toolbar-radius: 12px;
@@ -661,10 +681,17 @@ input:checked + .toggle-slider:before {
   left: 0;
   top: 0;
   transform: translate(-50%, -100%);
+  animation: oa-toolbar-pop-in 150ms ease-out;
 
   background: var(--oa-toolbar-bg);
   border-radius: var(--oa-toolbar-radius);
   box-shadow: var(--oa-toolbar-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .annotation-style-toolbar {
+    animation: none;
+  }
 }
 
 /* The dropdown cells' (Color, Font family, Font size) outer wrapper - just
