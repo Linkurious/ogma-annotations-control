@@ -80,12 +80,26 @@
   margin: 5px 0;
 }
 
-/* Tooltips */
-[data-tooltip] {
+/* Tooltips - scoped to .add-menu/.view-controls (this file's own
+   components), not left bare on `[data-tooltip]`/`[tooltip-position]`
+   globally. Those attributes are a generic convention other components
+   also use for their own hover tooltips (e.g. the core `AnnotationToolbar`
+   scopes its equivalent rules to `.annotation-toolbar [data-tooltip]`, and
+   `TextAnnotationToolbar`'s pill does the same under
+   `.annotation-style-toolbar`) - left unscoped, these rules leaked onto
+   every other `data-tooltip` element this stylesheet reaches (this file is
+   `@import`ed globally by `ui/styles.css`), fighting their own tooltip CSS
+   property-by-property (e.g. this block's `top: -6px` plus the pill's
+   `bottom: 100%` both landing on the same element, since neither rule sets
+   the other's property for specificity to arbitrate) rather than losing
+   cleanly to its higher-specificity selectors. */
+.add-menu [data-tooltip],
+.view-controls [data-tooltip] {
   position: relative;
 }
 
-[data-tooltip]::before {
+.add-menu [data-tooltip]::before,
+.view-controls [data-tooltip]::before {
   content: "";
   position: absolute;
   top: -6px;
@@ -98,20 +112,23 @@
   opacity: 0;
 }
 
-[tooltip-position="left"]::before {
+.add-menu [tooltip-position="left"]::before,
+.view-controls [tooltip-position="left"]::before {
   left: 0%;
   top: 50%;
   margin-left: -12px;
   transform: translatey(-50%) rotate(-90deg);
 }
-[tooltip-position="right"]::before {
+.add-menu [tooltip-position="right"]::before,
+.view-controls [tooltip-position="right"]::before {
   left: 100%;
   top: 50%;
   margin-left: 1px;
   transform: translatey(-50%) rotate(90deg);
 }
 
-[data-tooltip]::after {
+.add-menu [data-tooltip]::after,
+.view-controls [data-tooltip]::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 50%;
@@ -129,20 +146,24 @@
   opacity: 0;
 }
 
-[tooltip-position="left"]::after {
+.add-menu [tooltip-position="left"]::after,
+.view-controls [tooltip-position="left"]::after {
   left: 0%;
   top: 50%;
   margin-left: -8px;
   transform: translateX(-100%) translateY(-50%);
 }
-[tooltip-position="right"]::after {
+.add-menu [tooltip-position="right"]::after,
+.view-controls [tooltip-position="right"]::after {
   left: 100%;
   top: 50%;
   margin-left: 8px;
   transform: translateX(0%) translateY(-50%);
 }
 
-[data-tooltip]:hover::after,
-[data-tooltip]:hover::before {
+.add-menu [data-tooltip]:hover::after,
+.add-menu [data-tooltip]:hover::before,
+.view-controls [data-tooltip]:hover::after,
+.view-controls [data-tooltip]:hover::before {
   opacity: 1;
 }
