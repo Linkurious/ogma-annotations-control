@@ -1,7 +1,7 @@
 import { Ogma } from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import { Control, createText, createBox } from "../../src";
+import { Control, createArrow, createText, createBox } from "../../src";
 import { createStore, Store } from "../../src/store";
 import { Links } from "../../src/handlers/links";
 import { Snapping } from "../../src/handlers/snapping";
@@ -54,6 +54,28 @@ describe("handleDrag: carries the rest of a multi-selection along", () => {
     handleDrag(store, links, a.id, { x: 10, y: 10 });
 
     expect(store.getState().liveUpdates[b.id]).toBeUndefined();
+  });
+
+  // Regression: moving a linked shape (moveConnected) cascades into
+  // updateLinkedArrowsDuringDrag, which stages a matching update for the
+  // dragged arrow's own endpoint too - if the arrow's own translation had
+  // already been staged by then, that cascade added to it instead of
+  // replacing it, displacing the endpoint twice.
+  it("doesn't double-apply displacement to a moveConnected arrow's linked endpoint", () => {
+    const shape = createText(100, 100, 50, 50, "s"); // center [125, 125]
+    const arrow = createArrow(0, 0, 125, 125);
+    const magnet = { x: 0, y: 0 };
+    arrow.properties.link = {
+      end: { side: "end", id: shape.id, type: "text", magnet }
+    };
+    store.getState().addFeature(shape);
+    store.getState().addFeature(arrow);
+    links.add(arrow, "end", shape.id, "text", magnet);
+
+    handleDrag(store, links, arrow.id, { x: 10, y: 0 }, true);
+
+    const liveArrow = store.getState().liveUpdates[arrow.id];
+    expect(liveArrow?.geometry?.coordinates?.[1]).toEqual([135, 125]);
   });
 });
 

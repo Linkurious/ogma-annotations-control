@@ -58,6 +58,21 @@ function moveOne(
   if (!annotation) return;
 
   if (isArrow(annotation)) {
+    // Move connected shapes first: this may cascade into staging an update
+    // for this same arrow too (its endpoint linked to one of them, via
+    // updateLinkedArrowsDuringDrag below). Compute the arrow's own geometry
+    // last, as a pure translation of its committed coordinates, so it
+    // overwrites that instead of adding to it - otherwise a linked endpoint
+    // gets displaced twice.
+    if (moveConnected) {
+      const link = annotation.properties.link || {};
+      for (const end of [link.start, link.end]) {
+        if (end && isAnnotationLink(end.type)) {
+          moveOne(state, links, end.id, displacement, false, liveUpdates);
+        }
+      }
+    }
+
     const coords = annotation.geometry.coordinates;
     liveUpdates[annotationId] = {
       geometry: {
@@ -68,15 +83,6 @@ function moveOne(
         ]
       }
     } as Partial<Arrow>;
-
-    if (moveConnected) {
-      const link = annotation.properties.link || {};
-      for (const end of [link.start, link.end]) {
-        if (end && isAnnotationLink(end.type)) {
-          moveOne(state, links, end.id, displacement, false, liveUpdates);
-        }
-      }
-    }
     return;
   }
 
