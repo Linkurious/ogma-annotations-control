@@ -57,7 +57,7 @@ describe("handleDrag: carries the rest of a multi-selection along", () => {
   });
 });
 
-describe("multi-select drag: same-type handler arming", () => {
+describe("multi-select drag: same-type handler switching", () => {
   let ogma: Ogma;
   let control: Control;
 
@@ -81,7 +81,7 @@ describe("multi-select drag: same-type handler arming", () => {
 
   // Same-type annotations (two texts here) share one Handler instance -
   // see AnnotationEditor's constructor.
-  it("selecting a second same-type annotation re-arms the shared handler onto it", () => {
+  it("selecting a second same-type annotation switches the shared handler onto it", () => {
     const a = createText(0, 0, 50, 50, "a");
     const b = createText(200, 200, 50, 50, "b");
     control.add(a);
@@ -110,7 +110,7 @@ describe("multi-select drag: same-type handler arming", () => {
     const textHandler = editor.handlers.get("text");
 
     editor.editFeature(a.id);
-    editor.editFeature(b.id); // handler now armed on b
+    editor.editFeature(b.id); // handler now tracking b
 
     // Deselecting a (which the handler is no longer tracking) must not
     // deactivate the handler's tracking of b.
@@ -121,7 +121,7 @@ describe("multi-select drag: same-type handler arming", () => {
     expect(textHandler.isAnnotation(b.id)).toBe(false);
   });
 
-  it("a mousedown-annotation event re-arms the shared handler onto the clicked sibling", () => {
+  it("a mousedown-annotation event switches the shared handler onto the clicked sibling", () => {
     const a = createText(0, 0, 50, 50, "a");
     const b = createText(200, 200, 50, 50, "b");
     control.add(a);
@@ -134,7 +134,7 @@ describe("multi-select drag: same-type handler arming", () => {
     const textHandler = editor.handlers.get("text");
 
     editor.editFeature(a.id);
-    editor.editFeature(b.id); // handler now armed on b, a would be undraggable
+    editor.editFeature(b.id); // handler now tracking b, a would be undraggable
 
     interactions.dispatchEvent(
       new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, { detail: { id: a.id } })
@@ -145,7 +145,7 @@ describe("multi-select drag: same-type handler arming", () => {
 
   // Handler.setAnnotation's mousemove/mouseup/mousedown/click listeners only
   // attach when ogma.getContainer() is non-null - headless test Ogma
-  // instances (see createOgma() in ./utils) never have one, so re-arming's
+  // instances (see createOgma() in ./utils) never have one, so switching's
   // remove-before-add listener bookkeeping can't be exercised at this
   // level. Covered by e2e instead (see test/e2e), against a real container.
 });

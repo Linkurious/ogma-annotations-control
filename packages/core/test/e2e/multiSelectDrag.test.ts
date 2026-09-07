@@ -27,7 +27,7 @@ describe("Multi-select drag", () => {
   // and swallow the very drag these tests are trying to exercise. Boxes
   // don't have that side effect, and still share a single TextHandler
   // instance per type the same way texts do - see AnnotationEditor's
-  // constructor - so they exercise the same shared-handler re-arming.
+  // constructor - so they exercise the same shared-handler switching.
   async function addTwoBoxes() {
     return session.page.evaluate(() => {
       const a = createBox(-200, -100, 100, 60);
@@ -130,7 +130,7 @@ describe("Multi-select drag", () => {
 
     await selectBothWithCmdClick(aScreen, bScreen);
 
-    // The handler both boxes' type shares is armed on b (selected last), so
+    // The handler both boxes' type shares is tracking b (selected last), so
     // this is the "just works" baseline case.
     const dx = 80;
     const dy = -50;
@@ -153,8 +153,8 @@ describe("Multi-select drag", () => {
     await selectBothWithCmdClick(aScreen, bScreen);
 
     // Both boxes share one Handler instance, and selecting b last left it
-    // armed on b, not a. Dragging from a specifically exercises the
-    // mousedown-annotation re-arm (AnnotationEditor/InteractionController):
+    // tracking b, not a. Dragging from a specifically exercises the
+    // mousedown-annotation switch (AnnotationEditor/InteractionController):
     // without it, this gesture wouldn't even register as a drag at all.
     const dx = -70;
     const dy = 40;

@@ -67,10 +67,11 @@ export class AnnotationEditor extends EventTarget {
       }) as unknown as EventListener);
     });
     // Clicking an already-selected sibling to drag it doesn't change
-    // selectedFeatures, so the subscription below wouldn't re-arm its
-    // handler on its own - do it here too. Only when actually switching id:
-    // re-arming a comment onto itself would reset TextHandler's
-    // justActivated and break its double-click-to-edit gate.
+    // selectedFeatures, so the subscription below wouldn't switch its
+    // handler onto it on its own - do it here too. Only when actually
+    // switching id: re-running this on a comment already tracked would
+    // reset TextHandler's justActivated and break its double-click-to-edit
+    // gate.
     this.interaction.addEventListener(EVT_MOUSEDOWN_ANNOTATION, ((
       evt: CustomEvent<{ id: Id }>
     ) => {
@@ -107,7 +108,7 @@ export class AnnotationEditor extends EventTarget {
     const handler = this.handlers.get(handlerType);
 
     // Only stop it if it's still tracking this id - it may already be
-    // armed on a different, still-selected same-type sibling.
+    // tracking a different, still-selected same-type sibling instead.
     if (handler && handler.isAnnotation(id)) handler.stopEditing();
   }
 

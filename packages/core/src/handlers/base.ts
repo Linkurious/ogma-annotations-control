@@ -211,8 +211,8 @@ export abstract class Handler<
     const win = container ? getBrowserWindow() || container : null;
 
     // Remove before re-adding: setAnnotation can be called again while
-    // already active (re-arming onto another same-type sibling), and
-    // without this each call would pile on another copy of these listeners.
+    // already active (switching to another same-type sibling), and without
+    // this each call would pile on another copy of these listeners.
     if (container && win) {
       win.removeEventListener("mousemove", this.handleMouseMove);
       win.removeEventListener("mouseup", this.handleMouseUp);
@@ -234,7 +234,7 @@ export abstract class Handler<
     }
   }
 
-  /** Is `id` the annotation this handler is currently armed on? */
+  /** Is `id` the annotation this handler is currently tracking? */
   isAnnotation(id: Id): boolean {
     return this.annotation === id;
   }

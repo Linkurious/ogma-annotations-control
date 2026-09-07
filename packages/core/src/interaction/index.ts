@@ -302,17 +302,17 @@ export class InteractionController extends EventTarget {
     };
 
     // A plain click on a not-yet-selected annotation selects it immediately,
-    // so its handler is armed in time for a drag that follows without
-    // releasing. Ctrl/meta toggling is handled entirely on mouseup instead
-    // (see there) - toggling here too would race it.
+    // so its handler is already tracking it in time for a drag that follows
+    // without releasing. Ctrl/meta toggling is handled entirely on mouseup
+    // instead (see there) - toggling here too would race it.
     if (annotation && !evt.ctrlKey && !evt.metaKey && !state.selectedFeatures.has(annotation.id)) {
       state.setSelectedFeatures([annotation.id]);
     }
 
     // Each annotation type shares one Handler instance across every
     // annotation of that type (see AnnotationEditor), which tracks a single
-    // active id - so when two same-type annotations are both selected, only
-    // one is armed to drag. Re-arm onto whatever's actually being clicked.
+    // id at a time - so when two same-type annotations are both selected,
+    // only one is draggable. Switch the handler onto whatever's clicked.
     if (annotation) {
       this.dispatchEvent(new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
         detail: { id: annotation.id }
