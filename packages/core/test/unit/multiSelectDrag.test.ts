@@ -6,7 +6,7 @@ import { createStore, Store } from "../../src/store";
 import { Links } from "../../src/handlers/links";
 import { Snapping } from "../../src/handlers/snapping";
 import { handleDrag } from "../../src/handlers/dragging";
-import { EVT_MOUSEDOWN_ANNOTATION } from "../../src/constants";
+import { EVT_MOUSEDOWN_ANNOTATION } from "../../src/interaction/index";
 
 describe("handleDrag: carries the rest of a multi-selection along", () => {
   let store: Store;

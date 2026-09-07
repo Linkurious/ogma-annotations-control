@@ -17,8 +17,6 @@ export const EVT_COMPLETE_DRAWING = "completeDrawing";
 export const EVT_UPDATE = "update";
 export const EVT_LINK = "link";
 export const EVT_HISTORY = "history";
-// Internal InteractionController -> AnnotationEditor signal, not re-exported from Control.
-export const EVT_MOUSEDOWN_ANNOTATION = "mousedown-annotation";
 
 export const DATA_ATTR = "data-annotation";
 

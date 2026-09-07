@@ -1,6 +1,6 @@
 import { Ogma } from "@linkurious/ogma";
 import { Index } from "./spatialIndex";
-import { cursors, EVT_CLICK, EVT_MOUSEDOWN_ANNOTATION } from "../constants";
+import { cursors, EVT_CLICK } from "../constants";
 import { Store } from "../store";
 import {
   Annotation,
@@ -20,6 +20,9 @@ import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 import { isAnnotationLinkTarget } from "../utils/rendering";
 
+// AnnotationEditor-only signal - not in constants.ts, which is wildcard
+// re-exported from the package root and so would otherwise leak this.
+export const EVT_MOUSEDOWN_ANNOTATION = "mousedown-annotation";
 
 export class InteractionController extends EventTarget {
   private query = {
