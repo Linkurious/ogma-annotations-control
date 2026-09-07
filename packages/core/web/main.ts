@@ -2,7 +2,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { Ogma } from "@linkurious/ogma";
-import { AnnotationPanel, AnnotationToolbar } from "@linkurious/ogma-annotations/ui";
+import {
+  AnnotationPanel,
+  AnnotationToolbar,
+  TextAnnotationToolbar
+} from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
 import {
   Control,
@@ -20,6 +24,8 @@ class App {
   private annotationPanel: AnnotationPanel | null = null;
   // @ts-expect-error Used for debugging
   private annotationToolbar: AnnotationToolbar | null = null;
+  // @ts-expect-error Used for debugging
+  private textAnnotationToolbar: TextAnnotationToolbar | null = null;
   private buttons: {
     centerView: HTMLButtonElement;
     rotateCW: HTMLButtonElement;
@@ -93,6 +99,7 @@ class App {
     this.setupKeyboardShortcuts();
     this.setupAnnotationPanel();
     this.setupAnnotationToolbar();
+    this.setupTextAnnotationToolbar();
   }
 
   private setupControlListeners() {
@@ -232,7 +239,11 @@ class App {
 
   private setupAnnotationPanel() {
     this.annotationPanel = new AnnotationPanel({
-      control: this.control
+      control: this.control,
+      // Text/sticky notes are handled by TextAnnotationToolbar (see
+      // setupTextAnnotationToolbar) - excluding "text" here keeps the
+      // docked panel from also popping up for the same selection.
+      enabledTypes: ["arrow", "box", "comment", "polygon"]
     });
   }
 
@@ -242,6 +253,17 @@ class App {
       control: this.control,
       onJsonExport: handleJsonExport,
       onSvgExport: handleSvgExport
+    });
+  }
+
+  /** Floating, per-selection style pill for Text annotations and sticky
+   * notes - anchored above the selection instead of docked like
+   * `AnnotationPanel`. `setupAnnotationPanel` excludes "text" from the
+   * docked panel's `enabledTypes` so the two don't both show for the same
+   * selection. */
+  private setupTextAnnotationToolbar() {
+    this.textAnnotationToolbar = new TextAnnotationToolbar({
+      control: this.control
     });
   }
 

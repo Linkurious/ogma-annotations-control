@@ -164,7 +164,8 @@ function drawContent(
     fontSize = defaultTextStyle.fontSize,
     font = defaultTextStyle.font,
     padding = 0,
-    fontScale
+    fontScale,
+    fontWeight
   } = annotation.properties.style || {};
 
   if (width === height && width === 0) return;
@@ -173,7 +174,11 @@ function drawContent(
 
   // Use 1.2 line-height for better readability (20% more than font size)
   const lineHeight = effectiveFontSize * TEXT_LINE_HEIGHT;
-  const fontString = `${effectiveFontSize}px ${font}`.replace(/(px)+/g, "px");
+  // "bold " prefix folded into the CSS font shorthand so both pretext's
+  // measurement/wrap (which reads this exact string) and firstLineDy()'s
+  // metrics cache (keyed on it below) account for bold's wider glyphs -
+  // a plain `font-weight` SVG attribute wouldn't reach either of those.
+  const fontString = `${fontWeight === "bold" ? "bold " : ""}${effectiveFontSize}px ${font}`.replace(/(px)+/g, "px");
   const maxWidth = width - padding * 2;
   const maxHeight = height - padding;
 
@@ -200,6 +205,7 @@ function drawContent(
   const textEl = createSVGElement<SVGTextElement>("text");
   textEl.setAttribute("font-size", `${effectiveFontSize}`);
   textEl.setAttribute("font-family", `${font}`);
+  if (fontWeight === "bold") textEl.setAttribute("font-weight", "bold");
   textEl.setAttribute(
     "transform",
     `translate(${x + padding}, ${y + padding})`

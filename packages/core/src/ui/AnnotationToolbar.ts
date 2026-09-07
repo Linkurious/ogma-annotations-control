@@ -129,7 +129,7 @@ export class AnnotationToolbar {
 
     const container = options.container ?? document.body;
     this.root = document.createElement("div");
-    this.root.className = "annotation-toolbar";
+    this.root.className = "annotation-toolbar oa-toolbar oa-toolbar-bar";
     this.root.dataset.placement =
       options.placement ?? DEFAULT_TOOLBAR_PLACEMENT;
     this.root.dataset.orientation =
@@ -311,6 +311,7 @@ export class AnnotationToolbar {
     onClick: () => void
   ): HTMLButtonElement {
     const button = document.createElement("button");
+    button.className = "oa-toolbar-button";
     button.dataset.tooltip = tooltip;
     button.innerHTML = svgIcon(icon, 16);
     button.addEventListener("click", onClick);
@@ -320,7 +321,7 @@ export class AnnotationToolbar {
 
   private separator(): HTMLElement {
     const el = document.createElement("span");
-    el.className = "separator";
+    el.className = "oa-toolbar-separator";
     return el;
   }
 

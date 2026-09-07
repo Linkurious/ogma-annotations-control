@@ -218,7 +218,8 @@ export class TextArea {
       background = defaults.background,
       padding = 0,
       fixedSize = defaults.fixedSize,
-      fontScale
+      fontScale,
+      fontWeight
     } = annotation.properties.style || defaults;
     const textArea = this.textarea;
     const editorEl = this.layer.element as HTMLElement;
@@ -255,6 +256,7 @@ export class TextArea {
     // Style the textarea
     const textAreaStyle = textArea.style;
     textAreaStyle.fontFamily = font || "sans-serif";
+    textAreaStyle.fontWeight = fontWeight || "normal";
     textAreaStyle.fontSize = `${scaledFontSize}px`;
     textAreaStyle.lineHeight = `${scaledFontSize * TEXT_LINE_HEIGHT}px`;
     textAreaStyle.padding = "0";

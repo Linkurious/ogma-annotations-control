@@ -11,6 +11,7 @@ import {
   type PanelVisibilityControl
 } from "../../src/ui";
 import type { Annotation, AnnotationCollection, Control } from "../../src";
+import { createText } from "../../src";
 
 describe("ui/color", () => {
   it("seeds three default recent colors with the first active", () => {
@@ -51,8 +52,12 @@ describe("ui/icons", () => {
   });
 });
 
-/** Minimal fake Control implementing the structural slice the panel needs. */
-function createFakeControl(annotation: Annotation) {
+/** Minimal fake Control implementing the structural slice the panel needs.
+ * Accepts one or more annotations - `getAnnotation` looks up by id (falling
+ * back to the first one for an unrecognized id, matching the old
+ * single-annotation behavior's leniency) so tests can exercise switching
+ * selection between two different annotations, not just toggling one. */
+function createFakeControl(...annotations: Annotation[]) {
   const handlers = new Map<string, Set<(...args: never[]) => void>>();
   let drawing = false;
 
@@ -80,7 +85,8 @@ function createFakeControl(annotation: Annotation) {
       control.on(event, wrapped);
       return control;
     },
-    getAnnotation: () => annotation,
+    getAnnotation: (id) =>
+      annotations.find((a) => a.id === id) ?? annotations[0],
     isDrawing: () => drawing
   };
 
@@ -135,6 +141,46 @@ describe("ui/panelVisibility", () => {
     expect(onShow).not.toHaveBeenCalled();
   });
 
+  it("reappears on dragend after a drag on an already-shown annotation (move or resize)", () => {
+    // Regression test: dragging an annotation that's already selected and
+    // showing (not switching selection) used to leave the panel hidden for
+    // good - `dragstart` cleared `pending`, so `dragend`'s `showPending`
+    // had nothing to show and no-op'd.
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenCalledTimes(1);
+
+    emit("dragstart"); // resize or move - same event either way
+    expect(onHide).toHaveBeenCalledTimes(1);
+
+    emit("dragend");
+    expect(onShow).toHaveBeenCalledTimes(2);
+    expect(onShow).toHaveBeenLastCalledWith(annotation);
+    // Only shown once for this one dragend, not re-triggered again by a
+    // trailing `click` some interactions also fire.
+    emit("click");
+    expect(onShow).toHaveBeenCalledTimes(2);
+  });
+
+  it("a real deselect during/after a drag does not fall back to reshowing", () => {
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    emit("dragstart");
+    emit("unselect", { ids: ["a1"] }); // e.g. deleted mid-drag
+    emit("dragend");
+    expect(onShow).toHaveBeenCalledTimes(1); // just the original show
+  });
+
   it("hides on a multi-selection", () => {
     const { control, emit } = createFakeControl(annotation);
     const onShow = vi.fn();
@@ -158,6 +204,43 @@ describe("ui/panelVisibility", () => {
     expect(onShow).not.toHaveBeenCalled(); // no timer while drawing
     emit("completeDrawing");
     expect(onShow).toHaveBeenCalledWith(annotation);
+  });
+
+  it("shows the new annotation when selecting directly from one to another", () => {
+    // Ogma fires `select` for the new annotation, then `unselect` for the
+    // old one (not the other way around) - regression test for that
+    // `unselect` stomping the just-armed show for the new selection.
+    const a = { id: "a1" } as unknown as Annotation;
+    const b = { id: "b1" } as unknown as Annotation;
+    const { control, emit } = createFakeControl(a, b);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenLastCalledWith(a);
+
+    emit("select", { ids: ["b1"] });
+    emit("unselect", { ids: ["a1"] }); // stale - superseded by the select above
+    expect(onHide).not.toHaveBeenCalled();
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenLastCalledWith(b);
+    expect(onHide).not.toHaveBeenCalled();
+  });
+
+  it("still hides on a real deselect (unselect with no superseding select)", () => {
+    const { control, emit } = createFakeControl(annotation);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenCalledWith(annotation);
+
+    emit("unselect", { ids: ["a1"] });
+    expect(onHide).toHaveBeenCalledTimes(1);
   });
 
   it("detach removes every registered listener and pending timer", () => {
@@ -231,6 +314,43 @@ describe("ui/AnnotationPanel layout", () => {
     panel.setPlacement("bottom");
     expect(root.getAttribute("data-placement")).toBe("bottom");
 
+    panel.destroy();
+  });
+});
+
+describe("ui/AnnotationPanel enabledTypes", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function displayOf(panel: AnnotationPanel) {
+    return (document.querySelector(".annotation-panel") as HTMLElement).style
+      .display;
+  }
+
+  it("shows every annotation kind by default", () => {
+    const text = createText(0, 0, 100, 50, "Hi");
+    const { control, emit } = createFakeControl(text as unknown as Annotation);
+    const panel = new AnnotationPanel({ control: control as unknown as Control });
+
+    emit("select", { ids: [text.id] });
+    vi.runAllTimers();
+
+    expect(displayOf(panel)).toBe("block");
+    panel.destroy();
+  });
+
+  it("stays hidden for a type excluded via enabledTypes", () => {
+    const text = createText(0, 0, 100, 50, "Hi");
+    const { control, emit } = createFakeControl(text as unknown as Annotation);
+    const panel = new AnnotationPanel({
+      control: control as unknown as Control,
+      enabledTypes: ["arrow", "box", "comment", "polygon"]
+    });
+
+    emit("select", { ids: [text.id] });
+    vi.runAllTimers();
+
+    expect(displayOf(panel)).toBe("none");
     panel.destroy();
   });
 });
