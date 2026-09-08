@@ -77,11 +77,13 @@ export function attachPanelVisibility(
     if (pending) {
       const ann = pending;
       pending = null;
-      // Selected-but-not-editable: leave the canvas selection as is, just
-      // don't reveal a panel with nothing safe to change.
+      // Selected-but-not-editable: don't reveal a panel with nothing safe to
+      // change, and hide() clears a stale one left over from the previous selection.
       if (control.isAnnotationEditable(ann.id)) {
         shown = ann;
         onShow(ann);
+      } else {
+        hide();
       }
       return;
     }

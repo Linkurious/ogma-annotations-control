@@ -75,11 +75,11 @@ export type ControllerOptions = {
   isEditable: (annotation: Annotation) => boolean;
 
   /**
-   * Called to decide whether an annotation is rendered on the canvas and
-   * hit-testable (hover/select/drag via the mouse). Defaults to always
-   * `true`. A hidden annotation stays fully present in `getAnnotations()`,
-   * `getAnnotation()`, `getSelectedAnnotations()`, and exports - visibility
-   * only controls what's drawn and clickable, not data access.
+   * Called to decide whether an annotation is rendered (including in SVG
+   * export) and hit-testable (hover/select/drag via the mouse). Defaults to
+   * always `true`. A hidden annotation stays fully present in
+   * `getAnnotations()`, `getAnnotation()`, and `getSelectedAnnotations()` -
+   * visibility only controls what's drawn and clickable, not data access.
    *
    * Keep this cheap and synchronous - it can run once per annotation on
    * every render pass while the view is changing (drag, pan, zoom). Same
