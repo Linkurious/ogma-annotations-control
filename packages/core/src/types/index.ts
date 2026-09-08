@@ -36,6 +36,17 @@ export type ControllerOptions = {
   authorStyle?: Partial<AuthorLineStyle>;
 
   /**
+   * Minimum on-screen font size, in pixels, for a scalable (non-fixedSize)
+   * Text annotation's content or author line to actually be rendered.
+   * Below this, the text is skipped entirely (the box/background still
+   * renders) - avoids illegible sub-pixel text and the layout work that
+   * produces it. Ignored for `fixedSize` text (its on-screen size never
+   * shrinks with zoom) and during SVG/PNG export (export always renders
+   * in full, same as viewport culling). Set to 0 to disable.
+   */
+  minReadableFontSize: number;
+
+  /**
    * Show send button in text editor
    */
   showSendButton: boolean;

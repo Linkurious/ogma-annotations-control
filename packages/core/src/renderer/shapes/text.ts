@@ -35,7 +35,8 @@ export function renderText(
   root: SVGElement,
   annotation: Text,
   cachedElement: SVGGElement | undefined,
-  state: AnnotationState
+  state: AnnotationState,
+  isExporting = false
 ) {
   const { width, height } = getTextSize(annotation);
 
@@ -98,7 +99,7 @@ export function renderText(
   rect.setAttribute("x", `${x}`);
   rect.setAttribute("y", `${y}`);
 
-  drawContent(annotation, g, x, y, state);
+  drawContent(annotation, g, x, y, state, isExporting);
 
   // get the SVG transform matrix to rotate the box around its center:
   // When fixedSize is true, apply invZoom to maintain constant screen size
@@ -338,7 +339,8 @@ function drawContent(
   parent: SVGGElement,
   x: number = 0,
   y: number = 0,
-  state?: AnnotationState
+  state?: AnnotationState,
+  isExporting = false
 ) {
   // make sure text does not overflow
   const { width, height } = getTextSize(annotation);
@@ -347,7 +349,8 @@ function drawContent(
     font = defaultTextStyle.font,
     padding = 0,
     fontScale,
-    fontWeight
+    fontWeight,
+    fixedSize = defaultTextStyle.fixedSize
   } = annotation.properties.style || {};
 
   if (width === height && width === 0) return;
@@ -363,6 +366,20 @@ function drawContent(
   const fontString = `${fontWeight === "bold" ? "bold " : ""}${effectiveFontSize}px ${font}`.replace(/(px)+/g, "px");
   const maxWidth = width - padding * 2;
 
+  // Scalable (non-fixedSize) text's on-screen size is effectiveFontSize *
+  // zoom - the containing <g>'s local transform uses scale=1 for it (see
+  // getScreenAlignedTransform in store/index.ts), fully inheriting Ogma's
+  // own graph-to-screen zoom scaling. fixedSize text's on-screen size is
+  // always effectiveFontSize (that local transform cancels zoom via
+  // invZoom instead), so it's never subject to this. Never applies during
+  // export either, matching the viewport-culling precedent in
+  // renderer/shapes/index.ts - an export should never silently drop text
+  // just because it was sub-pixel at the current preview zoom.
+  const zoomScale = fixedSize ? 1 : (state?.zoom ?? 1);
+  const minReadableFontSize = state?.options?.minReadableFontSize ?? 0;
+  const tooSmallToRender = (px: number) =>
+    !isExporting && minReadableFontSize > 0 && px * zoomScale < minReadableFontSize;
+
   // Author line (if shown) reserves fixed space at the bottom of the box -
   // computed before maxHeight so content wrapping already accounts for it.
   // Fixed one-line height regardless of content length; box never grows to
@@ -370,14 +387,18 @@ function drawContent(
   const authorText = annotation.properties.author?.trim();
   const showAuthorLine = annotation.properties.style?.showAuthor === true && !!authorText;
   const resolvedAuthorStyle = showAuthorLine
-    ? resolveAuthorStyle(annotation.properties.style?.authorStyle, state?.options.authorStyle)
+    ? resolveAuthorStyle(annotation.properties.style?.authorStyle, state?.options?.authorStyle)
     : null;
   const authorFontSize = resolvedAuthorStyle
     ? getEffectiveFontSize(resolvedAuthorStyle.fontSize, undefined)
     : 0;
-  const authorLineHeight = resolvedAuthorStyle ? authorFontSize * TEXT_LINE_HEIGHT : 0;
+  // Independent of the content-size check above: the author line's own
+  // (usually smaller) font can cross the threshold before or after the
+  // main content's does.
+  const renderAuthorLine = showAuthorLine && !tooSmallToRender(authorFontSize);
+  const authorLineHeight = renderAuthorLine ? authorFontSize * TEXT_LINE_HEIGHT : 0;
   const AUTHOR_GAP = 4; // px, graph-space, between content and author line
-  const authorReserved = showAuthorLine ? authorLineHeight + AUTHOR_GAP : 0;
+  const authorReserved = renderAuthorLine ? authorLineHeight + AUTHOR_GAP : 0;
 
   // Tiny box + author line can push this to <= 0; maxLineCount's own
   // Math.max(1, ...) floor below still guarantees content gets at least
@@ -386,7 +407,7 @@ function drawContent(
 
   const content = annotation.properties.content || "";
 
-  if (content.length > 0) {
+  if (content.length > 0 && !tooSmallToRender(effectiveFontSize)) {
     // Markdown links are substituted with their (glued) label before this
     // ever reaches pretext - see extractMarkdownLinks - so word-wrap can't
     // split a multi-word label across two lines.
@@ -431,7 +452,7 @@ function drawContent(
     parent.appendChild(textEl);
   }
 
-  if (showAuthorLine && resolvedAuthorStyle) {
+  if (renderAuthorLine && resolvedAuthorStyle) {
     const authorFontString =
       `${resolvedAuthorStyle.fontWeight === "bold" ? "bold " : ""}${authorFontSize}px ${resolvedAuthorStyle.font}`.replace(
         /(px)+/g,

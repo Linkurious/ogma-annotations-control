@@ -117,6 +117,7 @@ export interface AnnotationState {
     magnetHandleRadius: number;
     textPlaceholder: string;
     authorStyle?: Partial<AuthorLineStyle>;
+    minReadableFontSize: number;
     isEditable: (annotation: Annotation) => boolean;
     isVisible: (annotation: Annotation) => boolean;
   };
@@ -212,6 +213,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             magnetHandleRadius: initialOptions?.magnetHandleRadius ?? 5,
             textPlaceholder: initialOptions?.textPlaceholder ?? "Type here",
             authorStyle: initialOptions?.authorStyle,
+            minReadableFontSize: initialOptions?.minReadableFontSize ?? 2,
             isEditable: initialOptions?.isEditable ?? (() => true),
             isVisible: initialOptions?.isVisible ?? (() => true)
           },
