@@ -136,4 +136,85 @@ describe("isEditable", () => {
     control.cancelDrawing();
     expect(control.isDrawing()).toBe(false);
   });
+
+  it("a locked, selected comment doesn't render its own edit/send button", () => {
+    const { comment, arrow } = createCommentWithArrow(0, 0, 100, 100, "note");
+    control = lockedControl(comment.id);
+    control.add(comment);
+    control.add(arrow);
+    control.select(comment.id);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const shapes = control["renderers"]["shapes"] as any;
+    shapes.render(shapes.layer.element);
+
+    expect(
+      (shapes.layer.element as SVGSVGElement).querySelector(".ogma-send-button")
+    ).toBeNull();
+  });
+
+  it("a locked, selected box keeps its selection outline but drops the resize handles", () => {
+    // Default box style has a borderRadius, so renderOutline draws via
+    // quadraticCurveTo; renderBoxHandles draws the corner squares via rect -
+    // distinct enough to tell the two apart via a plain context spy.
+    const box = createBox(0, 0, 50, 50);
+    control = lockedControl(box.id);
+    control.add(box);
+    control.select(box.id);
+
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      beginPath: vi.fn(),
+      closePath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      rect: vi.fn(),
+      strokeRect: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      arc: vi.fn()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (control["renderers"]["handles"] as any).render(ctx);
+
+    expect(ctx.quadraticCurveTo).toHaveBeenCalled(); // outline: still selected
+    expect(ctx.rect).not.toHaveBeenCalled(); // corner handles: locked, none drawn
+  });
+
+  it("an unlocked, selected box still shows resize handles (no regression)", () => {
+    const box = createBox(0, 0, 50, 50);
+    control = new Control(ogma);
+    control.add(box);
+    control.select(box.id);
+
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      translate: vi.fn(),
+      rotate: vi.fn(),
+      beginPath: vi.fn(),
+      closePath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      rect: vi.fn(),
+      strokeRect: vi.fn(),
+      quadraticCurveTo: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      arc: vi.fn()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (control["renderers"]["handles"] as any).render(ctx);
+
+    expect(ctx.quadraticCurveTo).toHaveBeenCalled();
+    expect(ctx.rect).toHaveBeenCalled();
+  });
 });

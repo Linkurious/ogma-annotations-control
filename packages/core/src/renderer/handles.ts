@@ -4,6 +4,7 @@ import { Renderer } from "./base";
 import { LAYERS } from "../constants";
 import { Store } from "../store";
 import {
+  Annotation,
   Arrow,
   Box,
   Polygon,
@@ -101,8 +102,13 @@ export class Handles extends Renderer<CanvasLayer> {
         ? { ...baseFeature, ...liveUpdates[baseFeature.id] }
         : baseFeature;
 
+      // A locked (non-editable) selection still shows outline/highlight -
+      // it's still selected - just not the draggable corner/vertex/endpoint
+      // handles, since there's nothing to resize/move.
+      const editable = state.options.isEditable(feature as Annotation);
+
       if (isArrow(feature)) {
-        this.renderArrowHandles(feature, ctx, r, hoveredHandle);
+        this.renderArrowHandles(feature, ctx, r, hoveredHandle, editable);
       } else if (isBox(feature) || isText(feature)) {
         const counterRotation = isText(feature) ? rotation : 0;
         this.renderOutline(
@@ -112,14 +118,17 @@ export class Handles extends Renderer<CanvasLayer> {
           hoveredHandle,
           state.zoom
         );
-        this.renderBoxHandles(feature, ctx, r, hoveredHandle, counterRotation);
+        if (editable) {
+          this.renderBoxHandles(feature, ctx, r, hoveredHandle, counterRotation);
+        }
       } else if (isPolygon(feature)) {
         this.renderPolygonHandles(
           feature,
           ctx,
           r,
           hoveredHandle,
-          state.drawingFeature === feature.id
+          state.drawingFeature === feature.id,
+          editable
         );
       }
     });
@@ -209,7 +218,8 @@ export class Handles extends Renderer<CanvasLayer> {
     feature: Arrow,
     ctx: CanvasRenderingContext2D,
     r: number,
-    hoveredHandle: -1 | number
+    hoveredHandle: -1 | number,
+    editable: boolean
   ) {
     const start = getArrowStart(feature);
     const end = getArrowEnd(feature);
@@ -226,6 +236,10 @@ export class Handles extends Renderer<CanvasLayer> {
 
     ctx.closePath();
     ctx.stroke();
+
+    // Selection highlight above still stands for a locked arrow - just the
+    // draggable endpoint squares below don't.
+    if (!editable) return;
 
     ctx.beginPath();
 
@@ -289,7 +303,8 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx: CanvasRenderingContext2D,
     r: number,
     hoveredHandle: -1 | number,
-    isDrawing: boolean
+    isDrawing: boolean,
+    editable: boolean
   ) {
     const coords = feature.geometry.coordinates[0];
 
@@ -307,6 +322,10 @@ export class Handles extends Renderer<CanvasLayer> {
       ctx.stroke();
       ctx.restore();
     }
+
+    // Outline above still stands for a locked polygon - just the draggable
+    // vertex handles below don't.
+    if (!editable) return;
 
     ctx.beginPath();
     // Render vertex handles (excluding the closing point)
