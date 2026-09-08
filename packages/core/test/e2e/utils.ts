@@ -14,6 +14,7 @@ declare global {
   let ogma: Ogma;
   let editor: import("../../src").Control;
   let createArrow: typeof import("../../src").createArrow;
+  let createBox: typeof import("../../src").createBox;
   let createPolygon: typeof import("../../src").createPolygon;
   let createText: typeof import("../../src").createText;
   let demoStyles: import("./pages/types").DemoStyles;

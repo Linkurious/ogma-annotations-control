@@ -1,7 +1,7 @@
 import type { Point } from "@linkurious/ogma";
 import { Links } from "./links";
 import { TARGET_TYPES } from "../constants";
-import { Store } from "../store";
+import { Store, AnnotationState } from "../store";
 import type {
   Annotation,
   Arrow,
@@ -16,9 +16,10 @@ import { isArrow, isBox, isComment, isPolygon, isText } from "../types";
 import { getBoxCenter } from "../utils/utils";
 
 /**
- * Handles dragging of annotations and their linked elements.
- * When an arrow body is dragged, it moves both linked annotations and updates all affected arrows.
- * When an annotation is dragged, it updates all arrows linked to it.
+ * Moves `annotationId` by `displacement` (and its linked arrows), same as
+ * before. If it's part of a multi-selection, the rest of the selection is
+ * carried along by the same displacement too, so a drag started on any one
+ * selected annotation moves the whole group.
  */
 export function handleDrag(
   store: Store,
@@ -28,90 +29,74 @@ export function handleDrag(
   moveConnected: boolean = false
 ) {
   const state = store.getState();
+  const liveUpdates: Record<Id, DeepPartial<Annotation>> = {};
+
+  moveOne(state, links, annotationId, displacement, moveConnected, liveUpdates);
+  for (const id of state.selectedFeatures) {
+    if (id !== annotationId) moveOne(state, links, id, displacement, false, liveUpdates);
+  }
+
+  state.applyLiveUpdates(liveUpdates);
+}
+
+function isAnnotationLink(type: string): boolean {
+  return type !== TARGET_TYPES.NODE && type !== TARGET_TYPES.EDGE;
+}
+
+/** Computes the live update(s) for moving one annotation, writing into the
+ * shared `liveUpdates` accumulator instead of applying immediately - lets
+ * handleDrag batch a whole selection into a single store update. */
+function moveOne(
+  state: AnnotationState,
+  links: Links,
+  annotationId: Id,
+  displacement: Point,
+  moveConnected: boolean,
+  liveUpdates: Record<Id, DeepPartial<Annotation>>
+) {
   const annotation = state.getFeature(annotationId);
   if (!annotation) return;
 
-  const annotationsToMove = new Set<Id>();
-  const arrowsToUpdate = new Set<Id>();
-  let draggedArrow: Id = "";
   if (isArrow(annotation)) {
-    const arrow = annotation as Arrow;
+    // Move connected shapes first: this may cascade into staging an update
+    // for this same arrow too (its endpoint linked to one of them, via
+    // updateLinkedArrowsDuringDrag below). Compute the arrow's own geometry
+    // last, as a pure translation of its committed coordinates, so it
+    // overwrites that instead of adding to it - otherwise a linked endpoint
+    // gets displaced twice.
     if (moveConnected) {
-      const link = arrow.properties.link || {};
-      if (link.start && isAnnotationLink(link.start.type)) {
-        annotationsToMove.add(link.start.id);
+      const link = annotation.properties.link || {};
+      for (const end of [link.start, link.end]) {
+        if (end && isAnnotationLink(end.type)) {
+          moveOne(state, links, end.id, displacement, false, liveUpdates);
+        }
       }
-      if (link.end && isAnnotationLink(link.end.type)) {
-        annotationsToMove.add(link.end.id);
-      }
-    }
-    draggedArrow = arrow.id;
-    arrowsToUpdate.add(arrow.id);
-  } else {
-    annotationsToMove.add(annotation.id);
-  }
-
-  const liveUpdates: Record<Id, DeepPartial<Annotation>> = {};
-  // Move all annotations
-  for (const id of annotationsToMove) {
-    const target = state.getFeature(id);
-    if (!target) continue;
-
-    const update = moveAnnotation(target, displacement);
-    if (update) {
-      liveUpdates[id] = update;
-      // After moving an annotation, its linked arrows need updating
-      links.updateLinkedArrowsDuringDrag(id, displacement, liveUpdates);
-    }
-  }
-
-  // Update the dragged arrow's geometry
-  for (const arrowId of arrowsToUpdate) {
-    const arrow = state.getFeature(arrowId) as Arrow;
-    if (!arrow) continue;
-
-    const link = arrow.properties.link || {};
-    const coords = arrow.geometry.coordinates;
-    const newCoords = [...coords];
-
-    // Move start if linked to an annotation (not node/edge)
-    if (link.start && isAnnotationLink(link.start.type) || draggedArrow === arrowId) {
-      newCoords[0] = [coords[0][0] + displacement.x, coords[0][1] + displacement.y];
     }
 
-    // Move end if linked to an annotation (not node/edge)
-    if (link.end && isAnnotationLink(link.end.type) || draggedArrow === arrowId) {
-      newCoords[1] = [coords[1][0] + displacement.x, coords[1][1] + displacement.y];
-    }
-    liveUpdates[arrowId] = {
+    const coords = annotation.geometry.coordinates;
+    liveUpdates[annotationId] = {
       geometry: {
-        ...arrow.geometry,
-        coordinates: newCoords
+        ...annotation.geometry,
+        coordinates: [
+          [coords[0][0] + displacement.x, coords[0][1] + displacement.y],
+          [coords[1][0] + displacement.x, coords[1][1] + displacement.y]
+        ]
       }
     } as Partial<Arrow>;
+    return;
   }
-  state.applyLiveUpdates(liveUpdates);
 
+  const update = moveAnnotation(annotation, displacement);
+  if (!update) return;
+  liveUpdates[annotationId] = update;
+  links.updateLinkedArrowsDuringDrag(annotationId, displacement, liveUpdates);
 }
 
-/**
- * Check if a link type refers to an annotation (not a node or edge)
- */
-function isAnnotationLink(type: string): boolean {
-  return (
-    type !== TARGET_TYPES.NODE &&
-    type !== TARGET_TYPES.EDGE
-  );
-}
-
-/**
- * Move an annotation by a displacement and return the update object
- */
+/** Move a Text/Box/Comment/Polygon annotation by a displacement. */
 function moveAnnotation(
   annotation: Annotation,
   displacement: Point
 ): Partial<Annotation> | null {
-  // Text, Box, and Comment all use Point geometry with center coordinates
   if (isText(annotation) || isBox(annotation) || isComment(annotation)) {
     const center = getBoxCenter(annotation as Text | Box | Comment);
     return {

@@ -20,6 +20,9 @@ import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 import { isAnnotationLinkTarget } from "../utils/rendering";
 
+// AnnotationEditor-only signal - not in constants.ts, which is wildcard
+// re-exported from the package root and so would otherwise leak this.
+export const EVT_MOUSEDOWN_ANNOTATION = "mousedown-annotation";
 
 export class InteractionController extends EventTarget {
   private query = {
@@ -36,6 +39,12 @@ export class InteractionController extends EventTarget {
     screenX: number;
     screenY: number;
     hasMoved: boolean;
+    // Was `annotation` selected before this gesture started? onMouseDown
+    // below adds a not-yet-selected ctrl/meta click to the selection right
+    // away, so a drag that follows without releasing still moves it - if
+    // onMouseUp's click-completion then toggled ctrl/meta again unconditionally,
+    // it would immediately undo that same add on a plain click release.
+    wasSelected: boolean;
   } | null = null;
 
   private readonly DRAG_THRESHOLD = 3; // pixels
@@ -288,26 +297,40 @@ export class InteractionController extends EventTarget {
     );
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y);
+    const state = this.store.getState();
+    const wasSelected = annotation
+      ? state.selectedFeatures.has(annotation.id)
+      : false;
 
     // Record what was clicked, but don't select yet
     this.mouseDownState = {
       annotation,
       screenX: evt.clientX,
       screenY: evt.clientY,
-      hasMoved: false
+      hasMoved: false,
+      wasSelected
     };
 
-    const state = this.store.getState();
-
-    // If clicking on an already-selected annotation, don't change selection yet
-    // (allows dragging multiple selected items)
-    if (annotation && !state.selectedFeatures.has(annotation.id)) {
-      // Not selected yet - select immediately to prepare for potential drag
+    // A not-yet-selected annotation is selected immediately, so its handler
+    // is already tracking it in time for a drag that follows without
+    // releasing (see wasSelected above for why onMouseUp doesn't also
+    // toggle it on a ctrl/meta click).
+    if (annotation && !wasSelected) {
       if (evt.ctrlKey || evt.metaKey) {
         state.toggleSelection(annotation.id);
       } else {
         state.setSelectedFeatures([annotation.id]);
       }
+    }
+
+    // Each annotation type shares one Handler instance across every
+    // annotation of that type (see AnnotationEditor), which tracks a single
+    // id at a time - so when two same-type annotations are both selected,
+    // only one is draggable. Switch the handler onto whatever's clicked.
+    if (annotation) {
+      this.dispatchEvent(new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
+        detail: { id: annotation.id }
+      }));
     }
   };
 
@@ -337,9 +360,11 @@ export class InteractionController extends EventTarget {
       const annotation = this.mouseDownState.annotation;
 
       if (annotation) {
-        // Handle selection on mouseup for already-selected items
+        // A ctrl/meta click toggles the *pre-gesture* selection state:
+        // onMouseDown already added it above if it wasn't selected before -
+        // toggling again here would immediately undo that add.
         if (evt.ctrlKey || evt.metaKey) {
-          state.toggleSelection(annotation.id);
+          if (this.mouseDownState.wasSelected) state.toggleSelection(annotation.id);
         } else if (!state.selectedFeatures.has(annotation.id)) {
           state.setSelectedFeatures([annotation.id]);
         }
