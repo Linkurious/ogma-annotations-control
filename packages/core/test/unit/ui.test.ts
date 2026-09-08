@@ -87,7 +87,8 @@ function createFakeControl(...annotations: Annotation[]) {
     },
     getAnnotation: (id) =>
       annotations.find((a) => a.id === id) ?? annotations[0],
-    isDrawing: () => drawing
+    isDrawing: () => drawing,
+    isAnnotationEditable: () => true
   };
 
   return {
@@ -388,6 +389,7 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
     redo: vi.fn(),
     remove: vi.fn(),
     getSelectedAnnotations: () => selected,
+    isAnnotationEditable: () => true,
     enableArrowDrawing: vi.fn(),
     enableCommentDrawing: vi.fn(),
     enableStickyNoteDrawing: vi.fn(),

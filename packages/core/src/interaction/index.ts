@@ -49,6 +49,16 @@ export class InteractionController extends EventTarget {
 
   private readonly DRAG_THRESHOLD = 3; // pixels
 
+  // A press on a non-editable annotation never arms a Handler (see
+  // AnnotationEditor.editFeature), so Handler.disablePanning() - normally
+  // called from onDragStart - never runs either, and dragging it just pans
+  // Ogma's own view underneath it instead of doing nothing. Disable/restore
+  // panning here for exactly that case; this never overlaps with a Handler's
+  // own disablePanning/restorePanning, since one only runs when the other
+  // doesn't.
+  private savedPan?: boolean;
+  private savedDrag?: boolean;
+
   constructor(
     private ogma: Ogma,
     private store: Store,
@@ -311,6 +321,15 @@ export class InteractionController extends EventTarget {
       wasSelected
     };
 
+    if (annotation && !state.options.isEditable(annotation)) {
+      const opts = this.ogma.getOptions().interactions;
+      this.savedPan = opts?.pan?.enabled ?? true;
+      this.savedDrag = opts?.drag?.enabled ?? true;
+      this.ogma.setOptions({
+        interactions: { pan: { enabled: false }, drag: { enabled: false } }
+      });
+    }
+
     // A not-yet-selected annotation is selected immediately, so its handler
     // is already tracking it in time for a drag that follows without
     // releasing (see wasSelected above for why onMouseUp doesn't also
@@ -342,6 +361,14 @@ export class InteractionController extends EventTarget {
       mousePressed: false,
       mousePressPoint: null
     });
+
+    if (this.savedPan !== undefined) {
+      this.ogma.setOptions({
+        interactions: { pan: { enabled: this.savedPan }, drag: { enabled: this.savedDrag } }
+      });
+      this.savedPan = undefined;
+      this.savedDrag = undefined;
+    }
 
     // Releasing over a content link: don't select or emit a click. Native
     // anchor navigation handles it. (mouseDownState was already cleared in

@@ -63,7 +63,9 @@ const defaultOptions: ControllerOptions = {
   showEditButton: true,
   editButtonIcon: DEFAULT_EDIT_ICON,
   minArrowHeight: 20,
-  maxArrowHeight: 30
+  maxArrowHeight: 30,
+  isEditable: () => true,
+  isVisible: () => true
 };
 
 interface RendererMap {
@@ -278,6 +280,20 @@ export class Control extends EventEmitter<FeatureEvents> {
   public setOptions(options: Partial<ControllerOptions> = {}) {
     this.store.getState().setOptions(options);
     return this.store.getState().options;
+  }
+
+  /** Can `id` be dragged/resized/restyled/text-edited/deleted/re-linked
+   * right now, per the `isEditable` option? `false` for an unknown id. */
+  public isAnnotationEditable(id: Id): boolean {
+    const feature = this.store.getState().getFeature(id);
+    return !!feature && this.store.getState().options.isEditable(feature);
+  }
+
+  /** Is `id` rendered and hit-testable right now, per the `isVisible`
+   * option? `false` for an unknown id. */
+  public isAnnotationVisible(id: Id): boolean {
+    const feature = this.store.getState().getFeature(id);
+    return !!feature && this.store.getState().options.isVisible(feature);
   }
 
   /**

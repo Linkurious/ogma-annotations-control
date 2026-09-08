@@ -115,6 +115,8 @@ export interface AnnotationState {
     magnetRadius: number;
     magnetHandleRadius: number;
     textPlaceholder: string;
+    isEditable: (annotation: Annotation) => boolean;
+    isVisible: (annotation: Annotation) => boolean;
   };
 
   setOptions: (options: Partial<AnnotationState["options"]>) => void;
@@ -206,7 +208,9 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             detectMargin: initialOptions?.detectMargin ?? 2,
             magnetRadius: initialOptions?.magnetRadius ?? 10,
             magnetHandleRadius: initialOptions?.magnetHandleRadius ?? 5,
-            textPlaceholder: initialOptions?.textPlaceholder ?? "Type here"
+            textPlaceholder: initialOptions?.textPlaceholder ?? "Type here",
+            isEditable: initialOptions?.isEditable ?? (() => true),
+            isVisible: initialOptions?.isVisible ?? (() => true)
           },
 
           setOptions: (newOptions) =>
@@ -218,6 +222,16 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             set((state) => {
               const feature = state.features[id];
               if (!feature) return state;
+
+              // A feature still being drawn (never confirmed) is exempt -
+              // isEditable is meant to gate an existing annotation, and
+              // blocking it here could leave startDrawing()'s draft stuck,
+              // uncancelable (see Handler/PolygonHandler.cancelDrawing).
+              if (id !== state.drawingFeature && !state.options.isEditable(feature)) {
+                // eslint-disable-next-line no-console
+                console.error(`Cannot delete annotation ${id}: not editable`);
+                return state;
+              }
 
               const { features, liveUpdates } = state;
 
@@ -237,6 +251,24 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
 
               // Deleting a comment (or text) also deletes all its arrows.
               const toDelete = getCascadeDeleteIds(features, id);
+
+              // All or nothing: if the cascade reaches a non-editable
+              // annotation (e.g. one of this comment's arrows is locked),
+              // refuse the whole delete rather than strand it.
+              for (const deleteId of toDelete) {
+                const cascaded = features[deleteId];
+                if (
+                  cascaded &&
+                  deleteId !== state.drawingFeature &&
+                  !state.options.isEditable(cascaded)
+                ) {
+                  // eslint-disable-next-line no-console
+                  console.error(
+                    `Cannot delete annotation ${id}: cascade includes non-editable annotation ${deleteId}`
+                  );
+                  return state;
+                }
+              }
 
               // Create copies BEFORE any deletions to preserve history correctly
               const newFeatures = { ...features };
@@ -359,6 +391,13 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           // Regular update - creates history entry
           updateFeature: (id, updates) =>
             set((state) => {
+              const feature = state.features[id];
+              if (feature && id !== state.drawingFeature && !state.options.isEditable(feature)) {
+                // eslint-disable-next-line no-console
+                console.error(`Cannot update annotation ${id}: not editable`);
+                return state;
+              }
+
               const merged = {
                 ...state.features[id],
                 ...updates
@@ -377,17 +416,21 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               };
             }),
 
-          // Batch update multiple features - single history entry
+          // Batch update multiple features - single history entry. Unlike
+          // removeFeature's cascade, each id here is independent (e.g. every
+          // arrow whose linked node moved in one layout tick) - skip
+          // non-editable ones individually rather than refusing the batch.
           updateFeatures: (updates) =>
             set((state) => {
               const newFeatures = { ...state.features };
               Object.entries(updates).forEach(([id, update]) => {
-                if (newFeatures[id]) {
-                  newFeatures[id] = {
-                    ...newFeatures[id],
-                    ...update
-                  } as Annotation;
-                }
+                const feature = newFeatures[id];
+                if (!feature) return;
+                if (id !== state.drawingFeature && !state.options.isEditable(feature)) return;
+                newFeatures[id] = {
+                  ...feature,
+                  ...update
+                } as Annotation;
               });
               return { features: newFeatures };
             }),

@@ -38,6 +38,7 @@ export interface PanelVisibilityControl {
   once(event: string, handler: (...args: any[]) => void): unknown;
   getAnnotation(id: string | number): Annotation | undefined;
   isDrawing(): boolean;
+  isAnnotationEditable(id: string | number): boolean;
 }
 
 /**
@@ -74,14 +75,19 @@ export function attachPanelVisibility(
   const showPending = () => {
     clearTimer();
     if (pending) {
-      shown = pending;
-      onShow(pending);
+      const ann = pending;
       pending = null;
+      // Selected-but-not-editable: leave the canvas selection as is, just
+      // don't reveal a panel with nothing safe to change.
+      if (control.isAnnotationEditable(ann.id)) {
+        shown = ann;
+        onShow(ann);
+      }
       return;
     }
     if (!shown && selectedId != null) {
       const ann = control.getAnnotation(selectedId);
-      if (ann) {
+      if (ann && control.isAnnotationEditable(ann.id)) {
         shown = ann;
         onShow(ann);
       }

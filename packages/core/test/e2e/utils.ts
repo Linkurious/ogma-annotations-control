@@ -13,6 +13,7 @@ declare global {
   function wait(ms: number): Promise<void>;
   let ogma: Ogma;
   let editor: import("../../src").Control;
+  let Control: typeof import("../../src").Control;
   let createArrow: typeof import("../../src").createArrow;
   let createBox: typeof import("../../src").createBox;
   let createPolygon: typeof import("../../src").createPolygon;

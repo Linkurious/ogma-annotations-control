@@ -117,6 +117,11 @@ export class AnnotationEditor extends EventTarget {
     if (!feature) return;
     // Get handler for this feature type
     this.setActiveHandler(feature.properties.type);
+    // Selection (which is what actually got us here - see the subscription
+    // above) stays independent of this: a non-editable feature is still
+    // selected, it just never gets a handler attached, so no drag/resize/
+    // text-edit can ever start for it.
+    if (!this.store.getState().options.isEditable(feature)) return;
     this.activeHandler?.setAnnotation(feature as Text);
   }
 
