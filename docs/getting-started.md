@@ -224,6 +224,24 @@ controller.on("remove", (annotation) => {
 });
 ```
 
+### Locking and Hiding Annotations
+
+Some annotations shouldn't be editable or visible to every user - one owned by another team, say, or one tied to a permission the current viewer lacks. Pass `isEditable`/`isVisible` to the controller:
+
+```typescript
+const controller = new Control(ogma, {
+  isEditable: (annotation) => currentUser.canEdit(annotation),
+  isVisible: (annotation) => currentUser.canSee(annotation)
+});
+```
+
+- `isEditable` gates drag, resize, restyle, text edit, delete, and re-linking. The annotation stays selectable - a user can still click it to see its content - just not change it.
+- `isVisible` gates rendering and hit-testing, including SVG export. The annotation stays in `getAnnotations()`/`getAnnotation()` - visibility only controls the canvas, not the data.
+
+**Why a callback instead of a `locked`/`hidden` field on the annotation itself?** A field on the annotation's own JSON is trivial to bypass - anyone with devtools, or anyone re-importing edited JSON, can just flip it. A callback keeps the decision entirely on your side, evaluated live against whatever your app actually trusts (a role, a permission check), so the annotation's own data can never override it.
+
+Both default to always `true`. Since they're functions, not data, the controller can't tell on its own when your answer for a given annotation changes for reasons outside that annotation's data (e.g. the user's role changed) - call `controller.setOptions({ isEditable, isVisible })` again with new function references to force a refresh; passing the same reference back is a no-op.
+
 ## Interactive Annotations
 
 Want to let users create annotations by clicking and dragging? Use the `startArrow()` and `startText()` methods:
