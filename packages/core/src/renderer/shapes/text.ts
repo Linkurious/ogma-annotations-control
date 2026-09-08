@@ -17,6 +17,20 @@ import {
   ANNOTATION_LINK_CLASS
 } from "../../utils/rendering";
 
+/**
+ * Compiled once and reused, rather than recompiled on every `drawContent`
+ * call (or, worse, on every visual line) - every exec loop below runs
+ * synchronously to exhaustion before returning, and drawContent never
+ * re-enters itself mid-loop, so sharing one instance per pattern is safe.
+ * `createMarkdownLinkPattern()`/`createUrlPattern()` from utils/rendering.ts
+ * still hand out a guaranteed-fresh instance where that actually matters
+ * (e.g. comment.ts's `.replace()` calls, or concurrent/interleaved use) -
+ * this file's usage doesn't need that guarantee, just a lastIndex reset
+ * before each use.
+ */
+const cachedMarkdownLinkPattern = createMarkdownLinkPattern();
+const cachedUrlPattern = createUrlPattern();
+
 export function renderText(
   root: SVGElement,
   annotation: Text,
@@ -207,7 +221,8 @@ function extractMarkdownLinks(text: string): {
   links: ExtractedLink[];
 } {
   const links: ExtractedLink[] = [];
-  const pattern = createMarkdownLinkPattern();
+  const pattern = cachedMarkdownLinkPattern;
+  pattern.lastIndex = 0;
   let lastIndex = 0;
   let measureText = "";
   let match: RegExpExecArray | null;
@@ -225,10 +240,36 @@ function extractMarkdownLinks(text: string): {
   return { measureText, links };
 }
 
+/** A compiled matcher for one piece of content (the note's body, or its
+ * author line): `hrefByToken` is `null` on the common fast path (no
+ * markdown links at all), where `pattern` is just the shared cached bare-
+ * URL pattern; otherwise `pattern` is a one-off alternation of every
+ * markdown link's exact token plus the bare-URL source, and `hrefByToken`
+ * maps each token back to its real href. */
+interface LinkMatcher {
+  pattern: RegExp;
+  hrefByToken: Map<string, string> | null;
+}
+
+/** Builds the `LinkMatcher` for `mdLinks` once per `drawContent` call (not
+ * once per visual line - the previous, wasteful approach) so multi-line
+ * content pays for at most one dynamic RegExp compile, and single-line
+ * content with no markdown links (by far the common case) pays for none -
+ * it just reuses `cachedUrlPattern`. */
+function buildLinkMatcher(mdLinks: ExtractedLink[]): LinkMatcher {
+  if (mdLinks.length === 0) {
+    return { pattern: cachedUrlPattern, hrefByToken: null };
+  }
+  const hrefByToken = new Map(mdLinks.map((link) => [link.token, link.href]));
+  const alternatives = mdLinks.map((link) => escapeRegExp(link.token));
+  alternatives.push(cachedUrlPattern.source);
+  return { pattern: new RegExp(alternatives.join("|"), "g"), hrefByToken };
+}
+
 /** Splits `text` - already the post-`extractMarkdownLinks` measure text, so
  * any markdown link in it is just its (glued) label, not the raw syntax -
  * on links, and appends the pieces to `tspan` as plain text nodes
- * interleaved with real SVG `<a>` elements. Matches `mdLinks`' exact
+ * interleaved with real SVG `<a>` elements. Matches `matcher`'s markdown
  * tokens first (rendered as their label, glue character restored to a
  * plain space), then falls back to autolinking any remaining bare URL.
  * Shared by content lines and the author line so link-rendering has one
@@ -236,21 +277,19 @@ function extractMarkdownLinks(text: string): {
 function appendLineWithLinks(
   tspan: SVGTSpanElement,
   text: string,
-  mdLinks: ExtractedLink[]
+  matcher: LinkMatcher
 ): void {
-  const hrefByToken = new Map(mdLinks.map((link) => [link.token, link.href]));
-  const alternatives = mdLinks.map((link) => escapeRegExp(link.token));
-  alternatives.push(createUrlPattern().source);
-  const linkPattern = new RegExp(alternatives.join("|"), "g");
+  const { pattern, hrefByToken } = matcher;
+  pattern.lastIndex = 0;
 
   let lastIndex = 0;
   let match: RegExpExecArray | null;
 
-  while ((match = linkPattern.exec(text)) !== null) {
+  while ((match = pattern.exec(text)) !== null) {
     if (match.index > lastIndex) {
       tspan.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
     }
-    const mdHref = hrefByToken.get(match[0]);
+    const mdHref = hrefByToken?.get(match[0]);
     const href = mdHref ?? match[0];
     const label = mdHref !== undefined ? match[0].replace(/ /g, " ") : match[0];
     const a = document.createElementNS("http://www.w3.org/2000/svg", "a");
@@ -352,6 +391,8 @@ function drawContent(
     // ever reaches pretext - see extractMarkdownLinks - so word-wrap can't
     // split a multi-word label across two lines.
     const { measureText, links } = extractMarkdownLinks(content);
+    // Built once for the whole content block, not once per visual line.
+    const linkMatcher = buildLinkMatcher(links);
     const prepared = prepareWithSegments(measureText, fontString, {
       whiteSpace: "pre-wrap",
       wordBreak: "normal"
@@ -383,7 +424,7 @@ function drawContent(
       const tspan = createSVGElement<SVGTSpanElement>("tspan");
       tspan.setAttribute("x", "0");
       tspan.setAttribute("dy", `${i === 0 ? firstDy : lineHeight}`);
-      appendLineWithLinks(tspan, line.text, links);
+      appendLineWithLinks(tspan, line.text, linkMatcher);
       textEl.appendChild(tspan);
     });
 
@@ -399,6 +440,7 @@ function drawContent(
     const maxAuthorWidth = width - padding * 2;
     const { measureText: authorMeasureText, links: authorLinks } =
       extractMarkdownLinks(authorText!);
+    const authorLinkMatcher = buildLinkMatcher(authorLinks);
     const truncatedAuthor = truncateToOneLine(
       authorMeasureText,
       authorFontString,
@@ -418,7 +460,7 @@ function drawContent(
     const tspan = createSVGElement<SVGTSpanElement>("tspan");
     tspan.setAttribute("x", "0");
     tspan.setAttribute("dy", `${firstLineDy(authorFontString, authorLineHeight)}`);
-    appendLineWithLinks(tspan, truncatedAuthor, authorLinks);
+    appendLineWithLinks(tspan, truncatedAuthor, authorLinkMatcher);
     authorEl.appendChild(tspan);
 
     parent.appendChild(authorEl);
