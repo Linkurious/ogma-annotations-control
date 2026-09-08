@@ -73,9 +73,7 @@ export class Shapes extends Renderer<SVGLayer> {
         }
       }
     );
-    // isVisible is a function, not annotation data - the subscription above
-    // never fires just because a host called setOptions({ isVisible }) with
-    // a new predicate. Watch it separately so that alone still re-renders.
+    // isVisible is a function, not data - watch it separately so a fresh setOptions() call alone still re-renders.
     this.store.subscribe(
       (state) => state.options.isVisible,
       this.throttleRender
@@ -300,10 +298,7 @@ export class Shapes extends Renderer<SVGLayer> {
     );
   }
 
-  /** True if `feature` is hidden per the `isVisible` option - and, if it
-   * still has a cached element from a previous pass (isVisible just flipped
-   * to false), removes it. Unlike viewport culling, applies during export
-   * too - "hidden" is host-controlled, not a viewport concern. */
+  /** True if `feature` is hidden per `isVisible`, also removing any stale cached element for it (unlike viewport culling, this applies during export too). */
   private hideIfNotVisible(feature: Annotation): boolean {
     if (this.store.getState().options.isVisible(feature)) return false;
     const existingElement = this.features.get(feature.id);

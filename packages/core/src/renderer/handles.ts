@@ -102,9 +102,7 @@ export class Handles extends Renderer<CanvasLayer> {
         ? { ...baseFeature, ...liveUpdates[baseFeature.id] }
         : baseFeature;
 
-      // A locked (non-editable) selection still shows outline/highlight -
-      // it's still selected - just not the draggable corner/vertex/endpoint
-      // handles, since there's nothing to resize/move.
+      // A locked selection still shows its outline/highlight, just not the draggable handles.
       const editable = state.options.isEditable(feature as Annotation);
 
       if (isArrow(feature)) {
@@ -237,8 +235,7 @@ export class Handles extends Renderer<CanvasLayer> {
     ctx.closePath();
     ctx.stroke();
 
-    // Selection highlight above still stands for a locked arrow - just the
-    // draggable endpoint squares below don't.
+    // Highlight above still stands for a locked arrow - the endpoint squares below don't.
     if (!editable) return;
 
     ctx.beginPath();
@@ -323,8 +320,7 @@ export class Handles extends Renderer<CanvasLayer> {
       ctx.restore();
     }
 
-    // Outline above still stands for a locked polygon - just the draggable
-    // vertex handles below don't.
+    // Outline above still stands for a locked polygon - the vertex handles below don't.
     if (!editable) return;
 
     ctx.beginPath();

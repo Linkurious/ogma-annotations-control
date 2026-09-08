@@ -181,9 +181,7 @@ export class AnnotationToolbar {
       this.root.appendChild(
         this.button(null, "trash", "Delete selected", () => {
           const selected = this.control.getSelectedAnnotations();
-          // A locked annotation is refused a level down (see
-          // store.removeFeature) with only a console.error - filter it out
-          // here too so the rest of a mixed selection still visibly deletes.
+          // Filter locked ones out here too, so the rest of a mixed selection still visibly deletes.
           const editable = selected.features.filter((f) =>
             this.control.isAnnotationEditable(f.id)
           );

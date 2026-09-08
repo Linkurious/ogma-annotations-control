@@ -49,13 +49,7 @@ export class InteractionController extends EventTarget {
 
   private readonly DRAG_THRESHOLD = 3; // pixels
 
-  // A press on a non-editable annotation never arms a Handler (see
-  // AnnotationEditor.editFeature), so Handler.disablePanning() - normally
-  // called from onDragStart - never runs either, and dragging it just pans
-  // Ogma's own view underneath it instead of doing nothing. Disable/restore
-  // panning here for exactly that case; this never overlaps with a Handler's
-  // own disablePanning/restorePanning, since one only runs when the other
-  // doesn't.
+  // A locked annotation never arms a Handler, so Handler.disablePanning() never runs either - handled here instead.
   private savedPan?: boolean;
   private savedDrag?: boolean;
 

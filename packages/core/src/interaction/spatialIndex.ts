@@ -16,9 +16,7 @@ export class Index extends Rtree<Annotation> {
 
     // Rebuild index when features are added/removed
     this.store.subscribe((state) => state.features, this.rebuild);
-    // isVisible is a function, not annotation data - the subscription above
-    // never fires just because a host called setOptions({ isVisible }) with
-    // a new predicate. Watch it separately so that alone still re-indexes.
+    // isVisible is a function, not data - watch it separately so a fresh setOptions() call alone still re-indexes.
     this.store.subscribe(
       (state) => state.options.isVisible,
       () => this.rebuild(this.store.getState().features)
@@ -42,8 +40,7 @@ export class Index extends Rtree<Annotation> {
               const newFeature = current.features[id];
               if (!newFeature) return;
               if (!this.isVisible(newFeature)) {
-                // May have gone visible->hidden in this same change - drop
-                // it, don't just skip re-inserting a stale entry.
+                // Went visible->hidden in this same change - drop it instead of just skipping the re-insert.
                 this.remove(newFeature, compareId);
                 return;
               }
@@ -95,11 +92,11 @@ export class Index extends Rtree<Annotation> {
 
   private rebuild = (features: Record<Id, Annotation>) => {
     this.clear();
-    Object.values(features).forEach((feature) => {
-      if (!this.isVisible(feature)) return;
+    for (const feature of Object.values(features)) {
+      if (!this.isVisible(feature)) continue;
       if (isText(feature) || isComment(feature)) this.updateRotatedText(feature);
       else this.insert(feature);
-    });
+    }
   };
 
   private updateRotatedText(text: Text | Comment) {

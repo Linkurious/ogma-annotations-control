@@ -223,10 +223,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               const feature = state.features[id];
               if (!feature) return state;
 
-              // A feature still being drawn (never confirmed) is exempt -
-              // isEditable is meant to gate an existing annotation, and
-              // blocking it here could leave startDrawing()'s draft stuck,
-              // uncancelable (see Handler/PolygonHandler.cancelDrawing).
+              // A feature still being drawn is exempt, or its draft could get stuck uncancelable.
               if (id !== state.drawingFeature && !state.options.isEditable(feature)) {
                 // eslint-disable-next-line no-console
                 console.error(`Cannot delete annotation ${id}: not editable`);
@@ -252,9 +249,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               // Deleting a comment (or text) also deletes all its arrows.
               const toDelete = getCascadeDeleteIds(features, id);
 
-              // All or nothing: if the cascade reaches a non-editable
-              // annotation (e.g. one of this comment's arrows is locked),
-              // refuse the whole delete rather than strand it.
+              // All or nothing - refuse the whole delete if the cascade reaches a non-editable annotation.
               for (const deleteId of toDelete) {
                 const cascaded = features[deleteId];
                 if (
@@ -416,10 +411,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               };
             }),
 
-          // Batch update multiple features - single history entry. Unlike
-          // removeFeature's cascade, each id here is independent (e.g. every
-          // arrow whose linked node moved in one layout tick) - skip
-          // non-editable ones individually rather than refusing the batch.
+          // Batch update, single history entry - each id is independent here, so skip non-editable ones rather than refusing the whole batch.
           updateFeatures: (updates) =>
             set((state) => {
               const newFeatures = { ...state.features };

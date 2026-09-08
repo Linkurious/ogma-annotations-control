@@ -320,10 +320,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   }
 
   public link(arrow: Arrow, target: Id | Node, side: Side) {
-    // this.links.add() below mutates arrow.properties.link directly (to
-    // keep it serializable) rather than through the store, so it must be
-    // refused here - by the time updateFeature ran its own check further
-    // down, the direct mutation would have already happened.
+    // links.add() below mutates arrow.properties.link directly, bypassing the store, so it's refused here too.
     if (!this.store.getState().options.isEditable(arrow)) {
       // eslint-disable-next-line no-console
       console.error(`Cannot link annotation ${arrow.id}: not editable`);
