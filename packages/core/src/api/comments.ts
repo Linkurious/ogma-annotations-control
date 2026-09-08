@@ -14,12 +14,17 @@ export class CommentManager {
    * @param id The id of the comment to toggle
    */
   public toggleComment(id: Id): void {
-    const feature = this.store.getState().getFeature(id);
+    const state = this.store.getState();
+    // Effective (features + any pending live update) mode, not the raw
+    // stored one - see updateCommentModesForZoom's doc comment for why
+    // that distinction matters here too: a comment auto-collapsed by zoom
+    // never has its raw `mode` touched, only its live-update overlay.
+    const feature = state.getMergedFeature(id);
     if (!feature || !isComment(feature)) return;
 
     const comment = feature as Comment;
 
-    this.store.getState().applyLiveUpdate(id, {
+    state.applyLiveUpdate(id, {
       properties: {
         ...comment.properties,
         mode: comment.properties.mode === "collapsed" ? "expanded" : "collapsed"
@@ -36,28 +41,38 @@ export class CommentManager {
     if (Math.abs(this.previousZoom - zoom) < 0.0005) return;
     this.previousZoom = zoom;
     const state = this.store.getState();
-    const features = state.features;
     const updates: Record<Id, Partial<Comment>> = {};
-    Object.values(features).forEach((feature) => {
-      if (isComment(feature)) {
-        const comment = feature as Comment;
+    Object.keys(state.features).forEach((id) => {
+      // Effective (features + any pending live update) mode - NOT
+      // state.features[id] directly. Auto-collapse/expand here only ever
+      // writes into the live-update overlay (applyLiveUpdates), never back
+      // into `features` itself, so the raw feature's `mode` is stuck at
+      // whatever it was created with forever. Comparing against it instead
+      // of the merged/effective mode meant that once a comment auto-
+      // collapsed for the first time, the very next zoom crossing back the
+      // other way would compute targetMode === that unchanged raw mode,
+      // wrongly conclude "already correct", and skip pushing the
+      // corrective update - leaving the comment stuck collapsed no matter
+      // how far back in you zoomed afterward.
+      const feature = state.getMergedFeature(id);
+      if (!feature || !isComment(feature)) return;
+      const comment = feature as Comment;
 
-        // Get threshold - uses explicit value if set, otherwise computes from dimensions
-        const threshold = this.getCommentZoomThreshold(comment);
+      // Get threshold - uses explicit value if set, otherwise computes from dimensions
+      const threshold = this.getCommentZoomThreshold(comment);
 
-        // Determine target mode based on zoom
-        const targetMode =
-          zoom < threshold ? COMMENT_MODE_COLLAPSED : COMMENT_MODE_EXPANDED;
+      // Determine target mode based on zoom
+      const targetMode =
+        zoom < threshold ? COMMENT_MODE_COLLAPSED : COMMENT_MODE_EXPANDED;
 
-        // Only update if mode needs to change
-        if (comment.properties.mode === targetMode) return;
-        updates[comment.id] = {
-          properties: {
-            ...comment.properties,
-            mode: targetMode
-          }
-        };
-      }
+      // Only update if mode needs to change
+      if (comment.properties.mode === targetMode) return;
+      updates[id] = {
+        properties: {
+          ...comment.properties,
+          mode: targetMode
+        }
+      };
     });
     state.applyLiveUpdates(updates);
   }
