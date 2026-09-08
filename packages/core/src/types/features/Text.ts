@@ -41,20 +41,38 @@ export interface TextStyle extends BoxStyle {
    * annotation that doesn't opt in - no italic, no other weights for v1. */
   fontWeight?: "normal" | "bold";
   /**
-   * Whether to show the note's author near it. Toggled by
-   * `StickyNoteStyleToolbar`'s author-visibility cell. Purely a display
-   * flag for now - no author string is stored or rendered anywhere yet,
-   * the signing format (who/when, and where it's persisted) is future
-   * work. Hidden (≡ false) by default.
+   * Whether to render `properties.author` as a one-line, ellipsis-truncated
+   * signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+   * author-visibility cell. No-op when `properties.author` is unset or
+   * blank. Hidden (≡ false) by default.
    */
   showAuthor?: boolean;
+  /**
+   * Per-annotation override for the author line's appearance. Overrides
+   * the global `ControllerOptions.authorStyle` for this annotation only -
+   * same precedence pattern as `placeholder` vs
+   * `ControllerOptions.textPlaceholder`. Falls back to a small built-in
+   * default (`DEFAULT_AUTHOR_STYLE` in `renderer/shapes/text.ts`) for any
+   * field neither this nor the global option sets.
+   */
+  authorStyle?: Partial<AuthorLineStyle>;
 }
+
+/** Style overrides for the author line rendered under a Text's content
+ * when `showAuthor` is true and `properties.author` is non-empty. Only
+ * the line-level subset of `TextStyle` - box properties (background,
+ * padding, borderRadius...) don't apply to it. */
+export type AuthorLineStyle = Pick<TextStyle, "font" | "fontSize" | "color" | "fontWeight">;
 
 export interface TextProperties extends Omit<BoxProperties, "type"> {
   type: "text";
 
   /**text to display*/
   content: string;
+  /** Author/signature line shown under the content when `style.showAuthor`
+   * is true. Set by the host app (via `properties.author` at creation or
+   * `control.update()`) - no built-in UI writes this string. */
+  author?: string;
   /** Width of the text box */
   width: number;
   /** Height of the text box */

@@ -335,4 +335,124 @@ describe("Sticky notes", () => {
 
     expect(secondFontScale).toBeGreaterThan(afterFirstResize.fontScale!);
   }, 15000);
+
+  it("renders, toggles, truncates, and links the author line", async () => {
+    // Placed directly via createText/editor.add (see the resize test above
+    // for why - avoids the click/drag placement gesture's auto-edit
+    // overlay intercepting things this test doesn't need).
+    const setup = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.view.locateGraph();
+      createEditor();
+
+      const text = createText(0, 0, 300, 160, "Meeting notes", {
+        fontSize: 16
+      });
+      editor.add(text);
+      return { id: text.id };
+    });
+
+    // Hidden until both showAuthor and a non-empty author are set.
+    const beforeToggle = await session.page.evaluate(
+      () => document.querySelector(".annotation-text-author")
+    );
+    expect(beforeToggle).toBeNull();
+
+    // The SVG annotation layer redraws on a ~16ms rAF throttle (see
+    // renderer/shapes/index.ts's `throttleRender`), not synchronously with
+    // `editor.update()` - `waitForFunction` polls past that instead of
+    // racing a fixed timeout against it.
+    await session.page.evaluate((id) => {
+      editor.update({
+        id,
+        properties: { author: "Jane Doe", style: { showAuthor: true } }
+      });
+    }, setup.id);
+    await session.page.waitForFunction(
+      () => document.querySelector(".annotation-text-author")?.textContent === "Jane Doe"
+    );
+
+    // Toggling off removes it again.
+    await session.page.evaluate((id) => {
+      editor.update({ id, properties: { style: { showAuthor: false } } });
+    }, setup.id);
+    await session.page.waitForFunction(
+      () => document.querySelector(".annotation-text-author") === null
+    );
+
+    // A long author string, on a note narrow enough to force it, truncates
+    // with an ellipsis rather than overflowing the box.
+    const longAuthor = "Jane Doe, Head of a Very Long Department Name Indeed";
+    await session.page.evaluate(
+      ({ id, longAuthor }) => {
+        editor.update({
+          id,
+          properties: {
+            width: 100,
+            author: longAuthor,
+            style: { showAuthor: true }
+          }
+        });
+      },
+      { id: setup.id, longAuthor }
+    );
+    await session.page.waitForFunction(
+      () => document.querySelector(".annotation-text-author")?.textContent?.endsWith("…") === true
+    );
+    const truncated = await session.page.evaluate(
+      () => document.querySelector(".annotation-text-author")?.textContent
+    );
+    expect(truncated?.length).toBeLessThan(longAuthor.length);
+
+    // A URL in the author line renders as a real, clickable anchor, reusing
+    // the same link mechanism as the note's body content.
+    await session.page.evaluate((id) => {
+      editor.update({
+        id,
+        properties: {
+          width: 300,
+          author: "Jane Doe - https://example.com",
+          style: { showAuthor: true }
+        }
+      });
+    }, setup.id);
+    await session.page.waitForFunction(
+      () => !!document.querySelector(".annotation-text-author a.ogma-annotation-link")
+    );
+
+    const link = await session.page.evaluate(() => {
+      const a = document.querySelector(
+        ".annotation-text-author a.ogma-annotation-link"
+      );
+      return a ? { href: a.getAttribute("href") } : null;
+    });
+    expect(link?.href).toBe("https://example.com");
+
+    // A markdown-style [label](url) link renders its label, not the raw
+    // URL, and survives word-wrap intact even though the label has spaces.
+    await session.page.evaluate((id) => {
+      editor.update({
+        id,
+        properties: {
+          author: "Jane Doe - [get in touch](https://example.com/contact)",
+          style: { showAuthor: true }
+        }
+      });
+    }, setup.id);
+    await session.page.waitForFunction(
+      () => document.querySelector(".annotation-text-author a.ogma-annotation-link")?.textContent === "get in touch"
+    );
+
+    const mdLink = await session.page.evaluate(() => {
+      const a = document.querySelector(
+        ".annotation-text-author a.ogma-annotation-link"
+      );
+      return a ? { text: a.textContent, href: a.getAttribute("href") } : null;
+    });
+    expect(mdLink?.href).toBe("https://example.com/contact");
+    const authorFullText = await session.page.evaluate(
+      () => document.querySelector(".annotation-text-author")?.textContent
+    );
+    expect(authorFullText).not.toContain("https://example.com/contact");
+  }, 10000);
 });

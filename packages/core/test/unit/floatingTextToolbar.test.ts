@@ -276,7 +276,10 @@ describe("ui/TextAnnotationToolbar", () => {
     container.remove();
   });
 
-  it("shows the plain-Text pill (no author cell) for a non-sticky Text", () => {
+  it("shows the plain-Text pill, author cell included, for a non-sticky Text", () => {
+    // The author-visibility toggle used to be a sticky-note-only cell (see
+    // `StickyNoteStyleToolbar`); it now lives on the base `TextStyleToolbar`
+    // so any Text annotation - sticky note or not - can show an author line.
     const added = control.add(
       createText(0, 0, 100, 50, "Hello", { fontSize: 18 })
     );
@@ -289,7 +292,7 @@ describe("ui/TextAnnotationToolbar", () => {
     expect(document.querySelector(".annotation-style-toolbar")).not.toBeNull();
     expect(
       document.querySelector('[data-tooltip="Show author"]')
-    ).toBeNull();
+    ).not.toBeNull();
     expect(document.querySelector('[data-tooltip="Bold"]')).not.toBeNull();
 
     toolbar.destroy();

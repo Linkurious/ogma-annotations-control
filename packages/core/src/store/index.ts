@@ -7,6 +7,7 @@ import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
 import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comment/helpers";
 import {
   Annotation,
+  AuthorLineStyle,
   Bounds,
   ControllerOptions,
   Id,
@@ -115,6 +116,7 @@ export interface AnnotationState {
     magnetRadius: number;
     magnetHandleRadius: number;
     textPlaceholder: string;
+    authorStyle?: Partial<AuthorLineStyle>;
     isEditable: (annotation: Annotation) => boolean;
     isVisible: (annotation: Annotation) => boolean;
   };
@@ -209,6 +211,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             magnetRadius: initialOptions?.magnetRadius ?? 10,
             magnetHandleRadius: initialOptions?.magnetHandleRadius ?? 5,
             textPlaceholder: initialOptions?.textPlaceholder ?? "Type here",
+            authorStyle: initialOptions?.authorStyle,
             isEditable: initialOptions?.isEditable ?? (() => true),
             isVisible: initialOptions?.isVisible ?? (() => true)
           },

@@ -1,4 +1,4 @@
-import type { Annotation } from "./features";
+import type { Annotation, AuthorLineStyle } from "./features";
 
 export * from "./features";
 export * from "./geometry";
@@ -26,6 +26,14 @@ export type ControllerOptions = {
    * Placeholder for the text input
    */
   textPlaceholder: string;
+
+  /**
+   * Editor-wide default style for every Text annotation's author line. Only
+   * applied when an annotation's `style.showAuthor` is true and
+   * `properties.author` is set; a given field here is overridden by that
+   * annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
+   */
+  authorStyle?: Partial<AuthorLineStyle>;
 
   /**
    * Show send button in text editor
