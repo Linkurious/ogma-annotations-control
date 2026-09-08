@@ -377,8 +377,9 @@ function drawContent(
   // just because it was sub-pixel at the current preview zoom.
   const zoomScale = fixedSize ? 1 : (state?.zoom ?? 1);
   const minReadableFontSize = state?.options?.minReadableFontSize ?? 0;
-  const tooSmallToRender = (px: number) =>
-    !isExporting && minReadableFontSize > 0 && px * zoomScale < minReadableFontSize;
+  const canSkipForSize = !isExporting && minReadableFontSize > 0;
+  const contentTooSmall =
+    canSkipForSize && effectiveFontSize * zoomScale < minReadableFontSize;
 
   // Author line (if shown) reserves fixed space at the bottom of the box -
   // computed before maxHeight so content wrapping already accounts for it.
@@ -395,7 +396,9 @@ function drawContent(
   // Independent of the content-size check above: the author line's own
   // (usually smaller) font can cross the threshold before or after the
   // main content's does.
-  const renderAuthorLine = showAuthorLine && !tooSmallToRender(authorFontSize);
+  const authorTooSmall =
+    canSkipForSize && authorFontSize * zoomScale < minReadableFontSize;
+  const renderAuthorLine = showAuthorLine && !authorTooSmall;
   const authorLineHeight = renderAuthorLine ? authorFontSize * TEXT_LINE_HEIGHT : 0;
   const AUTHOR_GAP = 4; // px, graph-space, between content and author line
   const authorReserved = renderAuthorLine ? authorLineHeight + AUTHOR_GAP : 0;
@@ -407,7 +410,7 @@ function drawContent(
 
   const content = annotation.properties.content || "";
 
-  if (content.length > 0 && !tooSmallToRender(effectiveFontSize)) {
+  if (content.length > 0 && !contentTooSmall) {
     // Markdown links are substituted with their (glued) label before this
     // ever reaches pretext - see extractMarkdownLinks - so word-wrap can't
     // split a multi-word label across two lines.
