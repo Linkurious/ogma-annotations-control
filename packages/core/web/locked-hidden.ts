@@ -77,6 +77,7 @@ function applyState() {
     isEditable: (a) => !state[groupOf[a.id]]?.locked,
     isVisible: (a) => !state[groupOf[a.id]]?.hidden
   });
+  control.unselect();
 }
 
 const control = new Control(ogma);
