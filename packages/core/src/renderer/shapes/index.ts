@@ -73,6 +73,11 @@ export class Shapes extends Renderer<SVGLayer> {
         }
       }
     );
+    // isVisible is a function, not data - watch it separately so a fresh setOptions() call alone still re-renders.
+    this.store.subscribe(
+      (state) => state.options.isVisible,
+      this.throttleRender
+    );
   }
 
   render = (root: SVGSVGElement) => {
@@ -122,6 +127,8 @@ export class Shapes extends Renderer<SVGLayer> {
       if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
+
+      if (this.hideIfNotVisible(feature)) continue;
 
       // Skip features outside viewport
       if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
@@ -195,6 +202,7 @@ export class Shapes extends Renderer<SVGLayer> {
       if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
+      if (this.hideIfNotVisible(feature)) continue;
       if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
         continue;
 
@@ -288,6 +296,17 @@ export class Shapes extends Renderer<SVGLayer> {
         y0 > viewport[3]
       ) // feature is below viewport
     );
+  }
+
+  /** True if `feature` is hidden per `isVisible`, also removing any stale cached element for it (unlike viewport culling, this applies during export too). */
+  private hideIfNotVisible(feature: Annotation): boolean {
+    if (this.store.getState().options.isVisible(feature)) return false;
+    const existingElement = this.features.get(feature.id);
+    if (existingElement) {
+      existingElement.parentNode?.removeChild(existingElement);
+      this.features.delete(feature.id);
+    }
+    return true;
   }
 
   private getDefs(): SVGDefsElement {

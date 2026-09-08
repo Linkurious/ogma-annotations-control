@@ -60,6 +60,7 @@ describe("ui/icons", () => {
 function createFakeControl(...annotations: Annotation[]) {
   const handlers = new Map<string, Set<(...args: never[]) => void>>();
   let drawing = false;
+  const lockedIds = new Set<string>();
 
   const emit = (event: string, ...args: unknown[]) => {
     handlers
@@ -87,13 +88,16 @@ function createFakeControl(...annotations: Annotation[]) {
     },
     getAnnotation: (id) =>
       annotations.find((a) => a.id === id) ?? annotations[0],
-    isDrawing: () => drawing
+    isDrawing: () => drawing,
+    isAnnotationEditable: (id) => !lockedIds.has(id as string)
   };
 
   return {
     control,
     emit,
     setDrawing: (v: boolean) => (drawing = v),
+    setLocked: (id: string, locked: boolean) =>
+      locked ? lockedIds.add(id) : lockedIds.delete(id),
     listenerCount: (event: string) => handlers.get(event)?.size ?? 0
   };
 }
@@ -179,6 +183,26 @@ describe("ui/panelVisibility", () => {
     emit("unselect", { ids: ["a1"] }); // e.g. deleted mid-drag
     emit("dragend");
     expect(onShow).toHaveBeenCalledTimes(1); // just the original show
+  });
+
+  it("hides a stale panel when selection switches straight to a locked annotation", () => {
+    // Regression: showPending used to just no-op for a non-editable pending
+    // annotation, leaving a still-open panel from the *previous* selection
+    // on screen even though the current selection is locked.
+    const a2 = { id: "a2" } as unknown as Annotation;
+    const { control, emit, setLocked } = createFakeControl(annotation, a2);
+    setLocked("a2", true);
+    const onShow = vi.fn();
+    const onHide = vi.fn();
+    attachPanelVisibility(control, { onShow, onHide });
+
+    emit("select", { ids: ["a1"] });
+    vi.runAllTimers();
+    expect(onShow).toHaveBeenCalledWith(annotation);
+
+    emit("select", { ids: ["a2"] });
+    vi.runAllTimers();
+    expect(onHide).toHaveBeenCalled();
   });
 
   it("hides on a multi-selection", () => {
@@ -388,6 +412,7 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
     redo: vi.fn(),
     remove: vi.fn(),
     getSelectedAnnotations: () => selected,
+    isAnnotationEditable: () => true,
     enableArrowDrawing: vi.fn(),
     enableCommentDrawing: vi.fn(),
     enableStickyNoteDrawing: vi.fn(),

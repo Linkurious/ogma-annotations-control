@@ -117,6 +117,8 @@ export class AnnotationEditor extends EventTarget {
     if (!feature) return;
     // Get handler for this feature type
     this.setActiveHandler(feature.properties.type);
+    // Selection stays independent of this - a non-editable feature is still selected, it just never gets a handler attached.
+    if (!this.store.getState().options.isEditable(feature)) return;
     this.activeHandler?.setAnnotation(feature as Text);
   }
 

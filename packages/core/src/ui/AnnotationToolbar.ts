@@ -181,7 +181,12 @@ export class AnnotationToolbar {
       this.root.appendChild(
         this.button(null, "trash", "Delete selected", () => {
           const selected = this.control.getSelectedAnnotations();
-          if (selected.features.length > 0) this.control.remove(selected);
+          // Filter locked ones out here too, so the rest of a mixed selection still visibly deletes.
+          const editable = selected.features.filter((f) =>
+            this.control.isAnnotationEditable(f.id)
+          );
+          if (editable.length > 0)
+            this.control.remove({ type: "FeatureCollection", features: editable });
         })
       );
     }

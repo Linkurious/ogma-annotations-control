@@ -1,3 +1,5 @@
+import type { Annotation } from "./features";
+
 export * from "./features";
 export * from "./geometry";
 export * from "./events";
@@ -56,6 +58,34 @@ export type ControllerOptions = {
    * Maximum height of the arrow in units
    */
   maxArrowHeight: number;
+
+  /**
+   * Called to decide whether an annotation can be dragged, resized, restyled,
+   * text-edited, deleted, or re-linked. Defaults to always `true`. Selection
+   * (click to highlight, `getSelectedAnnotations()`) is unaffected - a
+   * non-editable annotation stays fully selectable, just not mutable.
+   *
+   * Keep this cheap and synchronous - it can run once per affected
+   * annotation on every relevant edit attempt. To react to a change that
+   * isn't reflected in the annotation's own data (e.g. a host-side
+   * "read-only mode" toggle), call `control.setOptions({ isEditable })`
+   * again with a new function reference - passing the same reference is a
+   * no-op.
+   */
+  isEditable: (annotation: Annotation) => boolean;
+
+  /**
+   * Called to decide whether an annotation is rendered (including in SVG
+   * export) and hit-testable (hover/select/drag via the mouse). Defaults to
+   * always `true`. A hidden annotation stays fully present in
+   * `getAnnotations()`, `getAnnotation()`, and `getSelectedAnnotations()` -
+   * visibility only controls what's drawn and clickable, not data access.
+   *
+   * Keep this cheap and synchronous - it can run once per annotation on
+   * every render pass while the view is changing (drag, pan, zoom). Same
+   * reactivity note as `isEditable` applies to changing this after the fact.
+   */
+  isVisible: (annotation: Annotation) => boolean;
 };
 
 export type AnnotationOptions = {
