@@ -110,6 +110,7 @@
     "@chenglou/pretext": "0.0.7",
     "eventemitter3": "5.0.1",
     "geojson": "0.5.0",
+    "martinez-polygon-clipping": "0.8.1",
     "rbush": "4.0.1",
     "vanilla-colorful": "0.7.2",
     "zundo": "2.3.0",
