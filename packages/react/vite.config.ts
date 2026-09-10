@@ -1,6 +1,5 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
 import { libInjectCss } from "vite-plugin-lib-inject-css";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -9,17 +8,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // https://vitejs.dev/config/
+//
+// Declaration files (`dist/types`) come from the `tsc -p tsconfig-build.json`
+// step in the "build" script, not from a vite plugin - real per-module tsc
+// emission (mirroring `src/`), not a bundled/rolled-up declaration per entry.
+// See tsconfig-build.json for why.
 export default defineConfig({
   plugins: [
     react({
       jsxRuntime: "classic"
     }),
-    libInjectCss(),
-    dts({
-      outDir: "dist/types",
-      rollupTypes: true,
-      tsconfigPath: resolve(__dirname, "tsconfig-build.json")
-    })
+    libInjectCss()
   ],
   define: { "process.env": { NODE_ENV: "production" } },
   build: {
