@@ -36,17 +36,7 @@ export const TextAnnotationToolbarController: React.FC<
   useEffect(() => {
     if (!editor) return;
     const toolbar = new TextAnnotationToolbar({
-      // `editor`'s type resolves through the *built* package's `dist/types`
-      // (the main entry isn't source-aliased in this package's tsconfig,
-      // unlike the `/ui` subpath), while `TextAnnotationToolbarOptions.control`
-      // resolves through core's *source* `Control` - same class, two
-      // separate declarations with private members, which TS treats as
-      // incompatible. `panelVisibility.ts`'s `PanelVisibilityControl`
-      // sidesteps this the structural-type way for its own narrow needs;
-      // `AnnotationStyleToolbar`'s options need the real `Control` (it
-      // calls far more than 4 methods on it), so this is the one place
-      // that just casts across the boundary instead.
-      control: editor as unknown as TextAnnotationToolbarOptions["control"],
+      control: editor,
       ...optionsRef.current
     });
     return () => toolbar.destroy();

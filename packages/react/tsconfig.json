@@ -11,7 +11,13 @@
       // The /ui sources import the package's own main entry (for the React
       // context) and core's /ui subpath. Both are externalized at bundle time,
       // but tsc runs before dist exists — resolve them to source for typecheck.
+      // Both core entries are aliased (not just /ui) so a `Control` reached
+      // through either path is the *same* source declaration - otherwise
+      // TS sees two nominally distinct `Control`s wherever a value from one
+      // entry (e.g. `useAnnotationsContext().editor`) is passed to an API
+      // typed against the other (e.g. `TextAnnotationToolbarOptions.control`).
       "@linkurious/ogma-annotations-react": ["./src/index.ts"],
+      "@linkurious/ogma-annotations": ["../core/src/index.ts"],
       "@linkurious/ogma-annotations/ui": ["../core/src/ui/index.ts"]
     },
     "allowSyntheticDefaultImports": true,
