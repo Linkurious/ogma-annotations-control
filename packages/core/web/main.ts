@@ -49,7 +49,13 @@ class App {
     );
 
     //this.ogma.events.once = (e, h) => console.log("ogma.once", e, h); // Temporary fix for ogma typings
-    this.control = new Control(this.ogma);
+    this.control = new Control(this.ogma, {
+      // Editor-wide default for every Text annotation's author line - a
+      // note can still override this via its own style.authorStyle (see
+      // "sticky-with-author-example" in annotations-test.json, which
+      // does; "text-with-author-example" doesn't, and uses this instead).
+      authorStyle: { color: "#7c3aed", fontSize: 13 }
+    });
 
     this.buttons = {
       centerView: document.getElementById("center-view")! as HTMLButtonElement,

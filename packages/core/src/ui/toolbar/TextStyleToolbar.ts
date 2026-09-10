@@ -47,10 +47,10 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
   onMoreColors?: ColorCellOptions["onMoreColors"];
 }
 
-/** Floating style pill for a plain Text annotation: Color, Font family,
- * Font size, Bold, Delete - see the Figma "Sticky Note Toolbar" export
- * (alignment cell dropped for v1). `StickyNoteStyleToolbar` extends this
- * with an author-visibility cell.
+/** Floating style pill for a Text annotation (plain text box or sticky
+ * note): Color, Font family, Font size, Bold, Show author, Delete - see the
+ * Figma "Sticky Note Toolbar" export (alignment cell dropped for v1).
+ * `StickyNoteStyleToolbar` extends this with no items of its own for now.
  *
  * The built-in items are declarative `ToolbarItem`s (see `cells/types.ts`),
  * built from `this.options` - override `fonts`/`fontSizes`/`swatches`/
@@ -105,6 +105,17 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         action: (c) => {
           const isBold = c.getAnnotation().properties.style?.fontWeight === "bold";
           c.updateStyle({ fontWeight: isBold ? "normal" : "bold" });
+        }
+      },
+      { kind: "separator" },
+      {
+        kind: "button",
+        title: "Show author",
+        icon: "user",
+        isActive: (a) => a.properties.style?.showAuthor === true,
+        action: (c) => {
+          const shown = c.getAnnotation().properties.style?.showAuthor === true;
+          c.updateStyle({ showAuthor: !shown });
         }
       },
       { kind: "separator" },

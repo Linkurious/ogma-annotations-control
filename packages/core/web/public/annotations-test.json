@@ -547,6 +547,79 @@
           -108.5411089937025
         ]
       }
+    },
+    {
+      "id": "sticky-with-author-example",
+      "type": "Feature",
+      "properties": {
+        "type": "text",
+        "content": "Ping the team about the finding before Friday.",
+        "author": "Ada Lovelace",
+        "width": 220,
+        "height": 160,
+        "style": {
+          "font": "IBM Plex Sans",
+          "fontSize": 16,
+          "color": "#4A3B00",
+          "background": "#FFEB99",
+          "strokeWidth": 0,
+          "borderRadius": 4,
+          "padding": 16,
+          "placeholder": "Quick note…",
+          "scaleFontOnResize": true,
+          "showAuthor": true,
+          "authorStyle": {
+            "color": "#8a6d00",
+            "fontWeight": "bold"
+          }
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -300,
+          500
+        ],
+        "bbox": [
+          -410,
+          420,
+          -190,
+          580
+        ]
+      }
+    },
+    {
+      "id": "text-with-author-example",
+      "type": "Feature",
+      "properties": {
+        "type": "text",
+        "content": "Author line supports [markdown links](https://example.com) too.",
+        "author": "Bob - [profile](https://github.com/linkurious)",
+        "width": 280,
+        "height": 140,
+        "style": {
+          "font": "sans-serif",
+          "fontSize": 16,
+          "color": "#505050",
+          "background": "#f5f5f5",
+          "borderRadius": 8,
+          "padding": 16,
+          "showAuthor": true
+        }
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          50,
+          500
+        ],
+        "bbox": [
+          -90,
+          430,
+          190,
+          570
+        ]
+      }
     }
   ]
 }

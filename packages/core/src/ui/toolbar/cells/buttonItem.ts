@@ -4,7 +4,7 @@ import type { ToolbarCell, ToolbarCellContext } from "./contract";
 import type { ToolbarButtonItem } from "./types";
 
 /** Renders a `ToolbarButtonItem` - the generic cell behind Bold, Delete,
- * and the sticky-note author toggle (any simple action/toggle button). */
+ * and the author-visibility toggle (any simple action/toggle button). */
 export class ButtonItemCell implements ToolbarCell {
   public readonly element: HTMLButtonElement;
 

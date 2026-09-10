@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   createUrlPattern,
+  createMarkdownLinkPattern,
   isAnnotationLinkTarget,
   ANNOTATION_LINK_CLASS
 } from "../../src/utils/rendering";
@@ -56,6 +57,33 @@ describe("URL pattern (createUrlPattern)", () => {
 
   it("does not match plain text", () => {
     expect("just some words".match(createUrlPattern())).toBeNull();
+  });
+});
+
+describe("markdown link pattern (createMarkdownLinkPattern)", () => {
+  it("captures a markdown link's label and url", () => {
+    const m = createMarkdownLinkPattern().exec(
+      "see [our docs](https://example.com/docs) for more"
+    );
+    expect(m?.[1]).toBe("our docs");
+    expect(m?.[2]).toBe("https://example.com/docs");
+  });
+
+  it("does not match a bare URL", () => {
+    expect(createMarkdownLinkPattern().exec("see https://example.com now")).toBeNull();
+  });
+
+  it("matches multiple markdown links in one string", () => {
+    const matches = [
+      ..."[a](https://a.com) and [b](https://b.com)".matchAll(
+        createMarkdownLinkPattern()
+      )
+    ];
+    expect(matches.length).toBe(2);
+    expect(matches[0][1]).toBe("a");
+    expect(matches[0][2]).toBe("https://a.com");
+    expect(matches[1][1]).toBe("b");
+    expect(matches[1][2]).toBe("https://b.com");
   });
 });
 
@@ -139,5 +167,76 @@ describe("text annotation link rendering (renderText)", () => {
     renderText(root, text, undefined, mockState());
 
     expect(root.querySelectorAll("a").length).toBe(0);
+  });
+
+  it("renders a markdown-style link with a custom label instead of the raw URL", () => {
+    const root = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    ) as SVGElement;
+    const text = createText(
+      0,
+      0,
+      400,
+      100,
+      "See [our docs](https://example.com/docs) for more"
+    );
+
+    renderText(root, text, undefined, mockState());
+
+    const a = root.querySelector("a");
+    expect(a?.textContent).toBe("our docs");
+    expect(a?.getAttribute("href")).toBe("https://example.com/docs");
+    expect(a?.getAttribute("class")).toBe("ogma-annotation-link");
+    // The raw markdown syntax itself isn't left behind as visible text.
+    expect(root.textContent).not.toContain("[our docs]");
+    expect(root.textContent).not.toContain("https://example.com/docs");
+  });
+
+  it("keeps a multi-word markdown link label intact across word-wrap", () => {
+    // Regression: a naive "wrap the raw text, then regex-match each
+    // resulting line" approach finds `[label](url)` split across two
+    // lines exactly as often as a real multi-word label wraps on its own
+    // spaces - which, before extractMarkdownLinks moved link-detection to
+    // before wrapping, was often. vitest-canvas-mock's TextMetrics reports
+    // width === text.length, so a box just wide enough for the label but
+    // not the full raw markdown syntax reproduces that wrap deterministically.
+    const root = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    ) as SVGElement;
+    const text = createText(
+      0,
+      0,
+      60,
+      200,
+      "Contact [the design team lead](https://example.com/contact) today"
+    );
+
+    renderText(root, text, undefined, mockState());
+
+    const a = root.querySelector("a");
+    expect(a?.textContent).toBe("the design team lead");
+    expect(a?.getAttribute("href")).toBe("https://example.com/contact");
+  });
+
+  it("does not swallow a trailing paren from surrounding prose into a bare URL", () => {
+    const root = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "svg"
+    ) as SVGElement;
+    const text = createText(
+      0,
+      0,
+      400,
+      100,
+      "See the docs (https://example.com) for more"
+    );
+
+    renderText(root, text, undefined, mockState());
+
+    const a = root.querySelector("a");
+    expect(a?.getAttribute("href")).toBe("https://example.com");
+    expect(a?.textContent).toBe("https://example.com");
   });
 });

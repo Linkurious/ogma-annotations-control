@@ -58,6 +58,7 @@ const defaultOptions: ControllerOptions = {
   magnetHandleRadius: 5,
   magnetRadius: 10,
   textPlaceholder: "Type here",
+  minReadableFontSize: 2,
   showSendButton: true,
   sendButtonIcon: DEFAULT_SEND_ICON,
   showEditButton: true,

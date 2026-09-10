@@ -1,4 +1,4 @@
-import type { Annotation } from "./features";
+import type { Annotation, AuthorLineStyle } from "./features";
 
 export * from "./features";
 export * from "./geometry";
@@ -26,6 +26,25 @@ export type ControllerOptions = {
    * Placeholder for the text input
    */
   textPlaceholder: string;
+
+  /**
+   * Editor-wide default style for every Text annotation's author line. Only
+   * applied when an annotation's `style.showAuthor` is true and
+   * `properties.author` is set; a given field here is overridden by that
+   * annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
+   */
+  authorStyle?: Partial<AuthorLineStyle>;
+
+  /**
+   * Minimum on-screen font size, in pixels, for a scalable (non-fixedSize)
+   * Text annotation's content or author line to actually be rendered.
+   * Below this, the text is skipped entirely (the box/background still
+   * renders) - avoids illegible sub-pixel text and the layout work that
+   * produces it. Ignored for `fixedSize` text (its on-screen size never
+   * shrinks with zoom) and during SVG/PNG export (export always renders
+   * in full, same as viewport culling). Set to 0 to disable.
+   */
+  minReadableFontSize: number;
 
   /**
    * Show send button in text editor

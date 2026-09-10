@@ -143,7 +143,8 @@ export class Shapes extends Renderer<SVGLayer> {
           shapesRoot,
           feature,
           existingElement,
-          state
+          state,
+          this.isExporting
         );
       else if (isComment(feature))
         existingElement = renderComment(

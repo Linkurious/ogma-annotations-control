@@ -10,9 +10,8 @@ import {
 } from "./toolbar/TextStyleToolbar";
 
 /** `fonts`/`fontSizes`/`swatches` (see `TextStyleToolbarOptions`) apply to
- * both the plain-Text and sticky-note pill - `StickyNoteStyleToolbar` only
- * adds the author-toggle item on top, it doesn't take extra options of its
- * own. */
+ * both the plain-Text and sticky-note pill - `StickyNoteStyleToolbar`
+ * currently has no items or options of its own, it's a plain subclass. */
 export interface TextAnnotationToolbarOptions extends TextStyleToolbarOptions {
   control: Control;
 }
