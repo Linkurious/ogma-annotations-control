@@ -601,6 +601,38 @@ describe("HitDetector", () => {
       expect((result as Comment).properties.content).toBe("Expanded comment");
     });
 
+    // Regression test: a comment's arrow routinely overlaps the comment's
+    // own box (see DETECT_PRIORITY in interaction/index.ts) - dragging the
+    // comment used to be able to grab the arrow instead, detaching it.
+    it("should prefer a comment over its own overlapping connecting arrow", () => {
+      const comment = createComment(100, 100, "Has an arrow underneath");
+      comment.properties.mode = "expanded";
+      comment.properties.width = 200;
+      comment.properties.height = 100;
+      // Starts just outside the comment's center and runs through its box -
+      // the same shape as a rigid-linked connector's start endpoint.
+      const arrow = createArrow(100, 100, 300, 300);
+      const mockFeatures = { comment, arrow };
+
+      const { detector } = createAndFill(
+        mockOgma,
+        mockStore,
+        mockLinks,
+        5,
+        mockFeatures
+      );
+
+      // A few units along the arrow's line from its start, still well
+      // inside the comment's box (spans x:[0,200], y:[50,150]) - both
+      // features match here; the comment must win. (Not the arrow's exact
+      // start vertex itself - detectArrow requires `proj > 0`, so the
+      // vertex point never actually matches the arrow at all, which would
+      // make this test pass trivially regardless of priority.)
+      const result = detector.detect(110, 110, 0);
+      expect(result).not.toBeNull();
+      expect(result?.properties.type).toBe("comment");
+    });
+
     it("should detect comment at edges in expanded mode", () => {
       const comment = createComment(100, 100, "Edge test");
       comment.properties.mode = "expanded";

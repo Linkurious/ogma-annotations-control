@@ -60,12 +60,15 @@ const defaultOptions: ControllerOptions = {
   magnetHandleRadius: 5,
   magnetRadius: 10,
   textPlaceholder: "Type here",
+  minReadableFontSize: 2,
   showSendButton: true,
   sendButtonIcon: DEFAULT_SEND_ICON,
   showEditButton: true,
   editButtonIcon: DEFAULT_EDIT_ICON,
   minArrowHeight: 20,
-  maxArrowHeight: 30
+  maxArrowHeight: 30,
+  isEditable: () => true,
+  isVisible: () => true
 };
 
 interface RendererMap {
@@ -248,6 +251,33 @@ export class Control extends EventEmitter<FeatureEvents> {
   };
 
   /**
+   * The underlying Ogma instance this controller was created with. Needed by
+   * UI built on top of `Control`'s public API (e.g. `TextAnnotationToolbar`)
+   * that must mount its own `ogma.layers.addOverlay(...)` layer rather than
+   * going through a renderer/handler internal to `Control`.
+   */
+  public getOgma(): Ogma {
+    return this.ogma;
+  }
+
+  /**
+   * Current global annotation-rotation angle (radians) - see
+   * `TextStyle`/`Handles`' `counterRotation`. Needed alongside `getZoom()` by
+   * `TextAnnotationToolbar` to anchor its pill above a (possibly rotated)
+   * Text box's world-space bounds.
+   */
+  public getRotation(): number {
+    return this.store.getState().rotation;
+  }
+
+  /** Current zoom level - needed by `TextAnnotationToolbar` to convert a
+   * `fixedSize` Text annotation's screen-pixel dimensions back to graph
+   * units for its anchor-point math (same conversion `Handles` does). */
+  public getZoom(): number {
+    return this.store.getState().zoom;
+  }
+
+  /**
    * Set the options for the controller
    * @param options new Options
    * @returns the updated options
@@ -255,6 +285,20 @@ export class Control extends EventEmitter<FeatureEvents> {
   public setOptions(options: Partial<ControllerOptions> = {}) {
     this.store.getState().setOptions(options);
     return this.store.getState().options;
+  }
+
+  /** Can `id` be dragged/resized/restyled/text-edited/deleted/re-linked
+   * right now, per the `isEditable` option? `false` for an unknown id. */
+  public isAnnotationEditable(id: Id): boolean {
+    const feature = this.store.getState().getFeature(id);
+    return !!feature && this.store.getState().options.isEditable(feature);
+  }
+
+  /** Is `id` rendered and hit-testable right now, per the `isVisible`
+   * option? `false` for an unknown id. */
+  public isAnnotationVisible(id: Id): boolean {
+    const feature = this.store.getState().getFeature(id);
+    return !!feature && this.store.getState().options.isVisible(feature);
   }
 
   /**

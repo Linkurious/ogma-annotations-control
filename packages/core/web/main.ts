@@ -2,7 +2,11 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 import { Ogma } from "@linkurious/ogma";
-import { AnnotationPanel, AnnotationToolbar } from "@linkurious/ogma-annotations/ui";
+import {
+  AnnotationPanel,
+  AnnotationToolbar,
+  TextAnnotationToolbar
+} from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
 import {
   Control,
@@ -20,6 +24,8 @@ class App {
   private annotationPanel: AnnotationPanel | null = null;
   // @ts-expect-error Used for debugging
   private annotationToolbar: AnnotationToolbar | null = null;
+  // @ts-expect-error Used for debugging
+  private textAnnotationToolbar: TextAnnotationToolbar | null = null;
   private buttons: {
     centerView: HTMLButtonElement;
     rotateCW: HTMLButtonElement;
@@ -43,7 +49,13 @@ class App {
     );
 
     //this.ogma.events.once = (e, h) => console.log("ogma.once", e, h); // Temporary fix for ogma typings
-    this.control = new Control(this.ogma);
+    this.control = new Control(this.ogma, {
+      // Editor-wide default for every Text annotation's author line - a
+      // note can still override this via its own style.authorStyle (see
+      // "sticky-with-author-example" in annotations-test.json, which
+      // does; "text-with-author-example" doesn't, and uses this instead).
+      authorStyle: { color: "#7c3aed", fontSize: 13 }
+    });
 
     this.buttons = {
       centerView: document.getElementById("center-view")! as HTMLButtonElement,
@@ -93,6 +105,7 @@ class App {
     this.setupKeyboardShortcuts();
     this.setupAnnotationPanel();
     this.setupAnnotationToolbar();
+    this.setupTextAnnotationToolbar();
   }
 
   private setupControlListeners() {
@@ -232,7 +245,11 @@ class App {
 
   private setupAnnotationPanel() {
     this.annotationPanel = new AnnotationPanel({
-      control: this.control
+      control: this.control,
+      // Text/sticky notes are handled by TextAnnotationToolbar (see
+      // setupTextAnnotationToolbar) - excluding "text" here keeps the
+      // docked panel from also popping up for the same selection.
+      enabledTypes: ["arrow", "box", "comment", "polygon"]
     });
   }
 
@@ -242,6 +259,17 @@ class App {
       control: this.control,
       onJsonExport: handleJsonExport,
       onSvgExport: handleSvgExport
+    });
+  }
+
+  /** Floating, per-selection style pill for Text annotations and sticky
+   * notes - anchored above the selection instead of docked like
+   * `AnnotationPanel`. `setupAnnotationPanel` excludes "text" from the
+   * docked panel's `enabledTypes` so the two don't both show for the same
+   * selection. */
+  private setupTextAnnotationToolbar() {
+    this.textAnnotationToolbar = new TextAnnotationToolbar({
+      control: this.control
     });
   }
 

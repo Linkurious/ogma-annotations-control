@@ -21,6 +21,15 @@ export interface TextStyle extends BoxStyle {
   borderRadius?: number;
   /** When true, text maintains constant size regardless of zoom level */
   fixedSize?: boolean;
+  /** Opt-in: when true, corner/edge-drag resize also updates fontScale, so
+   * the rendered font size scales with the box instead of the text
+   * rewrapping/truncating. Only set by defaultStickyNoteStyle. */
+  scaleFontOnResize?: boolean;
+  /** Accumulated multiplier applied to fontSize at render time:
+   * effectiveFontSize = fontSize * (fontScale ?? 1). Updated incrementally
+   * by TextHandler's corner/edge drag when scaleFontOnResize is true;
+   * absent (≡ 1) for every annotation that doesn't opt in. */
+  fontScale?: number;
   /**
    * Ghost text shown (via the textarea's native `placeholder` attribute)
    * while `content` is empty - disappears the instant the user types, no
@@ -28,13 +37,42 @@ export interface TextStyle extends BoxStyle {
    * `ControllerOptions.textPlaceholder` for this annotation.
    */
   placeholder?: string;
+  /** Bold the rendered/edited text. Absent (≡ "normal") for every
+   * annotation that doesn't opt in - no italic, no other weights for v1. */
+  fontWeight?: "normal" | "bold";
+  /**
+   * Whether to render `properties.author` as a one-line, ellipsis-truncated
+   * signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+   * author-visibility cell. No-op when `properties.author` is unset or
+   * blank. Hidden (≡ false) by default.
+   */
+  showAuthor?: boolean;
+  /**
+   * Per-annotation override for the author line's appearance. Overrides
+   * the global `ControllerOptions.authorStyle` for this annotation only -
+   * same precedence pattern as `placeholder` vs
+   * `ControllerOptions.textPlaceholder`. Falls back to a small built-in
+   * default (`DEFAULT_AUTHOR_STYLE` in `renderer/shapes/text.ts`) for any
+   * field neither this nor the global option sets.
+   */
+  authorStyle?: Partial<AuthorLineStyle>;
 }
+
+/** Style overrides for the author line rendered under a Text's content
+ * when `showAuthor` is true and `properties.author` is non-empty. Only
+ * the line-level subset of `TextStyle` - box properties (background,
+ * padding, borderRadius...) don't apply to it. */
+export type AuthorLineStyle = Pick<TextStyle, "font" | "fontSize" | "color" | "fontWeight">;
 
 export interface TextProperties extends Omit<BoxProperties, "type"> {
   type: "text";
 
   /**text to display*/
   content: string;
+  /** Author/signature line shown under the content when `style.showAuthor`
+   * is true. Set by the host app (via `properties.author` at creation or
+   * `control.update()`) - no built-in UI writes this string. */
+  author?: string;
   /** Width of the text box */
   width: number;
   /** Height of the text box */
@@ -50,6 +88,30 @@ export interface Text extends AnnotationFeature<GeoJSONPoint, TextProperties> {}
 export const isText = (
   a: AnnotationFeature<Geometry, AnnotationProps>
 ): a is Text => a.properties.type === "text";
+
+/**
+ * Heuristic "is this Text a sticky note" check. Sticky notes are not a
+ * distinct annotation type - they're `Text` created via
+ * `Control.enableStickyNoteDrawing()` with `defaultStickyNoteStyle` (see
+ * `api/drawing.ts`) - so there is no dedicated marker to check yet.
+ *
+ * Checks two of that preset's characteristic style values rather than just
+ * `scaleFontOnResize` alone: that flag's own doc comment above notes it's
+ * "only set by defaultStickyNoteStyle", but a host app is free to set it
+ * manually on a plain Text too, so pairing it with `placeholder` (which -
+ * unlike `content` - never gets cleared by typing) cuts down on that
+ * false-positive risk. Still a heuristic: a host that overrides
+ * `styles.stickyNote.placeholder` when calling `enableStickyNoteDrawing`/
+ * `AnnotationToolbar` will miss here.
+ *
+ * Kept as a single function (not inlined at each call site) so swapping in
+ * a dedicated marker later - e.g. a `style.preset` field - is a one-place
+ * change.
+ */
+export const isStickyNote = (a: Text): boolean => {
+  const style = a.properties.style;
+  return style?.scaleFontOnResize === true && style?.placeholder === "Quick note…";
+};
 
 /**
  * Default style configuration for text annotations.

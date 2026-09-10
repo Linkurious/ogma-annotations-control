@@ -73,6 +73,11 @@ export class Shapes extends Renderer<SVGLayer> {
         }
       }
     );
+    // isVisible is a function, not data - watch it separately so a fresh setOptions() call alone still re-renders.
+    this.store.subscribe(
+      (state) => state.options.isVisible,
+      this.throttleRender
+    );
   }
 
   render = (root: SVGSVGElement) => {
@@ -108,6 +113,7 @@ export class Shapes extends Renderer<SVGLayer> {
     const shapesRoot = this.shapesRoot!;
 
     const state = this.store.getState();
+    const isGeoActive = this.isGeoActive();
 
     // Get viewport bounds for culling
     const viewportBounds = this.getViewportBounds();
@@ -122,6 +128,8 @@ export class Shapes extends Renderer<SVGLayer> {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
 
+      if (this.hideIfNotVisible(feature)) continue;
+
       // Skip features outside viewport
       if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
         continue;
@@ -135,7 +143,8 @@ export class Shapes extends Renderer<SVGLayer> {
           shapesRoot,
           feature,
           existingElement,
-          state
+          state,
+          this.isExporting
         );
       else if (isComment(feature))
         existingElement = renderComment(
@@ -152,7 +161,8 @@ export class Shapes extends Renderer<SVGLayer> {
           state.options.minArrowHeight,
           state.options.maxArrowHeight,
           existingElement,
-          state
+          state,
+          isGeoActive
         );
       }
       if (existingElement) this.features.set(feature.id, existingElement);
@@ -193,6 +203,7 @@ export class Shapes extends Renderer<SVGLayer> {
       if (liveUpdates[feature.id]) {
         feature = { ...feature, ...liveUpdates[feature.id] } as Annotation;
       }
+      if (this.hideIfNotVisible(feature)) continue;
       if (!this.isExporting && !this.isFeatureVisible(feature, viewportBounds))
         continue;
 
@@ -226,6 +237,19 @@ export class Shapes extends Renderer<SVGLayer> {
     16,
     true
   );
+
+  // `ogma.geo.enabled()` can throw in environments where the geo module
+  // never got a chance to fully initialize (observed in the jsdom-based
+  // unit test harness, and plausible for a destroyed/mid-teardown Ogma
+  // instance a stray rAF-scheduled render fires against) - default to
+  // "not active" rather than let a render pass crash over this.
+  private isGeoActive(): boolean {
+    try {
+      return this.ogma.geo.enabled();
+    } catch {
+      return false;
+    }
+  }
 
   private getViewportBounds(): Bounds {
     const ogma = this.ogma;
@@ -273,6 +297,17 @@ export class Shapes extends Renderer<SVGLayer> {
         y0 > viewport[3]
       ) // feature is below viewport
     );
+  }
+
+  /** True if `feature` is hidden per `isVisible`, also removing any stale cached element for it (unlike viewport culling, this applies during export too). */
+  private hideIfNotVisible(feature: Annotation): boolean {
+    if (this.store.getState().options.isVisible(feature)) return false;
+    const existingElement = this.features.get(feature.id);
+    if (existingElement) {
+      existingElement.parentNode?.removeChild(existingElement);
+      this.features.delete(feature.id);
+    }
+    return true;
   }
 
   private getDefs(): SVGDefsElement {

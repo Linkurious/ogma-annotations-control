@@ -320,6 +320,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
   }
 
   public link(arrow: Arrow, target: Id | Node, side: Side) {
+    // links.add() below mutates arrow.properties.link directly, bypassing the store, so it's refused here too.
+    if (!this.store.getState().options.isEditable(arrow)) {
+      // eslint-disable-next-line no-console
+      console.error(`Cannot link annotation ${arrow.id}: not editable`);
+      return;
+    }
     let extremity = getArrowSide(arrow, side);
     const link = arrow.properties.link || {};
     let snap: Snap | null = null;

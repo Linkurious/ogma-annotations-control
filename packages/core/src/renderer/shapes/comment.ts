@@ -447,7 +447,8 @@ export function renderComment(
     mode !== COMMENT_MODE_COLLAPSED &&
     state.selectedFeatures.has(annotation.id) &&
     state.editingFeature !== annotation.id &&
-    state.options.showEditButton;
+    state.options.showEditButton &&
+    state.options.isEditable(annotation);
 
   // Render both states
   renderCollapsedIcon(iconGroup, annotation, state);

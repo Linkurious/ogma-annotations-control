@@ -38,6 +38,7 @@ export interface PanelVisibilityControl {
   once(event: string, handler: (...args: any[]) => void): unknown;
   getAnnotation(id: string | number): Annotation | undefined;
   isDrawing(): boolean;
+  isAnnotationEditable(id: string | number): boolean;
 }
 
 /**
@@ -50,6 +51,18 @@ export function attachPanelVisibility(
 ): () => void {
   // The annotation selected but not yet shown, and a timer that reveals it.
   let pending: Annotation | null = null;
+  // The annotation `onShow` was last called with (cleared on hide) - lets
+  // `handleUnselect` tell a real deselect apart from the stale `unselect`
+  // that clicking straight from one annotation to another also fires (see
+  // its own comment below).
+  let shown: Annotation | null = null;
+  // The id of whatever is actually selected right now, independent of
+  // pending/shown - a drag hides the panel (see `handleDragStart`) without
+  // the selection itself changing, so this is what `showPending` falls
+  // back to on `dragend` to reveal the *same* annotation again (at its new
+  // position/size) instead of silently staying hidden because nothing was
+  // freshly "pending". Cleared only on a real deselect or a multi-select.
+  let selectedId: string | number | null = null;
   let showTimer: ReturnType<typeof setTimeout> | null = null;
 
   const clearTimer = () => {
@@ -62,9 +75,32 @@ export function attachPanelVisibility(
   const showPending = () => {
     clearTimer();
     if (pending) {
-      onShow(pending);
+      const ann = pending;
       pending = null;
+      // Selected-but-not-editable: don't reveal a panel with nothing safe to
+      // change, and hide() clears a stale one left over from the previous selection.
+      if (control.isAnnotationEditable(ann.id)) {
+        shown = ann;
+        onShow(ann);
+      } else {
+        hide();
+      }
+      return;
     }
+    if (!shown && selectedId != null) {
+      const ann = control.getAnnotation(selectedId);
+      if (ann && control.isAnnotationEditable(ann.id)) {
+        shown = ann;
+        onShow(ann);
+      }
+    }
+  };
+
+  const hide = () => {
+    clearTimer();
+    pending = null;
+    shown = null;
+    onHide();
   };
 
   const handleSelect = (sel: { ids: (string | number)[] }) => {
@@ -73,6 +109,7 @@ export function attachPanelVisibility(
       const ann = control.getAnnotation(sel.ids[0]);
       if (!ann) return;
 
+      selectedId = sel.ids[0];
       pending = ann as Annotation;
 
       if (control.isDrawing()) {
@@ -89,21 +126,32 @@ export function attachPanelVisibility(
       // cancels the timer first and avoids a show/hide flicker.
       showTimer = setTimeout(showPending, SHOW_DELAY_MS);
     } else {
-      pending = null;
-      onHide();
+      selectedId = null;
+      hide();
     }
   };
 
-  const handleDragStart = () => {
-    clearTimer();
-    pending = null;
-    onHide();
-  };
+  // A move *and* a resize both fire dragstart/dragend around the drag
+  // (verified against the real interaction, not just the generic move
+  // case) - hide for its duration either way, `selectedId` staying set is
+  // what lets `showPending` on `dragend` bring it back at the new
+  // position/size afterward instead of leaving it hidden for good.
+  const handleDragStart = () => hide();
 
-  const handleUnselect = () => {
-    clearTimer();
-    pending = null;
-    onHide();
+  const handleUnselect = (evt: { ids: (string | number)[] }) => {
+    // Clicking straight from one selected annotation to another fires
+    // `select` for the *new* one first, then `unselect` for the old one
+    // (not the more intuitive other way around) - so by the time this
+    // runs, `pending`/`shown` may already be the new annotation, and this
+    // `unselect` is stale: it's not "nothing is selected anymore", it's
+    // fallout from the old selection losing out to the new one. Only treat
+    // it as a real deselect when it actually names our own pending/shown
+    // annotation - otherwise ignore it and leave the newer selection's
+    // pending timer / already-shown panel alone.
+    const current = pending ?? shown;
+    if (current && !evt.ids.includes(current.id)) return;
+    selectedId = null;
+    hide();
   };
 
   control.on("select", handleSelect);

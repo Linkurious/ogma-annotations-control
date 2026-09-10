@@ -206,30 +206,37 @@ export abstract class Handler<
   }
 
   setAnnotation(annotation: T | null): void {
+    // Guard against null container (e.g., in headless tests)
+    const container: HTMLElement | null = this.ogma.getContainer();
+    const win = container ? getBrowserWindow() || container : null;
+
+    // Remove before re-adding: setAnnotation can be called again while
+    // already active (switching to another same-type sibling), and without
+    // this each call would pile on another copy of these listeners.
+    if (container && win) {
+      win.removeEventListener("mousemove", this.handleMouseMove);
+      win.removeEventListener("mouseup", this.handleMouseUp);
+      container.removeEventListener("mousedown", this.handleMouseDown, true);
+      win.removeEventListener("click", this.onClick as EventListener, true);
+    }
+
     this.annotation = annotation ? annotation.id : null;
     if (this.annotation !== null) {
-      // Guard against null container (e.g., in headless tests)
-      const container: HTMLElement | null = this.ogma.getContainer();
-      if (container) {
-        const win = getBrowserWindow() || container;
+      if (container && win) {
         win.addEventListener("mousemove", this.handleMouseMove);
         win.addEventListener("mouseup", this.handleMouseUp, false);
         container.addEventListener("mousedown", this.handleMouseDown, true);
         win.addEventListener("click", this.onClick as EventListener, true);
       }
     } else {
-      // Guard against null container (e.g., in headless tests)
-      const container: HTMLElement | null = this.ogma.getContainer();
-      if (container) {
-        const win = getBrowserWindow() || container;
-        win.removeEventListener("mousemove", this.handleMouseMove);
-        win.removeEventListener("mouseup", this.handleMouseUp);
-        container.removeEventListener("mousedown", this.handleMouseDown);
-        win.removeEventListener("click", this.onClick as EventListener);
-      }
       this.clearDragState();
       this.setCursor(cursors.default);
     }
+  }
+
+  /** Is `id` the annotation this handler is currently tracking? */
+  isAnnotation(id: Id): boolean {
+    return this.annotation === id;
   }
 
   getAnnotation(withLiveUpdates?: boolean): T | undefined {
@@ -259,8 +266,12 @@ export abstract class Handler<
     if (!this.isActive()) return;
     // Only delete the annotation if it's being drawn (not an existing annotation being edited)
     const state = this.store.getState();
-    if (state.drawingFeature === this.annotation)
+    if (state.drawingFeature === this.annotation) {
       state.removeFeature(this.annotation!);
+      // Otherwise drawingFeature stays stuck on the now-deleted id and
+      // isDrawing() keeps reporting true forever after a cancel.
+      this.store.setState({ drawingFeature: null });
+    }
     this.stopEditing();
   }
 

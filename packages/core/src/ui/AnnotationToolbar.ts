@@ -129,7 +129,7 @@ export class AnnotationToolbar {
 
     const container = options.container ?? document.body;
     this.root = document.createElement("div");
-    this.root.className = "annotation-toolbar";
+    this.root.className = "annotation-toolbar oa-toolbar oa-toolbar-bar";
     this.root.dataset.placement =
       options.placement ?? DEFAULT_TOOLBAR_PLACEMENT;
     this.root.dataset.orientation =
@@ -181,7 +181,12 @@ export class AnnotationToolbar {
       this.root.appendChild(
         this.button(null, "trash", "Delete selected", () => {
           const selected = this.control.getSelectedAnnotations();
-          if (selected.features.length > 0) this.control.remove(selected);
+          // Filter locked ones out here too, so the rest of a mixed selection still visibly deletes.
+          const editable = selected.features.filter((f) =>
+            this.control.isAnnotationEditable(f.id)
+          );
+          if (editable.length > 0)
+            this.control.remove({ type: "FeatureCollection", features: editable });
         })
       );
     }
@@ -311,6 +316,7 @@ export class AnnotationToolbar {
     onClick: () => void
   ): HTMLButtonElement {
     const button = document.createElement("button");
+    button.className = "oa-toolbar-button";
     button.dataset.tooltip = tooltip;
     button.innerHTML = svgIcon(icon, 16);
     button.addEventListener("click", onClick);
@@ -320,7 +326,7 @@ export class AnnotationToolbar {
 
   private separator(): HTMLElement {
     const el = document.createElement("span");
-    el.className = "separator";
+    el.className = "oa-toolbar-separator";
     return el;
   }
 
