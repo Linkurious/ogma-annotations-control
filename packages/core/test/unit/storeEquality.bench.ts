@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { describe, test } from "vitest";
 import { temporalEquality } from "../../src/store";
 import type { Annotation, Arrow, Id, Text } from "../../src/types";
 import { createArrow } from "../../src/types/features/Arrow";
@@ -38,12 +38,16 @@ describe("temporalEquality vs JSON.stringify - Small (10 features)", () => {
   const stateA = createTestState(10);
   const stateB = { ...stateA, features: { ...stateA.features } };
 
-  bench("temporalEquality", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality", async ({ bench }) => {
+    await bench("temporalEquality", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify", async ({ bench }) => {
+    await bench("JSON.stringify", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
 
@@ -51,12 +55,16 @@ describe("temporalEquality vs JSON.stringify - Medium (100 features)", () => {
   const stateA = createTestState(100);
   const stateB = { ...stateA, features: { ...stateA.features } };
 
-  bench("temporalEquality", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality", async ({ bench }) => {
+    await bench("temporalEquality", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify", async ({ bench }) => {
+    await bench("JSON.stringify", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
 
@@ -64,12 +72,16 @@ describe("temporalEquality vs JSON.stringify - Large (1000 features)", () => {
   const stateA = createTestState(1000);
   const stateB = { ...stateA, features: { ...stateA.features } };
 
-  bench("temporalEquality", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality", async ({ bench }) => {
+    await bench("temporalEquality", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify", async ({ bench }) => {
+    await bench("JSON.stringify", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
 
@@ -86,12 +98,16 @@ describe("With coordinate change - 100 features (early detection)", () => {
     }
   } as Text;
 
-  bench("temporalEquality (detects change early)", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality (detects change early)", async ({ bench }) => {
+    await bench("temporalEquality (detects change early)", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify (must stringify all)", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify (must stringify all)", async ({ bench }) => {
+    await bench("JSON.stringify (must stringify all)", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
 
@@ -108,12 +124,16 @@ describe("With coordinate change - 1000 features (late detection)", () => {
     }
   } as Text;
 
-  bench("temporalEquality (detects change at middle)", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality (detects change at middle)", async ({ bench }) => {
+    await bench("temporalEquality (detects change at middle)", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify (must stringify all)", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify (must stringify all)", async ({ bench }) => {
+    await bench("JSON.stringify (must stringify all)", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
 
@@ -133,12 +153,16 @@ describe("With style change - 1000 features", () => {
     }
   } as Arrow;
 
-  bench("temporalEquality (detects style change)", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality (detects style change)", async ({ bench }) => {
+    await bench("temporalEquality (detects style change)", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify (detects style change)", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify (detects style change)", async ({ bench }) => {
+    await bench("JSON.stringify (detects style change)", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
 
@@ -146,11 +170,15 @@ describe("No changes (identical states) - 1000 features", () => {
   const stateA = createTestState(1000);
   const stateB = stateA; // Same reference
 
-  bench("temporalEquality (identical states)", () => {
-    temporalEquality(stateA, stateB);
+  test("temporalEquality (identical states)", async ({ bench }) => {
+    await bench("temporalEquality (identical states)", () => {
+      temporalEquality(stateA, stateB);
+    }).run();
   });
 
-  bench("JSON.stringify (identical states)", () => {
-    JSON.stringify(stateA) === JSON.stringify(stateB);
+  test("JSON.stringify (identical states)", async ({ bench }) => {
+    await bench("JSON.stringify (identical states)", () => {
+      JSON.stringify(stateA) === JSON.stringify(stateB);
+    }).run();
   });
 });
