@@ -273,14 +273,24 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               // Create copies BEFORE any deletions to preserve history correctly
               const newFeatures = { ...features };
               const newLiveUpdates = { ...liveUpdates };
+              const newSelection = new Set(state.selectedFeatures);
 
-              // Delete all marked features from the copies
+              // Delete all marked features from the copies. Also drop them
+              // from the selection - otherwise a deleted-but-still-selected
+              // id never fires `unselect` (selectedFeatures unchanged), so
+              // any panel/toolbar anchored to it (e.g. the Text style pill)
+              // stays on screen pointing at a now-gone annotation.
               toDelete.forEach((deleteId) => {
                 delete newFeatures[deleteId];
                 delete newLiveUpdates[deleteId];
+                newSelection.delete(deleteId);
               });
 
-              return { features: newFeatures, liveUpdates: newLiveUpdates };
+              return {
+                features: newFeatures,
+                liveUpdates: newLiveUpdates,
+                selectedFeatures: newSelection
+              };
             }),
 
           addFeature: (feature) => {
