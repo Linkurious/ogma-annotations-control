@@ -443,11 +443,19 @@ function drawContent(
       `translate(${x + padding}, ${y + padding})`
     );
 
+    // Each line gets an absolute `y` (line index * lineHeight), not a `dy`
+    // chained off the previous tspan - a blank line's tspan has zero
+    // characters, and browsers don't advance the text-layout cursor by a
+    // tspan's dy when it has no glyphs to attach it to. With relative dy
+    // chaining, that silently swallows the blank line's vertical space:
+    // consecutive blank lines (or any blank line at all) end up rendering
+    // as if they were never there. An absolute y per line has no such
+    // dependency on what the previous tspan did or didn't contain.
     const firstDy = firstLineDy(fontString, lineHeight);
     visibleLines.forEach((line, i) => {
       const tspan = createSVGElement<SVGTSpanElement>("tspan");
       tspan.setAttribute("x", "0");
-      tspan.setAttribute("dy", `${i === 0 ? firstDy : lineHeight}`);
+      tspan.setAttribute("y", `${firstDy + i * lineHeight}`);
       appendLineWithLinks(tspan, line.text, linkMatcher);
       textEl.appendChild(tspan);
     });
