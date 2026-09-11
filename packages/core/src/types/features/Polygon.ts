@@ -10,19 +10,30 @@ export interface PolygonStyle extends BoxStyle {}
 /**
  * Live node-containment metadata for a polygon acting as a "region".
  *
- * When present, the polygon's ring is grown — never recomputed from
- * scratch — to keep enclosing `nodeIds` whenever one of them moves: each
- * moved member's padded footprint is unioned into the existing ring, so
- * untouched parts of the (possibly hand-drawn) contour are left byte-for-byte
- * alone. Membership is sticky: a node stays tracked once it's a member, and
- * a node dragged into the polygon's current boundary from outside joins
- * automatically. See {@link Regions} for the reactive behavior.
+ * When present, the polygon reshapes on every member move (drag or layout)
+ * via a metaball blend — a padded circle per member plus a smooth
+ * "wasp-waist" connector for every pair close enough to blend, unioned
+ * together. Membership is sticky: a node stays tracked once it's a member,
+ * and a node dragged into the polygon's current boundary from outside
+ * joins automatically. See {@link Regions} for the reactive behavior.
  */
 export interface PolygonRegion {
   /** Ids of graph nodes this polygon tracks and reshapes to contain */
   nodeIds: Id[];
   /** World-units buffer kept around each member node (default 20) */
   padding?: number;
+  /**
+   * World-units budget for how far apart two members' circles can be
+   * (beyond touching) and still blend into one shape, rather than reading
+   * as separate blobs. Computed once, automatically, when tracking starts
+   * — the average distance from each member's position to the polygon's
+   * *initial* contour (the drawn shape at `createRegion`/`trackRegionNodes`
+   * time), so a loosely hand-drawn region stays blended longer than a
+   * tightly seeded one. Frozen after that: not recomputed as the shape
+   * changes. Falls back to {@link REGION_METABALL_DEFAULT_REACH} when
+   * absent (e.g. a hand-authored `region` property).
+   */
+  reach?: number;
 }
 
 export interface PolygonProperties extends AnnotationProps {

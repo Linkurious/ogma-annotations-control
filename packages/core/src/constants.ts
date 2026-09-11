@@ -63,11 +63,21 @@ export const HL_BRIGHTEN = 0.2;
 
 /** Default world-units buffer kept around each node in a tracked region */
 export const REGION_DEFAULT_PADDING = 20;
-/** Points generated around each node's circumference when growing a region */
+/** Points generated around each node's circumference when building a
+ *  region's per-member circle */
 export const REGION_CIRCLE_POINTS_PER_NODE = 16;
-/** Half-width of the bridging corridor used to weld a disjoint member back
- *  into a region's ring (world units) */
-export const REGION_BRIDGE_HALF_WIDTH = 4;
+/** Metaball connector tuning (see {@link buildMetaballConnector}) — spread
+ *  (0..1) is how far the waist's sides pull out toward the tangent lines
+ *  between two member circles, handle size shapes how rounded vs. pinched
+ *  the blend looks. */
+export const REGION_METABALL_SPREAD = 0.5;
+export const REGION_METABALL_HANDLE_SIZE = 2.4;
+export const REGION_METABALL_SEGMENTS = 16;
+/** Fallback connect-gap budget (world units) for a region with no
+ *  `reach` recorded — normally every region gets one computed
+ *  automatically from its initial contour (see {@link PolygonRegion}); this
+ *  only covers hand-authored `region` properties that skip it. */
+export const REGION_METABALL_DEFAULT_REACH = 60;
 /** Debounce (ms) before recomputing region shapes after a node move batch */
 export const REGION_COMMIT_DEBOUNCE_MS = 1;
 /** Douglas-Peucker tolerance (world units) applied after each ring union.

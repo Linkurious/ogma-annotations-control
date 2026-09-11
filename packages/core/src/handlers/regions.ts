@@ -2,10 +2,13 @@ import type { NodeList, Ogma, Point, NodesEvent } from "@linkurious/ogma";
 import * as martinez from "martinez-polygon-clipping";
 import type { BBox } from "rbush";
 import {
-  REGION_BRIDGE_HALF_WIDTH,
   REGION_CIRCLE_POINTS_PER_NODE,
   REGION_COMMIT_DEBOUNCE_MS,
   REGION_DEFAULT_PADDING,
+  REGION_METABALL_DEFAULT_REACH,
+  REGION_METABALL_HANDLE_SIZE,
+  REGION_METABALL_SEGMENTS,
+  REGION_METABALL_SPREAD,
   REGION_SIMPLIFY_TOLERANCE
 } from "../constants";
 import { Index } from "../interaction/spatialIndex";
@@ -15,30 +18,42 @@ import { createPolygon, isPolygon } from "../types";
 import { isPointInsidePolygon } from "./snapping/polygon";
 import { getBbox } from "../utils/utils";
 import { updatePolygonBbox, simplifyPolygon } from "../utils/polygon";
+import { buildMetaballConnector } from "../utils/metaball";
 import { distanceToSegment } from "../utils/geom";
 
 type XYR = { x: number; y: number; radius: number };
 type Ring = number[][];
 
 /**
- * Tracks polygons acting as live node-containment "regions" and grows their
- * ring to keep enclosing their member nodes.
+ * Tracks polygons acting as live node-containment "regions" and reshapes
+ * them to keep enclosing their member nodes.
  *
- * Reshaping is additive, not a from-scratch recompute: each moved member's
- * padded footprint is unioned (`martinez-polygon-clipping`) into the
- * polygon's *existing* ring, so parts of a hand-drawn contour that aren't
- * near the moved node are left completely untouched. If a member ends up
- * disjoint from the current ring (dragged far away in one jump), a thin
- * bridging corridor is unioned in first to weld it back into one shape.
+ * Reshaping is a full recompute from current member positions, not growth
+ * onto a stale ring: every member's padded circle plus a
+ * {@link buildMetaballConnector metaball connector} for every pair of
+ * members close enough to blend are unioned together
+ * (`martinez-polygon-clipping`) into one shape. An earlier version grew
+ * each moved member's footprint onto the polygon's *existing* ring and
+ * welded in a straight corridor when a member landed disjoint from it —
+ * cheap for a single dragged node, but a layout re-run scattering several
+ * members at once produced a bundle of straight corridors reading as ugly
+ * tunnels. A from-scratch metaball recompute has no "existing ring" to
+ * weld onto, so it has no tunnels to produce: disjoint members just read
+ * as separate blobs until they're close enough to blend again.
+ *
+ * The one place the *existing* shape still matters is before any member
+ * has moved: `createRegion`'s initial hull and a hand-drawn
+ * `trackRegionNodes` contour are left exactly as they are until the first
+ * move — the metaball model only takes over once nodes actually start
+ * moving (drag or layout).
  *
  * Membership is sticky and geometric: a node becomes a member either by
  * being listed in `polygon.properties.region.nodeIds` when tracking starts,
  * or by being dragged into an already-tracked polygon's current boundary
- * (join-on-entry). Once a member, a node stays tracked — moving it away
- * makes the region grow to keep enclosing it — until it's removed from the
- * graph or the polygon stops being tracked. The ring never shrinks on its
- * own: a bulge grown to reach a member stays even if that member later
- * moves back inside.
+ * (join-on-entry). Once a member, a node stays tracked until it's removed
+ * from the graph or the polygon stops being tracked — moving away just
+ * means its circle drifts apart from the rest of the blob rather than
+ * dropping out.
  *
  * Structurally this mirrors {@link Links}: a serializable field on the
  * feature (`polygon.properties.region`, parallel to `arrow.properties.link`)
@@ -80,14 +95,13 @@ export class Regions {
       throw new Error("createRegion requires at least one node id");
 
     const padding = options?.padding ?? REGION_DEFAULT_PADDING;
-    const region: PolygonRegion = { nodeIds: [...nodeIds], padding };
 
     // The initial shape has no hand-drawn contour to preserve, so a solid
-    // convex hull over the padded seed nodes (rather than folding each in
-    // one at a time via union) is what we want here — union-folding widely
-    // spaced seeds one by one can weld them with thin corridors instead of
-    // filling the area between them. Subsequent single-node moves grow this
-    // hull additively, per {@link _growRingForNode}.
+    // convex hull over the padded seed nodes (rather than a metaball blend)
+    // is what we want here — a hull fills the area between widely spaced
+    // seeds solidly, where a metaball blend would only weld a thin neck
+    // between them. Any subsequent move switches to the metaball model,
+    // per {@link _computeMetaballRing}.
     const xyr = this.ogma.getNodes(nodeIds).getAttributes([
       "x",
       "y",
@@ -100,10 +114,14 @@ export class Regions {
     if (ring.length < 4)
       throw new Error("createRegion: no valid node positions found");
 
+    // Freeze the metaball connect-gap budget from how spread out this
+    // initial shape is - see {@link PolygonRegion.reach}.
+    const reach = this._averageDistanceToRing(ring, xyr);
+
     const polygon = createPolygon([ring as [number, number][]], {
       style: options?.style
     });
-    polygon.properties.region = region;
+    polygon.properties.region = { nodeIds: [...nodeIds], padding, reach };
 
     this.store.getState().addFeature(polygon);
     return polygon;
@@ -129,11 +147,17 @@ export class Regions {
     );
     const ids = inside.nodes.getId();
     const positions = inside.nodes.getPosition();
+    const memberPositions = positions.filter((p) => isPointInsidePolygon(p, ring));
     const nodeIds = ids.filter((_, i) => isPointInsidePolygon(positions[i], ring));
+
+    // Freeze the metaball connect-gap budget from how loosely this
+    // contour was drawn around its members - see {@link PolygonRegion.reach}.
+    const reach = this._averageDistanceToRing(ring, memberPositions);
 
     const region: PolygonRegion = {
       nodeIds,
-      padding: options?.padding ?? REGION_DEFAULT_PADDING
+      padding: options?.padding ?? REGION_DEFAULT_PADDING,
+      reach
     };
     state.updateFeature(polygonId, {
       properties: { ...polygon.properties, region }
@@ -268,20 +292,17 @@ export class Regions {
   private _handleNodesMoved(nodes: NodeList) {
     if (!nodes.size || this.membership.size === 0) return;
     const ids = nodes.getId();
-    // polygonId -> node ids that need folding into its ring this batch
-    // (kept small and specific, not "all members", so each frame only
-    // touches the local area around whatever actually moved).
-    const affected = new Map<Id, Set<Id>>();
-    const addAffected = (polygonId: Id, nodeId: Id) => {
-      if (!affected.has(polygonId)) affected.set(polygonId, new Set());
-      affected.get(polygonId)!.add(nodeId);
-    };
+    // Which polygons need a reshape this batch. Unlike the old growth
+    // model, a full recompute reads *every* current member's position
+    // regardless of which one moved, so this only needs to track which
+    // polygons are touched, not which specific nodes moved.
+    const touched = new Set<Id>();
 
     ids.forEach((nodeId) => {
       const owningRegions = this.nodeToRegions.get(nodeId);
       if (owningRegions && owningRegions.size > 0) {
         // Sticky member: always follow, no containment check needed.
-        owningRegions.forEach((polygonId) => addAffected(polygonId, nodeId));
+        owningRegions.forEach((polygonId) => touched.add(polygonId));
         return;
       }
 
@@ -295,11 +316,11 @@ export class Regions {
         const ring = polygon.geometry.coordinates[0];
         if (!isPointInsidePolygon(position, ring)) return;
         this._addMember(polygon.id, nodeId);
-        addAffected(polygon.id, nodeId);
+        touched.add(polygon.id);
       });
     });
 
-    if (affected.size > 0) this._reshapeAndCommit(affected);
+    if (touched.size > 0) this._reshapeAndCommit(touched);
   }
 
   private _addMember(polygonId: Id, nodeId: Id) {
@@ -321,33 +342,32 @@ export class Regions {
       .filter((f): f is Polygon => isPolygon(f) && !!f.properties.region);
   }
 
-  // --- reshaping: grow, never recompute from scratch ---
+  // --- reshaping: full metaball recompute from current member positions ---
 
-  private _reshapeAndCommit(affected: Map<Id, Set<Id>>) {
+  private _reshapeAndCommit(polygonIds: Set<Id>) {
     const state = this.store.getState();
     const updates: Record<Id, DeepPartial<Annotation>> = {};
 
-    affected.forEach((nodeIds, polygonId) => {
+    polygonIds.forEach((polygonId) => {
       // Merged (committed + live) so a rapid burst of debounced frames
-      // folds onto the *latest* ring rather than restarting from a stale
-      // committed base each time.
+      // reads the *latest* metadata rather than a stale committed base.
       const polygon = state.getMergedFeature(polygonId);
       if (!polygon || !isPolygon(polygon) || !polygon.properties.region) return;
 
       const region = polygon.properties.region;
       const padding = region.padding ?? REGION_DEFAULT_PADDING;
+      const reach = region.reach ?? REGION_METABALL_DEFAULT_REACH;
+      const memberIds = Array.from(this.membership.get(polygonId) ?? []);
+      if (memberIds.length === 0) return;
 
-      let ring = polygon.geometry.coordinates[0] as Ring;
-      const xyr = this.ogma.getNodes(Array.from(nodeIds)).getAttributes([
+      const xyr = this.ogma.getNodes(memberIds).getAttributes([
         "x",
         "y",
         "radius"
       ]) as XYR[];
-      xyr.forEach(({ x, y, radius }) => {
-        ring = this._growRingForNode(ring, x, y, (radius || 0) + padding) ?? ring;
-      });
+      const ring = this._computeMetaballRing(xyr, padding, reach);
+      if (!ring) return;
 
-      const memberIds = Array.from(this.membership.get(polygonId) ?? []);
       const updated: Polygon = {
         ...polygon,
         properties: {
@@ -371,34 +391,128 @@ export class Regions {
   }
 
   /**
-   * Grow `ring` to enclose a padded circle around (x, y), unioning it in.
-   * If the circle is already fully contained, the ring is returned
-   * untouched (byte-identical) — the common case for most member moves.
-   * If the circle is disjoint from the ring, a thin bridging corridor is
-   * welded in first so the result stays a single connected shape.
+   * Builds a region's ring from scratch: a padded circle per member plus a
+   * {@link buildMetaballConnector} for every pair close enough to blend,
+   * all unioned together.
+   *
+   * Every member has to end up enclosed by the *one* ring a `Polygon`
+   * feature can hold — sticky membership means "stays visually contained",
+   * not "drops out once it's inconvenient" — so a union-find over the
+   * in-range connectors tracks which members are still geometrically
+   * separate afterwards, and each remaining gap gets exactly one bridging
+   * weld to its nearest other cluster (never the full O(n^2) mesh, which
+   * would read as spaghetti again). The weld reuses the *same* metaball
+   * connector shape with its distance cutoff lifted, rather than falling
+   * back to the old rigid straight corridor — so even a member dragged far
+   * away gets one smooth tapered neck instead of a straight tunnel.
    */
-  private _growRingForNode(
-    ring: Ring | undefined,
-    x: number,
-    y: number,
-    radius: number
+  private _computeMetaballRing(
+    members: XYR[],
+    padding: number,
+    maxGap: number
   ): Ring | undefined {
-    const circle = this._buildCircle(x, y, radius);
-    if (!ring) return circle;
-    if (this._isCircleInsideRing(ring, x, y, radius)) return ring;
+    const n = members.length;
+    if (n === 0) return undefined;
+    const circles = members.map(({ x, y, radius }) => ({
+      x,
+      y,
+      r: (radius || 0) + padding
+    }));
+    if (n === 1) return this._buildCircle(circles[0].x, circles[0].y, circles[0].r);
 
-    const direct = this._unionRings(ring, circle);
-    if (direct) return direct;
+    const shapes: Ring[] = circles.map((c) => this._buildCircle(c.x, c.y, c.r));
 
-    // Disjoint: weld a corridor from the ring's closest edge point to the
-    // node, then union the circle in — this only ever touches a thin strip
-    // plus the local area the node landed in, leaving the rest of the ring
-    // alone.
-    const closest = this._closestPointOnRing(ring, { x, y });
-    const corridor = this._buildCorridor(closest, { x, y });
-    const bridged = corridor ? this._unionRings(ring, corridor) : undefined;
-    if (!bridged) return ring;
-    return this._unionRings(bridged, circle) ?? bridged;
+    const parent = circles.map((_, i) => i);
+    const find = (i: number): number =>
+      parent[i] === i ? i : (parent[i] = find(parent[i]));
+    const union = (a: number, b: number) => {
+      const ra = find(a);
+      const rb = find(b);
+      if (ra !== rb) parent[ra] = rb;
+    };
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const connector = buildMetaballConnector(
+          circles[i],
+          circles[j],
+          REGION_METABALL_SPREAD,
+          REGION_METABALL_HANDLE_SIZE,
+          maxGap,
+          REGION_METABALL_SEGMENTS
+        );
+        if (connector) {
+          shapes.push(this._closeRing(connector));
+          union(i, j);
+        }
+      }
+    }
+
+    // Weld remaining clusters together, closest gap first, until fully
+    // connected — at most n-1 extra welds.
+    let rootCount = new Set(circles.map((_, i) => find(i))).size;
+    while (rootCount > 1) {
+      let closest: { i: number; j: number; d: number } | undefined;
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          if (find(i) === find(j)) continue;
+          const d = Math.hypot(circles[i].x - circles[j].x, circles[i].y - circles[j].y);
+          if (!closest || d < closest.d) closest = { i, j, d };
+        }
+      }
+      if (!closest) break;
+      const weld = buildMetaballConnector(
+        circles[closest.i],
+        circles[closest.j],
+        REGION_METABALL_SPREAD,
+        REGION_METABALL_HANDLE_SIZE,
+        Infinity, // unbounded: this pair must connect regardless of distance
+        REGION_METABALL_SEGMENTS
+      );
+      if (weld) shapes.push(this._closeRing(weld));
+      union(closest.i, closest.j);
+      rootCount = new Set(circles.map((_, i) => find(i))).size;
+    }
+
+    const components = this._collapseRings(shapes);
+    if (components.length === 0) return undefined;
+    if (components.length === 1) return components[0];
+    // Guaranteed connected by construction above; only reachable if
+    // martinez itself failed to union two overlapping shapes (numerical
+    // edge case) — fall back to the largest piece rather than throwing.
+    return components.reduce((best, ring) =>
+      this._ringArea(ring) > this._ringArea(best) ? ring : best
+    );
+  }
+
+  /** Repeatedly unions overlapping/connected rings together until no pair
+   *  merges any further (fixed point) — order-independent, so it doesn't
+   *  matter which circle or connector was pushed first. Membership counts
+   *  are small, so the worst-case O(n^2) union attempts stay cheap. */
+  private _collapseRings(rings: Ring[]): Ring[] {
+    let list = rings;
+    let merged = true;
+    while (merged) {
+      merged = false;
+      for (let i = 0; i < list.length && !merged; i++) {
+        for (let j = i + 1; j < list.length; j++) {
+          const union = this._unionRings(list[i], list[j]);
+          if (union) {
+            list = [union, ...list.filter((_, k) => k !== i && k !== j)];
+            merged = true;
+            break;
+          }
+        }
+      }
+    }
+    return list;
+  }
+
+  private _ringArea(ring: Ring): number {
+    let sum = 0;
+    for (let i = 0; i < ring.length - 1; i++)
+      sum += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+    return Math.abs(sum) / 2;
   }
 
   private _buildCircle(x: number, y: number, radius: number): Ring {
@@ -411,14 +525,14 @@ export class Regions {
     return points;
   }
 
-  private _isCircleInsideRing(
-    ring: Ring,
-    x: number,
-    y: number,
-    radius: number
-  ): boolean {
-    if (!isPointInsidePolygon({ x, y }, ring)) return false;
-    return this._distanceToRing(ring, { x, y }) >= radius;
+  /** Average, over `points`, of each point's distance to its nearest point
+   *  on `ring` — used once, at `createRegion`/`trackRegionNodes` time, to
+   *  freeze {@link PolygonRegion.reach} from how loosely the initial shape
+   *  was drawn around its members. */
+  private _averageDistanceToRing(ring: Ring, points: Point[]): number {
+    if (points.length === 0) return REGION_METABALL_DEFAULT_REACH;
+    const total = points.reduce((sum, p) => sum + this._distanceToRing(ring, p), 0);
+    return total / points.length;
   }
 
   private _distanceToRing(ring: Ring, point: Point): number {
@@ -432,58 +546,13 @@ export class Regions {
     return min;
   }
 
-  private _closestPointOnRing(ring: Ring, point: Point): Point {
-    let best: Point = { x: ring[0][0], y: ring[0][1] };
-    let bestDist = Infinity;
-    for (let i = 0; i < ring.length - 1; i++) {
-      const ax = ring[i][0];
-      const ay = ring[i][1];
-      const bx = ring[i + 1][0];
-      const by = ring[i + 1][1];
-      const dx = bx - ax;
-      const dy = by - ay;
-      const lenSq = dx * dx + dy * dy;
-      let t = lenSq === 0 ? 0 : ((point.x - ax) * dx + (point.y - ay) * dy) / lenSq;
-      t = Math.max(0, Math.min(1, t));
-      const px = ax + t * dx;
-      const py = ay + t * dy;
-      const d = (px - point.x) ** 2 + (py - point.y) ** 2;
-      if (d < bestDist) {
-        bestDist = d;
-        best = { x: px, y: py };
-      }
-    }
-    return best;
-  }
-
-  /** Thin quad from `a` to `b`, overshot at both ends so it reliably
-   *  overlaps whatever it's unioned with next (avoids exact-tangency gaps). */
-  private _buildCorridor(a: Point, b: Point): Ring | undefined {
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const len = Math.hypot(dx, dy);
-    if (len === 0) return undefined;
-    const ux = dx / len;
-    const uy = dy / len;
-    const overshoot = REGION_BRIDGE_HALF_WIDTH * 1.5;
-    const sx = a.x - ux * overshoot;
-    const sy = a.y - uy * overshoot;
-    const ex = b.x + ux * overshoot;
-    const ey = b.y + uy * overshoot;
-    const px = -uy * REGION_BRIDGE_HALF_WIDTH;
-    const py = ux * REGION_BRIDGE_HALF_WIDTH;
-    return [
-      [sx + px, sy + py],
-      [ex + px, ey + py],
-      [ex - px, ey - py],
-      [sx - px, sy - py],
-      [sx + px, sy + py]
-    ];
-  }
-
   /** Union two closed rings; returns the merged ring only when the result
-   *  is a single connected polygon (undefined if it came out disjoint).
-   *  Simplified afterwards — repeated near-tangent unions otherwise pile up
+   *  is a single connected polygon with no interior hole (undefined if it
+   *  came out disjoint). A hole can legitimately appear when members form
+   *  a ring shape (each only blending with its neighbors) — same "one
+   *  solid boundary, no see-through gap" policy drops it and keeps the
+   *  exterior, rather than surfacing a hollow region. Simplified
+   *  afterwards — repeated near-tangent unions otherwise pile up
    *  near-duplicate/collinear vertices without bound over many moves. */
   private _unionRings(a: Ring, b: Ring): Ring | undefined {
     let result: number[][][][] | null;
@@ -502,8 +571,8 @@ export class Regions {
   }
 
   /** Andrew's monotone-chain convex hull. Used only for the initial shape
-   *  at {@link createRegion} time — ongoing reshaping never recomputes a
-   *  hull, it grows the existing ring additively instead. */
+   *  at {@link createRegion} time — ongoing reshaping never touches this,
+   *  it's a metaball recompute over current member positions instead. */
   private _convexHull(points: Ring): Ring {
     const pts = points.slice().sort((p, q) => p[0] - q[0] || p[1] - q[1]);
     if (pts.length < 3) return pts;

@@ -35,6 +35,25 @@ describe("Regions", () => {
     expect(region.properties.region?.nodeIds.sort()).toEqual(["n1", "n2", "n3"]);
   });
 
+  it("derives reach from how loosely the initial contour was drawn", () => {
+    addTriangle();
+    const tight = control.createRegion(["n1", "n2", "n3"], { padding: 5 });
+    // Every seed sits right on the tight hull, so reach should land close
+    // to a single node's own circle radius (radius + padding).
+    expect(tight.properties.region?.reach).toBeGreaterThan(0);
+    expect(tight.properties.region?.reach).toBeLessThan(20);
+
+    const loose = createPolygon([
+      [[-500, -500], [600, -500], [600, 600], [-500, 600], [-500, -500]]
+    ]);
+    control.add(loose);
+    control.trackRegionNodes(loose.id);
+    // A loosely hand-drawn contour far from its members yields a much
+    // bigger reach than a tightly seeded one.
+    const looseReach = control.getAnnotation<Polygon>(loose.id)!.properties.region?.reach;
+    expect(looseReach).toBeGreaterThan(300);
+  });
+
   it("reshapes to keep containing a dragged member node (sticky, without excluding the others)", () => {
     addTriangle();
     const region = control.createRegion(["n1", "n2", "n3"]);
@@ -129,6 +148,36 @@ describe("Regions", () => {
 
     const after = control.getAnnotation<Polygon>(region.id)!;
     expect(after.geometry.coordinates).toEqual(before.geometry.coordinates);
+  });
+
+  it("encloses every member after a simulated layout re-run scatters them all at once (#134)", () => {
+    addTriangle();
+    const region = control.createRegion(["n1", "n2", "n3"]);
+
+    // A layout re-run fires one batch of moves covering every member at
+    // once, unlike an interactive drag which only ever moves one — this is
+    // the scenario that produced straight-corridor "tunnels" under the old
+    // growth model.
+    const scattered: Record<string, { x: number; y: number }> = {
+      n1: { x: -800, y: 300 },
+      n2: { x: 600, y: -750 },
+      n3: { x: 50, y: 900 }
+    };
+    Object.entries(scattered).forEach(([id, { x, y }]) =>
+      ogma.getNode(id)!.setAttributes({ x, y })
+    );
+
+    // @ts-expect-error regions is private
+    control.regions._handleNodesMoved(ogma.getNodes(["n1", "n2", "n3"]));
+    // @ts-expect-error regions is private
+    control.regions._commit();
+
+    const updated = control.getAnnotation<Polygon>(region.id)!;
+    const ring = updated.geometry.coordinates[0];
+
+    Object.values(scattered).forEach((p) => {
+      expect(isPointInsidePolygon(p, ring)).toBe(true);
+    });
   });
 
   it("does not throw across many nodes and many rapid moves", () => {
