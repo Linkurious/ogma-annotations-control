@@ -361,4 +361,24 @@ describe("ui/TextAnnotationToolbar", () => {
 
     toolbar.destroy();
   });
+
+  it("Delete cell also unmounts the pill and clears selection (regression: pill used to outlive the deleted annotation)", () => {
+    const added = control.add(createText(0, 0, 100, 50, "Hello"));
+    const text = added.getAnnotations().features[0] as Text;
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(text.id);
+    vi.advanceTimersByTime(200);
+    expect(document.querySelector(".annotation-style-toolbar")).not.toBeNull();
+
+    const deleteBtn = document.querySelector<HTMLButtonElement>(
+      '[data-tooltip="Delete"]'
+    )!;
+    deleteBtn.click();
+
+    expect(document.querySelector(".annotation-style-toolbar")).toBeNull();
+    expect(control.getSelectedAnnotations().features).toHaveLength(0);
+
+    toolbar.destroy();
+  });
 });

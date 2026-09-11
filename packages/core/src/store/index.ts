@@ -273,18 +273,31 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               // Create copies BEFORE any deletions to preserve history correctly
               const newFeatures = { ...features };
               const newLiveUpdates = { ...liveUpdates };
-              const newSelection = new Set(state.selectedFeatures);
 
-              // Delete all marked features from the copies. Also drop them
-              // from the selection - otherwise a deleted-but-still-selected
-              // id never fires `unselect` (selectedFeatures unchanged), so
-              // any panel/toolbar anchored to it (e.g. the Text style pill)
-              // stays on screen pointing at a now-gone annotation.
+              // Delete all marked features from the copies.
               toDelete.forEach((deleteId) => {
                 delete newFeatures[deleteId];
                 delete newLiveUpdates[deleteId];
-                newSelection.delete(deleteId);
               });
+
+              // Also drop deleted ids from the selection - otherwise a
+              // deleted-but-still-selected id never fires `unselect`
+              // (selectedFeatures unchanged), so any panel/toolbar anchored
+              // to it (e.g. the Text style pill) stays on screen pointing at
+              // a now-gone annotation. Compared as strings: `Id` is
+              // `string | number`, and a selection made through the public
+              // API isn't guaranteed to carry the same representation as
+              // `toDelete` (sourced from feature records, whose keys are
+              // always strings) - `Set.delete` alone would silently miss a
+              // "2" vs 2 mismatch.
+              const toDeleteKeys = new Set(
+                Array.from(toDelete, (deleteId) => String(deleteId))
+              );
+              const newSelection = new Set(
+                Array.from(state.selectedFeatures).filter(
+                  (selectedId) => !toDeleteKeys.has(String(selectedId))
+                )
+              );
 
               return {
                 features: newFeatures,
