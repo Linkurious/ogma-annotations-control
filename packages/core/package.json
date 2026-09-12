@@ -121,7 +121,7 @@
     "@types/geojson": "7946.0.16",
     "@types/leaflet": "1.9.22",
     "@types/rbush": "4.0.0",
-    "get-port": "7.0.0",
+    "get-port": "7.2.0",
     "jsdom": "24.0.0",
     "leaflet": "1.9.4",
     "oxlint": "0.16.0",
