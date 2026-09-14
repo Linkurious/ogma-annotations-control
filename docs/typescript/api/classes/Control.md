@@ -623,6 +623,40 @@ A FeatureCollection containing all annotations
 
 ***
 
+### getOgma()
+
+```ts
+getOgma(): Ogma;
+```
+
+The underlying Ogma instance this controller was created with. Needed by
+UI built on top of `Control`'s public API (e.g. `TextAnnotationToolbar`)
+that must mount its own `ogma.layers.addOverlay(...)` layer rather than
+going through a renderer/handler internal to `Control`.
+
+#### Returns
+
+`Ogma`
+
+***
+
+### getRotation()
+
+```ts
+getRotation(): number;
+```
+
+Current global annotation-rotation angle (radians) - see
+`TextStyle`/`Handles`' `counterRotation`. Needed alongside `getZoom()` by
+`TextAnnotationToolbar` to anchor its pill above a (possibly rotated)
+Text box's world-space bounds.
+
+#### Returns
+
+`number`
+
+***
+
 ### getSelected()
 
 ```ts
@@ -652,6 +686,64 @@ Get the currently selected annotations as a collection
 [`AnnotationCollection`](../interfaces/AnnotationCollection.md)
 
 A FeatureCollection of selected annotations
+
+***
+
+### getZoom()
+
+```ts
+getZoom(): number;
+```
+
+Current zoom level - needed by `TextAnnotationToolbar` to convert a
+`fixedSize` Text annotation's screen-pixel dimensions back to graph
+units for its anchor-point math (same conversion `Handles` does).
+
+#### Returns
+
+`number`
+
+***
+
+### isAnnotationEditable()
+
+```ts
+isAnnotationEditable(id): boolean;
+```
+
+Can `id` be dragged/resized/restyled/text-edited/deleted/re-linked
+right now, per the `isEditable` option? `false` for an unknown id.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### isAnnotationVisible()
+
+```ts
+isAnnotationVisible(id): boolean;
+```
+
+Is `id` rendered and hit-testable right now, per the `isVisible`
+option? `false` for an unknown id.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`boolean`
 
 ***
 
@@ -1035,6 +1127,12 @@ new Options
 
 the updated options
 
+##### authorStyle?
+
+```ts
+optional authorStyle: Partial<AuthorLineStyle>;
+```
+
 ##### detectMargin
 
 ```ts
@@ -1046,6 +1144,38 @@ detectMargin: number;
 ```ts
 editButtonIcon: string;
 ```
+
+##### isEditable()
+
+```ts
+isEditable: (annotation) => boolean;
+```
+
+###### Parameters
+
+###### annotation
+
+[`Annotation`](../type-aliases/Annotation.md)
+
+###### Returns
+
+`boolean`
+
+##### isVisible()
+
+```ts
+isVisible: (annotation) => boolean;
+```
+
+###### Parameters
+
+###### annotation
+
+[`Annotation`](../type-aliases/Annotation.md)
+
+###### Returns
+
+`boolean`
 
 ##### magnetHandleRadius
 
@@ -1069,6 +1199,12 @@ maxArrowHeight: number;
 
 ```ts
 minArrowHeight: number;
+```
+
+##### minReadableFontSize
+
+```ts
+minReadableFontSize: number;
 ```
 
 ##### sendButtonIcon

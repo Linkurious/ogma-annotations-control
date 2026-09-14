@@ -6,6 +6,18 @@
 
 ## Properties
 
+### author?
+
+```ts
+optional author: string;
+```
+
+Author/signature line shown under the content when `style.showAuthor`
+is true. Set by the host app (via `properties.author` at creation or
+`control.update()`) - no built-in UI writes this string.
+
+***
+
 ### content
 
 ```ts

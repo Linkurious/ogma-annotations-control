@@ -43,6 +43,7 @@
 | [AnnotationGetter](type-aliases/AnnotationGetter.md) | Function type to get an Annotation by its id |
 | [AnnotationOptions](type-aliases/AnnotationOptions.md) | - |
 | [AnnotationType](type-aliases/AnnotationType.md) | Types of annotations supported |
+| [AuthorLineStyle](type-aliases/AuthorLineStyle.md) | Style overrides for the author line rendered under a Text's content when `showAuthor` is true and `properties.author` is non-empty. Only the line-level subset of `TextStyle` - box properties (background, padding, borderRadius...) don't apply to it. |
 | [Bounds](type-aliases/Bounds.md) | Bounding box object, with the following properties: - [0]: min x - [1]: min y - [2]: max x - [3]: max y |
 | [BoxMagnet](type-aliases/BoxMagnet.md) | Arrow snapped to a rectangular annotation (text, box, comment). nx/ny are center-relative fractions multiplied by width/height: left-center = { nx: -0.5, ny: 0 } right-center = { nx: 0.5, ny: 0 } center = { nx: 0, ny: 0 } |
 | [ClientMouseEvent](type-aliases/ClientMouseEvent.md) | - |
@@ -105,6 +106,8 @@
 | [handleDetectionThreshold](variables/handleDetectionThreshold.md) | - |
 | [handleRadius](variables/handleRadius.md) | - |
 | [HL\_BRIGHTEN](variables/HL_BRIGHTEN.md) | - |
+| [MAX\_FONT\_SCALE](variables/MAX_FONT_SCALE.md) | - |
+| [MIN\_FONT\_SCALE](variables/MIN_FONT_SCALE.md) | - |
 | [NONE](variables/NONE.md) | - |
 | [SIDE\_END](variables/SIDE_END.md) | - |
 | [SIDE\_START](variables/SIDE_START.md) | - |
@@ -150,6 +153,7 @@
 | [getCommentSize](functions/getCommentSize.md) | Get the dimensions of a comment based on its mode |
 | [getCommentZoomThreshold](functions/getCommentZoomThreshold.md) | Get the effective zoom threshold for a comment Uses explicit threshold if set, otherwise calculates from dimensions |
 | [getCoordinates](functions/getCoordinates.md) | - |
+| [getEffectiveFontSize](functions/getEffectiveFontSize.md) | fontSize * fontScale, the number to actually render/edit at. Shared by the SVG renderer (text.ts) and the live-edit overlay (textArea.ts) so both stay in sync. fontScale absent/undefined is a no-op (×1). |
 | [getHandleId](functions/getHandleId.md) | - |
 | [getPolygonBounds](functions/getPolygonBounds.md) | Get bounding box of a polygon |
 | [getPolygonCenter](functions/getPolygonCenter.md) | Get centroid (geometric center) of a polygon |
@@ -166,6 +170,7 @@
 | [isRgbaColor](functions/isRgbaColor.md) | Type guard to check if a string is a valid RGBA color |
 | [isRgbColor](functions/isRgbColor.md) | Type guard to check if a string is a valid RGB color |
 | [isRigidConnector](functions/isRigidConnector.md) | Whether a comment's connector line should rigidly follow its attachment point (translate the comment by the same offset) rather than elastically re-anchoring to the nearest point on the comment box. |
+| [isStickyNote](functions/isStickyNote.md) | Heuristic "is this Text a sticky note" check. Sticky notes are not a distinct annotation type - they're `Text` created via `Control.enableStickyNoteDrawing()` with `defaultStickyNoteStyle` (see `api/drawing.ts`) - so there is no dedicated marker to check yet. |
 | [isText](functions/isText.md) | - |
 | [parseColor](functions/parseColor.md) | - |
 | [rgbToRgba](functions/rgbToRgba.md) | Adds alpha channel to an rgb color |
