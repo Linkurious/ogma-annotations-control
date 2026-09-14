@@ -11,6 +11,7 @@ import {
   defaultCommentStyle
 } from "../types";
 import { getBoxSize, getEffectiveFontSize } from "../utils/utils";
+import { getAuthorReservedHeight } from "../renderer/shapes/text";
 
 // Send-button dimensions in screen pixels (before effectiveScale), and the
 // fallback minimum height for fixed-size auto-grow when the style doesn't
@@ -194,6 +195,15 @@ export class TextArea {
     if (maxHeight) {
       height = Math.min(height, maxHeight - borderWidth * 2);
     }
+    // Stop short of the author line's region (same calc drawContent uses to
+    // reserve it) so the textarea overlay doesn't cover it - the author
+    // line stays visible/live-updating underneath while editing, instead
+    // of only showing up after edit mode ends.
+    const authorReserved = getAuthorReservedHeight(
+      annotation as Text,
+      this.store.getState()
+    );
+    height = Math.max(0, height - authorReserved);
     // Button is rendered within the same height using CSS grid (1fr auto),
     // not added to the total height.
     return {
