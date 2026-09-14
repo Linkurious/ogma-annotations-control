@@ -193,6 +193,49 @@ function resolveAuthorStyle(
   };
 }
 
+// px, graph-space, between content and author line - only used to cap
+// content wrapping height (drawContent's own local `authorReserved`
+// below), never to place the author line itself.
+const AUTHOR_GAP = 4;
+
+/** Vertical span (graph units, or screen px for `fixedSize` text), measured
+ * up from the box's *bottom edge*, that the author line occupies when
+ * shown - 0 when `style.showAuthor` is off, there's no author text, or the
+ * author line would render below `minReadableFontSize`. Matches
+ * drawContent's own `authorTop = y + height - padding - authorLineHeight`
+ * below exactly (padding + authorLineHeight from the bottom edge - NOT
+ * `AUTHOR_GAP`, which is a separate, content-wrap-only buffer that never
+ * factors into the author line's actual position). Exported so TextArea's
+ * edit-mode overlay (see textArea.ts getSize()) can stop its bottom edge
+ * exactly at the author line's top and leave it visible underneath while
+ * editing, instead of covering it. */
+export function getAuthorReservedHeight(
+  annotation: Text,
+  state?: AnnotationState,
+  isExporting = false
+): number {
+  const authorText = annotation.properties.author?.trim();
+  if (annotation.properties.style?.showAuthor !== true || !authorText) return 0;
+
+  const {
+    fixedSize = defaultTextStyle.fixedSize,
+    padding = 0
+  } = annotation.properties.style || {};
+  const resolvedAuthorStyle = resolveAuthorStyle(
+    annotation.properties.style?.authorStyle,
+    state?.options?.authorStyle
+  );
+  const authorFontSize = getEffectiveFontSize(resolvedAuthorStyle.fontSize, undefined);
+
+  const zoomScale = fixedSize ? 1 : (state?.zoom ?? 1);
+  const minReadableFontSize = state?.options?.minReadableFontSize ?? 0;
+  const canSkipForSize = !isExporting && minReadableFontSize > 0;
+  const authorTooSmall = canSkipForSize && authorFontSize * zoomScale < minReadableFontSize;
+  if (authorTooSmall) return 0;
+
+  return padding + authorFontSize * TEXT_LINE_HEIGHT;
+}
+
 /** One markdown link found by `extractMarkdownLinks`: `token` is what
  * stands in for it in the text handed to pretext's layout (see below),
  * `href` is what it should actually link to. */
@@ -400,7 +443,6 @@ function drawContent(
     canSkipForSize && authorFontSize * zoomScale < minReadableFontSize;
   const renderAuthorLine = showAuthorLine && !authorTooSmall;
   const authorLineHeight = renderAuthorLine ? authorFontSize * TEXT_LINE_HEIGHT : 0;
-  const AUTHOR_GAP = 4; // px, graph-space, between content and author line
   const authorReserved = renderAuthorLine ? authorLineHeight + AUTHOR_GAP : 0;
 
   // Tiny box + author line can push this to <= 0; maxLineCount's own
