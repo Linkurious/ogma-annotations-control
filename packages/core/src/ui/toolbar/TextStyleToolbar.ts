@@ -45,6 +45,19 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
    * `vanilla-colorful` popover when the color cell's "More colors…" is
    * clicked. See `ColorCellOptions.onMoreColors` for the full contract. */
   onMoreColors?: ColorCellOptions["onMoreColors"];
+  /**
+   * Full control over the pill's contents, beyond `fonts`/`fontSizes`/
+   * `swatches`/`onMoreColors`: called with the built-in item list (color,
+   * font, font size, bold, show-author, delete - each with a stable `id`,
+   * see `ToolbarButtonItem.id`) and returns what actually renders. Add,
+   * remove, reorder or replace freely -
+   * `defaultItems.filter((i) => i.id !== "delete")` drops Delete,
+   * `[{ kind: "custom", build: () => new MyCell(ctx) }, ...defaultItems]`
+   * prepends a cell - same power as subclassing and overriding
+   * `getItems()`, as a plain option instead. Defaults to the identity
+   * function (`defaultItems` unchanged).
+   */
+  items?: (defaultItems: ToolbarItem[], ctx: ToolbarCellContext) => ToolbarItem[];
 }
 
 /** Floating style pill for a Text annotation (plain text box or sticky
@@ -56,20 +69,22 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
  * built from `this.options` - override `fonts`/`fontSizes`/`swatches`/
  * `onMoreColors` at construction to reconfigure them without subclassing. */
 export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOptions> {
-  protected getItems(_ctx: ToolbarCellContext): ToolbarItem[] {
+  protected getItems(ctx: ToolbarCellContext): ToolbarItem[] {
     const fonts = this.options.fonts ?? DEFAULT_TOOLBAR_FONTS;
     const fontSizes = this.options.fontSizes ?? DEFAULT_TOOLBAR_FONT_SIZES;
     const swatches = this.options.swatches ?? STICKY_SWATCHES;
     const onMoreColors = this.options.onMoreColors;
 
-    return [
+    const defaultItems: ToolbarItem[] = [
       {
         kind: "custom",
+        id: "color",
         build: (c) => new ColorCell(c, { swatches, onMoreColors })
       },
       { kind: "separator" },
       {
         kind: "dropdown",
+        id: "font",
         title: "Font",
         options: fonts,
         getValue: (a) => a.properties.style?.font || defaultTextStyle.font!,
@@ -81,6 +96,7 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
       },
       {
         kind: "dropdown",
+        id: "fontSize",
         title: "Font size",
         options: fontSizes.map((size) => ({ value: size, label: `${size}` })),
         getValue: (a) => {
@@ -99,6 +115,7 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
       { kind: "separator" },
       {
         kind: "button",
+        id: "bold",
         title: "Bold",
         icon: "bold",
         isActive: (a) => a.properties.style?.fontWeight === "bold",
@@ -110,6 +127,7 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
       { kind: "separator" },
       {
         kind: "button",
+        id: "showAuthor",
         title: "Show author",
         icon: "user",
         isActive: (a) => a.properties.style?.showAuthor === true,
@@ -121,11 +139,14 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
       { kind: "separator" },
       {
         kind: "button",
+        id: "delete",
         title: "Delete",
         icon: "trash",
         danger: true,
         action: (c) => c.deleteAnnotation()
       }
     ];
+
+    return this.options.items?.(defaultItems, ctx) ?? defaultItems;
   }
 }

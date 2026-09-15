@@ -29,6 +29,13 @@ export type ToolbarItem =
 
 export interface ToolbarButtonItem {
   kind: "button";
+  /** Stable identifier for a built-in item (e.g. `"bold"`, `"delete"`) -
+   * lets a `TextStyleToolbarOptions.items` transform address one by
+   * `id` (`filter`/`find`) instead of by array position, so it keeps
+   * working if the built-in list's order or length changes in a later
+   * version. Not read by the toolbar itself; unset on your own items,
+   * which only your own `items` function ever sees. */
+  id?: string;
   /** Tooltip label, shown on hover via the existing `data-tooltip` CSS. */
   title: string;
   icon: IconName;
@@ -55,6 +62,8 @@ export interface ToolbarDropdownOption {
 
 export interface ToolbarDropdownItem {
   kind: "dropdown";
+  /** See `ToolbarButtonItem.id`. */
+  id?: string;
   title: string;
   options: ToolbarDropdownOption[];
   getValue: (annotation: Text) => ToolbarDropdownValue;
@@ -67,9 +76,16 @@ export interface ToolbarDropdownItem {
 
 export interface ToolbarSeparatorItem {
   kind: "separator";
+  /** See `ToolbarButtonItem.id` - lets an `items` transform address a
+   * specific divider (e.g. "the one right before Delete") without
+   * counting positions. Rarely needed; addressing the item next to it is
+   * usually enough. */
+  id?: string;
 }
 
 export interface ToolbarCustomItem {
   kind: "custom";
+  /** See `ToolbarButtonItem.id`. */
+  id?: string;
   build: (ctx: ToolbarCellContext) => ToolbarCell;
 }
