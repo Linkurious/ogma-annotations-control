@@ -21,6 +21,17 @@ export interface PanelVisibilityHandlers {
   onShow: (annotation: Annotation) => void;
   /** Called when the panel should be hidden. */
   onHide: () => void;
+  /**
+   * Whether a selected-but-non-editable annotation (per the `isEditable`
+   * control option) keeps the panel hidden, same as if nothing were
+   * selected. Defaults to `true` - the original behavior, right for a panel
+   * with nothing safe to change on a locked annotation. Set to `false` for
+   * a panel that stays open on a locked selection instead (e.g. to keep a
+   * lock/unlock toggle reachable) - callers typically also grey out every
+   * other control in that case, since `onShow` still fires for an
+   * annotation nothing else in the panel can safely edit.
+   */
+  hideWhenNotEditable?: boolean;
 }
 
 /**
@@ -47,8 +58,11 @@ export interface PanelVisibilityControl {
  */
 export function attachPanelVisibility(
   control: PanelVisibilityControl,
-  { onShow, onHide }: PanelVisibilityHandlers
+  { onShow, onHide, hideWhenNotEditable = true }: PanelVisibilityHandlers
 ): () => void {
+  const isRevealable = (id: string | number) =>
+    !hideWhenNotEditable || control.isAnnotationEditable(id);
+
   // The annotation selected but not yet shown, and a timer that reveals it.
   let pending: Annotation | null = null;
   // The annotation `onShow` was last called with (cleared on hide) - lets
@@ -77,9 +91,10 @@ export function attachPanelVisibility(
     if (pending) {
       const ann = pending;
       pending = null;
-      // Selected-but-not-editable: don't reveal a panel with nothing safe to
-      // change, and hide() clears a stale one left over from the previous selection.
-      if (control.isAnnotationEditable(ann.id)) {
+      // Selected-but-not-editable: by default don't reveal a panel with
+      // nothing safe to change (hide() clears a stale one left over from
+      // the previous selection) - unless hideWhenNotEditable opts out.
+      if (isRevealable(ann.id)) {
         shown = ann;
         onShow(ann);
       } else {
@@ -89,7 +104,7 @@ export function attachPanelVisibility(
     }
     if (!shown && selectedId != null) {
       const ann = control.getAnnotation(selectedId);
-      if (ann && control.isAnnotationEditable(ann.id)) {
+      if (ann && isRevealable(ann.id)) {
         shown = ann;
         onShow(ann);
       }

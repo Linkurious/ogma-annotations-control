@@ -143,6 +143,8 @@ new TextAnnotationToolbar({
 | `fontSizes` | `number[]` _(optional)_ | Font-size dropdown presets. Defaults to `DEFAULT_TOOLBAR_FONT_SIZES`. |
 | `swatches` | `Swatch[]` _(optional)_ | Color cell's swatch-grid palette. Defaults to `STICKY_SWATCHES`. |
 | `onMoreColors` | `(ctx, anchor: HTMLElement) => void` _(optional)_ | Called instead of opening the built-in color picker when "More colors…" is clicked - hand off to your own picker. |
+| `items` | `(defaultItems: ToolbarItem[], ctx) => ToolbarItem[]` _(optional)_ | Full control over the pill's contents - reorder, drop, or add items around the built-in list. See [below](#beyond-fontssizescolors-rearranging-or-replacing-items). |
+| `hideWhenNotEditable` | `boolean` _(optional)_ | Whether a selected-but-locked (`isEditable: false`) Text keeps the pill hidden, same as no selection. Defaults to `true`. |
 
 ## Methods
 
@@ -163,47 +165,175 @@ The author toggle only flips a `showAuthor` display flag on the
 annotation's style for now; it doesn't render an author name anywhere yet
 (that format — who, and where it's stored — isn't decided).
 
-## Beyond fonts/sizes/colors: replacing an item entirely
+## Beyond fonts/sizes/colors: rearranging or replacing items
 
-`fonts`/`fontSizes`/`swatches` cover the common case. For anything more —
-removing the Delete button, adding a new action, changing what Bold does —
-subclass `TextStyleToolbar` (or `StickyNoteStyleToolbar`) and override
-`getItems()`, which returns a plain declarative list:
+`fonts`/`fontSizes`/`swatches` cover the common case. For anything more -
+drop the Delete button, add a new action, reorder the whole row - pass
+`items`. It's called with the built-in list (color, font, font size,
+bold, show-author, delete) and returns what actually renders - add,
+remove, reorder or replace freely, no subclassing needed:
 
 ```ts
-import { TextStyleToolbar } from "@linkurious/ogma-annotations/ui";
+const toolbar = new TextAnnotationToolbar({
+  control,
+  items: (defaultItems, ctx) => [
+    ...defaultItems.slice(0, -2), // everything except the trailing separator + Delete
+    { kind: "separator" },
+    {
+      kind: "button",
+      title: "Export as SVG",
+      icon: "camera",
+      action: (c) => exportAnnotationAsSvg(c.getAnnotation())
+    }
+  ]
+});
+```
 
-class MyTextToolbar extends TextStyleToolbar {
-  protected getItems(ctx) {
-    return [
-      ...super.getItems(ctx).slice(0, -2), // everything except the trailing separator + Delete
-      { kind: "separator" },
-      {
-        kind: "button",
-        title: "Export as SVG",
-        icon: "camera",
-        action: (c) => exportAnnotationAsSvg(c.getAnnotation())
-      }
-    ];
-  }
-}
+Each built-in entry carries a stable `id` (`"color"`, `"font"`,
+`"fontSize"`, `"bold"`, `"showAuthor"`, `"delete"`) so you can address one
+without relying on array position - safe even if a later version adds to
+or reorders the built-in list:
+
+```ts
+items: (defaultItems) => defaultItems.filter((i) => i.id !== "delete")
 ```
 
 Each entry is one of:
 
-- `{ kind: "button", title, icon, action, isActive?, danger? }` — a plain
-  action or toggle button (this is what Bold/Delete/the author toggle are).
-- `{ kind: "dropdown", title, options, getValue, onSelect, getLabel? }` — a
-  "pick one of a list" cell (Font family/Font size).
-- `{ kind: "separator" }` — a divider. There's no automatic spacing between
-  items - the list controls layout explicitly, dividers included.
-- `{ kind: "custom", build: (ctx) => cell }` — an escape hatch for
-  anything that doesn't fit the two shapes above. The color cell (a swatch
-  grid opening a secondary picker popover) uses this.
+- `{ kind: "button", id?, title, icon, action, isActive?, danger? }` — a
+  plain action or toggle button (this is what Bold/Delete/the author
+  toggle are).
+- `{ kind: "dropdown", id?, title, options, getValue, onSelect, getLabel? }`
+  — a "pick one of a list" cell (Font family/Font size).
+- `{ kind: "separator" }` — a divider. There's no automatic spacing
+  between items - the list controls layout explicitly, dividers included.
+- `{ kind: "custom", id?, build: (ctx) => cell }` — an escape hatch for
+  anything that doesn't fit the two shapes above: a hand-built
+  `ToolbarCell` (`element`/`update()`/`destroy()`). The color cell (a
+  swatch grid opening a secondary picker popover) uses this.
 
 `icon` is any name from the shared icon set (`IconName`, exported from
 `@linkurious/ogma-annotations/ui`) — the same hand-copied SVG paths used
-throughout the panel and toolbar, no icon font required.
+throughout the panel and toolbar, no icon font required. For anything
+else (like a lock glyph, in the example below) build the cell's own
+`<svg>` inline instead - see `kind: "custom"`.
+
+`items` covers everything a `TextStyleToolbar` subclass used to be needed
+for. Subclassing (override `getItems()`) still works and is only worth
+reaching for if you're also changing the class's behavior beyond its item
+list - `items` is the right tool for "different buttons," not a smaller
+version of subclassing.
+
+### Worked example: a "lock" button that blocks drag/edit and greys out the rest
+
+`isEditable(annotation)` (a `Control` option) decides whether an
+annotation can be dragged, resized, restyled, text-edited, deleted or
+re-linked - this is the actual enforcement; the toolbar only decides
+what's shown.
+
+**Keep the locked-ids set outside the annotation's own data - don't try
+to store it as an annotation field.** `isEditable` gates *every* write
+that goes through `control.update()`/`updateStyle()`, evaluated against
+the annotation's state *before* that write applies - so a `locked` flag
+living inside `properties` could never unlock itself: the very call that
+sets `locked: false` would already be vetoed, since at the moment it
+runs the annotation is still locked. (Worth confirming yourself before
+relying on it - `control.update({ id, properties: { locked: false } })`
+against an annotation whose `isEditable` currently returns `false` logs
+`Cannot update annotation <id>: not editable` and is a no-op.) A plain
+`Map`, read by the predicate and written directly by the lock button,
+sidesteps the gate entirely and still applies uniformly across every
+annotation type - Text, Arrow, Box, Polygon, Comment alike, not just
+`TextStyle`:
+
+```ts
+import type { Id } from "@linkurious/ogma-annotations";
+
+const locked = new Map<Id, boolean>();
+
+control.setOptions({
+  isEditable: (annotation) => !locked.get(annotation.id)
+});
+```
+
+The button. Nothing here changes annotation data, so nothing else
+triggers a re-render on its own - the click handler refreshes the
+button (and the grey-out class) itself, right after mutating `locked`:
+
+```ts
+import type { ToolbarCell, ToolbarCellContext } from "@linkurious/ogma-annotations/ui";
+import type { Id } from "@linkurious/ogma-annotations";
+
+const LOCK_ICON =
+  '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>';
+
+class LockCell implements ToolbarCell {
+  readonly element = document.createElement("button");
+
+  constructor(private ctx: ToolbarCellContext) {
+    this.element.type = "button";
+    // oa-lock-button is a hook for the CSS below, not a styling class of
+    // its own - oa-toolbar-button is what actually makes it look right.
+    this.element.className = "oa-toolbar-button oa-lock-button";
+    this.element.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${LOCK_ICON}</svg>`;
+    this.element.addEventListener("click", this.onClick);
+  }
+
+  private onClick = () => {
+    const id = this.ctx.getAnnotation().id;
+    locked.set(id, !locked.get(id));
+    this.refresh(id);
+  };
+
+  update(annotation: { id: Id }) {
+    this.refresh(annotation.id);
+  }
+
+  private refresh(id: Id) {
+    const isLocked = locked.get(id) === true;
+    this.element.classList.toggle("active", isLocked);
+    this.element.dataset.tooltip = isLocked ? "Unlock" : "Lock";
+    // Grey out every other cell in the pill - see the CSS below.
+    this.element.closest(".annotation-style-toolbar")?.classList.toggle("locked", isLocked);
+  }
+
+  destroy() {
+    this.element.removeEventListener("click", this.onClick);
+  }
+}
+```
+
+```css
+/* Every direct child of the pill except the lock button and dividers -
+   covers Bold/Delete/the color swatch/the Font dropdowns alike, whatever
+   kind of cell they are, since they're all direct children of the same
+   row. */
+.annotation-style-toolbar.locked > *:not(.oa-lock-button):not(.oa-toolbar-separator) {
+  opacity: 0.4;
+  pointer-events: none;
+}
+```
+
+Wire it together with `items` and `hideWhenNotEditable: false` - the
+latter is what keeps the pill open (greyed out) on a locked selection
+instead of disappearing, which is the default (matches the docked
+[style panel](./style-panel)'s behavior too):
+
+```ts
+const toolbar = new TextAnnotationToolbar({
+  control,
+  hideWhenNotEditable: false,
+  items: (defaultItems, ctx) => [
+    { kind: "custom", id: "lock", build: () => new LockCell(ctx) },
+    { kind: "separator" },
+    ...defaultItems
+  ]
+});
+```
+
+That's the whole feature - no subclass, no custom show/hide wiring. The
+docked `AnnotationPanel` takes the same `hideWhenNotEditable` option if
+you want a locked annotation's panel to behave the same way there.
 
 ## Theming
 

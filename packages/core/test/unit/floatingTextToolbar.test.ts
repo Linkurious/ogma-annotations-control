@@ -381,4 +381,67 @@ describe("ui/TextAnnotationToolbar", () => {
 
     toolbar.destroy();
   });
+
+  it("hides for a non-editable selection by default", () => {
+    const added = control.add(createText(0, 0, 100, 50, "Hello"));
+    const text = added.getAnnotations().features[0] as Text;
+    control.setOptions({ isEditable: () => false });
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(text.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector(".annotation-style-toolbar")).toBeNull();
+
+    toolbar.destroy();
+  });
+
+  it("hideWhenNotEditable: false keeps the pill open for a non-editable selection", () => {
+    const added = control.add(createText(0, 0, 100, 50, "Hello"));
+    const text = added.getAnnotations().features[0] as Text;
+    control.setOptions({ isEditable: () => false });
+
+    const toolbar = new TextAnnotationToolbar({
+      control,
+      hideWhenNotEditable: false
+    });
+    control.select(text.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector(".annotation-style-toolbar")).not.toBeNull();
+
+    toolbar.destroy();
+  });
+
+  it("items transforms the built-in list - reorder, drop, and add by id", () => {
+    const added = control.add(createText(0, 0, 100, 50, "Hello"));
+    const text = added.getAnnotations().features[0] as Text;
+
+    const toolbar = new TextAnnotationToolbar({
+      control,
+      items: (defaultItems) => [
+        {
+          kind: "button",
+          id: "lock",
+          title: "Lock",
+          icon: "circle-dot",
+          action: () => {}
+        },
+        { kind: "separator" },
+        ...defaultItems.filter((i) => (i.kind === "separator" ? true : i.id !== "delete"))
+      ]
+    });
+    control.select(text.id);
+    vi.advanceTimersByTime(200);
+
+    const pill = document.querySelector(".annotation-style-toolbar")!;
+    const tooltips = Array.from(
+      pill.querySelectorAll<HTMLElement>("[data-tooltip]")
+    ).map((el) => el.dataset.tooltip);
+
+    expect(tooltips[0]).toBe("Lock");
+    expect(tooltips).not.toContain("Delete");
+
+    toolbar.destroy();
+  });
 });

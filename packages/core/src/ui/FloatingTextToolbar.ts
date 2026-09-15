@@ -14,6 +14,14 @@ import {
  * currently has no items or options of its own, it's a plain subclass. */
 export interface TextAnnotationToolbarOptions extends TextStyleToolbarOptions {
   control: Control;
+  /**
+   * Whether a selected-but-locked (`isEditable: false`) Text annotation
+   * keeps the toolbar hidden, same as no selection. Defaults to `true`.
+   * Set to `false` to keep the toolbar open on a locked selection instead
+   * (e.g. to keep a lock/unlock button in `items` reachable) - see
+   * `attachPanelVisibility`'s `hideWhenNotEditable` for the full contract.
+   */
+  hideWhenNotEditable?: boolean;
 }
 
 /**
@@ -44,7 +52,8 @@ export class TextAnnotationToolbar {
 
     this.detachVisibility = attachPanelVisibility(this.control, {
       onShow: (annotation) => this.show(annotation),
-      onHide: () => this.hide()
+      onHide: () => this.hide(),
+      hideWhenNotEditable: options.hideWhenNotEditable
     });
 
     this.control.on(EVT_UPDATE, this.handleUpdate);

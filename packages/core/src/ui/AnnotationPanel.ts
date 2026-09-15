@@ -70,6 +70,12 @@ export interface AnnotationPanelOptions {
    * same selection.
    */
   enabledTypes?: PanelAnnotationType[];
+  /**
+   * Whether a selected-but-locked (`isEditable: false`) annotation keeps
+   * the panel hidden, same as no selection. Defaults to `true`. See
+   * `attachPanelVisibility`'s `hideWhenNotEditable` for the full contract.
+   */
+  hideWhenNotEditable?: boolean;
 }
 
 export class AnnotationPanel {
@@ -115,7 +121,8 @@ export class AnnotationPanel {
         this.setAnnotation(ann);
         this.show();
       },
-      onHide: this.hide
+      onHide: this.hide,
+      hideWhenNotEditable: options.hideWhenNotEditable
     });
 
     ["click", "mousedown", "mousemove"].forEach((evt) =>
