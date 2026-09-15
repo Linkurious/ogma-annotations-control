@@ -335,10 +335,13 @@ That's the whole feature - no subclass, no custom show/hide wiring. The
 docked `AnnotationPanel` takes the same `hideWhenNotEditable` option if
 you want a locked annotation's panel to behave the same way there.
 
-Prepending puts Lock first, ahead of Color - fine as a default, but say
-you want it grouped with Delete instead, at the *end* of the row rather
-than the start. Same `LockCell`, just placed by finding `"delete"`'s
-index instead of spreading `defaultItems` wholesale:
+### Worked example: placing the lock item next to Delete instead of first
+
+The example above prepends Lock, ahead of Color - fine as a default, but
+say you want it grouped with Delete instead, at the *end* of the row
+rather than the start. Same `LockCell` from that example, unchanged -
+only where `items` places it in the returned array differs, by finding
+`"delete"`'s index instead of spreading `defaultItems` wholesale:
 
 ```ts
 items: (defaultItems, ctx) => {
