@@ -334,7 +334,15 @@ export function clientToContainerPosition(
   };
 }
 
+// "transparent"/"none" are both listed on the `Color` type itself (see
+// types/colors.ts) as valid, paint-free values - neither is hex or
+// rgb(a), so both need calling out explicitly before the two prefix
+// checks below, rather than falling through to the "must be rgb(a)"
+// branch and throwing on a value the type itself promises is legal.
+const TRANSPARENT_RGBA = { r: 0, g: 0, b: 0, a: 0 } as const;
+
 export function colorToRgba(color: Color, alpha: number): RgbaColor {
+  if (color === "transparent" || color === "none") return "rgba(0, 0, 0, 0)";
   if (color.startsWith("#")) return hexToRgba(color as HexColor, alpha);
   if (color.startsWith("rgb")) return rgbToRgba(color as RgbColor, alpha);
   return color as RgbaColor;
@@ -346,6 +354,7 @@ export function parseColor(color: Color): {
   b: number;
   a: number;
 } {
+  if (color === "transparent" || color === "none") return TRANSPARENT_RGBA;
   if (color.startsWith("#")) {
     const hex = hexShortToLong(color as HexColor);
     const r = parseInt(hex.slice(1, 3), 16);
