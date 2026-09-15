@@ -2,7 +2,6 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 import { describe, it, expect } from "vitest";
-// @ts-expect-error - no published types resolve for this pinned prerelease
 import processWithFontEmbedder from "@linkurious/svg-font-embedder";
 import { renderText } from "../../src/renderer/shapes/text";
 import { createText } from "../../src";
@@ -20,10 +19,11 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * handles it, not just that our local understanding of the shape hasn't
  * drifted.
  *
- * PINNED VERSION: devDependencies pins 0.0.6-develop.2 (a prerelease tag)
- * because that's the first published version containing the fix - the
- * package's `latest` dist-tag does not yet include it. Bump the pin to
- * the stable release once one ships, and drop this comment.
+ * PINNED VERSION: devDependencies pins the exact stable release (1.1.0)
+ * containing the fix, rather than a loose range - the package's `latest`
+ * dist-tag still points at the old, broken 0.0.87 as of this writing, so
+ * an unpinned/caret install would silently resolve to the broken version.
+ * Re-check that before loosening this pin.
  */
 const FONT_FAMILY = "IBM Plex Sans";
 const FONT_WOFF2_BASE64 = readFileSync(
