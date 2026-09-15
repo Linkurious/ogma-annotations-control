@@ -335,6 +335,29 @@ That's the whole feature - no subclass, no custom show/hide wiring. The
 docked `AnnotationPanel` takes the same `hideWhenNotEditable` option if
 you want a locked annotation's panel to behave the same way there.
 
+Prepending puts Lock first, ahead of Color - fine as a default, but say
+you want it grouped with Delete instead, at the *end* of the row rather
+than the start. Same `LockCell`, just placed by finding `"delete"`'s
+index instead of spreading `defaultItems` wholesale:
+
+```ts
+items: (defaultItems, ctx) => {
+  const lockItem = { kind: "custom" as const, id: "lock", build: () => new LockCell(ctx) };
+  const deleteIndex = defaultItems.findIndex((i) => i.id === "delete");
+  return [
+    ...defaultItems.slice(0, deleteIndex), // color…showAuthor, plus the separator right before Delete
+    lockItem,
+    { kind: "separator" },
+    ...defaultItems.slice(deleteIndex) // Delete itself
+  ];
+}
+```
+
+Renders as `[…] [showAuthor] | [Lock] | [Delete]` - `deleteIndex` still
+points at the right item even if a later version inserts something new
+earlier in the built-in list, which is exactly what addressing by `id`
+instead of a hardcoded array index buys you here.
+
 ## Theming
 
 The pill uses its own `--oa-toolbar-*` CSS custom properties, alongside the
