@@ -76,6 +76,11 @@ export interface ToolbarDropdownItem {
 
 export interface ToolbarSeparatorItem {
   kind: "separator";
+  /** See `ToolbarButtonItem.id` - lets an `items` transform address a
+   * specific divider (e.g. "the one right before Delete") without
+   * counting positions. Rarely needed; addressing the item next to it is
+   * usually enough. */
+  id?: string;
 }
 
 export interface ToolbarCustomItem {

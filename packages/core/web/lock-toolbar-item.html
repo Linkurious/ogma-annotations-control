@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Lock toolbar item</title>
+    <style>
+      #graph-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      .hint {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 1;
+        font: 13px/1.4 sans-serif;
+        color: #444;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 8px 12px;
+        max-width: 320px;
+      }
+      /* Every direct child of the pill except the lock button and
+         dividers - covers Bold/Delete/the color swatch/the Font
+         dropdowns alike, whatever kind of cell they are, since they're
+         all direct children of the same row. */
+      .annotation-style-toolbar.locked > *:not(.oa-lock-button):not(.oa-toolbar-separator) {
+        opacity: 0.4;
+        pointer-events: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hint">
+      Select the Text or sticky note, click the lock icon next to Delete.
+      Locked: drag/resize/text-edit/restyle/delete are all blocked, and
+      every other toolbar button greys out - but the pill stays open, so
+      the same lock icon can unlock it again.
+    </div>
+    <div id="graph-container"></div>
+    <script type="module" src="./lock-toolbar-item.ts"></script>
+  </body>
+</html>
