@@ -85,9 +85,21 @@ export class BrowserSession {
    * causing a `createOgma is not defined` failure in whatever runs right
    * after. Wait for the actual readiness signal instead of trusting the
    * navigation lifecycle event.
+   *
+   * Explicit `timeout` matching `hookTimeout` (vitest.config.mts) - this
+   * call's own default is Playwright's, 30s, which is *not* the same
+   * budget as the 60s `hookTimeout` was raised to for exactly this kind
+   * of contention. Left at the default, this still throws at 30s
+   * regardless of hookTimeout, and since `start()` runs inside
+   * `beforeAll`, vitest's `retry` never gets a chance to retry it - a
+   * `beforeAll` failure fails every test in the file outright. Observed
+   * in CI as `TimeoutError: page.waitForFunction: Timeout 30000ms
+   * exceeded` in test/e2e/snapping.test.ts.
    */
   private async waitForReady() {
-    await this.page.waitForFunction(() => typeof createOgma === "function");
+    await this.page.waitForFunction(() => typeof createOgma === "function", undefined, {
+      timeout: 60000
+    });
   }
 
   /**
