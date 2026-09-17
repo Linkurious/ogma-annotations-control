@@ -43,17 +43,23 @@
 | [AnnotationGetter](type-aliases/AnnotationGetter.md) | Function type to get an Annotation by its id |
 | [AnnotationOptions](type-aliases/AnnotationOptions.md) | - |
 | [AnnotationType](type-aliases/AnnotationType.md) | Types of annotations supported |
+| [AuthorLineStyle](type-aliases/AuthorLineStyle.md) | Style overrides for the author line rendered under a Text's content when `showAuthor` is true and `properties.author` is non-empty. Only the line-level subset of `TextStyle` - box properties (background, padding, borderRadius...) don't apply to it. |
 | [Bounds](type-aliases/Bounds.md) | Bounding box object, with the following properties: - [0]: min x - [1]: min y - [2]: max x - [3]: max y |
+| [BoxMagnet](type-aliases/BoxMagnet.md) | Arrow snapped to a rectangular annotation (text, box, comment). nx/ny are center-relative fractions multiplied by width/height: left-center = { nx: -0.5, ny: 0 } right-center = { nx: 0.5, ny: 0 } center = { nx: 0, ny: 0 } |
 | [ClientMouseEvent](type-aliases/ClientMouseEvent.md) | - |
 | [Color](type-aliases/Color.md) | Any valid color format |
 | [ControllerOptions](type-aliases/ControllerOptions.md) | Options for the annotations control |
 | [DeepPartial](type-aliases/DeepPartial.md) | - |
-| [ExportedLink](type-aliases/ExportedLink.md) | - |
+| [EdgeMagnet](type-aliases/EdgeMagnet.md) | Arrow snapped at parametric position t (0–1) along an edge path. |
+| [ExportedLink](type-aliases/ExportedLink.md) | Serialized link stored inside arrow.properties.link. Uses plain { x, y } for backward compatibility with saved annotations. Converted to the internal Magnet type by Links.add(). |
 | [Extremity](type-aliases/Extremity.md) | Extremity types for arrow annotations. |
 | [FeatureEvents](type-aliases/FeatureEvents.md) | - |
 | [HexColor](type-aliases/HexColor.md) | Hex color string in format #RGB or #RRGGBB |
 | [Id](type-aliases/Id.md) | Unique identifier type for annotations |
+| [Magnet](type-aliases/Magnet.md) | - |
+| [NodeMagnet](type-aliases/NodeMagnet.md) | Arrow snapped to the center or perimeter of a node. |
 | [Point](type-aliases/Point.md) | 2D coordinate |
+| [PolygonMagnet](type-aliases/PolygonMagnet.md) | Arrow snapped to a polygon annotation. rx/ry are 0–1 fractions of the polygon's bounding box from its top-left corner. |
 | [RgbaColor](type-aliases/RgbaColor.md) | RGBA color string in format rgba(r, g, b, a) |
 | [RgbColor](type-aliases/RgbColor.md) | RGB color string in format rgb(r, g, b) |
 | [Side](type-aliases/Side.md) | - |
@@ -100,6 +106,8 @@
 | [handleDetectionThreshold](variables/handleDetectionThreshold.md) | - |
 | [handleRadius](variables/handleRadius.md) | - |
 | [HL\_BRIGHTEN](variables/HL_BRIGHTEN.md) | - |
+| [MAX\_FONT\_SCALE](variables/MAX_FONT_SCALE.md) | - |
+| [MIN\_FONT\_SCALE](variables/MIN_FONT_SCALE.md) | - |
 | [NONE](variables/NONE.md) | - |
 | [SIDE\_END](variables/SIDE_END.md) | - |
 | [SIDE\_START](variables/SIDE_START.md) | - |
@@ -109,12 +117,13 @@
 
 | Function | Description |
 | ------ | ------ |
-| [adjustColorBrightness](functions/adjustColorBrightness.md) | Automatically lightens or darkens a color (hex or rgba) for highlight purposes. |
+| [adjustColorBrightness](functions/adjustColorBrightness.md) | Adjusts the brightness of a color (hex or rgba) based on its perceived luminance. For bright colors, the adjustment is applied as darkening; for dark colors, as lightening. |
 | [asColor](functions/asColor.md) | Safely cast a string to a Color type with runtime validation |
 | [asHexColor](functions/asHexColor.md) | Safely cast a string to a HexColor type with runtime validation |
 | [asRgbaColor](functions/asRgbaColor.md) | Safely cast a string to an RgbaColor type with runtime validation |
 | [asRgbColor](functions/asRgbColor.md) | Safely cast a string to an RgbColor type with runtime validation |
 | [brighten](functions/brighten.md) | Brighten a color for highlight purposes. |
+| [bringToTop](functions/bringToTop.md) | Move `el` to the end of `root`'s children. SVG paint order is DOM order, so this is how a shape gets raised to the top of its group. Safe to call every render even when `el` is already last - `appendChild` on an existing child just re-positions it, it doesn't clone or re-trigger insertion. |
 | [calculateCommentZoomThreshold](functions/calculateCommentZoomThreshold.md) | Calculate optimal zoom threshold for auto-collapse based on comment dimensions |
 | [canDetachArrowEnd](functions/canDetachArrowEnd.md) | Check if arrow endpoint can be detached from its target |
 | [canDetachArrowStart](functions/canDetachArrowStart.md) | Check if arrow start point can be detached from its source |
@@ -137,10 +146,14 @@
 | [getBoxCenter](functions/getBoxCenter.md) | - |
 | [getBoxPosition](functions/getBoxPosition.md) | - |
 | [getBoxSize](functions/getBoxSize.md) | - |
+| [getCascadeDeleteIds](functions/getCascadeDeleteIds.md) | Ids that removing `id` should take with it: `id` itself, plus every arrow attached to it when it's a comment or text annotation - deleting the anchor takes its connectors along, since a detached comment-arrow has nothing to point at. |
+| [getCommentLeftOrphanedBy](functions/getCommentLeftOrphanedBy.md) | Comments must always keep at least one arrow. Returns the comment's id when deleting `arrowId` would leave it with none, so the caller can block the deletion instead - or `null` when it's safe to proceed. |
+| [getCommentLinkId](functions/getCommentLinkId.md) | Get the id of the comment an arrow is connected to, if any. |
 | [getCommentPosition](functions/getCommentPosition.md) | Get the position (center) of a comment |
 | [getCommentSize](functions/getCommentSize.md) | Get the dimensions of a comment based on its mode |
 | [getCommentZoomThreshold](functions/getCommentZoomThreshold.md) | Get the effective zoom threshold for a comment Uses explicit threshold if set, otherwise calculates from dimensions |
 | [getCoordinates](functions/getCoordinates.md) | - |
+| [getEffectiveFontSize](functions/getEffectiveFontSize.md) | fontSize * fontScale, the number to actually render/edit at. Shared by the SVG renderer (text.ts) and the live-edit overlay (textArea.ts) so both stay in sync. fontScale absent/undefined is a no-op (×1). |
 | [getHandleId](functions/getHandleId.md) | - |
 | [getPolygonBounds](functions/getPolygonBounds.md) | Get bounding box of a polygon |
 | [getPolygonCenter](functions/getPolygonCenter.md) | Get centroid (geometric center) of a polygon |
@@ -156,6 +169,8 @@
 | [isPolygon](functions/isPolygon.md) | - |
 | [isRgbaColor](functions/isRgbaColor.md) | Type guard to check if a string is a valid RGBA color |
 | [isRgbColor](functions/isRgbColor.md) | Type guard to check if a string is a valid RGB color |
+| [isRigidConnector](functions/isRigidConnector.md) | Whether a comment's connector line should rigidly follow its attachment point (translate the comment by the same offset) rather than elastically re-anchoring to the nearest point on the comment box. |
+| [isStickyNote](functions/isStickyNote.md) | Heuristic "is this Text a sticky note" check. Sticky notes are not a distinct annotation type - they're `Text` created via `Control.enableStickyNoteDrawing()` with `defaultStickyNoteStyle` (see `api/drawing.ts`) - so there is no dedicated marker to check yet. |
 | [isText](functions/isText.md) | - |
 | [parseColor](functions/parseColor.md) | - |
 | [rgbToRgba](functions/rgbToRgba.md) | Adds alpha channel to an rgb color |

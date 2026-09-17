@@ -100,6 +100,29 @@ describe("Options Reactivity", () => {
       defaultControl.destroy();
     });
 
+    it("should default isEditable/isVisible to always true", () => {
+      const defaultControl = new Control(ogma);
+      const options = defaultControl["store"].getState().options;
+      const text = createText(0, 0, 50, 50, "a");
+
+      expect(options.isEditable(text)).toBe(true);
+      expect(options.isVisible(text)).toBe(true);
+
+      defaultControl.destroy();
+    });
+
+    it("setOptions replaces isEditable/isVisible by reference", () => {
+      const lockedId = "locked";
+      const first = () => false;
+      control.setOptions({ isEditable: first });
+      expect(control["store"].getState().options.isEditable).toBe(first);
+
+      const second = (a: { id: string }) => a.id !== lockedId;
+      control.setOptions({ isEditable: second });
+      expect(control["store"].getState().options.isEditable).toBe(second);
+      expect(control["store"].getState().options.isEditable).not.toBe(first);
+    });
+
     it("should override defaults with provided options", () => {
       const customControl = new Control(ogma, {
         detectMargin: 20,

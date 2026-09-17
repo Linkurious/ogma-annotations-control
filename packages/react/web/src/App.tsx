@@ -2,7 +2,10 @@ import { Ogma as OgmaLib, RawGraph } from "@linkurious/ogma";
 import { AnnotationCollection } from "@linkurious/ogma-annotations";
 import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
 import React from "react";
-import { AnnotationPanelController } from "@linkurious/ogma-annotations-react/ui";
+import {
+  AnnotationPanelController,
+  TextAnnotationToolbarController
+} from "@linkurious/ogma-annotations-react/ui";
 import { Controls } from "./components/Controls";
 import { AnnotationsContextProvider } from "@linkurious/ogma-annotations-react";
 
@@ -81,7 +84,13 @@ export default function App() {
               padding: 12
             }}
           />
-          <AnnotationPanelController />
+          {/* Text/sticky notes are handled by TextAnnotationToolbarController
+              below - excluding "text" here keeps the docked panel from also
+              popping up for the same selection. */}
+          <AnnotationPanelController
+            enabledTypes={["arrow", "box", "comment", "polygon"]}
+          />
+          <TextAnnotationToolbarController />
         </AnnotationsContextProvider>
       </Ogma>
     </div>

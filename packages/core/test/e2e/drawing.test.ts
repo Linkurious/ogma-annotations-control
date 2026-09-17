@@ -1,5 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession } from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Snapping", () => {
   const session = new BrowserSession();
@@ -13,6 +13,7 @@ describe("Snapping", () => {
   });
 
   beforeEach(async () => {
+    captureScreenshotOnTestEnd(session, "drawing");
     await session.refresh();
     await session.page.evaluate(async () => {
       const ogma = createOgma({});

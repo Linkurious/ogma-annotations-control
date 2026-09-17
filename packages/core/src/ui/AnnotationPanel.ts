@@ -35,6 +35,11 @@ import {
   type PanelPlacement,
   type PanelOrientation
 } from "./layout";
+import {
+  ALL_PANEL_ANNOTATION_TYPES,
+  classifyPanelAnnotationType,
+  type PanelAnnotationType
+} from "./panelTypes";
 
 type AnnotationMode = "arrow" | "text" | "polygon" | null;
 
@@ -57,6 +62,20 @@ export interface AnnotationPanelOptions {
    * {@link AnnotationPanel.setOrientation}.
    */
   orientation?: PanelOrientation;
+  /**
+   * Which selected-annotation types the panel responds to. Defaults to all
+   * five (`["arrow", "text", "box", "comment", "polygon"]`). Exclude
+   * `"text"` once you've adopted `TextAnnotationToolbar` for Text
+   * annotations and sticky notes, so the two don't show at once for the
+   * same selection.
+   */
+  enabledTypes?: PanelAnnotationType[];
+  /**
+   * Whether a selected-but-locked (`isEditable: false`) annotation keeps
+   * the panel hidden, same as no selection. Defaults to `true`. See
+   * `attachPanelVisibility`'s `hideWhenNotEditable` for the full contract.
+   */
+  hideWhenNotEditable?: boolean;
 }
 
 export class AnnotationPanel {
@@ -72,9 +91,11 @@ export class AnnotationPanel {
   private colorPicker: RgbaColorPicker | null = null;
   private detachVisibility: () => void;
   private documentClickHandler: (e: MouseEvent) => void;
+  private enabledTypes: PanelAnnotationType[];
 
   constructor(options: AnnotationPanelOptions) {
     this.control = options.control;
+    this.enabledTypes = options.enabledTypes ?? ALL_PANEL_ANNOTATION_TYPES;
 
     // Build our own root inside the container, rather than relying on a
     // pre-existing #annotation-panel element in the host page.
@@ -92,10 +113,16 @@ export class AnnotationPanel {
 
     this.detachVisibility = attachPanelVisibility(this.control, {
       onShow: (ann) => {
+        const type = classifyPanelAnnotationType(ann);
+        if (!type || !this.enabledTypes.includes(type)) {
+          this.hide();
+          return;
+        }
         this.setAnnotation(ann);
         this.show();
       },
-      onHide: this.hide
+      onHide: this.hide,
+      hideWhenNotEditable: options.hideWhenNotEditable
     });
 
     ["click", "mousedown", "mousemove"].forEach((evt) =>

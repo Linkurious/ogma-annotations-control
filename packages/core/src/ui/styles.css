@@ -481,93 +481,355 @@ input:checked + .toggle-slider:before {
   display: none;
 }
 
-/* --- Annotation Toolbar (AnnotationToolbar) ---
-   Drawing/undo-redo toolbar. Shares the placement rules above with
-   `.annotation-panel`; only its own button/orientation styling lives here. */
-.annotation-toolbar {
+/* --- Shared horizontal-toolbar system ---
+   `.oa-toolbar` is a bare marker class every toolbar bar in both packages
+   carries alongside its own root class (`.annotation-toolbar`,
+   `.annotation-style-toolbar`, React's `.add-menu`/`.view-controls`) -
+   it sets no properties of its own, it just wires up the shared tooltip
+   system below with a single selector instead of a 4-way list. `AddMenu`/
+   `ViewControls` keep their own bar layout and button visuals entirely
+   (`packages/react/src/ui/toolbar.css`) - only the marker is shared with
+   them. `.oa-toolbar-bar` is the actual shared bar layout, a *second*
+   class added only where core's own two toolbars want to look/behave
+   alike (row of small inset buttons) - kept separate from the marker so
+   applying it can't leak into `AddMenu`/`ViewControls`'s different design. */
+.oa-toolbar-bar {
   display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 5px;
+  flex-direction: row;
+  gap: 3px;
+  padding: 0 4px;
+  min-height: 40px;
 }
 
 .annotation-toolbar[data-orientation="vertical"] {
   flex-direction: column;
 }
 
-.annotation-toolbar:not([data-orientation]),
-.annotation-toolbar[data-orientation="horizontal"] {
-  flex-direction: row;
-}
-
-.annotation-toolbar button {
-  margin: 2px;
-  padding: 5px;
+/* Small inset button - used for every plain toolbar action/toggle
+   (AnnotationToolbar's drawing/undo/redo/erase/delete buttons,
+   TextAnnotationToolbar's Bold/Delete/author-toggle cells, a dropdown's
+   trigger). `position: relative` doubles as the tooltip's anchor. */
+.oa-toolbar-button {
+  position: relative;
+  margin: 1px;
+  padding: 4px;
   border: 1px solid transparent;
   cursor: pointer;
   border-radius: 5px;
   background: transparent;
-  color: var(--oa-muted-color);
+  color: var(--oa-muted-color, #666);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
 }
 
-.annotation-toolbar button:hover {
-  background: var(--oa-control-bg);
-  color: var(--oa-text-color);
+.oa-toolbar-button:hover {
+  background: var(--oa-control-bg, #eee);
+  color: var(--oa-text-color, #333);
 }
 
-.annotation-toolbar button.active {
-  background: var(--oa-accent);
+.oa-toolbar-button.active {
+  background: var(--oa-accent, #3a03cf);
   color: #fff;
 }
 
-.annotation-toolbar button:disabled {
+.oa-toolbar-button:disabled {
   color: #aaa;
   cursor: not-allowed;
 }
 
-.annotation-toolbar .separator {
-  border-left: 1px solid #ccc;
-  margin: 0 4px;
-  height: 20px;
-  display: inline-block;
-  vertical-align: middle;
+.oa-toolbar-button-danger:hover {
+  color: #d92d20;
 }
 
-.annotation-toolbar[data-orientation="vertical"] .separator {
+/* `align-self: stretch` (not a hardcoded height) so the divider always
+   matches the bar's actual height - driven by `.oa-toolbar-bar`'s
+   `min-height: 40px` today, but this way it can't fall out of sync if that
+   number ever changes. */
+.oa-toolbar-separator {
+  border-left: 1px solid var(--oa-toolbar-divider, #ccc);
+  margin: 0 3px;
+  align-self: stretch;
+}
+
+.annotation-toolbar[data-orientation="vertical"] .oa-toolbar-separator {
   border-left: none;
-  border-top: 1px solid #ccc;
+  border-top: 1px solid var(--oa-toolbar-divider, #ccc);
+  align-self: auto;
   width: 20px;
   height: 0;
-  margin: 4px 0;
+  margin: 3px 0;
 }
 
-/* Tooltips, shown on hover via the `data-tooltip` attribute. */
-.annotation-toolbar [data-tooltip] {
+/* Tooltips, shown on hover via the `data-tooltip` attribute - one
+   definition shared by every toolbar in both packages (anything carrying
+   `.oa-toolbar`; React's `AddMenu`/`ViewControls` import this stylesheet
+   wholesale, see `packages/react/src/ui/styles.css`, and add no tooltip CSS
+   of their own). Previously each toolbar had its own near-duplicate block
+   (slightly different colors/radius/offsets, addressed by an earlier
+   4-selector-list version of this comment); worth keeping as one rule set
+   so they can't drift out of sync, or - as happened once - collide when a
+   scoped and an unscoped copy both matched the same element and fought
+   over properties neither set (see the git history on this block for
+   that). Dark pill + pointer triangle, matching the Figma "Sticky Note
+   Toolbar" spec `TextAnnotationToolbar`'s cells were originally built
+   against. */
+.oa-toolbar [data-tooltip] {
   position: relative;
 }
 
-.annotation-toolbar [data-tooltip]::after {
-  content: attr(data-tooltip);
+.oa-toolbar [data-tooltip]::after,
+.oa-toolbar [data-tooltip]::before {
   position: absolute;
   left: 50%;
   bottom: 100%;
-  transform: translateX(-50%) translateY(-6px);
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  text-align: center;
-  white-space: nowrap;
-  font-size: 12px;
-  padding: 4px 6px;
-  border-radius: 5px;
+  transform: translateX(-50%);
   pointer-events: none;
-  z-index: 99;
   opacity: 0;
   transition: opacity 0.15s;
+  z-index: 99;
 }
 
-.annotation-toolbar [data-tooltip]:hover::after {
+/* margin-bottom (not `bottom: calc(100% - Npx)` + a shared translateY) so
+   the pill and the triangle below it stack with a clean, exact seam - the
+   triangle's `border` trick makes its box 0-height, so its margin-bottom
+   directly sets the gap between the pill's bottom edge and the target;
+   getting this via two competing `bottom`/`transform` offsets previously
+   left the triangle's flat top 2px inside the pill's own box, where the
+   pill (painted after, per pseudo-element order) covered all but a sliver
+   of it - functionally invisible. */
+.oa-toolbar [data-tooltip]::after {
+  content: attr(data-tooltip);
+  margin-bottom: 8px;
+  background: var(--oa-tooltip-bg, #303030);
+  color: var(--oa-tooltip-fg, #ffffff);
+  white-space: nowrap;
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.oa-toolbar [data-tooltip]::before {
+  content: "";
+  margin-bottom: 0px;
+  border: 4px solid transparent;
+  border-top-color: var(--oa-tooltip-bg, #303030);
+}
+
+.oa-toolbar [data-tooltip]:hover::after,
+.oa-toolbar [data-tooltip]:hover::before {
   opacity: 1;
+}
+
+/* --- Floating text-annotation toolbar (TextAnnotationToolbar) ---
+   Anchored above the selected Text/sticky-note annotation via an Ogma
+   overlay layer, not docked like `.annotation-panel`/`.annotation-toolbar`
+   above. `.annotation-style-toolbar-anchor` is the element handed to
+   `ogma.layers.addOverlay()` - Ogma writes its own `transform`
+   (translate/rotate/scale) onto it directly on every pan/zoom/rotate, so it
+   must stay zero-size and untouched by our own CSS `transform`.
+   `.annotation-style-toolbar` (the actual visible pill, a child of the
+   anchor) carries all the positioning that's ours to set - centered
+   horizontally and lifted fully above the anchor point - plus every visual
+   rule. Keeping the two separate is what avoids fighting Ogma for control
+   of one element's `transform` property.
+
+   z-index: this overlay is a sibling of every other Ogma layer inside the
+   same container (Shapes, the resize-Handles canvas, a TextArea edit
+   overlay) - without an explicit z-index it paints in creation order,
+   which (Handles is created once, early, at Control construction, long
+   before any selection) puts it *underneath* the note it's editing and
+   the resize handles around it. `Handles` (`renderer/handles.ts`) hits the
+   same problem the other way and fixes it the same way: a permanent CSS
+   z-index, no reordering. 1000 is Handles' own value (to stay above a
+   TextArea edit overlay); this needs to beat *that*, hence 1100. */
+.annotation-style-toolbar-anchor {
+  position: relative;
+  width: 0;
+  height: 0;
+  z-index: 1100;
+}
+
+/* Slide-up-and-fade on appear. A fresh `.annotation-style-toolbar` element
+   is created every time the pill (re)appears (see `AnnotationStyleToolbar`
+   - `TextAnnotationToolbar` destroys and recreates it, never reuses one
+   across a hide/show), so this just replays naturally on each mount - no
+   JS needed. Only animates `transform`/`opacity`, which are exclusively
+   this element's own (Ogma only ever touches its parent
+   `.annotation-style-toolbar-anchor`'s transform - see that rule's own
+   comment), so there's nothing here to fight for control of either
+   property. */
+@keyframes oa-toolbar-pop-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 6px));
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -100%);
+  }
+}
+
+.annotation-style-toolbar {
+  --oa-toolbar-bg: #ffffff;
+  --oa-toolbar-radius: 12px;
+  --oa-toolbar-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -100%);
+  animation: oa-toolbar-pop-in 150ms ease-out;
+
+  background: var(--oa-toolbar-bg);
+  border-radius: var(--oa-toolbar-radius);
+  box-shadow: var(--oa-toolbar-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .annotation-style-toolbar {
+    animation: none;
+  }
+}
+
+/* The dropdown cells' (Color, Font family, Font size) outer wrapper - just
+   a popover-positioning context, all visible styling is on
+   `.oa-toolbar-dropdown-trigger` (an `.oa-toolbar-button`) inside it. */
+.oa-toolbar-dropdown {
+  position: relative;
+}
+
+.oa-toolbar-dropdown-trigger {
+  font-size: 14px;
+}
+
+.oa-toolbar-dropdown-label:empty {
+  display: none;
+}
+
+.oa-toolbar-dropdown-chevron {
+  display: inline-flex;
+  transition: transform 0.15s;
+}
+
+.oa-toolbar-dropdown.open .oa-toolbar-dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+.oa-toolbar-dropdown-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--oa-toolbar-bg);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  padding: 8px;
+  z-index: 1;
+}
+
+.oa-toolbar-dropdown.open .oa-toolbar-dropdown-panel {
+  display: block;
+}
+
+.oa-toolbar-dropdown-option {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+  border-radius: 4px;
+  color: var(--oa-text-color, #333);
+}
+
+.oa-toolbar-dropdown-option:hover {
+  background: var(--oa-control-bg, #eee);
+}
+
+/* Color cell */
+.oa-toolbar-swatch {
+  --oa-swatch-fill: #fff;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--oa-swatch-fill);
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  flex-shrink: 0;
+}
+
+.oa-toolbar-swatch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
+  gap: 4px;
+}
+
+.oa-toolbar-swatch-cell {
+  --oa-swatch-fill: #fff;
+  --oa-swatch-stroke: #ccc;
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border: none;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.oa-toolbar-swatch-cell::after {
+  content: "";
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--oa-swatch-fill);
+  border: 1px solid var(--oa-swatch-stroke);
+}
+
+/* "transparent" swatch - a checkerboard circle instead of a solid fill
+   (which, for `background: transparent`, would be indistinguishable from
+   an empty/missing swatch against the white cell/trigger behind it). Same
+   "no fill" convention `ui/config.ts`'s `BACKGROUNDS` already uses for the
+   docked `AnnotationPanel`, just drawn instead of dashed-bordered since
+   these swatches are filled circles, not outlined ones. */
+.oa-toolbar-swatch-transparent,
+.oa-toolbar-swatch-cell-transparent::after {
+  background-image: conic-gradient(
+    #ccc 90deg,
+    transparent 90deg 180deg,
+    #ccc 180deg 270deg,
+    transparent 270deg
+  );
+  background-size: 8px 8px;
+  background-color: #fff;
+}
+
+.oa-toolbar-more-colors {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  border: none;
+  border-top: 1px solid var(--oa-toolbar-divider, #ccc);
+  background: transparent;
+  cursor: pointer;
+  padding: 8px 4px 0;
+  font-size: 13px;
+  color: var(--oa-muted-color, #666);
+  text-align: center;
+}
+
+.oa-toolbar-more-colors:hover {
+  color: var(--oa-text-color, #333);
+}
+
+.oa-toolbar-more-colors-host {
+  margin-top: 8px;
 }

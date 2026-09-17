@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-02-20 | Version: 2.x
+> Auto-generated: 2026-09-14 | Version: 2.x
 
 ---
 
@@ -176,6 +176,20 @@ Destroy the controller and its elements
 #### Returns
 
 `void`
+
+***
+
+### disableEraseMode()
+
+```ts
+disableEraseMode(): this;
+```
+
+Turn erase mode off. No-op if it isn't active.
+
+#### Returns
+
+`this`
 
 ***
 
@@ -368,6 +382,28 @@ startComment for low-level programmatic control
 
 ***
 
+### enableEraseMode()
+
+```ts
+enableEraseMode(): this;
+```
+
+Enable erase mode: every click on an annotation deletes it immediately.
+Stays armed across multiple clicks until `disableEraseMode()` is called,
+or another drawing tool is enabled / `cancelDrawing()` is called.
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### See
+
+disableEraseMode to turn erase mode off
+
+***
+
 ### enablePlacement()
 
 ```ts
@@ -436,6 +472,59 @@ addPolygonButton.addEventListener('click', () => {
 #### See
 
 startPolygon for low-level programmatic control
+
+***
+
+### enableStickyNoteDrawing()
+
+```ts
+enableStickyNoteDrawing(style?): this;
+```
+
+Enable sticky note drawing mode - drops a plain, resizable text box
+(empty content, "Quick note…" ghost placeholder, no connector arrow)
+like a Miro sticky note, unlike `enableCommentDrawing`. It's a regular
+`text` annotation, so it's placed the same interactive way as
+`enableBoxDrawing`/`enableTextDrawing`: click for a default-size square,
+or drag to size it - either way it keeps the usual corner/edge drag
+handles to resize it afterward.
+
+Call this method when the user clicks an "Add sticky note" button. The
+control will:
+1. Wait for the next mousedown event
+2. Create the note at that position and start the interactive
+   corner-drag, already selected
+3. On release: a plain click (no drag) gets a default square size, a
+   drag gets sized to match instead - either way it drops straight
+   into editing (the placeholder is just ghost text, so typing
+   immediately replaces it)
+4. Clean up automatically when done
+
+#### Parameters
+
+##### style?
+
+`Partial`\<[`TextStyle`](../interfaces/TextStyle.md) \| `undefined`\>
+
+Sticky note style options (merged over the sticky note defaults)
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### Example
+
+```ts
+addStickyNoteButton.addEventListener('click', () => {
+  control.enableStickyNoteDrawing({ background: '#FFEB99' });
+});
+```
+
+#### See
+
+startStickyNote for low-level programmatic control
 
 ***
 
@@ -543,6 +632,40 @@ A FeatureCollection containing all annotations
 
 ***
 
+### getOgma()
+
+```ts
+getOgma(): Ogma;
+```
+
+The underlying Ogma instance this controller was created with. Needed by
+UI built on top of `Control`'s public API (e.g. `TextAnnotationToolbar`)
+that must mount its own `ogma.layers.addOverlay(...)` layer rather than
+going through a renderer/handler internal to `Control`.
+
+#### Returns
+
+`Ogma`
+
+***
+
+### getRotation()
+
+```ts
+getRotation(): number;
+```
+
+Current global annotation-rotation angle (radians) - see
+`TextStyle`/`Handles`' `counterRotation`. Needed alongside `getZoom()` by
+`TextAnnotationToolbar` to anchor its pill above a (possibly rotated)
+Text box's world-space bounds.
+
+#### Returns
+
+`number`
+
+***
+
 ### getSelected()
 
 ```ts
@@ -575,11 +698,83 @@ A FeatureCollection of selected annotations
 
 ***
 
+### getZoom()
+
+```ts
+getZoom(): number;
+```
+
+Current zoom level - needed by `TextAnnotationToolbar` to convert a
+`fixedSize` Text annotation's screen-pixel dimensions back to graph
+units for its anchor-point math (same conversion `Handles` does).
+
+#### Returns
+
+`number`
+
+***
+
+### isAnnotationEditable()
+
+```ts
+isAnnotationEditable(id): boolean;
+```
+
+Can `id` be dragged/resized/restyled/text-edited/deleted/re-linked
+right now, per the `isEditable` option? `false` for an unknown id.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### isAnnotationVisible()
+
+```ts
+isAnnotationVisible(id): boolean;
+```
+
+Is `id` rendered and hit-testable right now, per the `isVisible`
+option? `false` for an unknown id.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`boolean`
+
+***
+
 ### isDrawing()
 
 ```ts
 isDrawing(): boolean;
 ```
+
+#### Returns
+
+`boolean`
+
+***
+
+### isEraseModeActive()
+
+```ts
+isEraseModeActive(): boolean;
+```
+
+Whether erase mode is currently active.
 
 #### Returns
 
@@ -941,6 +1136,12 @@ new Options
 
 the updated options
 
+##### authorStyle?
+
+```ts
+optional authorStyle: Partial<AuthorLineStyle>;
+```
+
 ##### detectMargin
 
 ```ts
@@ -952,6 +1153,38 @@ detectMargin: number;
 ```ts
 editButtonIcon: string;
 ```
+
+##### isEditable()
+
+```ts
+isEditable: (annotation) => boolean;
+```
+
+###### Parameters
+
+###### annotation
+
+[`Annotation`](../type-aliases/Annotation.md)
+
+###### Returns
+
+`boolean`
+
+##### isVisible()
+
+```ts
+isVisible: (annotation) => boolean;
+```
+
+###### Parameters
+
+###### annotation
+
+[`Annotation`](../type-aliases/Annotation.md)
+
+###### Returns
+
+`boolean`
 
 ##### magnetHandleRadius
 
@@ -975,6 +1208,12 @@ maxArrowHeight: number;
 
 ```ts
 minArrowHeight: number;
+```
+
+##### minReadableFontSize
+
+```ts
+minReadableFontSize: number;
 ```
 
 ##### sendButtonIcon
@@ -1331,6 +1570,54 @@ ogma.events.once('mousedown', (evt) => {
 #### See
 
 enablePolygonDrawing for the recommended high-level API
+
+***
+
+### startStickyNote()
+
+```ts
+startStickyNote(
+   x, 
+   y, 
+   style?): this;
+```
+
+**Advanced API:** Programmatically start drawing a sticky note at
+specific coordinates - same interactive corner-drag as `startBox`.
+You must handle mouse events yourself (or immediately release/complete
+it via the same events `enableStickyNoteDrawing` would).
+
+**For most use cases, use `enableStickyNoteDrawing()` instead.**
+
+#### Parameters
+
+##### x
+
+`number`
+
+X coordinate for the note's top-left corner
+
+##### y
+
+`number`
+
+Y coordinate for the note's top-left corner
+
+##### style?
+
+`Partial`\<[`TextStyle`](../interfaces/TextStyle.md) \| `undefined`\>
+
+Sticky note style options
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### See
+
+enableStickyNoteDrawing for the recommended high-level API
 
 ***
 
@@ -1791,6 +2078,21 @@ Styles specific to box annotations.
 
 ## Properties
 
+### authorStyle?
+
+```ts
+optional authorStyle: Partial<AuthorLineStyle>;
+```
+
+Per-annotation override for the author line's appearance. Overrides
+the global `ControllerOptions.authorStyle` for this annotation only -
+same precedence pattern as `placeholder` vs
+`ControllerOptions.textPlaceholder`. Falls back to a small built-in
+default (`DEFAULT_AUTHOR_STYLE` in `renderer/shapes/text.ts`) for any
+field neither this nor the global option sets.
+
+***
+
 ### background?
 
 ```ts
@@ -1845,6 +2147,19 @@ Helvetica, sans-serif...
 
 ***
 
+### fontScale?
+
+```ts
+optional fontScale: number;
+```
+
+Accumulated multiplier applied to fontSize at render time:
+effectiveFontSize = fontSize * (fontScale ?? 1). Updated incrementally
+by TextHandler's corner/edge drag when scaleFontOnResize is true;
+absent (≡ 1) for every annotation that doesn't opt in.
+
+***
+
 ### fontSize?
 
 ```ts
@@ -1852,6 +2167,17 @@ optional fontSize: string | number;
 ```
 
 Font size, in pixels
+
+***
+
+### fontWeight?
+
+```ts
+optional fontWeight: "normal" | "bold";
+```
+
+Bold the rendered/edited text. Absent (≡ "normal") for every
+annotation that doesn't opt in - no italic, no other weights for v1.
 
 ***
 
@@ -1863,6 +2189,19 @@ optional padding: number;
 
 padding around the text
 
+### placeholder?
+
+```ts
+optional placeholder: string;
+```
+
+Ghost text shown (via the textarea's native `placeholder` attribute)
+while `content` is empty - disappears the instant the user types, no
+selection/focus tricks needed. Overrides the global
+`ControllerOptions.textPlaceholder` for this annotation.
+
+***
+
 ### scaled?
 
 ```ts
@@ -1870,6 +2209,31 @@ optional scaled: boolean;
 ```
 
 if true, the box scales with zoom. Default is true
+
+### scaleFontOnResize?
+
+```ts
+optional scaleFontOnResize: boolean;
+```
+
+Opt-in: when true, corner/edge-drag resize also updates fontScale, so
+the rendered font size scales with the box instead of the text
+rewrapping/truncating. Only set by defaultStickyNoteStyle.
+
+***
+
+### showAuthor?
+
+```ts
+optional showAuthor: boolean;
+```
+
+Whether to render `properties.author` as a one-line, ellipsis-truncated
+signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+author-visibility cell. No-op when `properties.author` is unset or
+blank. Hidden (≡ false) by default.
+
+***
 
 ### strokeColor?
 
@@ -2329,6 +2693,19 @@ Style configuration for Comment annotations
 
 ## Properties
 
+### authorStyle?
+
+```ts
+optional authorStyle: Partial<AuthorLineStyle>;
+```
+
+Per-annotation override for the author line's appearance. Overrides
+the global `ControllerOptions.authorStyle` for this annotation only -
+same precedence pattern as `placeholder` vs
+`ControllerOptions.textPlaceholder`. Falls back to a small built-in
+default (`DEFAULT_AUTHOR_STYLE` in `renderer/shapes/text.ts`) for any
+field neither this nor the global option sets.
+
 ### autoGrow?
 
 ```ts
@@ -2381,6 +2758,20 @@ optional color: string;
 
 text color: #f00, yellow...
 
+### connectorMode?
+
+```ts
+optional connectorMode: "rigid" | "elastic";
+```
+
+Connector-line behavior when the attachment point moves (default: "rigid").
+- "rigid": the comment translates by the same offset as the moved
+  attachment point — the arrow keeps its length/angle, whole callout moves.
+- "elastic": the comment stays put; the arrow re-anchors to the nearest
+  point on the comment box, so the line can stretch/rotate.
+
+***
+
 ### expandOnSelect?
 
 ```ts
@@ -2407,6 +2798,17 @@ optional font: string;
 
 Helvetica, sans-serif...
 
+### fontScale?
+
+```ts
+optional fontScale: number;
+```
+
+Accumulated multiplier applied to fontSize at render time:
+effectiveFontSize = fontSize * (fontScale ?? 1). Updated incrementally
+by TextHandler's corner/edge drag when scaleFontOnResize is true;
+absent (≡ 1) for every annotation that doesn't opt in.
+
 ### fontSize?
 
 ```ts
@@ -2414,6 +2816,15 @@ optional fontSize: string | number;
 ```
 
 Font size, in pixels
+
+### fontWeight?
+
+```ts
+optional fontWeight: "normal" | "bold";
+```
+
+Bold the rendered/edited text. Absent (≡ "normal") for every
+annotation that doesn't opt in - no italic, no other weights for v1.
 
 ### iconBorderColor?
 
@@ -2493,6 +2904,17 @@ optional padding: number;
 
 padding around the text
 
+### placeholder?
+
+```ts
+optional placeholder: string;
+```
+
+Ghost text shown (via the textarea's native `placeholder` attribute)
+while `content` is empty - disappears the instant the user types, no
+selection/focus tricks needed. Overrides the global
+`ControllerOptions.textPlaceholder` for this annotation.
+
 ### scaled?
 
 ```ts
@@ -2500,6 +2922,16 @@ optional scaled: boolean;
 ```
 
 if true, the box scales with zoom. Default is true
+
+### scaleFontOnResize?
+
+```ts
+optional scaleFontOnResize: boolean;
+```
+
+Opt-in: when true, corner/edge-drag resize also updates fontScale, so
+the rendered font size scales with the box instead of the text
+rewrapping/truncating. Only set by defaultStickyNoteStyle.
 
 ### shadow?
 
@@ -2510,6 +2942,17 @@ optional shadow: boolean;
 Show drop shadow on comment box (default: true)
 
 ***
+
+### showAuthor?
+
+```ts
+optional showAuthor: boolean;
+```
+
+Whether to render `properties.author` as a one-line, ellipsis-truncated
+signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+author-visibility cell. No-op when `properties.author` is unset or
+blank. Hidden (≡ false) by default.
 
 ### showSendButton?
 
@@ -2707,11 +3150,10 @@ id of the text the arrow is attached to
 ### magnet
 
 ```ts
-magnet: Point;
+magnet: Magnet;
 ```
 
-On which point relative to topleft corner the arrow is tighten, in case of
-node, a 0 vector represents the center, otherwise it can be deduced from the arrow itself
+Typed snap point — semantics depend on targetType, see Magnet union.
 
 ***
 
@@ -3689,6 +4131,19 @@ Options for the annotations control
 
 ## Properties
 
+### authorStyle?
+
+```ts
+optional authorStyle: Partial<AuthorLineStyle>;
+```
+
+Editor-wide default style for every Text annotation's author line. Only
+applied when an annotation's `style.showAuthor` is true and
+`properties.author` is set; a given field here is overridden by that
+annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
+
+***
+
 ### detectMargin
 
 ```ts
@@ -3707,6 +4162,64 @@ editButtonIcon: string;
 
 SVG icon for the edit button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
+
+***
+
+### isEditable()
+
+```ts
+isEditable: (annotation) => boolean;
+```
+
+Called to decide whether an annotation can be dragged, resized, restyled,
+text-edited, deleted, or re-linked. Defaults to always `true`. Selection
+(click to highlight, `getSelectedAnnotations()`) is unaffected - a
+non-editable annotation stays fully selectable, just not mutable.
+
+Keep this cheap and synchronous - it can run once per affected
+annotation on every relevant edit attempt. To react to a change that
+isn't reflected in the annotation's own data (e.g. a host-side
+"read-only mode" toggle), call `control.setOptions({ isEditable })`
+again with a new function reference - passing the same reference is a
+no-op.
+
+#### Parameters
+
+##### annotation
+
+[`Annotation`](Annotation.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### isVisible()
+
+```ts
+isVisible: (annotation) => boolean;
+```
+
+Called to decide whether an annotation is rendered (including in SVG
+export) and hit-testable (hover/select/drag via the mouse). Defaults to
+always `true`. A hidden annotation stays fully present in
+`getAnnotations()`, `getAnnotation()`, and `getSelectedAnnotations()` -
+visibility only controls what's drawn and clickable, not data access.
+
+Keep this cheap and synchronous - it can run once per annotation on
+every render pass while the view is changing (drag, pan, zoom). Same
+reactivity note as `isEditable` applies to changing this after the fact.
+
+#### Parameters
+
+##### annotation
+
+[`Annotation`](Annotation.md)
+
+#### Returns
+
+`boolean`
 
 ***
 
@@ -3747,6 +4260,22 @@ minArrowHeight: number;
 ```
 
 Minimum height of the arrow in units
+
+***
+
+### minReadableFontSize
+
+```ts
+minReadableFontSize: number;
+```
+
+Minimum on-screen font size, in pixels, for a scalable (non-fixedSize)
+Text annotation's content or author line to actually be rendered.
+Below this, the text is skipped entirely (the box/background still
+renders) - avoids illegible sub-pixel text and the layout work that
+produces it. Ignored for `fixedSize` text (its on-screen size never
+shrinks with zoom) and during SVG/PNG export (export always renders
+in full, same as viewport culling). Set to 0 to disable.
 
 ***
 

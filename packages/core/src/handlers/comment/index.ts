@@ -70,15 +70,16 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       ...this.arrowStyle?.style
     });
 
-    // Add arrow to store
-    this.store.getState().addFeature(arrow);
-    this.store.setState({ drawingFeature: arrow.id });
+    this.store.getState().batchUpdate(() => {
+      // Add arrow to store
+      this.store.getState().addFeature(arrow);
+      this.store.setState({ drawingFeature: arrow.id });
+      // Activate ArrowHandler by selecting the arrow
+      this.store.getState().setSelectedFeatures([arrow.id]);
+    });
 
     // Listen for arrow completion
     this.arrowHandler.addEventListener("dragend", this.onArrowComplete);
-
-    // Activate ArrowHandler by selecting the arrow
-    this.store.getState().setSelectedFeatures([arrow.id]);
 
     // Start arrow drawing - ArrowHandler takes over
     this.arrowHandler.startDrawing(arrow.id, x, y);
@@ -135,12 +136,9 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
       commentY = arrowEnd[1];
     }
 
-    // Position and add the comment
+    // Position the comment (not yet added to the store - see below).
     const comment = this.comment;
     comment.geometry.coordinates = [commentX, commentY];
-    state.addFeature(comment);
-
-    this.store.setState({ drawingFeature: comment.id });
 
     // Calculate arrow start point at comment edge (bottom center)
     // Comments have fixedSize: true, so pixel dimensions need to be
@@ -154,8 +152,8 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.snapArrowStart(arrow, arrowStart[0], arrowStart[1]);
     const existingStartLink = arrow.properties.link?.start;
 
-    // Update arrow to connect from comment edge to the original click point
-    state.updateFeature(arrow.id, {
+    // Connect the arrow from the comment edge to the original click point.
+    const updatedArrow: Arrow = {
       ...arrow,
       geometry: {
         ...arrow.geometry,
@@ -185,6 +183,31 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
             : undefined
         }
       }
+    };
+
+    // Add the comment and correct the arrow's geometry/link together, as one
+    // atomic state transition (equivalent to addFeature(comment) +
+    // updateFeature(arrow.id, ...) + setState({drawingFeature}), merged into
+    // a single set() call) - doing those as separate calls, in that order,
+    // means the comment becomes visible via its own commit (and the Shapes
+    // renderer's reactive re-render) for a frame or two *before* the arrow
+    // catches up to point at it, showing the connector's free end still at
+    // the raw, unlinked drag-release point instead.
+    this.store.setState((s) => {
+      const liveUpdates = { ...s.liveUpdates };
+      // Mirrors updateFeature()'s own clearing of stale liveUpdates for the
+      // feature being replaced - the arrow's in-progress drag position must
+      // not linger and get merged back on top of its corrected geometry.
+      delete liveUpdates[arrow.id];
+      return {
+        features: {
+          ...s.features,
+          [comment.id]: comment,
+          [arrow.id]: updatedArrow
+        },
+        liveUpdates,
+        drawingFeature: comment.id
+      };
     });
 
     // Set up links

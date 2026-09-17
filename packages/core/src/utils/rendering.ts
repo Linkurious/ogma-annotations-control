@@ -25,11 +25,13 @@ export function isAnnotationLinkTarget(target: EventTarget | null): boolean {
 }
 
 /**
- * Source for the URL matcher used to autolink text/comment content.
+ * Source for the bare-URL matcher used to autolink text/comment content.
  * Excludes whitespace and `<` so it never swallows a following HTML tag
- * when the match is injected into escaped HTML (comment renderer).
+ * when the match is injected into escaped HTML (comment renderer), and
+ * `)` so a markdown link's closing paren - see `createMarkdownLinkPattern`
+ * - never gets pulled into a bare URL match around it.
  */
-const URL_REGEX_SOURCE = "(https?://[^\\s<]+)";
+const URL_REGEX_SOURCE = "(https?://[^\\s)<]+)";
 
 /**
  * Returns a fresh global RegExp for matching URLs. A new instance per call
@@ -38,6 +40,33 @@ const URL_REGEX_SOURCE = "(https?://[^\\s<]+)";
  */
 export function createUrlPattern(): RegExp {
   return new RegExp(URL_REGEX_SOURCE, "g");
+}
+
+/**
+ * Source for the markdown-style `[label](url)` link matcher used by the
+ * Text renderer (content and author line). Matched and substituted with
+ * just its label *before* word-wrap/truncation runs - see
+ * `renderer/shapes/text.ts`'s `extractMarkdownLinks` - so a multi-word
+ * label can never be split across two wrapped lines by a naive
+ * post-wrap regex pass. Groups: 1 = label, 2 = url.
+ */
+const MARKDOWN_LINK_REGEX_SOURCE = "\\[([^\\]\\n]+)\\]\\((https?://[^\\s)<]+)\\)";
+
+/**
+ * Returns a fresh global RegExp matching a markdown-style `[label](url)`
+ * link. Fresh instance per call for the same reason as `createUrlPattern`.
+ */
+export function createMarkdownLinkPattern(): RegExp {
+  return new RegExp(MARKDOWN_LINK_REGEX_SOURCE, "g");
+}
+
+/**
+ * Escapes regex metacharacters in `text` so it can be dropped into a
+ * dynamically-built RegExp source as a literal match. Used to match a
+ * link's exact substituted label back out of a wrapped line of text.
+ */
+export function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 export function drawRoundedRect(

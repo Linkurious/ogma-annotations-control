@@ -1,4 +1,32 @@
 {
+  // Used by scripts/build-types.mjs (the real declaration build) for
+  // compiler context (JSX, target, ...) - unlike tsconfig.json (this
+  // package's own dev-time typecheck, run before `@linkurious/ogma-annotations`'s
+  // dist necessarily exists), this must resolve that package - and its
+  // `/ui` subpath - through ordinary node_modules resolution to its real
+  // *built* declarations, not the source-alias tsconfig.json uses for dev
+  // convenience.
+  //
+  // `paths: {}` clearing that alias is what actually matters (verified):
+  // with the alias still active, `@linkurious/ogma-annotations` resolves to
+  // a real file path *inside* this package's own graph (core's raw
+  // `src/Control.ts`, not something sitting in `node_modules`) - and
+  // `rollup-plugin-dts` walks and inlines anything it can resolve to a real
+  // file that way, duplicating a full private-laden copy of `Control` into
+  // this package's own output. With the alias cleared, resolution goes
+  // through the `node_modules` symlink instead, which `rollup-plugin-dts`
+  // treats as external by default - no duplication, even with no explicit
+  // `external` entry for it at all.
+  //
+  // scripts/build-types.mjs's own `external` list is a second, redundant
+  // layer on top of this (Rollup checks it by specifier text before any
+  // resolution happens at all, so it protects even if this alias is
+  // accidentally restored) - keep both. `onwarn` in the shared
+  // scripts/build-dts.mjs fails the build if either layer's absence ever
+  // lets something get walked in and inlined instead of staying external.
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {}
+  },
   "include": ["src"]
 }

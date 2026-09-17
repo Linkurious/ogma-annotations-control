@@ -1,16 +1,16 @@
 import { defineConfig } from "vite";
-import dts from "vite-plugin-dts";
 
 import { resolve } from "path";
 
 // config for production builds
+//
+// Declaration files (`dist/types`) are generated separately by
+// `npm run types` (scripts/build-types.mjs, via rollup-plugin-dts) - a real
+// chunked declaration bundle, so `Control` (and every other type shared
+// between the `index`/`ui` entries below) is the exact same declaration
+// wherever it's imported from, instead of each entry independently
+// bundling its own copy. See scripts/build-types.mjs for why that matters.
 export default defineConfig({
-  plugins: [
-    dts({
-      outDir: "dist/types",
-      rollupTypes: true
-    })
-  ],
   build: {
     sourcemap: false,
     lib: {

@@ -9,10 +9,13 @@ describe("Index (Spatial Index)", () => {
   let featuresCallback: (features: Record<string, Annotation>) => void;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let rotationCallback: (rotation: number) => void;
+  let isVisibleCallback: () => void;
   let mockFeatures: Record<string, Annotation> = {};
+  let isVisible: (feature: Annotation) => boolean = () => true;
 
   beforeEach(() => {
     mockFeatures = {};
+    isVisible = () => true;
 
     // Mock the store with all necessary methods
     mockStore = {
@@ -24,6 +27,7 @@ describe("Index (Spatial Index)", () => {
         cos: 1,
         zoom: 1,
         invZoom: 1,
+        options: { isVisible: (f: Annotation) => isVisible(f) },
         getRotatedBBox: (x0: number, y0: number, x1: number, y1: number) => [
           x0,
           y0,
@@ -43,6 +47,9 @@ describe("Index (Spatial Index)", () => {
         ) {
           // This is the drag/live updates subscription - we don't need it for these tests
           return vi.fn();
+        } else if (typeof selectorResult === "function") {
+          // The options.isVisible subscription
+          isVisibleCallback = callback;
         } else if (typeof selectorResult === "number") {
           // This is the rotation subscription
           rotationCallback = callback;
@@ -282,6 +289,45 @@ describe("Index (Spatial Index)", () => {
         maxY: 600
       });
       expect(results.map((r) => r.id)).toContain("text2");
+    });
+
+    it("excludes a hidden feature from the index despite it being in store.features", () => {
+      const text1 = createText(10, 10, 100, 50, "Test Text 1");
+      text1.id = "text1";
+
+      isVisible = (f) => f.id !== "text1";
+      mockFeatures = { text1 };
+      featuresCallback(mockFeatures);
+
+      const results = spatialIndex.search({
+        minX: 0,
+        minY: 0,
+        maxX: 200,
+        maxY: 200
+      });
+      expect(results).toHaveLength(0);
+    });
+
+    it("re-indexes a feature once isVisible's answer changes, without a features change", () => {
+      const text1 = createText(10, 10, 100, 50, "Test Text 1");
+      text1.id = "text1";
+
+      isVisible = () => false;
+      mockFeatures = { text1 };
+      featuresCallback(mockFeatures);
+
+      expect(
+        spatialIndex.search({ minX: 0, minY: 0, maxX: 200, maxY: 200 })
+      ).toHaveLength(0);
+
+      // The predicate's *answer* changes, features never do - only the
+      // isVisible subscription can pick this up.
+      isVisible = () => true;
+      isVisibleCallback();
+
+      expect(
+        spatialIndex.search({ minX: 0, minY: 0, maxX: 200, maxY: 200 })
+      ).toHaveLength(1);
     });
   });
 

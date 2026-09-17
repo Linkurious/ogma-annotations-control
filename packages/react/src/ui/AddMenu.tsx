@@ -182,7 +182,7 @@ export const AddMenu = ({
   const isEnabled = (type: ToolbarDrawingType) => enabledTypes.includes(type);
 
   return (
-    <div className="add-menu" onClick={stopEvent} onMouseMove={stopEvent}>
+    <div className="add-menu oa-toolbar" onClick={stopEvent} onMouseMove={stopEvent}>
       {isEnabled("arrow") && (
         <button
           data-tooltip="Add arrow"

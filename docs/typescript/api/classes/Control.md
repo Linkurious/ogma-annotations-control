@@ -170,6 +170,20 @@ Destroy the controller and its elements
 
 ***
 
+### disableEraseMode()
+
+```ts
+disableEraseMode(): this;
+```
+
+Turn erase mode off. No-op if it isn't active.
+
+#### Returns
+
+`this`
+
+***
+
 ### emit()
 
 ```ts
@@ -359,6 +373,28 @@ startComment for low-level programmatic control
 
 ***
 
+### enableEraseMode()
+
+```ts
+enableEraseMode(): this;
+```
+
+Enable erase mode: every click on an annotation deletes it immediately.
+Stays armed across multiple clicks until `disableEraseMode()` is called,
+or another drawing tool is enabled / `cancelDrawing()` is called.
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### See
+
+disableEraseMode to turn erase mode off
+
+***
+
 ### enablePlacement()
 
 ```ts
@@ -427,6 +463,59 @@ addPolygonButton.addEventListener('click', () => {
 #### See
 
 startPolygon for low-level programmatic control
+
+***
+
+### enableStickyNoteDrawing()
+
+```ts
+enableStickyNoteDrawing(style?): this;
+```
+
+Enable sticky note drawing mode - drops a plain, resizable text box
+(empty content, "Quick note…" ghost placeholder, no connector arrow)
+like a Miro sticky note, unlike `enableCommentDrawing`. It's a regular
+`text` annotation, so it's placed the same interactive way as
+`enableBoxDrawing`/`enableTextDrawing`: click for a default-size square,
+or drag to size it - either way it keeps the usual corner/edge drag
+handles to resize it afterward.
+
+Call this method when the user clicks an "Add sticky note" button. The
+control will:
+1. Wait for the next mousedown event
+2. Create the note at that position and start the interactive
+   corner-drag, already selected
+3. On release: a plain click (no drag) gets a default square size, a
+   drag gets sized to match instead - either way it drops straight
+   into editing (the placeholder is just ghost text, so typing
+   immediately replaces it)
+4. Clean up automatically when done
+
+#### Parameters
+
+##### style?
+
+`Partial`\<[`TextStyle`](../interfaces/TextStyle.md) \| `undefined`\>
+
+Sticky note style options (merged over the sticky note defaults)
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### Example
+
+```ts
+addStickyNoteButton.addEventListener('click', () => {
+  control.enableStickyNoteDrawing({ background: '#FFEB99' });
+});
+```
+
+#### See
+
+startStickyNote for low-level programmatic control
 
 ***
 
@@ -534,6 +623,40 @@ A FeatureCollection containing all annotations
 
 ***
 
+### getOgma()
+
+```ts
+getOgma(): Ogma;
+```
+
+The underlying Ogma instance this controller was created with. Needed by
+UI built on top of `Control`'s public API (e.g. `TextAnnotationToolbar`)
+that must mount its own `ogma.layers.addOverlay(...)` layer rather than
+going through a renderer/handler internal to `Control`.
+
+#### Returns
+
+`Ogma`
+
+***
+
+### getRotation()
+
+```ts
+getRotation(): number;
+```
+
+Current global annotation-rotation angle (radians) - see
+`TextStyle`/`Handles`' `counterRotation`. Needed alongside `getZoom()` by
+`TextAnnotationToolbar` to anchor its pill above a (possibly rotated)
+Text box's world-space bounds.
+
+#### Returns
+
+`number`
+
+***
+
 ### getSelected()
 
 ```ts
@@ -566,11 +689,83 @@ A FeatureCollection of selected annotations
 
 ***
 
+### getZoom()
+
+```ts
+getZoom(): number;
+```
+
+Current zoom level - needed by `TextAnnotationToolbar` to convert a
+`fixedSize` Text annotation's screen-pixel dimensions back to graph
+units for its anchor-point math (same conversion `Handles` does).
+
+#### Returns
+
+`number`
+
+***
+
+### isAnnotationEditable()
+
+```ts
+isAnnotationEditable(id): boolean;
+```
+
+Can `id` be dragged/resized/restyled/text-edited/deleted/re-linked
+right now, per the `isEditable` option? `false` for an unknown id.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### isAnnotationVisible()
+
+```ts
+isAnnotationVisible(id): boolean;
+```
+
+Is `id` rendered and hit-testable right now, per the `isVisible`
+option? `false` for an unknown id.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`boolean`
+
+***
+
 ### isDrawing()
 
 ```ts
 isDrawing(): boolean;
 ```
+
+#### Returns
+
+`boolean`
+
+***
+
+### isEraseModeActive()
+
+```ts
+isEraseModeActive(): boolean;
+```
+
+Whether erase mode is currently active.
 
 #### Returns
 
@@ -932,6 +1127,12 @@ new Options
 
 the updated options
 
+##### authorStyle?
+
+```ts
+optional authorStyle: Partial<AuthorLineStyle>;
+```
+
 ##### detectMargin
 
 ```ts
@@ -943,6 +1144,38 @@ detectMargin: number;
 ```ts
 editButtonIcon: string;
 ```
+
+##### isEditable()
+
+```ts
+isEditable: (annotation) => boolean;
+```
+
+###### Parameters
+
+###### annotation
+
+[`Annotation`](../type-aliases/Annotation.md)
+
+###### Returns
+
+`boolean`
+
+##### isVisible()
+
+```ts
+isVisible: (annotation) => boolean;
+```
+
+###### Parameters
+
+###### annotation
+
+[`Annotation`](../type-aliases/Annotation.md)
+
+###### Returns
+
+`boolean`
 
 ##### magnetHandleRadius
 
@@ -966,6 +1199,12 @@ maxArrowHeight: number;
 
 ```ts
 minArrowHeight: number;
+```
+
+##### minReadableFontSize
+
+```ts
+minReadableFontSize: number;
 ```
 
 ##### sendButtonIcon
@@ -1322,6 +1561,54 @@ ogma.events.once('mousedown', (evt) => {
 #### See
 
 enablePolygonDrawing for the recommended high-level API
+
+***
+
+### startStickyNote()
+
+```ts
+startStickyNote(
+   x, 
+   y, 
+   style?): this;
+```
+
+**Advanced API:** Programmatically start drawing a sticky note at
+specific coordinates - same interactive corner-drag as `startBox`.
+You must handle mouse events yourself (or immediately release/complete
+it via the same events `enableStickyNoteDrawing` would).
+
+**For most use cases, use `enableStickyNoteDrawing()` instead.**
+
+#### Parameters
+
+##### x
+
+`number`
+
+X coordinate for the note's top-left corner
+
+##### y
+
+`number`
+
+Y coordinate for the note's top-left corner
+
+##### style?
+
+`Partial`\<[`TextStyle`](../interfaces/TextStyle.md) \| `undefined`\>
+
+Sticky note style options
+
+#### Returns
+
+`this`
+
+this for chaining
+
+#### See
+
+enableStickyNoteDrawing for the recommended high-level API
 
 ***
 

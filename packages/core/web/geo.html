@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      #graph-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      #panel {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 10px 14px;
+        font-family: sans-serif;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      #status {
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="graph-container"></div>
+    <div id="panel">
+      <label><input type="checkbox" id="geoToggle" /> Geo mode</label>
+      <span id="status">node-link (force layout)</span>
+    </div>
+    <script type="module" src="geo.ts"></script>
+  </body>
+</html>

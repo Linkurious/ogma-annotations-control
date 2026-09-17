@@ -30,7 +30,7 @@ export const ViewControls = () => {
   }, []);
 
   return (
-    <div className="view-controls" onMouseMove={stopEvent} onClick={stopEvent}>
+    <div className="view-controls oa-toolbar" onMouseMove={stopEvent} onClick={stopEvent}>
       <button data-tooltip="Center view" onClick={handleCenterView}>
         <Icon name="minimize" size={16} />
       </button>

@@ -20,6 +20,9 @@ import { detectPolygon } from "../types/features/Polygon";
 import { clientToContainerPosition } from "../utils/utils";
 import { isAnnotationLinkTarget } from "../utils/rendering";
 
+// AnnotationEditor-only signal - not in constants.ts, which is wildcard
+// re-exported from the package root and so would otherwise leak this.
+export const EVT_MOUSEDOWN_ANNOTATION = "mousedown-annotation";
 
 export class InteractionController extends EventTarget {
   private query = {
@@ -36,9 +39,19 @@ export class InteractionController extends EventTarget {
     screenX: number;
     screenY: number;
     hasMoved: boolean;
+    // Was `annotation` selected before this gesture started? onMouseDown
+    // below adds a not-yet-selected ctrl/meta click to the selection right
+    // away, so a drag that follows without releasing still moves it - if
+    // onMouseUp's click-completion then toggled ctrl/meta again unconditionally,
+    // it would immediately undo that same add on a plain click release.
+    wasSelected: boolean;
   } | null = null;
 
   private readonly DRAG_THRESHOLD = 3; // pixels
+
+  // A locked annotation never arms a Handler, so Handler.disablePanning() never runs either - handled here instead.
+  private savedPan?: boolean;
+  private savedDrag?: boolean;
 
   constructor(
     private ogma: Ogma,
@@ -129,19 +142,23 @@ export class InteractionController extends EventTarget {
 
     if (hit.length === 0) return null;
 
-    // Thin/small targets (arrows, comments, texts) take priority over
-    // area-filling ones (boxes, polygons) that happen to also match the
-    // same point - e.g. an arrow endpoint sitting inside a polygon's body
-    // must still resolve to the arrow, not the polygon underneath it,
-    // otherwise clicking/dragging that endpoint is unreachable: the
-    // polygon's much larger hit area wins by pure luck of spatial-index
-    // ordering and steals the selection out from under the arrow.
+    // Thin/small targets take priority over area-filling ones that happen
+    // to overlap the same point (e.g. an arrow endpoint inside a polygon
+    // must resolve to the arrow, not the polygon underneath it). Comments
+    // are the one exception above arrows: a comment's own rigid-linked
+    // connector routinely overlaps its (much larger) box right where a
+    // user clicks to grab it, so arrow-first meant dragging the comment
+    // could drag the connector instead, detaching it. Texts don't get the
+    // same bump - nothing forces a text/arrow overlap the way a comment's
+    // rigid link does, and bumping texts too would make an arrow endpoint
+    // that merely sits inside an unrelated text unreachable, the exact
+    // regression this priority order exists to prevent.
     const DETECT_PRIORITY: Record<string, number> = {
-      arrow: 0,
-      comment: 1,
-      text: 1,
-      box: 2,
-      polygon: 2
+      comment: 0,
+      arrow: 1,
+      text: 2,
+      box: 3,
+      polygon: 3
     };
     const ordered = [...hit].sort(
       (a, b) =>
@@ -284,26 +301,49 @@ export class InteractionController extends EventTarget {
     );
     const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
     const annotation = this.detect(x, y);
+    const state = this.store.getState();
+    const wasSelected = annotation
+      ? state.selectedFeatures.has(annotation.id)
+      : false;
 
     // Record what was clicked, but don't select yet
     this.mouseDownState = {
       annotation,
       screenX: evt.clientX,
       screenY: evt.clientY,
-      hasMoved: false
+      hasMoved: false,
+      wasSelected
     };
 
-    const state = this.store.getState();
+    if (annotation && !state.options.isEditable(annotation)) {
+      const opts = this.ogma.getOptions().interactions;
+      this.savedPan = opts?.pan?.enabled ?? true;
+      this.savedDrag = opts?.drag?.enabled ?? true;
+      this.ogma.setOptions({
+        interactions: { pan: { enabled: false }, drag: { enabled: false } }
+      });
+    }
 
-    // If clicking on an already-selected annotation, don't change selection yet
-    // (allows dragging multiple selected items)
-    if (annotation && !state.selectedFeatures.has(annotation.id)) {
-      // Not selected yet - select immediately to prepare for potential drag
+    // A not-yet-selected annotation is selected immediately, so its handler
+    // is already tracking it in time for a drag that follows without
+    // releasing (see wasSelected above for why onMouseUp doesn't also
+    // toggle it on a ctrl/meta click).
+    if (annotation && !wasSelected) {
       if (evt.ctrlKey || evt.metaKey) {
         state.toggleSelection(annotation.id);
       } else {
         state.setSelectedFeatures([annotation.id]);
       }
+    }
+
+    // Each annotation type shares one Handler instance across every
+    // annotation of that type (see AnnotationEditor), which tracks a single
+    // id at a time - so when two same-type annotations are both selected,
+    // only one is draggable. Switch the handler onto whatever's clicked.
+    if (annotation) {
+      this.dispatchEvent(new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
+        detail: { id: annotation.id }
+      }));
     }
   };
 
@@ -315,6 +355,14 @@ export class InteractionController extends EventTarget {
       mousePressed: false,
       mousePressPoint: null
     });
+
+    if (this.savedPan !== undefined) {
+      this.ogma.setOptions({
+        interactions: { pan: { enabled: this.savedPan }, drag: { enabled: this.savedDrag } }
+      });
+      this.savedPan = undefined;
+      this.savedDrag = undefined;
+    }
 
     // Releasing over a content link: don't select or emit a click. Native
     // anchor navigation handles it. (mouseDownState was already cleared in
@@ -333,9 +381,11 @@ export class InteractionController extends EventTarget {
       const annotation = this.mouseDownState.annotation;
 
       if (annotation) {
-        // Handle selection on mouseup for already-selected items
+        // A ctrl/meta click toggles the *pre-gesture* selection state:
+        // onMouseDown already added it above if it wasn't selected before -
+        // toggling again here would immediately undo that add.
         if (evt.ctrlKey || evt.metaKey) {
-          state.toggleSelection(annotation.id);
+          if (this.mouseDownState.wasSelected) state.toggleSelection(annotation.id);
         } else if (!state.selectedFeatures.has(annotation.id)) {
           state.setSelectedFeatures([annotation.id]);
         }

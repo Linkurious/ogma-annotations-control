@@ -72,7 +72,17 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
     if (this.isDrawingMode) {
       this.isDrawingMode = false;
       if (this.annotation) {
-        this.store.getState().removeFeature(this.annotation);
+        // Snapshot before removeFeature() - deleting the (selected)
+        // in-progress annotation cascades into a synchronous
+        // selection-change side effect that clears this.annotation via
+        // stopEditing(), so re-reading it afterwards would see null.
+        const annotationId = this.annotation;
+        const wasDrawingFeature =
+          this.store.getState().drawingFeature === annotationId;
+        this.store.getState().removeFeature(annotationId);
+        // Otherwise drawingFeature stays stuck on the now-deleted id and
+        // isDrawing() keeps reporting true forever after a cancel.
+        if (wasDrawingFeature) this.store.setState({ drawingFeature: null });
         this.annotation = null;
       }
     }

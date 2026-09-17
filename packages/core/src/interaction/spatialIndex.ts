@@ -1,6 +1,6 @@
 import Rtree, { BBox } from "rbush";
 import { Store } from "../store";
-import { Annotation, Comment, Text, isComment, isText } from "../types";
+import { Annotation, Comment, Id, Text, isComment, isText } from "../types";
 import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils/utils";
 
 const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
@@ -15,16 +15,11 @@ export class Index extends Rtree<Annotation> {
     this.store = store;
 
     // Rebuild index when features are added/removed
+    this.store.subscribe((state) => state.features, this.rebuild);
+    // isVisible is a function, not data - watch it separately so a fresh setOptions() call alone still re-indexes.
     this.store.subscribe(
-      (state) => state.features,
-      (features) => {
-        this.clear();
-        Object.values(features).forEach((feature) => {
-          if (isText(feature) || isComment(feature))
-            this.updateRotatedText(feature);
-          else this.insert(feature);
-        });
-      }
+      (state) => state.options.isVisible,
+      () => this.rebuild(this.store.getState().features)
     );
 
     // Update index when live updates are committed (features are modified)
@@ -43,14 +38,18 @@ export class Index extends Rtree<Annotation> {
             current.lastChangedFeatures.forEach((id) => {
               // Insert updated version
               const newFeature = current.features[id];
-              if (newFeature) {
-                updateBbox(newFeature);
-                if (isText(newFeature) || isComment(newFeature))
-                  this.updateRotatedText(newFeature);
-                else {
-                  this.remove(newFeature, compareId);
-                  this.insert(newFeature);
-                }
+              if (!newFeature) return;
+              if (!this.isVisible(newFeature)) {
+                // Went visible->hidden in this same change - drop it instead of just skipping the re-insert.
+                this.remove(newFeature, compareId);
+                return;
+              }
+              updateBbox(newFeature);
+              if (isText(newFeature) || isComment(newFeature))
+                this.updateRotatedText(newFeature);
+              else {
+                this.remove(newFeature, compareId);
+                this.insert(newFeature);
               }
             });
           }
@@ -66,7 +65,10 @@ export class Index extends Rtree<Annotation> {
     const texts = this.store
       .getState()
       .getAllFeatures()
-      .filter((feature) => isText(feature) || isComment(feature));
+      .filter(
+        (feature) =>
+          (isText(feature) || isComment(feature)) && this.isVisible(feature)
+      );
 
     for (const text of texts) this.updateRotatedText(text as Text);
   };
@@ -78,10 +80,23 @@ export class Index extends Rtree<Annotation> {
       .filter(
         (feature) =>
           (isText(feature) || isComment(feature)) &&
-          feature.properties.style?.fixedSize
+          feature.properties.style?.fixedSize &&
+          this.isVisible(feature)
       );
 
     for (const text of fixedSizeTexts) this.updateRotatedText(text as Text);
+  };
+
+  private isVisible = (feature: Annotation): boolean =>
+    this.store.getState().options.isVisible(feature);
+
+  private rebuild = (features: Record<Id, Annotation>) => {
+    this.clear();
+    for (const feature of Object.values(features)) {
+      if (!this.isVisible(feature)) continue;
+      if (isText(feature) || isComment(feature)) this.updateRotatedText(feature);
+      else this.insert(feature);
+    }
   };
 
   private updateRotatedText(text: Text | Comment) {
