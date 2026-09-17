@@ -58,7 +58,16 @@ export function isRgbaColor(color: string): color is RgbaColor {
  * Type guard to check if a string is a valid color
  */
 export function isColor(color: string): color is Color {
-  return isHexColor(color) || isRgbColor(color) || isRgbaColor(color);
+  // "transparent"/"none" are listed on the `Color` type itself as valid,
+  // paint-free values - accept them here too, not just hex/rgb(a).
+  const trimmed = color.trim();
+  return (
+    trimmed === "transparent" ||
+    trimmed === "none" ||
+    isHexColor(trimmed) ||
+    isRgbColor(trimmed) ||
+    isRgbaColor(trimmed)
+  );
 }
 
 /**

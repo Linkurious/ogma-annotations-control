@@ -200,6 +200,21 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     );
   });
 
+  it("ColorCell's built-in 'More colors…' popover opens for a transparent background instead of throwing (regression: parseColor didn't recognize transparent/none)", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { background: "transparent" });
+    const { ctx } = fakeCellContext(text);
+    const cell = new ColorCell(ctx, { swatches: STICKY_SWATCHES });
+
+    const moreBtn = cell.element.querySelector<HTMLButtonElement>(
+      ".oa-toolbar-more-colors"
+    )!;
+
+    expect(() => moreBtn.click()).not.toThrow();
+    expect(
+      cell.element.querySelector(".oa-toolbar-more-colors-host")
+    ).not.toBeNull();
+  });
+
   it("ColorCell calls onMoreColors instead of opening the built-in picker when provided", () => {
     const text = createText(0, 0, 100, 50, "Hi", { background: "#FFE49B" });
     const { ctx } = fakeCellContext(text);

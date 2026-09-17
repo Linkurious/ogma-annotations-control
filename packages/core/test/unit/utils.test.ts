@@ -10,9 +10,12 @@ import {
 import { describe, it, assert } from "vitest";
 import {
   AnnotationCollection,
+  colorToRgba,
   getAnnotationsBounds,
   getCoordinates,
-  getEffectiveFontSize
+  getEffectiveFontSize,
+  isColor,
+  parseColor
 } from "../../src";
 
 import Set1 from "../fixtures/set1.json";
@@ -341,5 +344,45 @@ describe("getEffectiveFontSize", () => {
   it("returns 0 for a non-finite fontSize", () => {
     assert.strictEqual(getEffectiveFontSize(undefined, 2), 0);
     assert.strictEqual(getEffectiveFontSize("not-a-number", 2), 0);
+  });
+});
+
+// Regression: a client's custom color picker set an annotation's
+// background to "transparent" via control.updateStyle() (a perfectly
+// valid Color per types/colors.ts's own union) - opening this package's
+// own color picker afterward (ColorCell's "More colors…", or
+// AnnotationPanel's circular swatch) seeds itself by calling
+// parseColor(currentBackground), which threw "Invalid RGB color:
+// transparent" because only "#…"/"rgb(a)(…)" were recognized.
+describe("parseColor/colorToRgba/isColor - transparent and none", () => {
+  it("parseColor treats transparent/none as fully transparent instead of throwing", () => {
+    assert.deepEqual(parseColor("transparent"), { r: 0, g: 0, b: 0, a: 0 });
+    assert.deepEqual(parseColor("none"), { r: 0, g: 0, b: 0, a: 0 });
+  });
+
+  it("parseColor still throws on a genuinely invalid color", () => {
+    assert.throws(() => parseColor("not-a-color"), /Invalid RGB color/);
+  });
+
+  it("parseColor still handles hex and rgba as before", () => {
+    assert.deepEqual(parseColor("#ff0000"), { r: 255, g: 0, b: 0, a: 1 });
+    assert.deepEqual(parseColor("rgba(1, 2, 3, 0.5)"), {
+      r: 1,
+      g: 2,
+      b: 3,
+      a: 0.5
+    });
+  });
+
+  it("colorToRgba treats transparent/none as rgba(0, 0, 0, 0)", () => {
+    assert.strictEqual(colorToRgba("transparent", 1), "rgba(0, 0, 0, 0)");
+    assert.strictEqual(colorToRgba("none", 1), "rgba(0, 0, 0, 0)");
+  });
+
+  it("isColor accepts transparent/none alongside hex/rgb(a)", () => {
+    assert.isTrue(isColor("transparent"));
+    assert.isTrue(isColor("none"));
+    assert.isTrue(isColor("#fff"));
+    assert.isFalse(isColor("not-a-color"));
   });
 });
