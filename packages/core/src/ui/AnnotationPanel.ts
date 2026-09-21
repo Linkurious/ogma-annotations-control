@@ -110,7 +110,8 @@ export class AnnotationPanel {
     // control (unit tests construct these) doesn't blow up the constructor.
     const ogmaContainer = this.control.getOgma?.()?.getContainer?.();
     if (!options.container && ogmaContainer && ogmaContainer !== document.body) {
-      console.warn(
+      // eslint-disable-next-line no-console
+      console.error(
         "[ogma-annotations-control] AnnotationPanel: no `container` option " +
           "given, defaulting to document.body. If this panel should dock to " +
           "the Ogma graph area (e.g. it is embedded in a smaller/offset " +
