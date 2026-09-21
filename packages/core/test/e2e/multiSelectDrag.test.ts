@@ -1,9 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import {
-  BrowserSession,
-  captureScreenshotOnTestEnd,
-  offsetGraphContainer
-} from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Multi-select drag", () => {
   const session = new BrowserSession();
@@ -19,7 +15,6 @@ describe("Multi-select drag", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "multiSelectDrag");
     await session.refresh();
-    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       createOgma({});
       await ogma.view.locateGraph();

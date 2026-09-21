@@ -1,9 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import {
-  BrowserSession,
-  captureScreenshotOnTestEnd,
-  offsetGraphContainer
-} from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Locked and hidden annotations", () => {
   const session = new BrowserSession();
@@ -19,7 +15,6 @@ describe("Locked and hidden annotations", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "lockedAndHidden");
     await session.refresh();
-    await offsetGraphContainer(session);
   });
 
   it("a locked annotation ignores a real drag and removal, but stays selectable", async () => {

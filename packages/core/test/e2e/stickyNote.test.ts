@@ -1,9 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import {
-  BrowserSession,
-  captureScreenshotOnTestEnd,
-  offsetGraphContainer
-} from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 describe("Sticky notes", () => {
   const session = new BrowserSession();
@@ -19,7 +15,6 @@ describe("Sticky notes", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "stickyNote");
     await session.refresh();
-    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       const ogma = createOgma({});
       await ogma.view.locateGraph();
@@ -29,8 +24,8 @@ describe("Sticky notes", () => {
 
   // A plain screen-space point (no graph-coordinate conversion needed, since
   // it's not placed relative to anything in the graph) - routed through
-  // containerToPage so it still lands inside #graph-container once
-  // offsetGraphContainer() has shifted it off the viewport's (0,0).
+  // containerToPage so it still lands inside #graph-container, which sits
+  // off the viewport's (0,0) by default (see pages/index.html).
   async function toPage(p: { x: number; y: number }) {
     return session.page.evaluate((pt) => containerToPage(pt), p);
   }

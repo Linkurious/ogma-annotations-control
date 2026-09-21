@@ -1,9 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import {
-  BrowserSession,
-  captureScreenshotOnTestEnd,
-  offsetGraphContainer
-} from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 describe("Snapping", () => {
   const session = new BrowserSession();
   let bottomRight: { x: number; y: number };
@@ -20,7 +16,6 @@ describe("Snapping", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "snapping");
     await session.refresh();
-    await offsetGraphContainer(session);
     const pts = await session.page.evaluate(() => {
       const ogma = createOgma({});
       const x = 0;

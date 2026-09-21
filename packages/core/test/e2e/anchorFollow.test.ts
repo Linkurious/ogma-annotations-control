@@ -1,9 +1,5 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import {
-  BrowserSession,
-  captureScreenshotOnTestEnd,
-  offsetGraphContainer
-} from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
 // Anchor-follow coverage: arrows/comments linked to graph nodes/edges must
 // keep tracking their target through the real event pipeline
@@ -27,7 +23,6 @@ describe("Anchor follow", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "anchorFollow");
     await session.refresh();
-    await offsetGraphContainer(session);
   });
 
   it("should keep a node-anchored arrow attached when the node is dragged with the mouse", async () => {

@@ -42,9 +42,9 @@ export interface AugmentedWindow {
    * be driven with directly. ogma.view.graphToScreenCoordinates alone
    * returns a *container*-relative point, which only lines up with
    * page.mouse when #graph-container sits flush at the viewport's (0,0) -
-   * true unless a test has shifted it (see utils.ts's offsetGraphContainer).
-   * A no-op offset (container at its natural position) makes this behave
-   * exactly like graphToScreenCoordinates, so it's safe to use unconditionally.
+   * it doesn't by default (see index.html's #graph-container margin). Would
+   * behave exactly like graphToScreenCoordinates if the container ever sat
+   * at (0,0), so it's safe to use unconditionally either way.
    */
   screenToPage: (p: { x: number; y: number }) => { x: number; y: number };
   /**

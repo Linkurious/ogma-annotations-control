@@ -1,10 +1,10 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import {
-  BrowserSession,
-  captureScreenshotOnTestEnd,
-  offsetGraphContainer
-} from "./utils";
+import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
 
+// #graph-container sits off the viewport's (0,0) origin by default (see
+// pages/index.html), so every e2e spec already exercises this - these tests
+// are the focused, exact-coordinate regressions for each bug that offset
+// exposed, not what makes the offset happen.
 describe("Offset/non-fullscreen container", () => {
   const session = new BrowserSession();
 
@@ -19,7 +19,6 @@ describe("Offset/non-fullscreen container", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "offsetContainer");
     await session.refresh();
-    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       createOgma({});
       await ogma.view.locateGraph();
