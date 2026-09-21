@@ -13,6 +13,7 @@ import {
   AnnotationCollection,
   getAnnotationsBounds
 } from "../src";
+import { installBrand } from "./brand";
 
 interface ND {}
 interface ED {}
@@ -34,19 +35,7 @@ class App {
 
   constructor() {
     this.ogma = new Ogma<ND, ED>({ container: "app" });
-    this.ogma.tools.brand.set(
-      `<div class="brand">
-        <a href="../api/">
-          <code>ogma-annotations</code>
-        </a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/core/web/">code</a>
-      </div>`,
-      {
-        position: "top-left",
-        horizontalMargin: 10,
-        verticalMargin: 10,
-        className: "brand"
-      }
-    );
+    installBrand(this.ogma);
 
     //this.ogma.events.once = (e, h) => console.log("ogma.once", e, h); // Temporary fix for ogma typings
     this.control = new Control(this.ogma, {

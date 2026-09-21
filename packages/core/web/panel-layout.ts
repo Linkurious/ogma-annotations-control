@@ -12,9 +12,11 @@ import {
   type PanelOrientation
 } from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
+import { installBrand } from "./brand";
 import "./style.css";
 
 const ogma = new Ogma({ container: "graph-container" });
+installBrand(ogma);
 const control = new Control(ogma);
 
 await ogma.setGraph({

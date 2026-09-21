@@ -1,12 +1,14 @@
 import Ogma from "@linkurious/ogma";
 import { Control, createComment } from "../src";
 import { createDebugTools } from "./debug";
+import { installBrand } from "./brand";
 import "./style.css";
 
 // Create an instance of Ogma and bind it to the graph-container.
 const ogma = new Ogma({
   container: "graph-container"
 });
+installBrand(ogma);
 
 const control = new Control(ogma);
 

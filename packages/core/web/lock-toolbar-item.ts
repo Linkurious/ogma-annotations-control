@@ -8,6 +8,7 @@ import {
 } from "../src/ui";
 import "../src/ui/styles.css";
 import type { Id } from "../src";
+import { installBrand } from "./brand";
 import "./style.css";
 
 // Runnable version of the "lock button" worked example from
@@ -64,6 +65,7 @@ class LockCell implements ToolbarCell {
 
 // --- Ogma/Control setup ----------------------------------------------------
 const ogma = new Ogma({ container: "graph-container" });
+installBrand(ogma);
 const control = new Control(ogma);
 
 control.setOptions({

@@ -7,12 +7,14 @@ import {
   createCommentWithArrow,
   createText
 } from "../src";
+import { installBrand } from "./brand";
 import "./style.css";
 
 // This demo exists to show `isEditable`/`isVisible` (packages/core/src/types/index.ts,
 // ControllerOptions) actually working: no graph, just annotations, so
 // there's nothing else for a checkbox toggle to explain away.
 const ogma = new Ogma({ container: "graph-container" });
+installBrand(ogma);
 
 const fontFamily = "IBM Plex Sans, sans-serif";
 
