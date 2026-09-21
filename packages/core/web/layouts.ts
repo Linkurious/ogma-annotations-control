@@ -2,6 +2,7 @@ import Ogma from "@linkurious/ogma";
 import type { RawGraph } from "@linkurious/ogma";
 import { GUI } from "@linkurious/ogma-ui-kit/gui";
 import { Control, createCommentWithArrow, SIDE_END } from "../src";
+import { installBrand } from "./brand";
 import "./style.css";
 
 // Small tree - reads cleanly under both a hierarchical and a force layout,
@@ -28,6 +29,7 @@ const graph: RawGraph = {
 };
 
 const ogma = new Ogma({ graph, container: "graph-container" });
+installBrand(ogma);
 
 const fontFamily = "IBM Plex Sans, sans-serif";
 ogma.styles.addRule({

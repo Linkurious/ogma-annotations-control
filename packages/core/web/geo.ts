@@ -3,6 +3,7 @@ import type { RawGraph } from "@linkurious/ogma";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Control, createCommentWithArrow, createBox, createArrow, SIDE_END, SIDE_START } from "../src";
+import { installBrand } from "./brand";
 import "./style.css";
 
 Ogma.libraries["leaflet"] = L;
@@ -55,6 +56,7 @@ const graph: RawGraph = {
 };
 
 const ogma = new Ogma({ graph, container: "graph-container" });
+installBrand(ogma);
 
 const fontFamily = "IBM Plex Sans, sans-serif";
 ogma.styles.addRule({
