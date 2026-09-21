@@ -1,5 +1,9 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
+import {
+  BrowserSession,
+  captureScreenshotOnTestEnd,
+  offsetGraphContainer
+} from "./utils";
 
 describe("Snapping", () => {
   const session = new BrowserSession();
@@ -15,6 +19,7 @@ describe("Snapping", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "drawing");
     await session.refresh();
+    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       const ogma = createOgma({});
       const x = 0;
@@ -34,7 +39,7 @@ describe("Snapping", () => {
     const pos = await session.page.evaluate(async () => {
       const editor = createEditor();
       editor.startArrow(20, 20, createArrow(20, 20, 20, 20));
-      return ogma.view.graphToScreenCoordinates({ x: 20, y: 20 });
+      return screenToPage({ x: 20, y: 20 });
     });
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();

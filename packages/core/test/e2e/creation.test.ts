@@ -1,5 +1,9 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
+import {
+  BrowserSession,
+  captureScreenshotOnTestEnd,
+  offsetGraphContainer
+} from "./utils";
 
 describe("Annotation creation", () => {
   const session = new BrowserSession();
@@ -15,6 +19,7 @@ describe("Annotation creation", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "creation");
     await session.refresh();
+    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       createOgma({});
       await ogma.view.locateGraph();
@@ -25,7 +30,7 @@ describe("Annotation creation", () => {
   it("should create a text annotation with the click default size", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableTextDrawing(demoStyles.text);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await session.page.mouse.move(pos.x, pos.y);
@@ -50,7 +55,7 @@ describe("Annotation creation", () => {
   it("should size a text annotation to a drag", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableTextDrawing(demoStyles.text);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await session.page.mouse.move(pos.x, pos.y);
@@ -74,7 +79,7 @@ describe("Annotation creation", () => {
   it("should create a box annotation by dragging", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableBoxDrawing(demoStyles.box);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await session.page.mouse.move(pos.x, pos.y);
@@ -102,10 +107,10 @@ describe("Annotation creation", () => {
     const points = await session.page.evaluate(() => {
       editor.enablePolygonDrawing(demoStyles.polygon);
       return [
-        ogma.view.graphToScreenCoordinates({ x: -50, y: -50 }),
-        ogma.view.graphToScreenCoordinates({ x: 50, y: -50 }),
-        ogma.view.graphToScreenCoordinates({ x: 50, y: 50 }),
-        ogma.view.graphToScreenCoordinates({ x: -50, y: -50 }) // close the ring
+        screenToPage({ x: -50, y: -50 }),
+        screenToPage({ x: 50, y: -50 }),
+        screenToPage({ x: 50, y: 50 }),
+        screenToPage({ x: -50, y: -50 }) // close the ring
       ];
     });
 
@@ -132,8 +137,8 @@ describe("Annotation creation", () => {
     const points = await session.page.evaluate(() => {
       editor.enablePolygonDrawing(demoStyles.polygon);
       return [
-        ogma.view.graphToScreenCoordinates({ x: -50, y: -50 }),
-        ogma.view.graphToScreenCoordinates({ x: 50, y: -50 })
+        screenToPage({ x: -50, y: -50 }),
+        screenToPage({ x: 50, y: -50 })
       ];
     });
 
@@ -161,7 +166,7 @@ describe("Annotation creation", () => {
   it("should leave nothing behind when an arrow draw is cancelled before any drag", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableArrowDrawing(demoStyles.arrow);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await session.page.mouse.move(pos.x, pos.y);
@@ -189,7 +194,7 @@ describe("Annotation creation", () => {
   it("should leave nothing behind when a box draw is cancelled mid-drag", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableBoxDrawing(demoStyles.box);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await session.page.mouse.move(pos.x, pos.y);
@@ -215,7 +220,7 @@ describe("Annotation creation", () => {
   it("should leave nothing behind when a text draw is cancelled mid-drag", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableTextDrawing(demoStyles.text);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await session.page.mouse.move(pos.x, pos.y);
@@ -257,8 +262,8 @@ describe("Annotation creation", () => {
     const first = await session.page.evaluate(() => {
       editor.enableArrowDrawing(demoStyles.arrow);
       return {
-        from: ogma.view.graphToScreenCoordinates({ x: -40, y: -40 }),
-        to: ogma.view.graphToScreenCoordinates({ x: -10, y: -10 })
+        from: screenToPage({ x: -40, y: -40 }),
+        to: screenToPage({ x: -10, y: -10 })
       };
     });
     await drawArrow(first.from, first.to);
@@ -266,8 +271,8 @@ describe("Annotation creation", () => {
     const second = await session.page.evaluate(() => {
       editor.enableArrowDrawing(demoStyles.arrow);
       return {
-        from: ogma.view.graphToScreenCoordinates({ x: 40, y: 40 }),
-        to: ogma.view.graphToScreenCoordinates({ x: 10, y: 10 })
+        from: screenToPage({ x: 40, y: 40 }),
+        to: screenToPage({ x: 10, y: 10 })
       };
     });
     await drawArrow(second.from, second.to);
@@ -292,7 +297,7 @@ describe("Annotation creation", () => {
   it("should create one of every annotation type in sequence without throwing", async () => {
     const screen = (x: number, y: number) =>
       session.page.evaluate(
-        (p) => ogma.view.graphToScreenCoordinates(p),
+        (p) => screenToPage(p),
         { x, y }
       );
 
@@ -384,7 +389,7 @@ describe("Annotation creation", () => {
   it("should record exactly one history entry per creation, and keep undo/redo consistent", async () => {
     const screen = (x: number, y: number) =>
       session.page.evaluate(
-        (p) => ogma.view.graphToScreenCoordinates(p),
+        (p) => screenToPage(p),
         { x, y }
       );
 

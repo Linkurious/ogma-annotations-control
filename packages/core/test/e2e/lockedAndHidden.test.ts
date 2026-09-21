@@ -1,5 +1,9 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
+import {
+  BrowserSession,
+  captureScreenshotOnTestEnd,
+  offsetGraphContainer
+} from "./utils";
 
 describe("Locked and hidden annotations", () => {
   const session = new BrowserSession();
@@ -15,6 +19,7 @@ describe("Locked and hidden annotations", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "lockedAndHidden");
     await session.refresh();
+    await offsetGraphContainer(session);
   });
 
   it("a locked annotation ignores a real drag and removal, but stays selectable", async () => {
@@ -29,7 +34,7 @@ describe("Locked and hidden annotations", () => {
       editor.add(box);
       return {
         id: box.id,
-        screen: ogma.view.graphToScreenCoordinates({ x: -50, y: -70 })
+        screen: screenToPage({ x: -50, y: -70 })
       };
     });
 
@@ -88,7 +93,7 @@ describe("Locked and hidden annotations", () => {
       return {
         hiddenId: hidden.id,
         otherId: other.id,
-        hiddenScreen: ogma.view.graphToScreenCoordinates({ x: -50, y: -70 })
+        hiddenScreen: screenToPage({ x: -50, y: -70 })
       };
     });
 

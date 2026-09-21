@@ -11,6 +11,11 @@ declare global {
   function createOgma(options: OgmaParameters): Ogma;
   function createEditor(): import("../../src").Control;
   function wait(ms: number): Promise<void>;
+  function screenToPage(p: { x: number; y: number }): { x: number; y: number };
+  function containerToPage(p: { x: number; y: number }): {
+    x: number;
+    y: number;
+  };
   let ogma: Ogma;
   let editor: import("../../src").Control;
   let Control: typeof import("../../src").Control;
@@ -172,4 +177,36 @@ export function compareDates(date1: Date, date2: Date) {
 
 export function wait(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Non-zero, asymmetric default so a swapped x/y coordinate-transform
+ * regression would also be caught, not just "container isn't at (0,0)".
+ * #graph-container is 512x512 (pages/index.html) inside Playwright's default
+ * 1280x720 viewport, so this offset still leaves it fully on-screen.
+ */
+export const DEFAULT_CONTAINER_OFFSET = { left: 137, top: 83 };
+
+/**
+ * Shifts #graph-container off the viewport's (0,0) origin - every e2e
+ * fixture otherwise sits flush at the origin (page body has margin:0),
+ * which hid a class of coordinate-transform bugs where library code assumed
+ * container.getBoundingClientRect().left/top were always 0 (see
+ * src/utils/utils.ts's containerToClientPosition/containerToClientPosition
+ * call sites). Call from beforeEach, before createOgma, so every
+ * create/edit gesture in a spec also exercises an embedded, non-fullscreen,
+ * offset container instead of only the flush-at-origin case. Drive the
+ * mouse via the page-side screenToPage()/containerToPage() globals (see
+ * pages/index.ts) afterwards, not raw graphToScreenCoordinates results or
+ * literal pixel positions - those assume the container sits at (0,0).
+ */
+export async function offsetGraphContainer(
+  session: BrowserSession,
+  margin: { left: number; top: number } = DEFAULT_CONTAINER_OFFSET
+) {
+  await session.page.evaluate((m) => {
+    const container = document.getElementById("graph-container")!;
+    container.style.marginLeft = `${m.left}px`;
+    container.style.marginTop = `${m.top}px`;
+  }, margin);
 }

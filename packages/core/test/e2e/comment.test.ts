@@ -1,6 +1,10 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
 import type { Point } from "geojson";
-import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
+import {
+  BrowserSession,
+  captureScreenshotOnTestEnd,
+  offsetGraphContainer
+} from "./utils";
 
 describe("Comments", () => {
   const session = new BrowserSession();
@@ -16,6 +20,7 @@ describe("Comments", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "comment");
     await session.refresh();
+    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       const ogma = createOgma({});
       await ogma.addNodes([
@@ -60,7 +65,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Far from any node or edge (off-diagonal from the n1-n2 edge)
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
 
     await drawComment(session, pos);
@@ -75,7 +80,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // On node n1 at (-100, -100)
-      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+      return screenToPage({ x: -100, y: -100 });
     });
 
     await drawComment(session, pos);
@@ -91,7 +96,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Midpoint of edge e1 between (-100,-100) and (100,100) is (0,0)
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     });
 
     await drawComment(session, pos);
@@ -123,7 +128,7 @@ describe("Comments", () => {
 
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Center of the polygon
-      return ogma.view.graphToScreenCoordinates({ x: 105, y: -75 });
+      return screenToPage({ x: 105, y: -75 });
     });
 
     await drawComment(session, pos);
@@ -143,14 +148,14 @@ describe("Comments", () => {
     // First comment, drawn near graph centre at (-40, -40).
     const firstPos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: -40, y: -40 });
+      return screenToPage({ x: -40, y: -40 });
     });
     await drawComment(session, firstPos);
 
     // Second comment, drawn at a different on-screen graph point (40, 40).
     const secondPos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 40, y: 40 });
+      return screenToPage({ x: 40, y: 40 });
     });
     await drawComment(session, secondPos);
 
@@ -184,7 +189,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // On node n1 at (-100, -100)
-      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+      return screenToPage({ x: -100, y: -100 });
     });
     await drawComment(session, pos);
 
@@ -204,7 +209,7 @@ describe("Comments", () => {
       editor.select(arrow.id);
       return {
         arrowId: arrow.id,
-        endScreen: ogma.view.graphToScreenCoordinates({ x: end[0], y: end[1] }),
+        endScreen: screenToPage({ x: end[0], y: end[1] }),
         commentBefore: comment.geometry.coordinates
       };
     });
@@ -255,7 +260,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Far from any node, so this comment's connector doesn't attach to n1.
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
 
@@ -265,8 +270,8 @@ describe("Comments", () => {
         .features.find((f) => f.properties.type === "comment") as any;
       const [cx, cy] = comment.geometry.coordinates;
       return {
-        commentScreen: ogma.view.graphToScreenCoordinates({ x: cx, y: cy }),
-        nodeScreen: ogma.view.graphToScreenCoordinates({ x: -100, y: -100 })
+        commentScreen: screenToPage({ x: cx, y: cy }),
+        nodeScreen: screenToPage({ x: -100, y: -100 })
       };
     });
 
@@ -333,7 +338,7 @@ describe("Comments", () => {
 
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // Inside the polygon, so the arrow's free end snaps to it.
-      return ogma.view.graphToScreenCoordinates({ x: 105, y: -75 });
+      return screenToPage({ x: 105, y: -75 });
     });
     await drawComment(session, pos);
     await session.page.waitForTimeout(150);
@@ -355,9 +360,9 @@ describe("Comments", () => {
         .features.find((f) => f.properties.type === "polygon") as any;
       editor.select(polygon.id);
       return {
-        dragFrom: ogma.view.graphToScreenCoordinates({ x: 105, y: -75 }),
-        dragMid: ogma.view.graphToScreenCoordinates({ x: 110, y: -80 }),
-        dragTo: ogma.view.graphToScreenCoordinates({ x: 145, y: -115 })
+        dragFrom: screenToPage({ x: 105, y: -75 }),
+        dragMid: screenToPage({ x: 110, y: -80 }),
+        dragTo: screenToPage({ x: 145, y: -115 })
       };
     });
     await session.page.waitForTimeout(150);
@@ -388,7 +393,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // On node n1 at (-100, -100)
-      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+      return screenToPage({ x: -100, y: -100 });
     });
     await drawComment(session, pos);
     await session.page.waitForTimeout(150);
@@ -463,7 +468,7 @@ describe("Comments", () => {
 
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 105, y: -75 });
+      return screenToPage({ x: 105, y: -75 });
     });
     await drawComment(session, pos);
     await session.page.waitForTimeout(150);
@@ -491,9 +496,9 @@ describe("Comments", () => {
         .features.find((f) => f.properties.type === "polygon") as any;
       editor.select(polygon.id);
       return {
-        dragFrom: ogma.view.graphToScreenCoordinates({ x: 105, y: -75 }),
-        dragMid: ogma.view.graphToScreenCoordinates({ x: 110, y: -80 }),
-        dragTo: ogma.view.graphToScreenCoordinates({ x: 145, y: -115 })
+        dragFrom: screenToPage({ x: 105, y: -75 }),
+        dragMid: screenToPage({ x: 110, y: -80 }),
+        dragTo: screenToPage({ x: 145, y: -115 })
       };
     });
     await session.page.waitForTimeout(150);
@@ -552,7 +557,7 @@ describe("Comments", () => {
 
     const endScreen = await session.page.evaluate((id) => {
       editor.select(id);
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      return screenToPage({ x: 0, y: 0 });
     }, arrowId);
 
     await session.page.waitForTimeout(150);
@@ -596,7 +601,7 @@ describe("Comments", () => {
   it("should drop straight into edit mode after drawing, ready to type", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
 
@@ -634,7 +639,7 @@ describe("Comments", () => {
   it("should require a second click to edit an already-selected comment, prefilled with its existing content", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
     await session.page.keyboard.type("existing note");
@@ -645,7 +650,7 @@ describe("Comments", () => {
         .getAnnotations()
         .features.find((f) => f.properties.type === "comment") as any;
       const [cx, cy] = comment.geometry.coordinates;
-      return ogma.view.graphToScreenCoordinates({ x: cx, y: cy });
+      return screenToPage({ x: cx, y: cy });
     });
 
     // First click: selects only. No textarea yet - this click must not be
@@ -691,7 +696,7 @@ describe("Comments", () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       // On node n1, so the arrow's far end has a fixed reference point.
-      return ogma.view.graphToScreenCoordinates({ x: -100, y: -100 });
+      return screenToPage({ x: -100, y: -100 });
     });
     await drawComment(session, pos);
 
@@ -739,7 +744,7 @@ describe("Comments", () => {
   it("should send on Cmd/Ctrl+Enter, and keep plain Enter as a newline", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
 
@@ -789,7 +794,7 @@ describe("Comments", () => {
   it("should render the connector behind the box while editing, not on top of it", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
 
@@ -855,7 +860,7 @@ describe("Comments", () => {
         }
       );
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
-      return ogma.view.graphToScreenCoordinates({ x: 0, y: -50 });
+      return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
 

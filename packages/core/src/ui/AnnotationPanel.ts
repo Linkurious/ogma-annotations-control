@@ -48,6 +48,12 @@ export interface AnnotationPanelOptions {
   /**
    * Element the panel mounts into. The panel creates and manages its own root
    * `<div class="annotation-panel">` inside it. Defaults to `document.body`.
+   * If the Ogma graph itself is embedded in a smaller/offset container
+   * elsewhere on the page (not fullscreen), pass that same container here —
+   * otherwise the panel docks to the corner of the page instead of the
+   * graph. That container also needs CSS `position: relative` (or other
+   * non-`static` position) for the panel's `position: absolute` docking to
+   * be relative to it rather than the next positioned ancestor.
    */
   container?: HTMLElement;
   /**
@@ -100,6 +106,18 @@ export class AnnotationPanel {
     // Build our own root inside the container, rather than relying on a
     // pre-existing #annotation-panel element in the host page.
     const container = options.container ?? document.body;
+    // getOgma() is only on the real Control - guard it so a minimal fake
+    // control (unit tests construct these) doesn't blow up the constructor.
+    const ogmaContainer = this.control.getOgma?.()?.getContainer?.();
+    if (!options.container && ogmaContainer && ogmaContainer !== document.body) {
+      console.warn(
+        "[ogma-annotations-control] AnnotationPanel: no `container` option " +
+          "given, defaulting to document.body. If this panel should dock to " +
+          "the Ogma graph area (e.g. it is embedded in a smaller/offset " +
+          "div), pass `container: control.getOgma().getContainer()` and " +
+          "give that container `position: relative`."
+      );
+    }
     this.panel = document.createElement("div");
     this.panel.className = "annotation-panel";
     this.panel.style.display = "none";

@@ -27,6 +27,7 @@ import {
   createText
 } from "../types";
 import { findPlace } from "../utils/place-finder";
+import { clientToContainerPosition } from "../utils/utils";
 
 /** Width/height (square) a sticky note is dropped at on a plain click (no
  * drag) - see TextHandler.applyDefaultSizeIfEmpty. Dragging instead sizes
@@ -331,7 +332,8 @@ export class Drawing {
     if (!container) return this.control;
 
     const onMouseMove = (evt: MouseEvent) => {
-      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const screenPoint = clientToContainerPosition(evt, container);
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(screenPoint);
       const w = annotation.properties.width;
       const h = annotation.properties.height;
       this.store.getState().applyLiveUpdate(annotation.id, {

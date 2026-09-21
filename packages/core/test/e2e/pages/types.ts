@@ -37,4 +37,20 @@ export interface AugmentedWindow {
   createPolygon: typeof createPolygon;
   createText: typeof createText;
   demoStyles: DemoStyles;
+  /**
+   * Graph point -> viewport-relative page point Playwright's page.mouse can
+   * be driven with directly. ogma.view.graphToScreenCoordinates alone
+   * returns a *container*-relative point, which only lines up with
+   * page.mouse when #graph-container sits flush at the viewport's (0,0) -
+   * true unless a test has shifted it (see utils.ts's offsetGraphContainer).
+   * A no-op offset (container at its natural position) makes this behave
+   * exactly like graphToScreenCoordinates, so it's safe to use unconditionally.
+   */
+  screenToPage: (p: { x: number; y: number }) => { x: number; y: number };
+  /**
+   * Same viewport-offset step as screenToPage, for a point already
+   * expressed relative to #graph-container's own top-left corner (e.g. an
+   * arbitrary click spot that doesn't need graph-coordinate precision).
+   */
+  containerToPage: (p: { x: number; y: number }) => { x: number; y: number };
 }

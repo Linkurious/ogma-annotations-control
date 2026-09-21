@@ -1,5 +1,9 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
+import {
+  BrowserSession,
+  captureScreenshotOnTestEnd,
+  offsetGraphContainer
+} from "./utils";
 
 describe("Sticky notes", () => {
   const session = new BrowserSession();
@@ -15,12 +19,21 @@ describe("Sticky notes", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "stickyNote");
     await session.refresh();
+    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       const ogma = createOgma({});
       await ogma.view.locateGraph();
       createEditor();
     });
   });
+
+  // A plain screen-space point (no graph-coordinate conversion needed, since
+  // it's not placed relative to anything in the graph) - routed through
+  // containerToPage so it still lands inside #graph-container once
+  // offsetGraphContainer() has shifted it off the viewport's (0,0).
+  async function toPage(p: { x: number; y: number }) {
+    return session.page.evaluate((pt) => containerToPage(pt), p);
+  }
 
   // Each test below places its note at its own on-screen spot (rather than
   // all four landing on the same centre point) purely so a headful run
@@ -31,10 +44,8 @@ describe("Sticky notes", () => {
   it("should stay selected and editable after a plain click (no drag)", async () => {
     await session.page.evaluate(() => editor.enableStickyNoteDrawing());
     // Default click-size square (160x160) is centred on the click point -
-    // stay well clear of the container edges. A plain screen-space point
-    // (no graph-coordinate conversion needed, since we're not placing
-    // relative to anything in the graph).
-    const pos = { x: 110, y: 110 };
+    // stay well clear of the container edges.
+    const pos = await toPage({ x: 110, y: 110 });
 
     // A plain click: no intermediate mouse.move steps, so this is a single
     // mousedown+mouseup with no drag - exactly the case that used to get
@@ -87,7 +98,7 @@ describe("Sticky notes", () => {
 
   it("should not pan the viewport while placing the note", async () => {
     await session.page.evaluate(() => editor.enableStickyNoteDrawing());
-    const pos = { x: 400, y: 110 };
+    const pos = await toPage({ x: 400, y: 110 });
 
     const centerBefore = await session.page.evaluate(() =>
       ogma.view.getCenter()
@@ -114,7 +125,7 @@ describe("Sticky notes", () => {
     await session.page.evaluate(() => editor.enableStickyNoteDrawing());
     // Top-left anchor for a +300/+220 drag - stays inside the 512x512
     // container (500,300 endpoint) instead of spilling past its edge.
-    const pos = { x: 100, y: 40 };
+    const pos = await toPage({ x: 100, y: 40 });
 
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();
@@ -145,7 +156,7 @@ describe("Sticky notes", () => {
     await session.page.evaluate(() => editor.enableStickyNoteDrawing());
     // Top-left anchor for a +200/+150 drag - stays inside the container
     // (endpoint 480,360) and clear of the other tests' spots above.
-    const pos = { x: 280, y: 210 };
+    const pos = await toPage({ x: 280, y: 210 });
 
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();
@@ -180,7 +191,7 @@ describe("Sticky notes", () => {
     // the actual mechanism (z-index), not DOM order, which is deliberately
     // left untouched by the fix.
     await session.page.evaluate(() => editor.enableStickyNoteDrawing());
-    const pos = { x: 200, y: 200 };
+    const pos = await toPage({ x: 200, y: 200 });
 
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();
@@ -235,8 +246,8 @@ describe("Sticky notes", () => {
 
       return {
         id: text.id,
-        center: ogma.view.graphToScreenCoordinates({ x: 0, y: 0 }),
-        corner: ogma.view.graphToScreenCoordinates({ x: 80, y: 80 })
+        center: screenToPage({ x: 0, y: 0 }),
+        corner: screenToPage({ x: 80, y: 80 })
       };
     });
 
@@ -299,8 +310,8 @@ describe("Sticky notes", () => {
       const [cx, cy] = note.geometry.coordinates;
       const { width, height } = note.properties;
       return {
-        center: ogma.view.graphToScreenCoordinates({ x: cx, y: cy }),
-        corner: ogma.view.graphToScreenCoordinates({
+        center: screenToPage({ x: cx, y: cy }),
+        corner: screenToPage({
           x: cx + width / 2,
           y: cy + height / 2
         })

@@ -1,5 +1,9 @@
 import { beforeAll, afterAll, beforeEach, expect, describe, it } from "vitest";
-import { BrowserSession, captureScreenshotOnTestEnd } from "./utils";
+import {
+  BrowserSession,
+  captureScreenshotOnTestEnd,
+  offsetGraphContainer
+} from "./utils";
 
 describe("Multi-select drag", () => {
   const session = new BrowserSession();
@@ -15,6 +19,7 @@ describe("Multi-select drag", () => {
   beforeEach(async () => {
     captureScreenshotOnTestEnd(session, "multiSelectDrag");
     await session.refresh();
+    await offsetGraphContainer(session);
     await session.page.evaluate(async () => {
       createOgma({});
       await ogma.view.locateGraph();
@@ -38,8 +43,8 @@ describe("Multi-select drag", () => {
       return {
         aId: a.id,
         bId: b.id,
-        aScreen: ogma.view.graphToScreenCoordinates({ x: -150, y: -70 }),
-        bScreen: ogma.view.graphToScreenCoordinates({ x: 150, y: 130 })
+        aScreen: screenToPage({ x: -150, y: -70 }),
+        bScreen: screenToPage({ x: 150, y: 130 })
       };
     });
   }
