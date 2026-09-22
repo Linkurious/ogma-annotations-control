@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { TextAnnotationToolbar } from "@linkurious/ogma-annotations/ui";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { TextAnnotationToolbarController } from "./TextAnnotationToolbarController";
+import { TextAnnotationToolbarController } from "../../src/ui/TextAnnotationToolbarController";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()

@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { DEFAULT_RECENT_COLORS } from "@linkurious/ogma-annotations/ui";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { ColorController } from "./ColorController";
+import { ColorController } from "../../../src/ui/controllers/ColorController";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()

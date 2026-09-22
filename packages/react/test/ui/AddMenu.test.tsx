@@ -2,7 +2,7 @@ import { render, fireEvent, act } from "@testing-library/react";
 import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { AddMenu } from "./AddMenu";
+import { AddMenu } from "../../src/ui/AddMenu";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()

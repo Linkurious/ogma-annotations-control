@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import React from "react";
 import { describe, it, expect } from "vitest";
 import { ICON_PATHS } from "@linkurious/ogma-annotations/ui";
-import { Icon } from "./Icon";
+import { Icon } from "../../src/ui/Icon";
 
 describe("Icon", () => {
   it("renders the inner markup for the given icon name", () => {

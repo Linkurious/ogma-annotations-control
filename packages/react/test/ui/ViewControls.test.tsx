@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useOgma } from "@linkurious/ogma-react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { ViewControls } from "./ViewControls";
+import { ViewControls } from "../../src/ui/ViewControls";
 
 vi.mock("@linkurious/ogma-react", () => ({
   useOgma: vi.fn()

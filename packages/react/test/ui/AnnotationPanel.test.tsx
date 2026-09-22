@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { AnnotationPanel } from "./AnnotationPanel";
+import { AnnotationPanel } from "../../src/ui/AnnotationPanel";
 
 // AnnotationPanel composes the already-tested controllers; mock the shared
 // context they all read from so mounting doesn't require a real editor.

@@ -51,6 +51,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    // Tests live under test/ (mirroring src/), not co-located with source -
+    // same convention as packages/core/test/unit.
+    include: ["test/**/*.test.{ts,tsx}"],
     globalSetup: ["./test/print-ogma-build.ts"],
     //setupFiles: "./test/setup.ts",
     coverage: {
