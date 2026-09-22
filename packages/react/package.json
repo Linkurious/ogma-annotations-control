@@ -47,6 +47,7 @@
     "lint": "npx oxlint -c oxlint.json src web",
     "lint:ci": "mkdir -p reports && npx oxlint -c oxlint.json -f checkstyle src web > reports/checkstyle.xml",
     "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test": "npm run test:unit"
   },
   "publishConfig": {
@@ -72,6 +73,7 @@
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.5.1",
+    "@vitest/coverage-v8": "5.0.0",
     "lucide-react": "0.562.0",
     "oxlint": "0.16.0",
     "react": "18.3.1",
