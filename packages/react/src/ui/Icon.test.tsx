@@ -38,4 +38,10 @@ describe("Icon", () => {
     const svg = container.querySelector("svg")!;
     expect(svg.getAttribute("class")).toBe("my-icon");
   });
+
+  it("is hidden from assistive tech (decorative - the parent control supplies the label)", () => {
+    const { container } = render(<Icon name="x" />);
+    const svg = container.querySelector("svg")!;
+    expect(svg.getAttribute("aria-hidden")).toBe("true");
+  });
 });

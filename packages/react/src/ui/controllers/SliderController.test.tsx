@@ -52,6 +52,21 @@ describe("SliderController", () => {
     expect(input.max).toBe("72");
   });
 
+  it("labels the range input with the visible title (screen readers get no other cue)", () => {
+    const { container } = render(
+      <SliderController
+        annotation={annotation}
+        title="Font size"
+        property="fontSize"
+        value={18}
+        min={8}
+        max={72}
+      />
+    );
+    const input = container.querySelector("input[type='range']")!;
+    expect(input.getAttribute("aria-label")).toBe("Font size");
+  });
+
   it("updates fontSize style when property is fontSize", () => {
     const { container } = render(
       <SliderController

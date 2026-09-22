@@ -30,25 +30,39 @@ export const FontController: React.FC<FontControllerProps> = ({
       </div>
       <div className="custom-select-section">
         <div className={`custom-select ${isOpen ? "open" : ""}`}>
-          <div
+          <button
+            type="button"
             className="custom-select-trigger"
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+            aria-label={`Font: ${selected.label}`}
             onClick={() => setIsOpen(!isOpen)}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") setIsOpen(false);
+            }}
           >
             <Icon name={selected.icon as IconName} />
             <span>{selected.label}</span>
             <Icon name="chevron-down" className="custom-select-arrow" />
-          </div>
-          <div className="custom-select-options">
+          </button>
+          <div
+            className="custom-select-options"
+            role="listbox"
+            aria-label="Font options"
+          >
             {FONTS.map((font) => (
-              <div
+              <button
                 key={font.value}
+                type="button"
+                role="option"
+                aria-selected={font.value === currentFont}
                 className={`custom-select-option ${font.value === currentFont ? "selected" : ""}`}
                 title={font.label}
                 onClick={() => handleFontSelect(font.value)}
               >
                 <Icon name={font.icon as IconName} />
                 <span>{font.label}</span>
-              </div>
+              </button>
             ))}
           </div>
         </div>

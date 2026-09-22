@@ -28,7 +28,7 @@ export const BackgroundController: React.FC<BackgroundControllerProps> = ({
       <div className="section-header">
         <h3>{title}</h3>
       </div>
-      <div className="color-selector">
+      <div className="color-selector" role="group" aria-label={title}>
         {BACKGROUNDS.map(({ value, style }) => {
           const customStyle: React.CSSProperties & { [key: string]: string } =
             {};
@@ -48,7 +48,12 @@ export const BackgroundController: React.FC<BackgroundControllerProps> = ({
           return (
             <button
               key={value}
+              type="button"
               className={`color-circle ${value === currentBackground ? "color-circle-primary" : ""}`}
+              aria-label={
+                value === "transparent" ? "No background" : `Background ${value}`
+              }
+              aria-pressed={value === currentBackground}
               onClick={() => handleBackgroundClick(value)}
             >
               <div className="color-inner" style={customStyle}></div>

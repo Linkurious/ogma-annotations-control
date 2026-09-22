@@ -76,4 +76,40 @@ describe("ExtremityController", () => {
 
     expect(updateStyle).toHaveBeenCalledWith("a1", { head: "dot" });
   });
+
+  it("each side is a real keyboard-reachable button with listbox/option semantics", () => {
+    const { container } = render(
+      <ExtremityController annotation={makeAnnotation("none", "arrow")} />
+    );
+    const [head, tail] = container.querySelectorAll(".extremity-wrapper");
+
+    const headTrigger = head.querySelector(".custom-select-trigger")!;
+    expect(headTrigger.tagName).toBe("BUTTON");
+    expect(headTrigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(headTrigger.getAttribute("aria-expanded")).toBe("false");
+    expect(headTrigger.getAttribute("aria-label")).toBe("head: None");
+
+    const tailTrigger = tail.querySelector(".custom-select-trigger")!;
+    expect(tailTrigger.getAttribute("aria-label")).toBe("tail: Open Arrow");
+
+    const headList = head.querySelector(".custom-select-options")!;
+    expect(headList.getAttribute("role")).toBe("listbox");
+    expect(headList.getAttribute("aria-label")).toBe("head options");
+
+    head.querySelectorAll(".custom-select-option").forEach((opt) => {
+      expect(opt.tagName).toBe("BUTTON");
+      expect(opt.getAttribute("role")).toBe("option");
+    });
+  });
+
+  it("sets aria-expanded on the trigger that is open", () => {
+    const { container } = render(
+      <ExtremityController annotation={makeAnnotation("none", "none")} />
+    );
+    const [head] = container.querySelectorAll(".extremity-wrapper");
+    const headTrigger = head.querySelector(".custom-select-trigger")!;
+
+    fireEvent.click(headTrigger);
+    expect(headTrigger.getAttribute("aria-expanded")).toBe("true");
+  });
 });

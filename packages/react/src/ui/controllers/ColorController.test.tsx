@@ -57,6 +57,38 @@ describe("ColorController", () => {
     expect(container.querySelector(".color-picker-overlay")).toBeNull();
   });
 
+  it("exposes an aria-label per swatch and aria-pressed on the active one", () => {
+    const { container } = render(
+      <ColorController
+        annotation={annotation}
+        mode="arrow"
+        initialColor={DEFAULT_RECENT_COLORS[1]}
+      />
+    );
+    expect(
+      container.querySelector(".color-selector")?.getAttribute("aria-label")
+    ).toBe("Color");
+    const swatches = container.querySelectorAll(".color-circle");
+    expect(swatches[0].getAttribute("aria-label")).toBe(
+      `Set color to ${DEFAULT_RECENT_COLORS[0]}`
+    );
+    expect(swatches[1].getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("labels the color picker overlay as a dialog when open", () => {
+    const { container } = render(
+      <ColorController
+        annotation={annotation}
+        mode="arrow"
+        initialColor={DEFAULT_RECENT_COLORS[0]}
+      />
+    );
+    fireEvent.click(container.querySelectorAll(".color-circle")[1]);
+    const overlay = container.querySelector(".color-picker-overlay");
+    expect(overlay?.getAttribute("role")).toBe("dialog");
+    expect(overlay?.getAttribute("aria-label")).toBe("Custom color picker");
+  });
+
   it("updates strokeColor and opens the picker when a non-active swatch is clicked (arrow/polygon mode)", () => {
     const { container } = render(
       <ColorController

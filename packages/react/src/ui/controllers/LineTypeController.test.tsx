@@ -34,6 +34,20 @@ describe("LineTypeController", () => {
     );
     const active = container.querySelector(".linetype-button.active");
     expect(active?.getAttribute("title")).toBe("dashed");
+    expect(active?.getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("exposes a group label and marks every non-active button aria-pressed=false", () => {
+    const { container } = render(
+      <LineTypeController annotation={annotation} currentLineType="plain" />
+    );
+    expect(
+      container.querySelector(".linetype-section")?.getAttribute("aria-label")
+    ).toBe("Line type");
+    const dashed = Array.from(
+      container.querySelectorAll(".linetype-button")
+    ).find((btn) => btn.getAttribute("title") === "dashed")!;
+    expect(dashed.getAttribute("aria-pressed")).toBe("false");
   });
 
   it("updates the annotation's strokeType when a line type is clicked", () => {

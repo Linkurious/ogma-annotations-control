@@ -49,6 +49,21 @@ describe("ViewControls", () => {
     ).toBeTruthy();
   });
 
+  it("exposes a group label and an aria-label on every icon-only button", () => {
+    const { container } = render(<ViewControls />);
+    expect(container.querySelector(".view-controls")?.getAttribute("role")).toBe(
+      "group"
+    );
+    expect(
+      container.querySelector(".view-controls")?.getAttribute("aria-label")
+    ).toBe("View controls");
+    container.querySelectorAll(".view-controls button").forEach((btn) => {
+      expect(btn.getAttribute("aria-label")).toBe(
+        btn.getAttribute("data-tooltip")
+      );
+    });
+  });
+
   it("moves the view to the extended bounds on center click", () => {
     const { container } = render(<ViewControls />);
     fireEvent.click(

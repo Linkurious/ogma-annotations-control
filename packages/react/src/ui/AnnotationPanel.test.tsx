@@ -127,4 +127,13 @@ describe("AnnotationPanel", () => {
     expect(panel.getAttribute("data-placement")).toBe("bottom-left");
     expect(panel.getAttribute("data-orientation")).toBe("horizontal");
   });
+
+  it("is a labeled landmark region for screen-reader navigation", () => {
+    const { container } = render(
+      <AnnotationPanel visible={true} annotation={arrow} />
+    );
+    const panel = container.querySelector(".annotation-panel")!;
+    expect(panel.getAttribute("role")).toBe("region");
+    expect(panel.getAttribute("aria-label")).toBe("Annotation style panel");
+  });
 });

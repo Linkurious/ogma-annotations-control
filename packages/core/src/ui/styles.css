@@ -406,6 +406,7 @@ input:checked + .toggle-slider:before {
   cursor: pointer;
   padding: 0 8px;
   font-size: 14px;
+  font-family: inherit;
   color: var(--oa-text-color);
   display: flex;
   align-items: center;
@@ -453,6 +454,7 @@ input:checked + .toggle-slider:before {
 }
 
 .custom-select-option {
+  width: 100%;
   padding: 10px 12px;
   cursor: pointer;
   display: flex;
@@ -462,6 +464,13 @@ input:checked + .toggle-slider:before {
   transition: background 0.15s;
   font-size: 14px;
   color: var(--oa-text-color);
+  /* Neutralize UA <button> chrome - these rows are real buttons (keyboard
+     focusable, role="option") rather than divs, see
+     packages/react/src/ui/controllers/{Font,Extremity}Controller.tsx. */
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-family: inherit;
 }
 
 .custom-select-option:hover {

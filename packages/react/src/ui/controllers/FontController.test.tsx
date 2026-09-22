@@ -70,4 +70,54 @@ describe("FontController", () => {
       "open"
     );
   });
+
+  it("is a real keyboard-reachable button, not a div, with listbox/option semantics", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    const trigger = container.querySelector(".custom-select-trigger")!;
+    expect(trigger.tagName).toBe("BUTTON");
+    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(trigger.getAttribute("aria-label")).toBe(
+      `Font: ${FONTS[0].label}`
+    );
+
+    const list = container.querySelector(".custom-select-options")!;
+    expect(list.getAttribute("role")).toBe("listbox");
+
+    const options = container.querySelectorAll(".custom-select-option");
+    options.forEach((opt, i) => {
+      expect(opt.tagName).toBe("BUTTON");
+      expect(opt.getAttribute("role")).toBe("option");
+      expect(opt.getAttribute("aria-selected")).toBe(
+        String(FONTS[i].value === FONTS[0].value)
+      );
+    });
+  });
+
+  it("sets aria-expanded to true while open", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    const trigger = container.querySelector(".custom-select-trigger")!;
+    fireEvent.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+  });
+
+  it("closes the dropdown on Escape from the trigger", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    const trigger = container.querySelector(".custom-select-trigger")!;
+    fireEvent.click(trigger);
+    expect(container.querySelector(".custom-select")!.className).toContain(
+      "open"
+    );
+
+    fireEvent.keyDown(trigger, { key: "Escape" });
+    expect(
+      container.querySelector(".custom-select")!.className
+    ).not.toContain("open");
+  });
 });

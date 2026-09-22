@@ -65,6 +65,40 @@ describe("BackgroundController", () => {
     ).toBe(1);
   });
 
+  it("exposes an aria-label per swatch and aria-pressed on the current one", () => {
+    const { container } = render(
+      <BackgroundController
+        annotation={annotation}
+        currentBackground={BACKGROUNDS[1].value}
+      />
+    );
+    expect(
+      container.querySelector(".color-selector")?.getAttribute("aria-label")
+    ).toBe("Background");
+    const swatches = container.querySelectorAll(".color-circle");
+    expect(swatches[0].getAttribute("aria-label")).toBe(
+      `Background ${BACKGROUNDS[0].value}`
+    );
+    expect(swatches[1].getAttribute("aria-pressed")).toBe("true");
+    expect(swatches[0].getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("labels the transparent swatch as 'No background' rather than the literal value", () => {
+    const transparentIndex = BACKGROUNDS.findIndex(
+      (b) => b.value === "transparent"
+    );
+    const { container } = render(
+      <BackgroundController
+        annotation={annotation}
+        currentBackground={BACKGROUNDS[0].value}
+      />
+    );
+    const swatch = container.querySelectorAll(".color-circle")[
+      transparentIndex
+    ];
+    expect(swatch.getAttribute("aria-label")).toBe("No background");
+  });
+
   it("updates the annotation's background style when a swatch is clicked", () => {
     const { container } = render(
       <BackgroundController

@@ -30,15 +30,36 @@ export const ViewControls = () => {
   }, []);
 
   return (
-    <div className="view-controls oa-toolbar" onMouseMove={stopEvent} onClick={stopEvent}>
-      <button data-tooltip="Center view" onClick={handleCenterView}>
+    <div
+      className="view-controls oa-toolbar"
+      role="group"
+      aria-label="View controls"
+      onMouseMove={stopEvent}
+      onClick={stopEvent}
+    >
+      <button
+        type="button"
+        data-tooltip="Center view"
+        aria-label="Center view"
+        onClick={handleCenterView}
+      >
         <Icon name="minimize" size={16} />
       </button>
       <span className="separator"></span>
-      <button data-tooltip="Rotate clockwise" onClick={handleRotateCW}>
+      <button
+        type="button"
+        data-tooltip="Rotate clockwise"
+        aria-label="Rotate clockwise"
+        onClick={handleRotateCW}
+      >
         <Icon name="rotate-cw" size={16} />
       </button>
-      <button data-tooltip="Rotate counter-clockwise" onClick={handleRotateCCW}>
+      <button
+        type="button"
+        data-tooltip="Rotate counter-clockwise"
+        aria-label="Rotate counter-clockwise"
+        onClick={handleRotateCCW}
+      >
         <Icon name="rotate-ccw" size={16} />
       </button>
     </div>
