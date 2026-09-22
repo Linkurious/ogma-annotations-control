@@ -120,4 +120,113 @@ describe("FontController", () => {
       container.querySelector(".custom-select")!.className
     ).not.toContain("open");
   });
+
+  it("opening moves focus to the currently-selected option (roving tabIndex)", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[1].value} />
+    );
+    fireEvent.click(container.querySelector(".custom-select-trigger")!);
+
+    const options = container.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+    expect(document.activeElement).toBe(options[1]);
+    options.forEach((opt, i) => {
+      expect(opt.tabIndex).toBe(i === 1 ? 0 : -1);
+    });
+  });
+
+  it("ArrowDown/ArrowUp move the roving tabIndex and focus between options", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    fireEvent.click(container.querySelector(".custom-select-trigger")!);
+    const options = container.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(options[0], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(options[1]);
+    expect(options[1].tabIndex).toBe(0);
+    expect(options[0].tabIndex).toBe(-1);
+
+    fireEvent.keyDown(options[1], { key: "ArrowUp" });
+    expect(document.activeElement).toBe(options[0]);
+  });
+
+  it("ArrowDown/ArrowUp clamp at the first/last option instead of wrapping", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    fireEvent.click(container.querySelector(".custom-select-trigger")!);
+    const options = container.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(options[0], { key: "ArrowUp" });
+    expect(document.activeElement).toBe(options[0]);
+
+    fireEvent.keyDown(options[0], { key: "End" });
+    expect(document.activeElement).toBe(options[options.length - 1]);
+
+    fireEvent.keyDown(options[options.length - 1], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(options[options.length - 1]);
+
+    fireEvent.keyDown(options[options.length - 1], { key: "Home" });
+    expect(document.activeElement).toBe(options[0]);
+  });
+
+  it("Enter/Space on a focused option selects it and returns focus to the trigger", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    const trigger = container.querySelector(".custom-select-trigger")!;
+    fireEvent.click(trigger);
+    const options = container.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(options[0], { key: "ArrowDown" }); // -> options[1]
+    fireEvent.keyDown(options[1], { key: "Enter" });
+
+    expect(updateStyle).toHaveBeenCalledWith("a1", { font: FONTS[1].value });
+    expect(container.querySelector(".custom-select")!.className).not.toContain(
+      "open"
+    );
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("Escape from an option closes the dropdown and returns focus to the trigger", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    const trigger = container.querySelector(".custom-select-trigger")!;
+    fireEvent.click(trigger);
+    const options = container.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(options[0], { key: "Escape" });
+
+    expect(container.querySelector(".custom-select")!.className).not.toContain(
+      "open"
+    );
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it("ArrowDown on the trigger opens the dropdown and moves focus in", () => {
+    const { container } = render(
+      <FontController annotation={annotation} currentFont={FONTS[0].value} />
+    );
+    const trigger = container.querySelector(".custom-select-trigger")!;
+    fireEvent.keyDown(trigger, { key: "ArrowDown" });
+
+    expect(container.querySelector(".custom-select")!.className).toContain(
+      "open"
+    );
+    const options = container.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+    expect(document.activeElement).toBe(options[0]);
+  });
 });

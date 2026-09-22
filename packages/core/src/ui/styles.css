@@ -454,7 +454,6 @@ input:checked + .toggle-slider:before {
 }
 
 .custom-select-option {
-  width: 100%;
   padding: 10px 12px;
   cursor: pointer;
   display: flex;

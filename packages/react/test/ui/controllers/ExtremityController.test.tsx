@@ -112,4 +112,86 @@ describe("ExtremityController", () => {
     fireEvent.click(headTrigger);
     expect(headTrigger.getAttribute("aria-expanded")).toBe("true");
   });
+
+  it("opening moves focus to the currently-selected option, with a roving tabIndex", () => {
+    const { container } = render(
+      <ExtremityController annotation={makeAnnotation("dot", "none")} />
+    );
+    const [head] = container.querySelectorAll(".extremity-wrapper");
+    fireEvent.click(head.querySelector(".custom-select-trigger")!);
+
+    const options = head.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+    const dotIndex = Array.from(options).findIndex(
+      (o) => o.getAttribute("title") === "Dot"
+    );
+    expect(document.activeElement).toBe(options[dotIndex]);
+    options.forEach((opt, i) => {
+      expect(opt.tabIndex).toBe(i === dotIndex ? 0 : -1);
+    });
+  });
+
+  it("ArrowDown/ArrowUp move the roving tabIndex within one side only", () => {
+    const { container } = render(
+      <ExtremityController annotation={makeAnnotation("none", "none")} />
+    );
+    const [head, tail] = container.querySelectorAll(".extremity-wrapper");
+    fireEvent.click(head.querySelector(".custom-select-trigger")!);
+    const headOptions = head.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(headOptions[0], { key: "ArrowDown" });
+    expect(document.activeElement).toBe(headOptions[1]);
+
+    // The tail dropdown wasn't touched - still closed, and its own
+    // never-opened roving tabIndex is untouched by head's key handling
+    // (display: none keeps it out of the tab order regardless either way).
+    expect(tail.querySelector(".custom-select")!.className).not.toContain(
+      "open"
+    );
+  });
+
+  it("Enter on a focused option selects it, closes, and returns focus to that side's trigger", () => {
+    const { container } = render(
+      <ExtremityController annotation={makeAnnotation("none", "none")} />
+    );
+    const [head] = container.querySelectorAll(".extremity-wrapper");
+    const headTrigger = head.querySelector(".custom-select-trigger")!;
+    fireEvent.click(headTrigger);
+    const options = head.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(options[0], { key: "ArrowDown" });
+    fireEvent.keyDown(options[1], { key: "Enter" });
+
+    expect(updateStyle).toHaveBeenCalledWith("a1", {
+      head: EXTREMITY_OPTIONS[1].value
+    });
+    expect(head.querySelector(".custom-select")!.className).not.toContain(
+      "open"
+    );
+    expect(document.activeElement).toBe(headTrigger);
+  });
+
+  it("Escape from an option closes that side and returns focus to its trigger", () => {
+    const { container } = render(
+      <ExtremityController annotation={makeAnnotation("none", "none")} />
+    );
+    const [head] = container.querySelectorAll(".extremity-wrapper");
+    const headTrigger = head.querySelector(".custom-select-trigger")!;
+    fireEvent.click(headTrigger);
+    const options = head.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+
+    fireEvent.keyDown(options[0], { key: "Escape" });
+
+    expect(head.querySelector(".custom-select")!.className).not.toContain(
+      "open"
+    );
+    expect(document.activeElement).toBe(headTrigger);
+  });
 });
