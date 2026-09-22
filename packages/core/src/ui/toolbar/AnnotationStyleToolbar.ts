@@ -85,6 +85,8 @@ export abstract class AnnotationStyleToolbar<
 
     this.root = document.createElement("div");
     this.root.className = "annotation-style-toolbar oa-toolbar oa-toolbar-bar";
+    this.root.setAttribute("role", "group");
+    this.root.setAttribute("aria-label", "Text style toolbar");
     this.anchor.appendChild(this.root);
     // Same guard as AnnotationPanel/AnnotationToolbar: don't let clicks
     // inside the pill reach Ogma's own interaction handlers (which would

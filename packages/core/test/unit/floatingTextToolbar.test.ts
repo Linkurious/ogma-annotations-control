@@ -130,6 +130,7 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const cell = new ButtonItemCell(ctx, item);
 
     expect(cell.element.dataset.tooltip).toBe("Bold");
+    expect(cell.element.getAttribute("aria-label")).toBe("Bold");
     expect(cell.element.classList.contains("oa-toolbar-button-danger")).toBe(true);
 
     cell.element.click();
@@ -156,12 +157,28 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const cell = new DropdownItemCell(ctx, item);
     cell.update(ctx.getAnnotation());
 
-    const option = cell.element.querySelectorAll<HTMLButtonElement>(
+    const trigger = cell.element.querySelector<HTMLButtonElement>(
+      ".oa-toolbar-dropdown-trigger"
+    )!;
+    expect(trigger.tagName).toBe("BUTTON");
+    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(trigger.getAttribute("aria-label")).toBe("Font size: 18");
+
+    const panel = cell.element.querySelector(".oa-toolbar-dropdown-panel")!;
+    expect(panel.getAttribute("role")).toBe("listbox");
+
+    const options = cell.element.querySelectorAll<HTMLButtonElement>(
       ".oa-toolbar-dropdown-option"
-    )[1];
-    option.click();
+    );
+    expect(options[0].getAttribute("role")).toBe("option");
+    expect(options[0].getAttribute("aria-selected")).toBe("true");
+    expect(options[1].getAttribute("aria-selected")).toBe("false");
+
+    options[1].click();
 
     expect(onSelect).toHaveBeenCalledWith(24, ctx);
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
   });
 
   it("ColorCell gives the transparent swatch a checkerboard marker class and picks it correctly", () => {
@@ -176,6 +193,7 @@ describe("ui/toolbar/cells - generic item renderers", () => {
       (c) => c.title === "transparent"
     )!;
     expect(transparentCell).toBeTruthy();
+    expect(transparentCell.getAttribute("aria-label")).toBe("No background");
     expect(
       transparentCell.classList.contains("oa-toolbar-swatch-cell-transparent")
     ).toBe(true);
