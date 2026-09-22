@@ -74,6 +74,10 @@ export class ColorCell implements ToolbarCell {
       cell.className = "oa-toolbar-swatch-cell";
       cell.classList.toggle("oa-toolbar-swatch-cell-transparent", s.fill === "transparent");
       cell.title = s.fill;
+      cell.setAttribute(
+        "aria-label",
+        s.fill === "transparent" ? "No background" : `Background ${s.fill}`
+      );
       cell.style.setProperty("--oa-swatch-fill", s.fill);
       cell.style.setProperty("--oa-swatch-stroke", s.stroke);
       cell.addEventListener("click", (e) => {

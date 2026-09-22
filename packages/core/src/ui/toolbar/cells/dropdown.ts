@@ -20,7 +20,9 @@ export interface ToolbarDropdown {
    * popover-positioning wrapper; all visible button styling is on the
    * trigger (an `.oa-toolbar-button`) inside it. */
   element: HTMLElement;
-  /** Replaces the trigger's label text (icon and chevron stay put). */
+  /** Replaces the trigger's label text (icon and chevron stay put), and its
+   * `aria-label` (`"<tooltip>: <label>"`, since the visible label text is
+   * icon-adjacent, not a substitute for an accessible name on its own). */
   setLabel(label: string): void;
   /** The popover panel - append option elements into this. */
   panel: HTMLElement;
@@ -38,6 +40,11 @@ export function createToolbarDropdown(
   trigger.type = "button";
   trigger.className = "oa-toolbar-button oa-toolbar-dropdown-trigger";
   trigger.dataset.tooltip = tooltip;
+  trigger.setAttribute("aria-haspopup", "listbox");
+  trigger.setAttribute("aria-expanded", "false");
+  // Callers that never call setLabel (e.g. ColorCell, whose trigger shows
+  // only a swatch dot + chevron, no text) still need a usable name.
+  trigger.setAttribute("aria-label", tooltip);
 
   const label = document.createElement("span");
   label.className = "oa-toolbar-dropdown-label";
@@ -52,8 +59,16 @@ export function createToolbarDropdown(
 
   const panel = document.createElement("div");
   panel.className = "oa-toolbar-dropdown-panel";
+  panel.setAttribute("role", "listbox");
+  panel.setAttribute("aria-label", `${tooltip} options`);
 
-  const close = () => element.classList.remove("open");
+  const setExpanded = (open: boolean) =>
+    trigger.setAttribute("aria-expanded", String(open));
+
+  const close = () => {
+    element.classList.remove("open");
+    setExpanded(false);
+  };
 
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -66,9 +81,15 @@ export function createToolbarDropdown(
       .closest(".annotation-style-toolbar")
       ?.querySelectorAll(".oa-toolbar-dropdown.open")
       .forEach((other) => {
-        if (other !== element) other.classList.remove("open");
+        if (other !== element) {
+          other.classList.remove("open");
+          other
+            .querySelector(".oa-toolbar-dropdown-trigger")
+            ?.setAttribute("aria-expanded", "false");
+        }
       });
     element.classList.toggle("open", willOpen);
+    setExpanded(willOpen);
   });
 
   element.appendChild(trigger);
@@ -80,6 +101,7 @@ export function createToolbarDropdown(
     close,
     setLabel: (text: string) => {
       label.textContent = text;
+      trigger.setAttribute("aria-label", `${tooltip}: ${text || initialLabel}`);
     }
   };
 }
