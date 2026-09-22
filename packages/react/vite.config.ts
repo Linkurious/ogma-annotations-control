@@ -54,6 +54,9 @@ export default defineConfig({
     globalSetup: ["./test/print-ogma-build.ts"],
     //setupFiles: "./test/setup.ts",
     coverage: {
+      // CI's "test:unit" (no --coverage flag) is what actually runs per-PR —
+      // must be on unconditionally or the cobertura file never gets written.
+      enabled: true,
       provider: "v8",
       reporter: ["text", "json", "cobertura"],
       include: ["src/**/*.{ts,tsx}"],
