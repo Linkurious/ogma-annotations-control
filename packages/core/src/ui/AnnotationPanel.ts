@@ -121,6 +121,8 @@ export class AnnotationPanel {
     }
     this.panel = document.createElement("div");
     this.panel.className = "annotation-panel";
+    this.panel.setAttribute("role", "region");
+    this.panel.setAttribute("aria-label", "Annotation style panel");
     this.panel.style.display = "none";
     this.panel.dataset.placement = options.placement ?? DEFAULT_PANEL_PLACEMENT;
     this.panel.dataset.orientation =
@@ -156,9 +158,13 @@ export class AnnotationPanel {
       ) {
         this.closeColorPicker();
       }
-      this.panelBody
-        .querySelectorAll(".custom-select")
-        .forEach((s) => s.classList.remove("open"));
+      this.panelBody.querySelectorAll(".custom-select").forEach((s) => {
+        s.classList.remove("open");
+        s.querySelector(".custom-select-trigger")?.setAttribute(
+          "aria-expanded",
+          "false"
+        );
+      });
     };
     document.addEventListener("click", this.documentClickHandler);
   }
@@ -233,7 +239,7 @@ export class AnnotationPanel {
 
     this.panelBody.innerHTML = `
       ${this.section("Color", this.colorSelector())}
-      ${this.section("Fill", this.backgroundSelector(s.background || "transparent"))}
+      ${this.section("Fill", this.backgroundSelector(s.background || "transparent", "Fill"))}
       ${this.slider("Stroke width", "line-width", s.strokeWidth || 2, 1, 20)}
       ${this.lineTypeButtons(s.strokeType || "plain")}
     `;
@@ -253,10 +259,10 @@ export class AnnotationPanel {
   }
 
   private colorSelector() {
-    return `<div class="color-selector">${this.recent.colors
+    return `<div class="color-selector" role="group" aria-label="Color">${this.recent.colors
       .map(
         (c, i) => `
-      <button class="color-circle ${i === 0 ? "color-circle-primary" : ""}" data-index="${i}" data-color="${c}">
+      <button type="button" class="color-circle ${i === 0 ? "color-circle-primary" : ""}" data-index="${i}" data-color="${c}" aria-label="Set color to ${c}" aria-pressed="${i === 0}">
         <div class="color-inner"></div>
       </button>
     `
@@ -264,10 +270,10 @@ export class AnnotationPanel {
       .join("")}</div>`;
   }
 
-  private backgroundSelector(current: string) {
-    return `<div class="color-selector">${BACKGROUNDS.map(
+  private backgroundSelector(current: string, title = "Background") {
+    return `<div class="color-selector" role="group" aria-label="${title}">${BACKGROUNDS.map(
       ({ value, style }) => `
-      <button class="color-circle ${value === current ? "color-circle-primary" : ""}" data-background-color="${value}">
+      <button type="button" class="color-circle ${value === current ? "color-circle-primary" : ""}" data-background-color="${value}" aria-label="${value === "transparent" ? "No background" : `Background ${value}`}" aria-pressed="${value === current}">
         <div class="color-inner" style="${style}"></div>
       </button>
     `
@@ -312,19 +318,20 @@ export class AnnotationPanel {
     }>,
     extra = ""
   ) {
+    const labelPrefix = type === "font" ? "Font" : type;
     return `<div class="custom-select" data-type="${type}" ${extra}>
-      <div class="custom-select-trigger">
+      <button type="button" class="custom-select-trigger" aria-haspopup="listbox" aria-expanded="false" aria-label="${labelPrefix}: ${selected.label}">
         ${this.icon(selected.icon as IconName, selected.rotate)}
         <span>${selected.label}</span>
         ${this.icon("chevron-down")}
-      </div>
-      <div class="custom-select-options">${options
+      </button>
+      <div class="custom-select-options" role="listbox" aria-label="${labelPrefix} options">${options
         .map(
           (o) => `
-        <div class="custom-select-option ${o.selected ? "selected" : ""}" data-value="${o.value}" data-icon="${o.icon}" data-rotate="${o.rotate ? "1" : ""}" title="${o.label}">
+        <button type="button" role="option" aria-selected="${o.selected ? "true" : "false"}" class="custom-select-option ${o.selected ? "selected" : ""}" data-value="${o.value}" data-icon="${o.icon}" data-rotate="${o.rotate ? "1" : ""}" title="${o.label}">
           ${this.icon(o.icon as IconName, o.rotate)}
           <span>${o.label}</span>
-        </div>
+        </button>
       `
         )
         .join("")}</div>
@@ -341,7 +348,7 @@ export class AnnotationPanel {
     return `${this.section(
       title,
       `<div class="slider-section">
-      <input type="range" id="${id}-slider" class="slider" min="${min}" max="${max}" value="${value}">
+      <input type="range" id="${id}-slider" class="slider" aria-label="${title}" min="${min}" max="${max}" value="${value}">
       <div class="slider-value"><span id="${id}-value">${value}</span></div>
     </div>`
     )}`;
@@ -350,9 +357,9 @@ export class AnnotationPanel {
   private lineTypeButtons(current: string) {
     return `${this.section(
       "Line type",
-      `<div class="linetype-section">${LINE_TYPES.map(
+      `<div class="linetype-section" role="group" aria-label="Line type">${LINE_TYPES.map(
         ({ value, icon }) => `
-      <button class="linetype-button ${current === value ? "active" : ""}" data-linetype="${value}" title="${value}">
+      <button type="button" class="linetype-button ${current === value ? "active" : ""}" data-linetype="${value}" title="${value}" aria-label="${value} line" aria-pressed="${current === value}">
         ${this.icon(icon as IconName)}
       </button>
     `
@@ -405,12 +412,23 @@ export class AnnotationPanel {
           ".custom-select-option"
         );
 
+        const labelPrefix =
+          sel.dataset.type === "font" ? "Font" : sel.dataset.type;
+
         trigger.addEventListener("click", (e) => {
           e.stopPropagation();
           this.panelBody.querySelectorAll(".custom-select").forEach((s) => {
-            if (s !== sel) s.classList.remove("open");
+            if (s !== sel) {
+              s.classList.remove("open");
+              s.querySelector(".custom-select-trigger")?.setAttribute(
+                "aria-expanded",
+                "false"
+              );
+            }
           });
-          sel.classList.toggle("open");
+          const willOpen = !sel.classList.contains("open");
+          sel.classList.toggle("open", willOpen);
+          trigger.setAttribute("aria-expanded", String(willOpen));
         });
 
         options.forEach((opt) => {
@@ -418,8 +436,12 @@ export class AnnotationPanel {
             e.stopPropagation();
             const value = opt.dataset.value!;
 
-            options.forEach((o) => o.classList.remove("selected"));
+            options.forEach((o) => {
+              o.classList.remove("selected");
+              o.setAttribute("aria-selected", "false");
+            });
             opt.classList.add("selected");
+            opt.setAttribute("aria-selected", "true");
 
             // Reflect the chosen option's icon/label in the trigger.
             const iconName = opt.dataset.icon as IconName;
@@ -429,7 +451,9 @@ export class AnnotationPanel {
             if (triggerIcon)
               triggerIcon.outerHTML = this.icon(iconName, rotate);
             trigger.querySelector("span")!.textContent = label;
+            trigger.setAttribute("aria-label", `${labelPrefix}: ${label}`);
             sel.classList.remove("open");
+            trigger.setAttribute("aria-expanded", "false");
 
             const type = sel.dataset.type;
             const end = sel.dataset.end;
@@ -475,8 +499,12 @@ export class AnnotationPanel {
           const type = btn.dataset.linetype as "plain" | "dashed";
           this.panelBody
             .querySelectorAll(".linetype-button")
-            .forEach((b) => b.classList.remove("active"));
+            .forEach((b) => {
+              b.classList.remove("active");
+              b.setAttribute("aria-pressed", "false");
+            });
           btn.classList.add("active");
+          btn.setAttribute("aria-pressed", "true");
           this.updateStyle({ strokeType: type });
         });
       });
@@ -491,11 +519,11 @@ export class AnnotationPanel {
   private updateColorCircles() {
     this.colorCircles.forEach((circle, i) => {
       circle.setAttribute("data-color", this.recent.colors[i]);
+      circle.setAttribute("aria-label", `Set color to ${this.recent.colors[i]}`);
       circle.style.setProperty("--circle-color", this.recent.colors[i]);
-      circle.classList.toggle(
-        "color-circle-primary",
-        i === this.recent.activeIndex
-      );
+      const active = i === this.recent.activeIndex;
+      circle.classList.toggle("color-circle-primary", active);
+      circle.setAttribute("aria-pressed", String(active));
     });
   }
 
@@ -507,6 +535,8 @@ export class AnnotationPanel {
 
     this.colorPickerOverlay = document.createElement("div");
     this.colorPickerOverlay.className = "color-picker-overlay";
+    this.colorPickerOverlay.setAttribute("role", "dialog");
+    this.colorPickerOverlay.setAttribute("aria-label", "Custom color picker");
     document.body.appendChild(this.colorPickerOverlay);
 
     this.colorPicker = createRgbaColorPicker();
