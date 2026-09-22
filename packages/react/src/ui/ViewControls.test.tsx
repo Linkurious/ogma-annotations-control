@@ -84,14 +84,19 @@ describe("ViewControls", () => {
 
   it("stops click and mousemove propagation so the graph underneath doesn't react", () => {
     const { container } = render(
-      <div onClick={() => {
-        throw new Error("click should not bubble");
-      }}>
+      <div
+        onClick={() => {
+          throw new Error("event should not bubble");
+        }}
+        onMouseMove={() => {
+          throw new Error("event should not bubble");
+        }}
+      >
         <ViewControls />
       </div>
     );
-    expect(() =>
-      fireEvent.click(container.querySelector(".view-controls")!)
-    ).not.toThrow();
+    const controls = container.querySelector(".view-controls")!;
+    expect(() => fireEvent.click(controls)).not.toThrow();
+    expect(() => fireEvent.mouseMove(controls)).not.toThrow();
   });
 });
