@@ -38,8 +38,8 @@ describe("Multi-select drag", () => {
       return {
         aId: a.id,
         bId: b.id,
-        aScreen: ogma.view.graphToScreenCoordinates({ x: -150, y: -70 }),
-        bScreen: ogma.view.graphToScreenCoordinates({ x: 150, y: 130 })
+        aScreen: screenToPage({ x: -150, y: -70 }),
+        bScreen: screenToPage({ x: 150, y: 130 })
       };
     });
   }

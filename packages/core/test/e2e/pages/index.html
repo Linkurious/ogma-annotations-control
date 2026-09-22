@@ -17,6 +17,18 @@
          box's size/position (unlike border/padding), so this is safe for
          the e2e tests' pixel-exact screen<->graph coordinate math. */
       overflow: hidden;
+      /* Off the viewport's (0,0) origin by default, and asymmetric (so a
+         swapped x/y coordinate-transform regression would also be caught) -
+         every e2e spec drives the mouse through screenToPage()/
+         containerToPage() (see index.ts), which account for wherever this
+         container actually sits, so this is safe for every existing test
+         and exercises the realistic "embedded, non-fullscreen" case by
+         default instead of only the coincidentally-easy flush-at-origin
+         one. A library that works correctly here works correctly at (0,0)
+         too; the reverse isn't true - see utils/utils.ts's
+         containerToClientPosition. */
+      margin-left: 137px;
+      margin-top: 83px;
     }
 
     body {

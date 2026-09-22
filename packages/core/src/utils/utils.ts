@@ -334,6 +334,25 @@ export function clientToContainerPosition(
   };
 }
 
+/**
+ * Inverse of clientToContainerPosition: turns a point already relative to
+ * the container's top-left (e.g. from ogma.view.graphToScreenCoordinates)
+ * into viewport-relative clientX/clientY, for code paths that synthesize a
+ * MouseEvent-shaped object and hand it to something (like Handler.onDragStart)
+ * that normalizes via clientToContainerPosition itself.
+ */
+export function containerToClientPosition(
+  point: { x: number; y: number },
+  container?: HTMLElement | null
+): { x: number; y: number } {
+  if (!container) return point;
+  const rect = container.getBoundingClientRect();
+  return {
+    x: point.x + rect.left + container.clientLeft,
+    y: point.y + rect.top + container.clientTop
+  };
+}
+
 // "transparent"/"none" are both listed on the `Color` type itself (see
 // types/colors.ts) as valid, paint-free values - neither is hex or
 // rgb(a), so both need calling out explicitly before the two prefix

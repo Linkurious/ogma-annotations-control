@@ -24,6 +24,7 @@ import {
   isText
 } from "../types";
 import {
+  containerToClientPosition,
   getBoxCenter,
   getBoxSize,
   MIN_FONT_SCALE,
@@ -642,8 +643,13 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     // Disable ogma panning
     this.disablePanning();
 
+    const clientPos = containerToClientPosition(pos, this.ogma.getContainer());
+
     // Start live update
-    this.onDragStart({ clientX: pos.x, clientY: pos.y } as MouseEvent);
+    this.onDragStart({
+      clientX: clientPos.x,
+      clientY: clientPos.y
+    } as MouseEvent);
   }
 
   public setAnnotation(annotation: Text | Comment | null): void {

@@ -28,6 +28,7 @@ import {
   isText
 } from "../types";
 import {
+  containerToClientPosition,
   getArrowSide,
   getBoxCenter,
   getPolygonCenter,
@@ -313,7 +314,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.dragging = true;
     this.dragStartPoint = { x, y };
 
-    const clientPos = this.ogma.view.graphToScreenCoordinates({ x, y });
+    const clientPos = containerToClientPosition(
+      this.ogma.view.graphToScreenCoordinates({ x, y }),
+      this.ogma.getContainer()
+    );
 
     // Start live update
     this.onDragStart({ clientX: clientPos.x, clientY: clientPos.y });

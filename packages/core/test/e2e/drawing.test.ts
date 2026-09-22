@@ -34,7 +34,7 @@ describe("Snapping", () => {
     const pos = await session.page.evaluate(async () => {
       const editor = createEditor();
       editor.startArrow(20, 20, createArrow(20, 20, 20, 20));
-      return ogma.view.graphToScreenCoordinates({ x: 20, y: 20 });
+      return screenToPage({ x: 20, y: 20 });
     });
     await session.page.mouse.move(pos.x, pos.y);
     await session.page.mouse.down();

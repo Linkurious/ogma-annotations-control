@@ -36,11 +36,11 @@ describe("Anchor follow", () => {
       createEditor();
 
       editor.enableArrowDrawing(demoStyles.arrow);
-      const nodeCenter = ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
+      const nodeCenter = screenToPage({ x: 0, y: 0 });
       // A point on the node's circle, off-centre, to grab it by later
       // without touching the arrow's own endpoint handle.
-      const grabPoint = ogma.view.graphToScreenCoordinates({ x: 0, y: -25 });
-      const from = ogma.view.graphToScreenCoordinates({ x: -150, y: -150 });
+      const grabPoint = screenToPage({ x: 0, y: -25 });
+      const from = screenToPage({ x: -150, y: -150 });
       return { nodeCenter, grabPoint, from };
     });
 
@@ -80,7 +80,7 @@ describe("Anchor follow", () => {
     // Target accounts for the grabPoint's (0,-25) offset from the node's
     // centre, so the node's centre itself ends up at exactly (150, 75).
     const target = await session.page.evaluate(() =>
-      ogma.view.graphToScreenCoordinates({ x: 150, y: 50 })
+      screenToPage({ x: 150, y: 50 })
     );
     await session.page.mouse.move(setup.grabPoint.x, setup.grabPoint.y);
     await session.page.mouse.down();
@@ -138,9 +138,9 @@ describe("Anchor follow", () => {
 
       editor.enableArrowDrawing(demoStyles.arrow);
       // Edge midpoint - well clear of either node's own hit radius.
-      const mid = ogma.view.graphToScreenCoordinates({ x: 0, y: 0 });
-      const from = ogma.view.graphToScreenCoordinates({ x: 0, y: -150 });
-      const n1Center = ogma.view.graphToScreenCoordinates({ x: -120, y: 0 });
+      const mid = screenToPage({ x: 0, y: 0 });
+      const from = screenToPage({ x: 0, y: -150 });
+      const n1Center = screenToPage({ x: -120, y: 0 });
       return { mid, from, n1Center };
     });
 
@@ -165,7 +165,7 @@ describe("Anchor follow", () => {
     await session.page.waitForTimeout(150);
 
     const target = await session.page.evaluate(() =>
-      ogma.view.graphToScreenCoordinates({ x: -120, y: 150 })
+      screenToPage({ x: -120, y: 150 })
     );
     await session.page.mouse.move(setup.n1Center.x, setup.n1Center.y);
     await session.page.mouse.down();
@@ -444,8 +444,8 @@ describe("Anchor follow", () => {
       const corner = { x: 50, y: -30 }; // box half-width/height from centre
       editor.enableArrowDrawing(demoStyles.arrow);
       await ogma.view.setZoom(1);
-      const from = ogma.view.graphToScreenCoordinates({ x: -200, y: -200 });
-      const to = ogma.view.graphToScreenCoordinates(corner);
+      const from = screenToPage({ x: -200, y: -200 });
+      const to = screenToPage(corner);
       return { from, to };
     });
 
