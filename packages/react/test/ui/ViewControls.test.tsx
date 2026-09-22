@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useOgma } from "@linkurious/ogma-react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { ViewControls } from "./ViewControls";
+import { ViewControls } from "../../src/ui/ViewControls";
 
 vi.mock("@linkurious/ogma-react", () => ({
   useOgma: vi.fn()
@@ -47,6 +47,21 @@ describe("ViewControls", () => {
     expect(
       container.querySelector('[data-tooltip="Rotate counter-clockwise"]')
     ).toBeTruthy();
+  });
+
+  it("exposes a group label and an aria-label on every icon-only button", () => {
+    const { container } = render(<ViewControls />);
+    expect(container.querySelector(".view-controls")?.getAttribute("role")).toBe(
+      "group"
+    );
+    expect(
+      container.querySelector(".view-controls")?.getAttribute("aria-label")
+    ).toBe("View controls");
+    container.querySelectorAll(".view-controls button").forEach((btn) => {
+      expect(btn.getAttribute("aria-label")).toBe(
+        btn.getAttribute("data-tooltip")
+      );
+    });
   });
 
   it("moves the view to the extended bounds on center click", () => {

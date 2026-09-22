@@ -2,7 +2,7 @@ import { render, fireEvent, act } from "@testing-library/react";
 import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { AddMenu } from "./AddMenu";
+import { AddMenu } from "../../src/ui/AddMenu";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()
@@ -72,6 +72,21 @@ describe("AddMenu", () => {
     });
   });
 
+  it("exposes a group label and an aria-label mirroring every button's data-tooltip", () => {
+    const { container } = render(<AddMenu />);
+    expect(container.querySelector(".add-menu")?.getAttribute("role")).toBe(
+      "group"
+    );
+    expect(container.querySelector(".add-menu")?.getAttribute("aria-label")).toBe(
+      "Annotation tools"
+    );
+    container.querySelectorAll(".add-menu > button").forEach((btn) => {
+      expect(btn.getAttribute("aria-label")).toBe(
+        btn.getAttribute("data-tooltip")
+      );
+    });
+  });
+
   it("only renders the requested subset of enabledTypes", () => {
     const { container } = render(<AddMenu enabledTypes={["arrow", "text"]} />);
     expect(tooltip(container, "Add arrow")).toBeTruthy();
@@ -88,6 +103,9 @@ describe("AddMenu", () => {
       expect.objectContaining({ strokeType: "plain", head: "arrow" })
     );
     expect(tooltip(container, "Add arrow").className).toContain("active");
+    expect(tooltip(container, "Add arrow").getAttribute("aria-pressed")).toBe(
+      "true"
+    );
   });
 
   it("merges per-type style overrides into the drawing call", () => {

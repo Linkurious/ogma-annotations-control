@@ -120,16 +120,19 @@ export const ColorController: React.FC<ColorControllerProps> = ({
       <div className="section-header">
         <h3>Color</h3>
       </div>
-      <div className="color-selector">
+      <div className="color-selector" role="group" aria-label="Color">
         {recent.colors.map((color, index) => (
           <button
             key={index}
+            type="button"
             className={`color-circle ${index === recent.activeIndex ? "color-circle-primary" : ""}`}
             style={
               { "--circle-color": color } as React.CSSProperties & {
                 "--circle-color": string;
               }
             }
+            aria-label={`Set color to ${color}`}
+            aria-pressed={index === recent.activeIndex}
             onClick={(e) => handleColorCircleClick(index, e)}
           >
             <div className="color-inner"></div>
@@ -140,6 +143,8 @@ export const ColorController: React.FC<ColorControllerProps> = ({
       {showColorPicker && (
         <div
           className="color-picker-overlay"
+          role="dialog"
+          aria-label="Custom color picker"
           ref={colorPickerRef}
           style={{
             position: "fixed",

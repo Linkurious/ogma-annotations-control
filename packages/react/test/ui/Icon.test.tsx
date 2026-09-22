@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import React from "react";
 import { describe, it, expect } from "vitest";
 import { ICON_PATHS } from "@linkurious/ogma-annotations/ui";
-import { Icon } from "./Icon";
+import { Icon } from "../../src/ui/Icon";
 
 describe("Icon", () => {
   it("renders the inner markup for the given icon name", () => {
@@ -37,5 +37,11 @@ describe("Icon", () => {
     const { container } = render(<Icon name="x" className="my-icon" />);
     const svg = container.querySelector("svg")!;
     expect(svg.getAttribute("class")).toBe("my-icon");
+  });
+
+  it("is hidden from assistive tech (decorative - the parent control supplies the label)", () => {
+    const { container } = render(<Icon name="x" />);
+    const svg = container.querySelector("svg")!;
+    expect(svg.getAttribute("aria-hidden")).toBe("true");
   });
 });

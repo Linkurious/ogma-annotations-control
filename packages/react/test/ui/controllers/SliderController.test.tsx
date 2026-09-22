@@ -2,7 +2,7 @@ import { render, fireEvent } from "@testing-library/react";
 import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { SliderController } from "./SliderController";
+import { SliderController } from "../../../src/ui/controllers/SliderController";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()
@@ -50,6 +50,21 @@ describe("SliderController", () => {
     ) as HTMLInputElement;
     expect(input.min).toBe("8");
     expect(input.max).toBe("72");
+  });
+
+  it("labels the range input with the visible title (screen readers get no other cue)", () => {
+    const { container } = render(
+      <SliderController
+        annotation={annotation}
+        title="Font size"
+        property="fontSize"
+        value={18}
+        min={8}
+        max={72}
+      />
+    );
+    const input = container.querySelector("input[type='range']")!;
+    expect(input.getAttribute("aria-label")).toBe("Font size");
   });
 
   it("updates fontSize style when property is fontSize", () => {

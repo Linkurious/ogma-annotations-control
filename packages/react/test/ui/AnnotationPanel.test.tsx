@@ -2,7 +2,7 @@ import { render } from "@testing-library/react";
 import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { AnnotationPanel } from "./AnnotationPanel";
+import { AnnotationPanel } from "../../src/ui/AnnotationPanel";
 
 // AnnotationPanel composes the already-tested controllers; mock the shared
 // context they all read from so mounting doesn't require a real editor.
@@ -126,5 +126,14 @@ describe("AnnotationPanel", () => {
     const panel = container.querySelector(".annotation-panel")!;
     expect(panel.getAttribute("data-placement")).toBe("bottom-left");
     expect(panel.getAttribute("data-orientation")).toBe("horizontal");
+  });
+
+  it("is a labeled landmark region for screen-reader navigation", () => {
+    const { container } = render(
+      <AnnotationPanel visible={true} annotation={arrow} />
+    );
+    const panel = container.querySelector(".annotation-panel")!;
+    expect(panel.getAttribute("role")).toBe("region");
+    expect(panel.getAttribute("aria-label")).toBe("Annotation style panel");
   });
 });
