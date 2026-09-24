@@ -75,7 +75,12 @@ export class UpdateManager {
     id: Id,
     style: A["properties"]["style"]
   ): void {
-    const feature = this.store.getState().getFeature(id);
+    // Use the merged feature (base feature + any in-progress liveUpdates),
+    // not the raw stored feature - `updateFeature` below clears
+    // `liveUpdates[id]`, so basing this on the raw feature would silently
+    // discard any not-yet-committed edit (e.g. text typed in an open
+    // TextArea editor) still sitting only in `liveUpdates`.
+    const feature = this.store.getState().getMergedFeature(id);
     if (!feature) return;
 
     this.store.getState().updateFeature(id, {
@@ -136,7 +141,9 @@ export class UpdateManager {
     annotation: DeepPartial<A> & { id: Id }
   ): void {
     const state = this.store.getState();
-    const feature = state.getFeature(annotation.id);
+    // See updateStyle() above - must use the merged feature so any
+    // in-progress liveUpdates (e.g. text being typed) aren't discarded.
+    const feature = state.getMergedFeature(annotation.id);
     if (!feature) return;
 
     state.updateFeature(annotation.id, {
