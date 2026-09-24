@@ -841,3 +841,34 @@ input:checked + .toggle-slider:before {
 .oa-toolbar-more-colors-host {
   margin-top: 8px;
 }
+
+/* Outline (stroke) cell - thickness and line-style rows above the
+   stroke-color swatch grid (reuses `.oa-toolbar-swatch-grid`/
+   `-cell` as-is). Buttons reuse `.oa-toolbar-button`'s hover/active
+   colors - `.oa-toolbar-stroke-option` only adds the grid-cell sizing a
+   bare toolbar button (inline-flex, content-sized) doesn't need. */
+.oa-toolbar-stroke-trigger-icon {
+  display: inline-flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.oa-toolbar-stroke-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.oa-toolbar-stroke-option {
+  width: 100%;
+  height: 32px;
+  margin: 0;
+}
+
+.oa-toolbar-dropdown-divider {
+  display: block;
+  height: 1px;
+  background: var(--oa-toolbar-divider, #e5e5e5);
+  margin: 8px -8px;
+}

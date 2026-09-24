@@ -11,11 +11,15 @@ import {
 import { renderText } from "../../src/renderer/shapes/text";
 import {
   STICKY_SWATCHES,
+  STROKE_SWATCHES,
   DEFAULT_TOOLBAR_FONTS,
   TextAnnotationToolbar,
   ButtonItemCell,
   DropdownItemCell,
-  ColorCell
+  ColorCell,
+  StrokeCell,
+  STROKE_WIDTH_THIN,
+  STROKE_WIDTH_THICK
 } from "../../src/ui";
 import type { ToolbarCellContext } from "../../src/ui/toolbar/cells/contract";
 import type { ToolbarButtonItem, ToolbarDropdownItem } from "../../src/ui/toolbar/cells/types";
@@ -89,6 +93,13 @@ describe("ui/toolbar/swatches", () => {
       expect(s.stroke).toMatch(/^#[0-9A-F]{6}$/i);
     });
     expect(STICKY_SWATCHES.some((s) => s.fill === "transparent")).toBe(true);
+  });
+
+  it("STROKE_SWATCHES is STICKY_SWATCHES without the transparent swatch", () => {
+    expect(STROKE_SWATCHES.some((s) => s.fill === "transparent")).toBe(false);
+    expect(STROKE_SWATCHES).toEqual(
+      STICKY_SWATCHES.filter((s) => s.fill !== "transparent")
+    );
   });
 });
 
@@ -254,6 +265,100 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     expect(ctx.updateStyle).toHaveBeenCalledWith({ background: "#123456" });
   });
 
+  it("StrokeCell's thickness row writes the thin/thick strokeWidth presets and reflects the closer preset as active", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { strokeWidth: 0 });
+    const { ctx } = fakeCellContext(text);
+    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    cell.update(ctx.getAnnotation());
+
+    const [weightRow] = cell.element.querySelectorAll<HTMLElement>(".oa-toolbar-stroke-row");
+    const [thin, thick] = weightRow.querySelectorAll<HTMLButtonElement>(
+      ".oa-toolbar-stroke-option"
+    );
+    // strokeWidth 0 is closer to STROKE_WIDTH_THIN than STROKE_WIDTH_THICK.
+    expect(thin.classList.contains("active")).toBe(true);
+    expect(thick.classList.contains("active")).toBe(false);
+
+    thick.click();
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeWidth: STROKE_WIDTH_THICK });
+
+    cell.update(ctx.getAnnotation());
+    expect(thick.classList.contains("active")).toBe(true);
+    expect(thin.classList.contains("active")).toBe(false);
+
+    thin.click();
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeWidth: STROKE_WIDTH_THIN });
+  });
+
+  it("StrokeCell's line-style row writes strokeType plain/dashed and reflects the current value", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { strokeType: "plain" });
+    const { ctx } = fakeCellContext(text);
+    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    cell.update(ctx.getAnnotation());
+
+    const [, typeRow] = cell.element.querySelectorAll<HTMLElement>(".oa-toolbar-stroke-row");
+    const [solid, dashed] = typeRow.querySelectorAll<HTMLButtonElement>(
+      ".oa-toolbar-stroke-option"
+    );
+    expect(solid.classList.contains("active")).toBe(true);
+    expect(dashed.classList.contains("active")).toBe(false);
+
+    dashed.click();
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeType: "dashed" });
+
+    cell.update(ctx.getAnnotation());
+    expect(dashed.classList.contains("active")).toBe(true);
+    expect(solid.classList.contains("active")).toBe(false);
+  });
+
+  it("StrokeCell's swatch grid writes strokeColor and closes the dropdown", () => {
+    const text = createText(0, 0, 100, 50, "Hi");
+    const { ctx } = fakeCellContext(text);
+    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    cell.element.classList.add("open");
+
+    const swatch = cell.element.querySelector<HTMLButtonElement>(
+      ".oa-toolbar-swatch-cell"
+    )!;
+    swatch.click();
+
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeColor: STROKE_SWATCHES[0].fill });
+    expect(cell.element.classList.contains("open")).toBe(false);
+  });
+
+  it("StrokeCell's built-in 'More colors…' popover opens without throwing", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { strokeColor: "#123456" });
+    const { ctx } = fakeCellContext(text);
+    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+
+    const moreBtn = cell.element.querySelector<HTMLButtonElement>(
+      ".oa-toolbar-more-colors"
+    )!;
+
+    expect(() => moreBtn.click()).not.toThrow();
+    expect(
+      cell.element.querySelector(".oa-toolbar-more-colors-host")
+    ).not.toBeNull();
+  });
+
+  it("StrokeCell calls onMoreColors instead of opening the built-in picker when provided", () => {
+    const text = createText(0, 0, 100, 50, "Hi", { strokeColor: "#123456" });
+    const { ctx } = fakeCellContext(text);
+    const onMoreColors = vi.fn();
+    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES, onMoreColors });
+
+    const moreBtn = cell.element.querySelector<HTMLButtonElement>(
+      ".oa-toolbar-more-colors"
+    )!;
+    moreBtn.click();
+
+    expect(onMoreColors).toHaveBeenCalledWith(ctx, moreBtn);
+    expect(cell.element.querySelector(".oa-toolbar-more-colors-host")).toBeNull();
+
+    onMoreColors.mock.calls[0][0].updateStyle({ strokeColor: "#654321" });
+    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeColor: "#654321" });
+  });
+
   it("real Text/StickyNote item lists (via TextStyleToolbar) expose bold/author/delete/font tooltips", () => {
     // Exercised end-to-end (real tooltips in the mounted pill) in the
     // ui/TextAnnotationToolbar block below - this just checks the default
@@ -327,6 +432,31 @@ describe("ui/TextAnnotationToolbar", () => {
       document.querySelector('[data-tooltip="Show author"]')
     ).not.toBeNull();
     expect(document.querySelector('[data-tooltip="Bold"]')).not.toBeNull();
+
+    toolbar.destroy();
+  });
+
+  it("shows the outline (Line Type) cell for a plain Text but not for a sticky note", () => {
+    const plainAdded = control.add(createText(0, 0, 100, 50, "Hello"));
+    const plain = plainAdded.getAnnotations().features[0] as Text;
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(plain.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector('[data-tooltip="Line Type"]')).not.toBeNull();
+
+    const sticky = control.add(
+      createText(0, 0, 160, 160, "", {
+        ...defaultTextStyle,
+        scaleFontOnResize: true,
+        placeholder: "Quick note…"
+      })
+    ).getAnnotations().features[1] as Text;
+    control.select(sticky.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector('[data-tooltip="Line Type"]')).toBeNull();
 
     toolbar.destroy();
   });
