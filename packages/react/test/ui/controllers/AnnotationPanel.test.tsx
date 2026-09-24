@@ -9,7 +9,7 @@ import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import {
   AnnotationPanelController,
   useAnnotationPanel
-} from "../../src/ui/AnnotationPanelController";
+} from "../../../src/ui/controllers/AnnotationPanel";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()

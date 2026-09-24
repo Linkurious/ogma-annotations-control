@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { EXTREMITY_OPTIONS } from "@linkurious/ogma-annotations/ui";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { ExtremityController } from "../../../src/ui/controllers/ExtremityController";
+import { ExtremityController } from "../../../src/ui/controllers/Extremity";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()
