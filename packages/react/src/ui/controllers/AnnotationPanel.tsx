@@ -9,7 +9,7 @@ import {
 } from "@linkurious/ogma-annotations/ui";
 import React, { useState, useEffect, useRef } from "react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { AnnotationPanel } from "./AnnotationPanel";
+import { AnnotationPanel } from "../AnnotationPanel";
 
 /**
  * Drives the {@link AnnotationPanel}'s visibility from editor events using the
