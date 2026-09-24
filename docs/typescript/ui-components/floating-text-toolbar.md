@@ -282,6 +282,11 @@ class LockCell implements ToolbarCell {
   private onClick = () => {
     const id = this.ctx.getAnnotation().id;
     locked.set(id, !locked.get(id));
+    // Applies the new lock state immediately: a handler is normally
+    // (de)attached only when the selection changes, so without this an
+    // already-open editor (or an in-progress drag) on this still-selected
+    // annotation would keep working until it's deselected and reselected.
+    control.editFeature(id);
     this.refresh(id);
   };
 
