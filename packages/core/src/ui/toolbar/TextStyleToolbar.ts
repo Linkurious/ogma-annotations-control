@@ -5,9 +5,10 @@ import {
   type AnnotationStyleToolbarOptions
 } from "./AnnotationStyleToolbar";
 import { ColorCell, type ColorCellOptions } from "./cells/color";
+import { StrokeCell, type StrokeCellOptions } from "./cells/stroke";
 import type { ToolbarCellContext } from "./cells/contract";
 import type { ToolbarDropdownOption, ToolbarItem } from "./cells/types";
-import { STICKY_SWATCHES, type Swatch } from "./swatches";
+import { STICKY_SWATCHES, STROKE_SWATCHES, type Swatch } from "./swatches";
 
 /** Font options offered by the Font-family cell. Real font names need the
  * actual webfont loaded by the host page to render as shown (e.g. the demo
@@ -41,10 +42,17 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
   fontSizes?: number[];
   /** Color cell's swatch-grid palette - defaults to `STICKY_SWATCHES`. */
   swatches?: Swatch[];
+  /** Outline cell's swatch-grid palette - defaults to `STROKE_SWATCHES`.
+   * Plain-Text only, see `TextStyleToolbar.includeOutlineCell`. */
+  strokeSwatches?: Swatch[];
   /** Bring your own color picker: called instead of opening the built-in
    * `vanilla-colorful` popover when the color cell's "More colors…" is
    * clicked. See `ColorCellOptions.onMoreColors` for the full contract. */
   onMoreColors?: ColorCellOptions["onMoreColors"];
+  /** Same as `onMoreColors`, but for the outline cell's "More colors…"
+   * (`strokeColor` instead of `background`). See
+   * `StrokeCellOptions.onMoreColors`. */
+  onMoreStrokeColors?: StrokeCellOptions["onMoreColors"];
   /**
    * Full control over the pill's contents, beyond `fonts`/`fontSizes`/
    * `swatches`/`onMoreColors`: called with the built-in item list (color,
@@ -61,19 +69,35 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
 }
 
 /** Floating style pill for a Text annotation (plain text box or sticky
- * note): Color, Font family, Font size, Bold, Show author, Delete - see the
- * Figma "Sticky Note Toolbar" export (alignment cell dropped for v1).
- * `StickyNoteStyleToolbar` extends this with no items of its own for now.
+ * note): Color, Font family, Font size, Bold, Outline, Show author, Delete -
+ * see the Figma "Sticky Note Toolbar"/"Annotation Toolbar" exports
+ * (alignment cell dropped for v1). Outline (`StrokeCell`) is plain-Text
+ * only - `StickyNoteStyleToolbar` turns it off via `includeOutlineCell`,
+ * otherwise extends this with no items of its own.
  *
  * The built-in items are declarative `ToolbarItem`s (see `cells/types.ts`),
  * built from `this.options` - override `fonts`/`fontSizes`/`swatches`/
  * `onMoreColors` at construction to reconfigure them without subclassing. */
 export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOptions> {
+  /** Whether the outline (`StrokeCell`) group is included - `true` here,
+   * overridden to `false` by `StickyNoteStyleToolbar` (a sticky note's
+   * borderless look is the point of that preset, so its own outline isn't
+   * offered). A *method*, not a field: the base `AnnotationStyleToolbar`
+   * constructor calls `getItems()` before any subclass field initializer
+   * would have run (see that class's own doc comment) - a field override
+   * would still read the base class's value here, but prototype method
+   * dispatch already resolves to the subclass's override at that point. */
+  protected includeOutlineCell(): boolean {
+    return true;
+  }
+
   protected getItems(ctx: ToolbarCellContext): ToolbarItem[] {
     const fonts = this.options.fonts ?? DEFAULT_TOOLBAR_FONTS;
     const fontSizes = this.options.fontSizes ?? DEFAULT_TOOLBAR_FONT_SIZES;
     const swatches = this.options.swatches ?? STICKY_SWATCHES;
+    const strokeSwatches = this.options.strokeSwatches ?? STROKE_SWATCHES;
     const onMoreColors = this.options.onMoreColors;
+    const onMoreStrokeColors = this.options.onMoreStrokeColors;
 
     const defaultItems: ToolbarItem[] = [
       {
@@ -124,6 +148,20 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
           c.updateStyle({ fontWeight: isBold ? "normal" : "bold" });
         }
       },
+      ...(this.includeOutlineCell()
+        ? ([
+            { kind: "separator" },
+            {
+              kind: "custom",
+              id: "outline",
+              build: (c) =>
+                new StrokeCell(c, {
+                  swatches: strokeSwatches,
+                  onMoreColors: onMoreStrokeColors
+                })
+            }
+          ] as ToolbarItem[])
+        : []),
       { kind: "separator" },
       {
         kind: "button",

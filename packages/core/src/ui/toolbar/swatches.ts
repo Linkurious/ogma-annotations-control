@@ -36,3 +36,14 @@ export const STICKY_SWATCHES: Swatch[] = [
   { fill: "#C3DAFE", stroke: "#668ECC" },
   { fill: "transparent", stroke: "#CCCCCC" }
 ];
+
+/**
+ * Same 8 colors as `STICKY_SWATCHES`, minus the trailing "transparent"
+ * swatch - used by `StrokeCell`'s outline-color grid (see the Figma
+ * "Annotation Toolbar" export's Line Type dropdown), where a transparent
+ * stroke is just "no outline" and better expressed by not opening the
+ * dropdown at all than by a dedicated swatch.
+ */
+export const STROKE_SWATCHES: Swatch[] = STICKY_SWATCHES.filter(
+  (s) => s.fill !== "transparent"
+);
