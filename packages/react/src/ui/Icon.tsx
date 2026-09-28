@@ -30,6 +30,7 @@ export const Icon: React.FC<IconProps> = ({
     strokeLinejoin="round"
     className={className}
     style={rotate ? { transform: "rotate(180deg)" } : undefined}
+    aria-hidden="true"
     dangerouslySetInnerHTML={{ __html: ICON_PATHS[name] }}
   />
 );

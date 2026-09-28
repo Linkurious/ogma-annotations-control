@@ -18,6 +18,7 @@ export class ButtonItemCell implements ToolbarCell {
       ? "oa-toolbar-button oa-toolbar-button-danger"
       : "oa-toolbar-button";
     this.element.dataset.tooltip = item.title;
+    this.element.setAttribute("aria-label", item.title);
     this.element.innerHTML = svgIcon(item.icon, 16);
     this.element.addEventListener("click", this.onClick);
   }

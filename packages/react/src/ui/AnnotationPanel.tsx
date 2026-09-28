@@ -166,6 +166,8 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   return (
     <div
       className="annotation-panel"
+      role="region"
+      aria-label="Annotation style panel"
       data-placement={placement}
       data-orientation={orientation}
       onClick={stopEvent}

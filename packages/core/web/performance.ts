@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { Ogma } from "@linkurious/ogma";
 import { Control, createCommentWithArrow, darken } from "../src";
+import { installBrand } from "./brand";
 
 const N = 300;
 
@@ -66,6 +67,7 @@ const ogma = new Ogma({
     backgroundColor: "#1a1a2e"
   }
 });
+installBrand(ogma);
 
 const control = new Control(ogma);
 

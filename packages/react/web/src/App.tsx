@@ -8,6 +8,7 @@ import {
 } from "@linkurious/ogma-annotations-react/ui";
 import { Controls } from "./components/Controls";
 import { AnnotationsContextProvider } from "@linkurious/ogma-annotations-react";
+import pkg from "../../package.json";
 
 import "./App.css";
 
@@ -52,10 +53,10 @@ export default function App() {
           ogma.tools.brand.set(
             `<div class="brand">
               <a href="../react/">
-                <code>ogma-annotations-react</code></a> | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/react/web/">code</a>
+                <code>ogma-annotations-react</code></a> v${pkg.version} | <a href="https://github.com/linkurious/ogma-annotations-control/tree/develop/packages/react/web/">code</a> | <a href="../">docs</a>
             </div>`,
             {
-              position: "top-left",
+              position: "bottom-right",
               horizontalMargin: 10,
               verticalMargin: 10,
               className: "brand"

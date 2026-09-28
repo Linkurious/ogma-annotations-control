@@ -8,6 +8,7 @@ import type { ToolbarDropdownItem } from "./types";
 export class DropdownItemCell implements ToolbarCell {
   public readonly element: HTMLElement;
   private dropdown: ToolbarDropdown;
+  private optionElements: HTMLButtonElement[] = [];
 
   constructor(
     private ctx: ToolbarCellContext,
@@ -20,6 +21,8 @@ export class DropdownItemCell implements ToolbarCell {
       const el = document.createElement("button");
       el.type = "button";
       el.className = "oa-toolbar-dropdown-option";
+      el.setAttribute("role", "option");
+      el.setAttribute("aria-selected", "false");
       el.textContent = option.label;
       if (option.style) Object.assign(el.style, option.style);
       el.addEventListener("click", (e) => {
@@ -28,6 +31,7 @@ export class DropdownItemCell implements ToolbarCell {
         this.dropdown.close();
       });
       this.dropdown.panel.appendChild(el);
+      this.optionElements.push(el);
     });
   }
 
@@ -39,6 +43,12 @@ export class DropdownItemCell implements ToolbarCell {
       : (option?.label ?? `${value}`);
     this.dropdown.setLabel(label);
     this.element.title = option?.label ?? `${value}`;
+    this.optionElements.forEach((el, i) => {
+      el.setAttribute(
+        "aria-selected",
+        String(this.item.options[i].value === value)
+      );
+    });
   }
 
   public destroy(): void {

@@ -13,7 +13,7 @@ import {
   Mock,
   MockedFunction
 } from "vitest";
-import { AnnotationsContextProvider } from "./AnnotationsContext";
+import { AnnotationsContextProvider } from "../src/AnnotationsContext";
 
 vi.mock("@linkurious/ogma-react", () => ({
   useOgma: vi.fn()

@@ -182,10 +182,19 @@ export const AddMenu = ({
   const isEnabled = (type: ToolbarDrawingType) => enabledTypes.includes(type);
 
   return (
-    <div className="add-menu oa-toolbar" onClick={stopEvent} onMouseMove={stopEvent}>
+    <div
+      className="add-menu oa-toolbar"
+      role="group"
+      aria-label="Annotation tools"
+      onClick={stopEvent}
+      onMouseMove={stopEvent}
+    >
       {isEnabled("arrow") && (
         <button
+          type="button"
           data-tooltip="Add arrow"
+          aria-label="Add arrow"
+          aria-pressed={activeMode === "arrow"}
           onClick={handleArrow}
           className={activeMode === "arrow" ? "active" : ""}
         >
@@ -194,7 +203,10 @@ export const AddMenu = ({
       )}
       {isEnabled("comment") && (
         <button
+          type="button"
           data-tooltip="Add comment"
+          aria-label="Add comment"
+          aria-pressed={activeMode === "comment"}
           onClick={handleComment}
           className={activeMode === "comment" ? "active" : ""}
         >
@@ -203,7 +215,10 @@ export const AddMenu = ({
       )}
       {isEnabled("sticky-note") && (
         <button
+          type="button"
           data-tooltip="Add sticky note"
+          aria-label="Add sticky note"
+          aria-pressed={activeMode === "sticky-note"}
           onClick={handleStickyNote}
           className={activeMode === "sticky-note" ? "active" : ""}
         >
@@ -212,7 +227,10 @@ export const AddMenu = ({
       )}
       {isEnabled("box") && (
         <button
+          type="button"
           data-tooltip="Add box"
+          aria-label="Add box"
+          aria-pressed={activeMode === "box"}
           onClick={handleBox}
           className={activeMode === "box" ? "active" : ""}
         >
@@ -221,7 +239,10 @@ export const AddMenu = ({
       )}
       {isEnabled("text") && (
         <button
+          type="button"
           data-tooltip="Add text"
+          aria-label="Add text"
+          aria-pressed={activeMode === "text"}
           onClick={handleText}
           className={activeMode === "text" ? "active" : ""}
         >
@@ -230,7 +251,10 @@ export const AddMenu = ({
       )}
       {isEnabled("polygon") && (
         <button
+          type="button"
           data-tooltip="Add polygon (click points, Esc to finish)"
+          aria-label="Add polygon (click points, Esc to finish)"
+          aria-pressed={activeMode === "polygon"}
           onClick={handlePolygon}
           className={activeMode === "polygon" ? "active" : ""}
         >
@@ -238,17 +262,32 @@ export const AddMenu = ({
         </button>
       )}
       {enabledTypes.length > 0 && <span className="separator"></span>}
-      <button data-tooltip="Undo" onClick={() => undo()} disabled={!canUndo}>
+      <button
+        type="button"
+        data-tooltip="Undo"
+        aria-label="Undo"
+        onClick={() => undo()}
+        disabled={!canUndo}
+      >
         <Icon name="undo" size={16} />
       </button>
-      <button data-tooltip="Redo" onClick={() => redo()} disabled={!canRedo}>
+      <button
+        type="button"
+        data-tooltip="Redo"
+        aria-label="Redo"
+        onClick={() => redo()}
+        disabled={!canRedo}
+      >
         <Icon name="redo" size={16} />
       </button>
       {(deleteMode === "erase" || deleteMode === "both") && (
         <>
           <span className="separator"></span>
           <button
+            type="button"
             data-tooltip="Erase (click annotations to delete them)"
+            aria-label="Erase (click annotations to delete them)"
+            aria-pressed={activeMode === "erase"}
             onClick={handleErase}
             className={activeMode === "erase" ? "active" : ""}
           >
@@ -259,19 +298,34 @@ export const AddMenu = ({
       {(deleteMode === "select" || deleteMode === "both") && (
         <>
           {deleteMode === "select" && <span className="separator"></span>}
-          <button data-tooltip="Delete selected" onClick={handleDelete}>
+          <button
+            type="button"
+            data-tooltip="Delete selected"
+            aria-label="Delete selected"
+            onClick={handleDelete}
+          >
             <Icon name="trash" size={16} />
           </button>
         </>
       )}
       {(onJsonExport || onSvgExport) && <span className="separator"></span>}
       {onJsonExport && (
-        <button data-tooltip="Export annotations" onClick={onJsonExport}>
+        <button
+          type="button"
+          data-tooltip="Export annotations"
+          aria-label="Export annotations"
+          onClick={onJsonExport}
+        >
           <Icon name="download" size={16} />
         </button>
       )}
       {onSvgExport && (
-        <button data-tooltip="Export SVG" onClick={onSvgExport}>
+        <button
+          type="button"
+          data-tooltip="Export SVG"
+          aria-label="Export SVG"
+          onClick={onSvgExport}
+        >
           <Icon name="camera" size={16} />
         </button>
       )}

@@ -29,7 +29,7 @@ describe("Locked and hidden annotations", () => {
       editor.add(box);
       return {
         id: box.id,
-        screen: ogma.view.graphToScreenCoordinates({ x: -50, y: -70 })
+        screen: screenToPage({ x: -50, y: -70 })
       };
     });
 
@@ -88,7 +88,7 @@ describe("Locked and hidden annotations", () => {
       return {
         hiddenId: hidden.id,
         otherId: other.id,
-        hiddenScreen: ogma.view.graphToScreenCoordinates({ x: -50, y: -70 })
+        hiddenScreen: screenToPage({ x: -50, y: -70 })
       };
     });
 

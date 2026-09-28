@@ -379,6 +379,96 @@ describe("ui/AnnotationPanel enabledTypes", () => {
   });
 });
 
+describe("ui/AnnotationPanel accessibility", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function createSelectedTextPanel() {
+    const text = createText(0, 0, 100, 50, "Hi", {
+      color: "#0099FF",
+      background: "#EDE6FF",
+      font: "sans-serif",
+      strokeType: "plain"
+    });
+    const { control, emit } = createFakeControl(text as unknown as Annotation);
+    const panel = new AnnotationPanel({ control: control as unknown as Control });
+    emit("select", { ids: [text.id] });
+    vi.runAllTimers();
+    return { panel, root: document.querySelector(".annotation-panel")! };
+  }
+
+  it("is a labeled landmark region", () => {
+    const { panel, root } = createSelectedTextPanel();
+    expect(root.getAttribute("role")).toBe("region");
+    expect(root.getAttribute("aria-label")).toBe("Annotation style panel");
+    panel.destroy();
+  });
+
+  it("color/background swatches are real buttons with an aria-label and aria-pressed", () => {
+    const { panel, root } = createSelectedTextPanel();
+    const swatches = root.querySelectorAll<HTMLButtonElement>(".color-circle");
+    expect(swatches.length).toBeGreaterThan(0);
+    swatches.forEach((btn) => {
+      expect(btn.tagName).toBe("BUTTON");
+      expect(btn.getAttribute("aria-label")).toBeTruthy();
+      expect(["true", "false"]).toContain(btn.getAttribute("aria-pressed"));
+    });
+    panel.destroy();
+  });
+
+  it("the Font dropdown is a real, keyboard-reachable button with listbox/option semantics", () => {
+    const { panel, root } = createSelectedTextPanel();
+    const trigger = root.querySelector<HTMLButtonElement>(
+      ".custom-select-trigger"
+    )!;
+    expect(trigger.tagName).toBe("BUTTON");
+    expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    expect(trigger.getAttribute("aria-label")).toContain("Font:");
+
+    const list = root.querySelector(".custom-select-options")!;
+    expect(list.getAttribute("role")).toBe("listbox");
+
+    const options = root.querySelectorAll<HTMLButtonElement>(
+      ".custom-select-option"
+    );
+    expect(options.length).toBeGreaterThan(0);
+    options.forEach((opt) => {
+      expect(opt.tagName).toBe("BUTTON");
+      expect(opt.getAttribute("role")).toBe("option");
+      expect(["true", "false"]).toContain(opt.getAttribute("aria-selected"));
+    });
+
+    // Opening it (trigger only - no updateStyle call) flips aria-expanded.
+    trigger.click();
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+
+    panel.destroy();
+  });
+
+  it("line-type buttons have an aria-label and aria-pressed reflecting the current selection", () => {
+    const { panel, root } = createSelectedTextPanel();
+    const buttons = root.querySelectorAll<HTMLButtonElement>(".linetype-button");
+    expect(buttons.length).toBeGreaterThan(0);
+    const active = Array.from(buttons).find(
+      (b) => b.dataset.linetype === "plain"
+    )!;
+    expect(active.getAttribute("aria-pressed")).toBe("true");
+    expect(active.getAttribute("aria-label")).toBe("plain line");
+    panel.destroy();
+  });
+
+  it("the font-size/stroke-width sliders are labeled inputs", () => {
+    const { panel, root } = createSelectedTextPanel();
+    const sliders = root.querySelectorAll<HTMLInputElement>("input[type='range']");
+    expect(sliders.length).toBeGreaterThan(0);
+    sliders.forEach((input) => {
+      expect(input.getAttribute("aria-label")).toBeTruthy();
+    });
+    panel.destroy();
+  });
+});
+
 /** Minimal fake Control implementing the slice AnnotationToolbar needs. */
 function createFakeToolbarControl(selected: AnnotationCollection) {
   const handlers = new Map<string, Set<(...args: never[]) => void>>();
@@ -460,6 +550,18 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
+  it("is a labeled group, and every button has an aria-label mirroring its data-tooltip", () => {
+    const { toolbar } = createToolbar();
+    const root = document.querySelector(".annotation-toolbar")!;
+    expect(root.getAttribute("role")).toBe("group");
+    expect(root.getAttribute("aria-label")).toBe("Annotation tools");
+
+    root.querySelectorAll<HTMLButtonElement>("button").forEach((btn) => {
+      expect(btn.getAttribute("aria-label")).toBe(btn.dataset.tooltip);
+    });
+    toolbar.destroy();
+  });
+
   it("applies the placement and orientation passed to the constructor", () => {
     const { toolbar } = createToolbar({
       placement: "top-left",
@@ -493,9 +595,11 @@ describe("ui/AnnotationToolbar", () => {
     arrowButton.click();
     expect(control.enableArrowDrawing).toHaveBeenCalled();
     expect(arrowButton.classList.contains("active")).toBe(true);
+    expect(arrowButton.getAttribute("aria-pressed")).toBe("true");
 
     emit("completeDrawing", { id: "a1" });
     expect(arrowButton.classList.contains("active")).toBe(false);
+    expect(arrowButton.getAttribute("aria-pressed")).toBe("false");
 
     toolbar.destroy();
   });

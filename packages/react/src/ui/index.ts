@@ -12,17 +12,14 @@ import "./styles.css";
 
 export { AnnotationPanel } from "./AnnotationPanel";
 export type { AnnotationPanelProps } from "./AnnotationPanel";
-export {
-  AnnotationPanelController,
-  useAnnotationPanel
-} from "./AnnotationPanelController";
-export type { AnnotationPanelControllerProps } from "./AnnotationPanelController";
-export { TextAnnotationToolbarController } from "./TextAnnotationToolbarController";
-export type { TextAnnotationToolbarControllerProps } from "./TextAnnotationToolbarController";
 export { AddMenu } from "./AddMenu";
 export type { AddMenuProps } from "./AddMenu";
 export { ViewControls } from "./ViewControls";
 export { Icon } from "./Icon";
 export type { IconProps } from "./Icon";
 
+// AnnotationPanelController, useAnnotationPanel, and
+// TextAnnotationToolbarController live in ./controllers now (dropped the
+// redundant "Controller" suffix from their file names since the directory
+// name already says so).
 export * from "./controllers";

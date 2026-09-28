@@ -57,6 +57,7 @@ export const SliderController: React.FC<SliderControllerProps> = ({
           type="range"
           id={`${property}-slider`}
           className="slider"
+          aria-label={title}
           min={min}
           max={max}
           value={sliderValue}

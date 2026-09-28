@@ -17,7 +17,7 @@ import {
   simplifyPolygon,
   updatePolygonBbox
 } from "../utils/polygon";
-import { updateBbox } from "../utils/utils";
+import { containerToClientPosition, updateBbox } from "../utils/utils";
 
 enum HandleType {
   VERTEX = "vertex",
@@ -60,8 +60,13 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
     // Disable ogma panning
     this.disablePanning();
 
+    const clientPos = containerToClientPosition(pos, this.ogma.getContainer());
+
     // Start live update
-    this.onDragStart({ clientX: pos.x, clientY: pos.y } as MouseEvent);
+    this.onDragStart({
+      clientX: clientPos.x,
+      clientY: clientPos.y
+    } as MouseEvent);
     return this;
   }
 

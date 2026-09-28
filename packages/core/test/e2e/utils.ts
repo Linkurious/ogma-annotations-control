@@ -11,6 +11,11 @@ declare global {
   function createOgma(options: OgmaParameters): Ogma;
   function createEditor(): import("../../src").Control;
   function wait(ms: number): Promise<void>;
+  function screenToPage(p: { x: number; y: number }): { x: number; y: number };
+  function containerToPage(p: { x: number; y: number }): {
+    x: number;
+    y: number;
+  };
   let ogma: Ogma;
   let editor: import("../../src").Control;
   let Control: typeof import("../../src").Control;

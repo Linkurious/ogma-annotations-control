@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-react",
-  "version": "2.1.3",
+  "version": "2.1.4",
   "description": "A react component to add ogma annotations with  react",
   "type": "module",
   "main": "dist/index.mjs",
@@ -47,6 +47,7 @@
     "lint": "npx oxlint -c oxlint.json src web",
     "lint:ci": "mkdir -p reports && npx oxlint -c oxlint.json -f checkstyle src web > reports/checkstyle.xml",
     "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test": "npm run test:unit"
   },
   "publishConfig": {
@@ -72,6 +73,7 @@
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.1",
     "@vitejs/plugin-react": "4.5.1",
+    "@vitest/coverage-v8": "5.0.0",
     "lucide-react": "0.562.0",
     "oxlint": "0.16.0",
     "react": "18.3.1",
@@ -86,7 +88,7 @@
     "vitest": "5.0.0"
   },
   "dependencies": {
-    "@linkurious/ogma-annotations": "2.1.3",
+    "@linkurious/ogma-annotations": "2.1.4",
     "@linkurious/ogma-react": "5.1.15",
     "vanilla-colorful": "0.7.2"
   }

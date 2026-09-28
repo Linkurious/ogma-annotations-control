@@ -72,6 +72,18 @@ function createEditor() {
   window.editor = editor;
   return editor;
 }
+
+function containerToPage(p: { x: number; y: number }) {
+  const rect = document
+    .getElementById("graph-container")!
+    .getBoundingClientRect();
+  return { x: p.x + rect.left, y: p.y + rect.top };
+}
+
+function screenToPage(p: { x: number; y: number }) {
+  return containerToPage(window.ogma.view.graphToScreenCoordinates(p));
+}
+
 window.Ogma = Ogma;
 window.Control = Control;
 window.createOgma = createOgma;
@@ -81,3 +93,5 @@ window.createPolygon = createPolygon;
 window.createText = createText;
 window.createEditor = createEditor;
 window.demoStyles = demoStyles;
+window.screenToPage = screenToPage;
+window.containerToPage = containerToPage;

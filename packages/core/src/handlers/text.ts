@@ -24,6 +24,7 @@ import {
   isText
 } from "../types";
 import {
+  containerToClientPosition,
   getBoxCenter,
   getBoxSize,
   MIN_FONT_SCALE,
@@ -489,6 +490,12 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     if (isAnnotationLinkTarget(evt.target ?? null)) return;
     const annotation = this.getAnnotation();
     if (!annotation) return;
+    // The handler stays attached to an already-selected annotation until
+    // it's deselected/reselected (attachment is only re-evaluated on
+    // selection change - see AnnotationEditor.editFeature), so locking a
+    // still-selected annotation wouldn't otherwise block a further click
+    // from expanding/entering edit mode on it.
+    if (!this.store.getState().options.isEditable(annotation)) return;
     if (isComment(annotation)
       && annotation.properties.mode === COMMENT_MODE_COLLAPSED
     ) {
@@ -642,8 +649,13 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     // Disable ogma panning
     this.disablePanning();
 
+    const clientPos = containerToClientPosition(pos, this.ogma.getContainer());
+
     // Start live update
-    this.onDragStart({ clientX: pos.x, clientY: pos.y } as MouseEvent);
+    this.onDragStart({
+      clientX: clientPos.x,
+      clientY: clientPos.y
+    } as MouseEvent);
   }
 
   public setAnnotation(annotation: Text | Comment | null): void {

@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-09-14 | Version: 2.x
+> Auto-generated: 2026-09-17 | Version: 2.x
 
 ---
 

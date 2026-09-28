@@ -51,12 +51,24 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "jsdom",
+    // Tests live under test/ (mirroring src/), not co-located with source -
+    // same convention as packages/core/test/unit.
+    include: ["test/**/*.test.{ts,tsx}"],
     globalSetup: ["./test/print-ogma-build.ts"],
     //setupFiles: "./test/setup.ts",
     coverage: {
-      reporter: ["json", "cobertura"],
+      // CI's "test:unit" (no --coverage flag) is what actually runs per-PR —
+      // must be on unconditionally or the cobertura file never gets written.
+      enabled: true,
+      provider: "v8",
+      reporter: ["text", "json", "cobertura"],
       include: ["src/**/*.{ts,tsx}"],
-      reportsDirectory: "reports/coverage"
+      // Climbs out of packages/react (vitest resolves this relative to the
+      // cwd the "test:coverage" script runs from) so the report lands under
+      // the repo-root reports/ tree CI scans for `reports/**/cobertura-coverage.xml`,
+      // same convention as packages/core/test/unit/vitest.config.mts's junit
+      // outputFile.
+      reportsDirectory: "../../reports/coverage/react"
     }
   }
 });

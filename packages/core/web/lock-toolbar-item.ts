@@ -8,6 +8,7 @@ import {
 } from "../src/ui";
 import "../src/ui/styles.css";
 import type { Id } from "../src";
+import { installBrand } from "./brand";
 import "./style.css";
 
 // Runnable version of the "lock button" worked example from
@@ -42,6 +43,11 @@ class LockCell implements ToolbarCell {
   private onClick = () => {
     const id = this.ctx.getAnnotation().id;
     locked.set(id, !locked.get(id));
+    // Applies the new lock state immediately - without this, an
+    // already-open editor (or drag) on this still-selected annotation
+    // would keep working until it's deselected/reselected, since a
+    // handler is normally (de)attached only on selection change.
+    control.editFeature(id);
     this.refresh(id);
   };
 
@@ -64,6 +70,7 @@ class LockCell implements ToolbarCell {
 
 // --- Ogma/Control setup ----------------------------------------------------
 const ogma = new Ogma({ container: "graph-container" });
+installBrand(ogma);
 const control = new Control(ogma);
 
 control.setOptions({

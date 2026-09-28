@@ -36,7 +36,7 @@ describe("Snapping", () => {
         .getNodes()
         .map((n) => n.getPosition());
 
-      const nodeBottom = ogma.view.graphToScreenCoordinates({
+      const nodeBottom = screenToPage({
         x,
         y: y + +ogma.getNode("test")!.getAttribute("radius")
       });

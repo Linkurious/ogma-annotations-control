@@ -118,7 +118,18 @@ export class AnnotationEditor extends EventTarget {
     // Get handler for this feature type
     this.setActiveHandler(feature.properties.type);
     // Selection stays independent of this - a non-editable feature is still selected, it just never gets a handler attached.
-    if (!this.store.getState().options.isEditable(feature)) return;
+    if (!this.store.getState().options.isEditable(feature)) {
+      // Not (or no longer) editable - detach if a handler was already
+      // tracking it, instead of merely skipping (re)attachment. Makes
+      // this self-correcting: calling it again after an *external*
+      // `isEditable` predicate flips (e.g. a `locked` Map driven by a
+      // custom UI button, not stored on the annotation itself - see the
+      // lock-toolbar-item.ts example) closes any open text editor and
+      // detaches drag/resize handling immediately, without requiring a
+      // deselect/reselect first.
+      this.stopEditingFeature(id);
+      return;
+    }
     this.activeHandler?.setAnnotation(feature as Text);
   }
 
