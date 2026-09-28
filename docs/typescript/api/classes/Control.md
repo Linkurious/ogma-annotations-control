@@ -184,6 +184,34 @@ Turn erase mode off. No-op if it isn't active.
 
 ***
 
+### editFeature()
+
+```ts
+editFeature(id): this;
+```
+
+(Re-)apply `id`'s handler attachment (drag/resize/text-edit) to match
+`isEditable` right now, instead of waiting for a deselect/reselect -
+this is the same call a selection change makes internally. Call it
+directly after changing whatever external state your `isEditable`
+predicate depends on (e.g. a `locked` flag kept outside the
+annotation - see the lock-toolbar-item.ts example): closes any open
+text editor and detaches the handler if `id` just became
+non-editable, or attaches it if `id` is selected and just became
+editable again.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`this`
+
+***
+
 ### emit()
 
 ```ts

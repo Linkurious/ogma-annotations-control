@@ -129,6 +129,7 @@
 | [canDetachArrowStart](functions/canDetachArrowStart.md) | Check if arrow start point can be detached from its source |
 | [clientToContainerPosition](functions/clientToContainerPosition.md) | - |
 | [colorToRgba](functions/colorToRgba.md) | - |
+| [containerToClientPosition](functions/containerToClientPosition.md) | Inverse of clientToContainerPosition: turns a point already relative to the container's top-left (e.g. from ogma.view.graphToScreenCoordinates) into viewport-relative clientX/clientY, for code paths that synthesize a MouseEvent-shaped object and hand it to something (like Handler.onDragStart) that normalizes via clientToContainerPosition itself. |
 | [createArrow](functions/createArrow.md) | - |
 | [createBox](functions/createBox.md) | - |
 | [createComment](functions/createComment.md) | Create a new Comment annotation |
