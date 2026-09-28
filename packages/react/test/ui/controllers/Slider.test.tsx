@@ -2,7 +2,7 @@ import { render, fireEvent } from "@testing-library/react";
 import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { SliderController } from "../../../src/ui/controllers/SliderController";
+import { SliderController } from "../../../src/ui/controllers/Slider";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()

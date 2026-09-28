@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { LINE_TYPES } from "@linkurious/ogma-annotations/ui";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { LineTypeController } from "../../../src/ui/controllers/LineTypeController";
+import { LineTypeController } from "../../../src/ui/controllers/LineType";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()

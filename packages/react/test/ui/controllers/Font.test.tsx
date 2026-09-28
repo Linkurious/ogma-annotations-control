@@ -3,7 +3,7 @@ import React from "react";
 import { vi, describe, beforeEach, it, expect, Mock } from "vitest";
 import { FONTS } from "@linkurious/ogma-annotations/ui";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
-import { FontController } from "../../../src/ui/controllers/FontController";
+import { FontController } from "../../../src/ui/controllers/Font";
 
 vi.mock("@linkurious/ogma-annotations-react", () => ({
   useAnnotationsContext: vi.fn()
