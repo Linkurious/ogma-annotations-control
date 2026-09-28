@@ -20,44 +20,12 @@ export class Index extends Rtree<Annotation> {
       () => this.rebuild(this.store.getState().features)
     );
 
-    // Update index when live updates are committed (features are modified)
+    // Catch up once a drag ends if anything was deferred while it lasted.
     this.store.subscribe(
-      (state) => ({
-        features: state.features,
-        isDragging: state.isDragging,
-        lastChangedFeatures: state.lastChangedFeatures,
-        rotation: state.rotation
-      }),
-      (current, previous) => {
-        // Only update when dragging stops (live updates are committed)
-        if (!previous || !previous.isDragging || current.isDragging) return;
-        // Something was skipped mid-drag - catch up with a single full rebuild.
-        if (this.dirty) {
-          this.rebuild(current.features);
-          return;
-        }
-        // Efficiently update only changed features instead of rebuilding entire index
-        if (current.lastChangedFeatures.length > 0) {
-          current.lastChangedFeatures.forEach((id) => {
-            // Insert updated version
-            const newFeature = current.features[id];
-            if (!newFeature) return;
-            if (!this.isVisible(newFeature)) {
-              // Went visible->hidden in this same change - drop it instead of just skipping the re-insert.
-              this.remove(newFeature, compareId);
-              return;
-            }
-            updateBbox(newFeature);
-            if (isText(newFeature) || isComment(newFeature))
-              this.updateRotatedText(newFeature);
-            else {
-              this.remove(newFeature, compareId);
-              this.insert(newFeature);
-            }
-          });
-        }
-      },
-      { equalityFn: (a, b) => a.isDragging === b.isDragging }
+      (state) => state.isDragging,
+      (isDragging) => {
+        if (!isDragging && this.dirty) this.rebuild(this.store.getState().features);
+      }
     );
     this.store.subscribe((state) => state.rotation, this.onRotationChange);
     this.store.subscribe((state) => state.zoom, this.onZoomChange);
@@ -68,9 +36,9 @@ export class Index extends Rtree<Annotation> {
    * landing mid-gesture (e.g. LinkSync's debounced arrow commit while a node
    * with an attached comment is dragged), and each one would otherwise clear
    * and re-insert the whole tree - repeatedly, and re-entrantly when the
-   * commit cascades into further feature updates. Nothing queries the index
-   * while dragging (hover detection is off), so defer to one rebuild at the
-   * end of the drag.
+   * commit cascades into further feature updates. Hover detection is off
+   * while dragging and snapping targets don't move mid-drag, so defer to
+   * one rebuild at the end of the drag.
    */
   private dirty = false;
 
@@ -118,7 +86,12 @@ export class Index extends Rtree<Annotation> {
     for (const feature of Object.values(features)) {
       if (!this.isVisible(feature)) continue;
       if (isText(feature) || isComment(feature)) this.updateRotatedText(feature);
-      else this.insert(feature);
+      else {
+        // Drag handlers spread the old geometry into their updates, so a
+        // committed arrow/polygon can carry a stale cached bbox.
+        updateBbox(feature);
+        this.insert(feature);
+      }
     }
   };
 
