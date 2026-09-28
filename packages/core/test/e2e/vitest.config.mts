@@ -3,11 +3,12 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     include: ["test/e2e/**/*.test.ts"],
-    globalSetup: ["./test/print-ogma-build.mts"],
+    globalSetup: ["./test/print-ogma-build.mts", "./test/e2e/globalSetup.mts"],
     // Browser-driven e2e tests start a Playwright/WebSocket session; retry
     // once to absorb transient connection/timing flakiness under CI load.
     retry: 2,
-    // Each file spins up its own Chromium + vite preview server. Running
+    // History: each file used to spin up its own Chromium + vite preview
+    // server (now shared, built once in globalSetup.mts). Running
     // every file concurrently (vitest's default, effectively unbounded)
     // piles those up at once - fine locally, but on a constrained CI agent
     // the resulting CPU/memory contention makes every test dramatically
@@ -23,8 +24,13 @@ export default defineConfig({
     // timeout and gets killed partway through. Capping concurrency instead
     // of removing it keeps peak concurrent Chromium instances low without
     // giving up all the parallel speedup.
+    //
+    // With the build/server/browser shared, files only open a context each,
+    // so this cap could likely be raised (4 workers: ~34s vs ~61s locally) -
+    // left at 2 until CI has been observed stable with the shared setup.
     maxWorkers: 2,
-    // beforeAll's session.start() (vite build + chromium.launch + page.goto)
+    // beforeAll's session.start() (then: vite build + chromium.launch +
+    // page.goto; now: connect + newContext + page.goto)
     // comfortably clears the 10s default hookTimeout locally, but under CI's
     // slower/contended agent - especially with two files' beforeAll racing
     // to launch their own Chromium at once under maxWorkers: 2 - it can miss
