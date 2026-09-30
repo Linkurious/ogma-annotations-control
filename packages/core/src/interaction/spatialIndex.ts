@@ -3,8 +3,6 @@ import { Store } from "../store";
 import { Annotation, Comment, Id, Text, isComment, isText } from "../types";
 import { getBbox, updateBbox, getBoxCenter, getBoxSize } from "../utils/utils";
 
-const bboxCache: BBox = { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-
 const compareId = (a: Annotation, b: Annotation) => a.id === b.id;
 
 export class Index extends Rtree<Annotation> {
@@ -22,46 +20,36 @@ export class Index extends Rtree<Annotation> {
       () => this.rebuild(this.store.getState().features)
     );
 
-    // Update index when live updates are committed (features are modified)
+    // Catch up once a drag ends if anything was deferred while it lasted.
     this.store.subscribe(
-      (state) => ({
-        features: state.features,
-        isDragging: state.isDragging,
-        lastChangedFeatures: state.lastChangedFeatures,
-        rotation: state.rotation
-      }),
-      (current, previous) => {
-        // Only update when dragging stops (live updates are committed)
-        if (previous && previous.isDragging && !current.isDragging) {
-          // Efficiently update only changed features instead of rebuilding entire index
-          if (current.lastChangedFeatures.length > 0) {
-            current.lastChangedFeatures.forEach((id) => {
-              // Insert updated version
-              const newFeature = current.features[id];
-              if (!newFeature) return;
-              if (!this.isVisible(newFeature)) {
-                // Went visible->hidden in this same change - drop it instead of just skipping the re-insert.
-                this.remove(newFeature, compareId);
-                return;
-              }
-              updateBbox(newFeature);
-              if (isText(newFeature) || isComment(newFeature))
-                this.updateRotatedText(newFeature);
-              else {
-                this.remove(newFeature, compareId);
-                this.insert(newFeature);
-              }
-            });
-          }
-        }
-      },
-      { equalityFn: (a, b) => a.isDragging === b.isDragging }
+      (state) => state.isDragging,
+      (isDragging) => {
+        if (!isDragging && this.dirty) this.rebuild(this.store.getState().features);
+      }
     );
     this.store.subscribe((state) => state.rotation, this.onRotationChange);
     this.store.subscribe((state) => state.zoom, this.onZoomChange);
   }
 
+  /**
+   * Re-indexing is skipped for the duration of a drag: commits keep
+   * landing mid-gesture (e.g. LinkSync's debounced arrow commit while a node
+   * with an attached comment is dragged), and each one would otherwise clear
+   * and re-insert the whole tree - repeatedly, and re-entrantly when the
+   * commit cascades into further feature updates. Hover detection is off
+   * while dragging and snapping targets don't move mid-drag, so defer to
+   * one rebuild at the end of the drag.
+   */
+  private dirty = false;
+
+  private deferWhileDragging(): boolean {
+    if (!this.store.getState().isDragging) return false;
+    this.dirty = true;
+    return true;
+  }
+
   private onRotationChange = () => {
+    if (this.deferWhileDragging()) return;
     const texts = this.store
       .getState()
       .getAllFeatures()
@@ -74,6 +62,7 @@ export class Index extends Rtree<Annotation> {
   };
 
   private onZoomChange = () => {
+    if (this.deferWhileDragging()) return;
     const fixedSizeTexts = this.store
       .getState()
       .getAllFeatures()
@@ -91,11 +80,18 @@ export class Index extends Rtree<Annotation> {
     this.store.getState().options.isVisible(feature);
 
   private rebuild = (features: Record<Id, Annotation>) => {
+    if (this.deferWhileDragging()) return;
+    this.dirty = false;
     this.clear();
     for (const feature of Object.values(features)) {
       if (!this.isVisible(feature)) continue;
       if (isText(feature) || isComment(feature)) this.updateRotatedText(feature);
-      else this.insert(feature);
+      else {
+        // Drag handlers spread the old geometry into their updates, so a
+        // committed arrow/polygon can carry a stale cached bbox.
+        updateBbox(feature);
+        this.insert(feature);
+      }
     }
   };
 
@@ -146,13 +142,13 @@ export class Index extends Rtree<Annotation> {
   //   return super.insert(item);
   // }
 
+  // Must return a fresh object: rbush's _insert holds on to the inserted
+  // item's bbox across _split, which calls toBBox on the node's other
+  // children - a shared, reused object would get overwritten underneath it
+  // and _adjustParentBBoxes would then extend the path with the wrong box.
   toBBox(item: Annotation): BBox {
     const bbox = getBbox(item);
-    bboxCache.minX = bbox[0];
-    bboxCache.minY = bbox[1];
-    bboxCache.maxX = bbox[2];
-    bboxCache.maxY = bbox[3];
-    return bboxCache;
+    return { minX: bbox[0], minY: bbox[1], maxX: bbox[2], maxY: bbox[3] };
   }
 
   query(bbox: BBox): Annotation[] {

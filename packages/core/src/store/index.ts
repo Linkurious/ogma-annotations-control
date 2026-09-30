@@ -386,11 +386,14 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             set({
               features: updatedFeatures,
               liveUpdates: remainingLiveUpdates,
-              // Only declare dragging over once nothing else is still
-              // live - a scoped commit (e.g. a comment auto-grow finalize)
-              // must not end an unrelated drag that's still in progress.
+              // A scoped commit (LinkSync's debounced arrow commit, a
+              // comment auto-grow finalize) never ends a drag - it can fire
+              // mid-gesture (e.g. while a node is still being dragged, with
+              // no annotation overlay of its own left in `liveUpdates`).
+              // Only an unscoped commit, and only once nothing else is
+              // still live, declares dragging over.
               isDragging:
-                Object.keys(remainingLiveUpdates).length === 0
+                !ids && Object.keys(remainingLiveUpdates).length === 0
                   ? false
                   : get().isDragging,
               lastChangedFeatures: changedFeatureIds // Track which features changed
