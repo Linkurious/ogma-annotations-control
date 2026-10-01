@@ -27,7 +27,7 @@ export {
 } from "./toolbar/TextStyleToolbar";
 export type { TextStyleToolbarOptions } from "./toolbar/TextStyleToolbar";
 export { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyleToolbar";
-export { STICKY_SWATCHES } from "./toolbar/swatches";
+export { STICKY_SWATCHES, STROKE_SWATCHES } from "./toolbar/swatches";
 export type { Swatch } from "./toolbar/swatches";
 export type { ToolbarCell, ToolbarCellContext } from "./toolbar/cells/contract";
 export type {
@@ -42,6 +42,12 @@ export { ButtonItemCell } from "./toolbar/cells/buttonItem";
 export { DropdownItemCell } from "./toolbar/cells/dropdownItem";
 export { ColorCell } from "./toolbar/cells/color";
 export type { ColorCellOptions } from "./toolbar/cells/color";
+export {
+  StrokeCell,
+  STROKE_WIDTH_THIN,
+  STROKE_WIDTH_THICK
+} from "./toolbar/cells/stroke";
+export type { StrokeCellOptions } from "./toolbar/cells/stroke";
 
 export * from "./config";
 export * from "./color";
