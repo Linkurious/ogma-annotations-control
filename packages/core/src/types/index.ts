@@ -1,4 +1,4 @@
-import type { Annotation, AuthorLineStyle } from "./features";
+import type { Annotation, AuthorLineStyle, Comment } from "./features";
 
 export * from "./features";
 export * from "./geometry";
@@ -67,6 +67,15 @@ export type ControllerOptions = {
    * Should be a complete SVG string (e.g., '<svg>...</svg>')
    */
   editButtonIcon: string;
+
+  /**
+   * Default collapsed-comment icon: an '<svg viewBox=...>' string or a text
+   * symbol (e.g. an emoji). Used by every comment that has no own
+   * `style.iconSymbol`, so it isn't repeated in each annotation. Defaults to
+   * the built-in SVG icon. May be a function to pick the icon per comment;
+   * return undefined for the built-in one.
+   */
+  commentIcon?: string | ((comment: Comment) => string | undefined);
 
   /**
    * Minimum height of the arrow in units

@@ -225,6 +225,15 @@ function parseSvg(markup: string): SVGSVGElement | null {
   return document.importNode(svg, true) as unknown as SVGSVGElement;
 }
 
+/** Control-level default icon for a comment, if any (string or callback) */
+function resolveCommentIcon(
+  comment: Comment,
+  state: AnnotationState
+): string | undefined {
+  const icon = state.options.commentIcon;
+  return typeof icon === "function" ? icon(comment) : icon;
+}
+
 /**
  * Render or update the collapsed icon within its group
  */
@@ -237,7 +246,7 @@ function renderCollapsedIcon(
   const size = style.iconSize!;
   const {
     iconColor = defaultCommentStyle.iconColor,
-    iconSymbol = defaultCommentStyle.iconSymbol,
+    iconSymbol = resolveCommentIcon(comment, state),
     iconBorderColor = defaultCommentStyle.iconBorderColor,
     iconBorderWidth = defaultCommentStyle.iconBorderWidth
   } = style;
@@ -539,7 +548,8 @@ export function renderComment(
     height,
     style,
     state.hoveredFeature === annotation.id,
-    showEditBtn && state.options.editButtonIcon
+    showEditBtn && state.options.editButtonIcon,
+    resolveCommentIcon(annotation, state)
   ]);
   if (renderedKeys.get(g) !== key) {
     renderCollapsedIcon(iconGroup, annotation, state);
