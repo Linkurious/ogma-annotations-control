@@ -478,6 +478,9 @@ export function formatContent(content: string): string {
   return html;
 }
 
+// Last drawn content signature per comment group, to skip identical redraws
+const renderedKeys = new WeakMap<SVGGElement, string>();
+
 /**
  * Main render function for comments
  *
@@ -526,9 +529,22 @@ export function renderComment(
     state.options.showEditButton &&
     state.options.isEditable(annotation);
 
-  // Render both states
-  renderCollapsedIcon(iconGroup, annotation, state);
-  renderExpandedBox(boxGroup, annotation, state, showEditBtn);
+  // Render both states, but only when something they draw has changed -
+  // pan/zoom only moves the container transform below
+  const { content, width, height, style } = annotation.properties;
+  const key = JSON.stringify([
+    content,
+    width,
+    height,
+    style,
+    state.hoveredFeature === annotation.id,
+    showEditBtn && state.options.editButtonIcon
+  ]);
+  if (renderedKeys.get(g) !== key) {
+    renderCollapsedIcon(iconGroup, annotation, state);
+    renderExpandedBox(boxGroup, annotation, state, showEditBtn);
+    renderedKeys.set(g, key);
+  }
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
   if (!wasVisible) {
