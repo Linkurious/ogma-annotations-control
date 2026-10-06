@@ -229,7 +229,7 @@ function parseSvg(markup: string): SVGSVGElement | null {
     for (const a of [...el.attributes]) {
       // browsers ignore tabs/newlines/control chars inside a URL scheme
       // ("java&#x09;script:"), so strip them before checking
-      const value = a.value.replace(/[\u0000-\u0020]/g, "");
+      const value = a.value.replace(/[^\x21-\x7e]/g, "");
       if (/^on/i.test(a.name) || /^javascript:/i.test(value))
         el.removeAttribute(a.name);
     }
