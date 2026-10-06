@@ -185,8 +185,9 @@ export function getCommentDefs(): SVGStyleElement {
   return style;
 }
 
-// Speech bubble with two text lines (24x24 viewBox)
-const BUBBLE_PATH = "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8.5 10.5h7M8.5 13.5h4";
+// Lucide "message-square-more" (ISC, https://lucide.dev), 24x24 viewBox
+const BUBBLE_PATH =
+  "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2zM12 11h.01M16 11h.01M8 11h.01";
 
 // Sanitized templates by markup string (null = invalid), cloned per comment
 // ponytail: unbounded, fine for a handful of distinct icons

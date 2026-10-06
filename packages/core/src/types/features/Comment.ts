@@ -20,7 +20,7 @@ export interface CommentStyle extends TextStyle {
   // Icon styling (collapsed mode)
   /** Background color for collapsed icon (default: "#FFD700") */
   iconColor?: Color;
-  /** Icon to display when collapsed (default: built-in SVG speech bubble; set e.g. "💬" for a text/emoji icon, or an "<svg viewBox=...>" string for a colorful icon; scripts/handlers are stripped) */
+  /** Icon to display when collapsed (default: built-in SVG message icon; set e.g. "💬" for a text/emoji icon, or an "<svg viewBox=...>" string for a colorful icon; scripts/handlers are stripped) */
   iconSymbol?: string;
   /** Border color for collapsed icon */
   iconBorderColor?: Color;
@@ -162,7 +162,7 @@ export const defaultCommentStyle: CommentStyle = {
 
   // Icon styling (collapsed mode)
   iconColor: "#FFFACD", // Gold
-  // iconSymbol unset = built-in SVG speech bubble
+  // iconSymbol unset = built-in SVG message icon
   iconBorderColor: "#aaa",
   iconBorderWidth: 1,
 
