@@ -188,6 +188,10 @@ export function getCommentDefs(): SVGStyleElement {
 // Speech bubble with two text lines (24x24 viewBox)
 const BUBBLE_PATH = "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8.5 10.5h7M8.5 13.5h4";
 
+// Sanitized templates by markup string (null = invalid), cloned per comment
+// ponytail: unbounded, fine for a handful of distinct icons
+const svgCache = new Map<string, SVGSVGElement | null>();
+
 const UNSAFE_TAGS = "script,foreignObject,iframe,object,embed,animate,set";
 
 /**
@@ -195,6 +199,11 @@ const UNSAFE_TAGS = "script,foreignObject,iframe,object,embed,animate,set";
  * event handlers and javascript: URLs. Returns null if it isn't valid SVG.
  */
 function parseSafeSvg(markup: string): SVGSVGElement | null {
+  if (!svgCache.has(markup)) svgCache.set(markup, parseSvg(markup));
+  return (svgCache.get(markup)?.cloneNode(true) as SVGSVGElement) ?? null;
+}
+
+function parseSvg(markup: string): SVGSVGElement | null {
   const doc = new DOMParser().parseFromString(
     // XML parsing needs the namespace; users rarely include it
     /xmlns\s*=/.test(markup)
