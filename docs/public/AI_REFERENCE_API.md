@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-09-28 | Version: 2.x
+> Auto-generated: 2026-10-06 | Version: 2.x
 
 ---
 
@@ -1168,6 +1168,12 @@ the updated options
 
 ```ts
 optional authorStyle: Partial<AuthorLineStyle>;
+```
+
+##### commentIcon?
+
+```ts
+optional commentIcon: string | (comment) => string | undefined;
 ```
 
 ##### detectMargin
@@ -2900,7 +2906,7 @@ Size when collapsed (default: 32px)
 optional iconSymbol: string;
 ```
 
-Icon to display when collapsed (default: "💬")
+Icon to display when collapsed (default: built-in SVG message icon; set e.g. "💬" for a text/emoji icon, or an `<svg viewBox=...>` string for a colorful icon; scripts/handlers are stripped)
 
 ***
 
@@ -4169,6 +4175,20 @@ Editor-wide default style for every Text annotation's author line. Only
 applied when an annotation's `style.showAuthor` is true and
 `properties.author` is set; a given field here is overridden by that
 annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
+
+***
+
+### commentIcon?
+
+```ts
+optional commentIcon: string | (comment) => string | undefined;
+```
+
+Default collapsed-comment icon: an `<svg viewBox=...>` string or a text
+symbol (e.g. an emoji). Used by every comment that has no own
+`style.iconSymbol`, so it isn't repeated in each annotation. Defaults to
+the built-in SVG icon. May be a function to pick the icon per comment;
+return undefined for the built-in one.
 
 ***
 

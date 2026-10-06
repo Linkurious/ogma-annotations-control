@@ -69,7 +69,7 @@ export type ControllerOptions = {
   editButtonIcon: string;
 
   /**
-   * Default collapsed-comment icon: an '<svg viewBox=...>' string or a text
+   * Default collapsed-comment icon: an `<svg viewBox=...>` string or a text
    * symbol (e.g. an emoji). Used by every comment that has no own
    * `style.iconSymbol`, so it isn't repeated in each annotation. Defaults to
    * the built-in SVG icon. May be a function to pick the icon per comment;
