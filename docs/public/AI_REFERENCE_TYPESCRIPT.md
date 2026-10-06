@@ -1,7 +1,7 @@
 # Ogma Annotations - TypeScript Reference
 
 > Core TypeScript API, usage patterns, and examples for @linkurious/ogma-annotations
-> Auto-generated: 2026-09-28 | Version: 2.x
+> Auto-generated: 2026-10-06 | Version: 2.x
 
 ---
 

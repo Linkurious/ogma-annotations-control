@@ -7,6 +7,7 @@ import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
 import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comment/helpers";
 import {
   Annotation,
+  Comment,
   AuthorLineStyle,
   Bounds,
   ControllerOptions,
@@ -110,6 +111,7 @@ export interface AnnotationState {
     showEditButton: boolean;
     sendButtonIcon: string;
     editButtonIcon: string;
+    commentIcon?: string | ((comment: Comment) => string | undefined);
     minArrowHeight: number;
     maxArrowHeight: number;
     detectMargin: number;
@@ -206,6 +208,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
             showEditButton: initialOptions?.showEditButton ?? true,
             editButtonIcon: initialOptions?.editButtonIcon ?? DEFAULT_EDIT_ICON,
+            commentIcon: initialOptions?.commentIcon,
             minArrowHeight: initialOptions?.minArrowHeight ?? 20,
             maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
             detectMargin: initialOptions?.detectMargin ?? 2,

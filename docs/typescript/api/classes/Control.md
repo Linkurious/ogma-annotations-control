@@ -1161,6 +1161,12 @@ the updated options
 optional authorStyle: Partial<AuthorLineStyle>;
 ```
 
+##### commentIcon?
+
+```ts
+optional commentIcon: string | (comment) => string | undefined;
+```
+
 ##### detectMargin
 
 ```ts

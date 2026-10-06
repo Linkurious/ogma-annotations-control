@@ -185,6 +185,67 @@ export function getCommentDefs(): SVGStyleElement {
   return style;
 }
 
+// Lucide "message-square-more" (ISC, https://lucide.dev), 24x24 viewBox
+const BUBBLE_PATH =
+  "M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2zM12 11h.01M16 11h.01M8 11h.01";
+
+// Sanitized templates by markup string (null = invalid), cloned per comment
+// ponytail: unbounded, fine for a handful of distinct icons
+const svgCache = new Map<string, SVGSVGElement | null>();
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+// <style> is dropped too: inline SVG shares the document, so its CSS (or
+// @import) would leak out and restyle the host page
+const UNSAFE_TAGS =
+  "script,style,foreignObject,iframe,object,embed,animate,set";
+
+/**
+ * Parse a user-supplied SVG string into an element, dropping scripts,
+ * event handlers and javascript: URLs. Returns null if it isn't valid SVG.
+ * ponytail: hand-rolled blocklist; swap for DOMPurify if icon markup can come
+ * from untrusted sources.
+ */
+function parseSafeSvg(markup: string): SVGSVGElement | null {
+  if (!svgCache.has(markup)) svgCache.set(markup, parseSvg(markup));
+  return (svgCache.get(markup)?.cloneNode(true) as SVGSVGElement) ?? null;
+}
+
+function parseSvg(markup: string): SVGSVGElement | null {
+  const parse = (m: string) =>
+    new DOMParser().parseFromString(m, "image/svg+xml");
+  let doc = parse(markup);
+  // XML parsing needs the namespace; users rarely include it
+  if (!doc.documentElement.namespaceURI)
+    doc = parse(markup.replace(/<svg/i, `<svg xmlns="${SVG_NS}"`));
+  const svg = doc.documentElement;
+  if (
+    svg.namespaceURI !== SVG_NS ||
+    svg.localName !== "svg" ||
+    doc.querySelector("parsererror")
+  )
+    return null;
+  svg.querySelectorAll(UNSAFE_TAGS).forEach(el => el.remove());
+  [svg, ...svg.querySelectorAll("*")].forEach(el => {
+    for (const a of [...el.attributes]) {
+      // browsers ignore tabs/newlines/control chars inside a URL scheme
+      // ("java&#x09;script:"), so strip them before checking
+      const value = a.value.replace(/[^\x21-\x7e]/g, "");
+      if (/^on/i.test(a.name) || /^javascript:/i.test(value))
+        el.removeAttribute(a.name);
+    }
+  });
+  return document.importNode(svg, true) as unknown as SVGSVGElement;
+}
+
+/** Control-level default icon for a comment, if any (string or callback) */
+function resolveCommentIcon(
+  comment: Comment,
+  state: AnnotationState
+): string | undefined {
+  const icon = state.options.commentIcon;
+  return typeof icon === "function" ? icon(comment) : icon;
+}
+
 /**
  * Render or update the collapsed icon within its group
  */
@@ -197,7 +258,7 @@ function renderCollapsedIcon(
   const size = style.iconSize!;
   const {
     iconColor = defaultCommentStyle.iconColor,
-    iconSymbol = defaultCommentStyle.iconSymbol,
+    iconSymbol = resolveCommentIcon(comment, state),
     iconBorderColor = defaultCommentStyle.iconBorderColor,
     iconBorderWidth = defaultCommentStyle.iconBorderWidth
   } = style;
@@ -230,21 +291,62 @@ function renderCollapsedIcon(
     rect.removeAttribute("stroke-width");
   }
 
-  // Find or create text
-  let text = iconGroup.querySelector("text") as SVGTextElement;
-  if (!text) {
-    text = createSVGElement<SVGTextElement>("text");
-    text.setAttribute("x", "0");
-    text.setAttribute("y", "0");
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("dominant-baseline", "central");
-    text.setAttribute("pointer-events", "none");
-    iconGroup.appendChild(text);
+  // iconSymbol: "<svg ...>" string -> sanitized colorful SVG, other string
+  // (e.g. emoji) -> text, unset -> built-in speech-bubble path
+  let text = iconGroup.querySelector("text") as SVGTextElement | null;
+  let path = iconGroup.querySelector("path") as SVGPathElement | null;
+  let custom = iconGroup.querySelector("svg") as SVGSVGElement | null;
+  const isSvg = !!iconSymbol && /^\s*<svg[\s>]/i.test(iconSymbol);
+  if (!isSvg || custom?.dataset.src !== iconSymbol) custom?.remove();
+  if (isSvg) {
+    text?.remove();
+    path?.remove();
+    let svg = iconGroup.querySelector("svg");
+    if (!svg) {
+      svg = parseSafeSvg(iconSymbol!);
+      if (svg) {
+        svg.dataset.src = iconSymbol!;
+        svg.setAttribute("pointer-events", "none");
+        iconGroup.appendChild(svg);
+      }
+    }
+    // geometry follows iconSize on every render, the parsed SVG is reused
+    if (svg) {
+      const d = size * 0.6;
+      svg.setAttribute("x", `${-d / 2}`);
+      svg.setAttribute("y", `${-d / 2}`);
+      svg.setAttribute("width", `${d}`);
+      svg.setAttribute("height", `${d}`);
+    }
+  } else if (iconSymbol) {
+    path?.remove();
+    if (!text) {
+      text = createSVGElement<SVGTextElement>("text");
+      text.setAttribute("x", "0");
+      text.setAttribute("y", "0");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("pointer-events", "none");
+      iconGroup.appendChild(text);
+    }
+    text.setAttribute("font-size", `${size * 0.5}`);
+    text.textContent = iconSymbol;
+  } else {
+    text?.remove();
+    if (!path) {
+      path = createSVGElement<SVGPathElement>("path");
+      path.setAttribute("d", BUBBLE_PATH);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      path.setAttribute("pointer-events", "none");
+      iconGroup.appendChild(path);
+    }
+    // 24x24 viewBox path, scaled to half the icon size and centred
+    path.setAttribute("transform", `scale(${(size * 0.55) / 24}) translate(-12 -12)`);
+    path.setAttribute("stroke", "#333");
   }
-
-  // Update text attributes
-  text.setAttribute("font-size", `${size * 0.5}`);
-  text.textContent = iconSymbol!;
 }
 
 /**
@@ -402,6 +504,9 @@ export function formatContent(content: string): string {
   return html;
 }
 
+// Last drawn content signature per comment group, to skip identical redraws
+const renderedKeys = new WeakMap<SVGGElement, string>();
+
 /**
  * Main render function for comments
  *
@@ -450,9 +555,23 @@ export function renderComment(
     state.options.showEditButton &&
     state.options.isEditable(annotation);
 
-  // Render both states
-  renderCollapsedIcon(iconGroup, annotation, state);
-  renderExpandedBox(boxGroup, annotation, state, showEditBtn);
+  // Render both states, but only when something they draw has changed -
+  // pan/zoom only moves the container transform below
+  const { content, width, height, style } = annotation.properties;
+  const key = JSON.stringify([
+    content,
+    width,
+    height,
+    style,
+    state.hoveredFeature === annotation.id,
+    showEditBtn && state.options.editButtonIcon,
+    resolveCommentIcon(annotation, state)
+  ]);
+  if (renderedKeys.get(g) !== key) {
+    renderCollapsedIcon(iconGroup, annotation, state);
+    renderExpandedBox(boxGroup, annotation, state, showEditBtn);
+    renderedKeys.set(g, key);
+  }
 
   // Disable transitions if the comment was not visible (e.g., just came into view)
   if (!wasVisible) {

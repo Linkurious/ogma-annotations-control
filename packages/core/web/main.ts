@@ -236,6 +236,7 @@ class App {
   private setupAnnotationPanel() {
     this.annotationPanel = new AnnotationPanel({
       control: this.control,
+      container: this.ogma.getContainer()!,
       // Text/sticky notes are handled by TextAnnotationToolbar (see
       // setupTextAnnotationToolbar) - excluding "text" here keeps the
       // docked panel from also popping up for the same selection.
@@ -247,6 +248,7 @@ class App {
     const { handleJsonExport, handleSvgExport } = this.setupExportPopups();
     this.annotationToolbar = new AnnotationToolbar({
       control: this.control,
+      container: this.ogma.getContainer()!,
       onJsonExport: handleJsonExport,
       onSvgExport: handleSvgExport
     });

@@ -187,7 +187,7 @@ Size when collapsed (default: 32px)
 optional iconSymbol: string;
 ```
 
-Icon to display when collapsed (default: "💬")
+Icon to display when collapsed (default: built-in SVG message icon; set e.g. "💬" for a text/emoji icon, or an `<svg viewBox=...>` string for a colorful icon; scripts/handlers are stripped)
 
 ***
 
