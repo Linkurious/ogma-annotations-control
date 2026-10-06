@@ -52,6 +52,23 @@ document.getElementById("enable")!.addEventListener("click", () => {
   });
 });
 
+// Collapsed comments showing the three icon kinds: default SVG bubble,
+// emoji text, and a custom colorful SVG string.
+const heart =
+  '<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11Z" fill="#e91e63"/><circle cx="8.5" cy="9" r="1.5" fill="#fff" opacity=".6"/></svg>';
+[
+  [-60, -40, "Default SVG bubble", undefined],
+  [0, -40, "Emoji icon", "💬"],
+  [60, -40, "Custom colorful SVG", heart]
+].forEach(([x, y, text, iconSymbol]) =>
+  control.add(
+    createComment(x as number, y as number, text as string, {
+      mode: "collapsed",
+      style: { iconSymbol: iconSymbol as string | undefined }
+    })
+  )
+);
+
 // Initialize debug tools
 const debug = createDebugTools(ogma, control);
 

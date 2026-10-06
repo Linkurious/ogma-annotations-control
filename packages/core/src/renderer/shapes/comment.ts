@@ -185,6 +185,36 @@ export function getCommentDefs(): SVGStyleElement {
   return style;
 }
 
+// Speech bubble with two text lines (24x24 viewBox)
+const BUBBLE_PATH = "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12ZM8.5 10.5h7M8.5 13.5h4";
+
+const UNSAFE_TAGS = "script,foreignObject,iframe,object,embed,animate,set";
+
+/**
+ * Parse a user-supplied SVG string into an element, dropping scripts,
+ * event handlers and javascript: URLs. Returns null if it isn't valid SVG.
+ */
+function parseSafeSvg(markup: string): SVGSVGElement | null {
+  const doc = new DOMParser().parseFromString(
+    // XML parsing needs the namespace; users rarely include it
+    /xmlns\s*=/.test(markup)
+      ? markup
+      : markup.replace(/<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"'),
+    "image/svg+xml"
+  );
+  const svg = doc.documentElement;
+  if (svg.nodeName.toLowerCase() !== "svg" || doc.querySelector("parsererror"))
+    return null;
+  svg.querySelectorAll(UNSAFE_TAGS).forEach(el => el.remove());
+  [svg, ...svg.querySelectorAll("*")].forEach(el => {
+    for (const a of [...el.attributes]) {
+      if (/^on/i.test(a.name) || /^\s*javascript:/i.test(a.value))
+        el.removeAttribute(a.name);
+    }
+  });
+  return document.importNode(svg, true) as unknown as SVGSVGElement;
+}
+
 /**
  * Render or update the collapsed icon within its group
  */
@@ -230,21 +260,58 @@ function renderCollapsedIcon(
     rect.removeAttribute("stroke-width");
   }
 
-  // Find or create text
-  let text = iconGroup.querySelector("text") as SVGTextElement;
-  if (!text) {
-    text = createSVGElement<SVGTextElement>("text");
-    text.setAttribute("x", "0");
-    text.setAttribute("y", "0");
-    text.setAttribute("text-anchor", "middle");
-    text.setAttribute("dominant-baseline", "central");
-    text.setAttribute("pointer-events", "none");
-    iconGroup.appendChild(text);
+  // iconSymbol: "<svg ...>" string -> sanitized colorful SVG, other string
+  // (e.g. emoji) -> text, unset -> built-in speech-bubble path
+  let text = iconGroup.querySelector("text") as SVGTextElement | null;
+  let path = iconGroup.querySelector("path") as SVGPathElement | null;
+  let custom = iconGroup.querySelector("svg") as SVGSVGElement | null;
+  const isSvg = !!iconSymbol && /^\s*<svg[\s>]/i.test(iconSymbol);
+  if (!isSvg || custom?.dataset.src !== iconSymbol) custom?.remove();
+  if (isSvg) {
+    text?.remove();
+    path?.remove();
+    if (!iconGroup.querySelector("svg")) {
+      const svg = parseSafeSvg(iconSymbol!);
+      if (svg) {
+        const d = size * 0.6;
+        svg.dataset.src = iconSymbol!;
+        svg.setAttribute("x", `${-d / 2}`);
+        svg.setAttribute("y", `${-d / 2}`);
+        svg.setAttribute("width", `${d}`);
+        svg.setAttribute("height", `${d}`);
+        svg.setAttribute("pointer-events", "none");
+        iconGroup.appendChild(svg);
+      }
+    }
+  } else if (iconSymbol) {
+    path?.remove();
+    if (!text) {
+      text = createSVGElement<SVGTextElement>("text");
+      text.setAttribute("x", "0");
+      text.setAttribute("y", "0");
+      text.setAttribute("text-anchor", "middle");
+      text.setAttribute("dominant-baseline", "central");
+      text.setAttribute("pointer-events", "none");
+      iconGroup.appendChild(text);
+    }
+    text.setAttribute("font-size", `${size * 0.5}`);
+    text.textContent = iconSymbol;
+  } else {
+    text?.remove();
+    if (!path) {
+      path = createSVGElement<SVGPathElement>("path");
+      path.setAttribute("d", BUBBLE_PATH);
+      path.setAttribute("fill", "none");
+      path.setAttribute("stroke-width", "2");
+      path.setAttribute("stroke-linecap", "round");
+      path.setAttribute("stroke-linejoin", "round");
+      path.setAttribute("pointer-events", "none");
+      iconGroup.appendChild(path);
+    }
+    // 24x24 viewBox path, scaled to half the icon size and centred
+    path.setAttribute("transform", `scale(${(size * 0.55) / 24}) translate(-12 -12)`);
+    path.setAttribute("stroke", "#333");
   }
-
-  // Update text attributes
-  text.setAttribute("font-size", `${size * 0.5}`);
-  text.textContent = iconSymbol!;
 }
 
 /**
