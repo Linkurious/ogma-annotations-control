@@ -62,4 +62,38 @@ describe("comment collapsed icon", () => {
     const fn = (c: any) => (c.properties.content === "hi" ? "🔔" : undefined);
     expect(icon(undefined, fn).group.querySelector("text")!.textContent).toBe("🔔");
   });
+
+  it("drops <style> elements", () => {
+    const { group } = icon("<svg viewBox='0 0 1 1'><style>body{display:none}</style><rect/></svg>");
+    expect(group.querySelector("style")).toBeNull();
+    expect(group.querySelector("rect")).toBeTruthy();
+  });
+
+  it("strips javascript: URLs hidden behind encoded whitespace", () => {
+    const { group } = icon(
+      '<svg viewBox="0 0 1 1" xmlns:xlink="http://www.w3.org/1999/xlink"><a href="java&#x09;script:alert(1)" xlink:href=" &#x0A;javascript:x"><rect/></a></svg>'
+    );
+    const a = group.querySelector("a")!;
+    expect(a.getAttribute("href")).toBeNull();
+    expect(a.getAttribute("xlink:href")).toBeNull();
+  });
+
+  it("rejects a non-SVG root namespace and tolerates descendant xmlns", () => {
+    expect(icon('<svg xmlns="urn:not-svg"/>').group.querySelector("svg")).toBeNull();
+    const { group } = icon('<svg viewBox="0 0 1 1"><g xmlns="http://www.w3.org/2000/svg"><rect/></g></svg>');
+    expect(group.querySelector("svg rect")).toBeTruthy();
+  });
+
+  it("resizes the custom svg when iconSize changes", () => {
+    const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const symbol = '<svg viewBox="0 0 1 1"><rect/></svg>';
+    const c = createComment(0, 0, "hi", { mode: "collapsed", style: { iconSymbol: symbol, iconSize: 20 } });
+    const st = { ...state, options: {} } as unknown as AnnotationState;
+    const g = renderComment(root, c, undefined, st, true);
+    const w = () => g.querySelector("svg")!.getAttribute("width");
+    expect(w()).toBe("12");
+    c.properties.style!.iconSize = 40;
+    renderComment(root, c, g, st, true);
+    expect(w()).toBe("24");
+  });
 });

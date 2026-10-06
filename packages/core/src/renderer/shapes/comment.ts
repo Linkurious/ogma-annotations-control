@@ -193,11 +193,17 @@ const BUBBLE_PATH =
 // ponytail: unbounded, fine for a handful of distinct icons
 const svgCache = new Map<string, SVGSVGElement | null>();
 
-const UNSAFE_TAGS = "script,foreignObject,iframe,object,embed,animate,set";
+const SVG_NS = "http://www.w3.org/2000/svg";
+// <style> is dropped too: inline SVG shares the document, so its CSS (or
+// @import) would leak out and restyle the host page
+const UNSAFE_TAGS =
+  "script,style,foreignObject,iframe,object,embed,animate,set";
 
 /**
  * Parse a user-supplied SVG string into an element, dropping scripts,
  * event handlers and javascript: URLs. Returns null if it isn't valid SVG.
+ * ponytail: hand-rolled blocklist; swap for DOMPurify if icon markup can come
+ * from untrusted sources.
  */
 function parseSafeSvg(markup: string): SVGSVGElement | null {
   if (!svgCache.has(markup)) svgCache.set(markup, parseSvg(markup));
@@ -205,20 +211,26 @@ function parseSafeSvg(markup: string): SVGSVGElement | null {
 }
 
 function parseSvg(markup: string): SVGSVGElement | null {
-  const doc = new DOMParser().parseFromString(
-    // XML parsing needs the namespace; users rarely include it
-    /xmlns\s*=/.test(markup)
-      ? markup
-      : markup.replace(/<svg/i, '<svg xmlns="http://www.w3.org/2000/svg"'),
-    "image/svg+xml"
-  );
+  const parse = (m: string) =>
+    new DOMParser().parseFromString(m, "image/svg+xml");
+  let doc = parse(markup);
+  // XML parsing needs the namespace; users rarely include it
+  if (!doc.documentElement.namespaceURI)
+    doc = parse(markup.replace(/<svg/i, `<svg xmlns="${SVG_NS}"`));
   const svg = doc.documentElement;
-  if (svg.nodeName.toLowerCase() !== "svg" || doc.querySelector("parsererror"))
+  if (
+    svg.namespaceURI !== SVG_NS ||
+    svg.localName !== "svg" ||
+    doc.querySelector("parsererror")
+  )
     return null;
   svg.querySelectorAll(UNSAFE_TAGS).forEach(el => el.remove());
   [svg, ...svg.querySelectorAll("*")].forEach(el => {
     for (const a of [...el.attributes]) {
-      if (/^on/i.test(a.name) || /^\s*javascript:/i.test(a.value))
+      // browsers ignore tabs/newlines/control chars inside a URL scheme
+      // ("java&#x09;script:"), so strip them before checking
+      const value = a.value.replace(/[\u0000-\u0020]/g, "");
+      if (/^on/i.test(a.name) || /^javascript:/i.test(value))
         el.removeAttribute(a.name);
     }
   });
@@ -289,18 +301,22 @@ function renderCollapsedIcon(
   if (isSvg) {
     text?.remove();
     path?.remove();
-    if (!iconGroup.querySelector("svg")) {
-      const svg = parseSafeSvg(iconSymbol!);
+    let svg = iconGroup.querySelector("svg");
+    if (!svg) {
+      svg = parseSafeSvg(iconSymbol!);
       if (svg) {
-        const d = size * 0.6;
         svg.dataset.src = iconSymbol!;
-        svg.setAttribute("x", `${-d / 2}`);
-        svg.setAttribute("y", `${-d / 2}`);
-        svg.setAttribute("width", `${d}`);
-        svg.setAttribute("height", `${d}`);
         svg.setAttribute("pointer-events", "none");
         iconGroup.appendChild(svg);
       }
+    }
+    // geometry follows iconSize on every render, the parsed SVG is reused
+    if (svg) {
+      const d = size * 0.6;
+      svg.setAttribute("x", `${-d / 2}`);
+      svg.setAttribute("y", `${-d / 2}`);
+      svg.setAttribute("width", `${d}`);
+      svg.setAttribute("height", `${d}`);
     }
   } else if (iconSymbol) {
     path?.remove();
