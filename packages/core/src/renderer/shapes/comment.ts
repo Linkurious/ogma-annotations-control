@@ -226,7 +226,7 @@ function parseSvg(markup: string): SVGSVGElement | null {
     return null;
   svg.querySelectorAll(UNSAFE_TAGS).forEach(el => el.remove());
   [svg, ...svg.querySelectorAll("*")].forEach(el => {
-    for (const a of [...el.attributes]) {
+    for (const a of el.attributes) {
       // browsers ignore tabs/newlines/control chars inside a URL scheme
       // ("java&#x09;script:"), so strip them before checking
       const value = a.value.replace(/[^\x21-\x7e]/g, "");
