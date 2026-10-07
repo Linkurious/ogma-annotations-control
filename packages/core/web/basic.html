@@ -12,17 +12,22 @@
         height: 100vh;
         position: absolute;
       }
-      #enable {
+      #enable,
+      #link-edge {
         position: absolute;
         top: 10px;
         left: 10px;
         z-index: 1000;
+      }
+      #link-edge {
+        left: 80px;
       }
     </style>
   </head>
   <body>
     <div id="graph-container"></div>
     <button id="enable">enable</button>
+    <button id="link-edge">link to edge</button>
     <script type="module" src="basic.ts"></script>
   </body>
 </html>
