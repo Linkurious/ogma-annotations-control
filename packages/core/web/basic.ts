@@ -1,5 +1,5 @@
 import Ogma from "@linkurious/ogma";
-import { Control, createComment } from "../src";
+import { Control, createComment, createCommentWithArrow } from "../src";
 import { createDebugTools } from "./debug";
 import { installBrand } from "./brand";
 import "./style.css";
@@ -19,7 +19,7 @@ await ogma.setGraph({
     { id: 2, attributes: { x: 0, y: 15 } }
   ],
   edges: [
-    { source: 0, target: 1 },
+    { id: "e01", source: 0, target: 1 },
     { source: 1, target: 2 },
     { source: 2, target: 0 }
   ]
@@ -50,6 +50,25 @@ document.getElementById("enable")!.addEventListener("click", () => {
       }
     }
   });
+});
+
+// control.link(arrowId, edge, side, magnet?): re-attach an existing connector
+// to an edge, keeping its id and history. First click adds a comment linked to
+// the edge; later clicks replace the edge (like toggling edge grouping would)
+// and relink the same connector to the new one.
+let edgeComment: ReturnType<typeof createCommentWithArrow> | undefined;
+let edgeId = "e01";
+document.getElementById("link-edge")!.addEventListener("click", () => {
+  if (!edgeComment) {
+    edgeComment = createCommentWithArrow(0, -15, 0, -60, "Linked to an edge");
+    control.add(edgeComment.comment);
+    control.add(edgeComment.arrow);
+  } else {
+    ogma.removeEdge(edgeId);
+    edgeId = `e01-${Date.now()}`;
+    ogma.addEdge({ id: edgeId, source: 0, target: 1 });
+  }
+  control.link(edgeComment.arrow.id, ogma.getEdge(edgeId)!, "end");
 });
 
 // Collapsed comments showing the three icon kinds: default SVG bubble,

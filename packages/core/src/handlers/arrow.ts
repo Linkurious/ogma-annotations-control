@@ -1,4 +1,4 @@
-import { Ogma, Node, type Point } from "@linkurious/ogma";
+import { Ogma, Node, Edge, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import {
   canDetachArrowEnd,
@@ -10,6 +10,7 @@ import { Snap, Snapping } from "./snapping";
 import {
   EVT_DRAG,
   SIDE_END,
+  TARGET_TYPES,
   SIDE_START,
   cursors,
   handleDetectionThreshold
@@ -323,7 +324,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.onDragStart({ clientX: clientPos.x, clientY: clientPos.y });
   }
 
-  public link(arrow: Arrow, target: Id | Node, side: Side) {
+  public link(
+    arrow: Arrow,
+    target: Id | Node | Edge,
+    side: Side,
+    magnet: Point = { x: 0.5, y: 0 }
+  ) {
     // links.add() below mutates arrow.properties.link directly, bypassing the store, so it's refused here too.
     if (!this.store.getState().options.isEditable(arrow)) {
       // eslint-disable-next-line no-console
@@ -338,6 +344,15 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       extremity = target.getPosition();
       // find the snapping point to use
       snap = this.snapping.snapToNodes(extremity, target.toList());
+    } else if (target instanceof Edge) {
+      // magnet.x is the position along the edge, 0..1
+      extremity = this.links.getEdgePoint(target.getId(), magnet.x);
+      snap = {
+        point: extremity,
+        id: target.getId(),
+        magnet,
+        type: TARGET_TYPES.EDGE
+      };
     } else {
       const other = this.store.getState().getFeature(target);
       if (!other) {

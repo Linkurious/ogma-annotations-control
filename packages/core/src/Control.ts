@@ -1,4 +1,4 @@
-import { Node, type Ogma } from "@linkurious/ogma";
+import { Edge, Node, type Ogma, type Point } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { CommentManager } from "./api/comments";
 import { Drawing } from "./api/drawing";
@@ -995,10 +995,25 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param side
    */
   public link(arrowId: Id, target: Id, side: Side): this;
-  public link(arrowId: Id, target: Id | Node, side: Side = SIDE_END): this {
+  /**
+   * Attach an arrow to an edge at the specified side. Keeps the arrow id and
+   * does not touch history.
+   * @param arrowId
+   * @param targetEdge
+   * @param side
+   * @param magnet position along the edge as `{ x: t, y: 0 }`, t in 0..1
+   * (default: the middle)
+   */
+  public link(arrowId: Id, targetEdge: Edge, side: Side, magnet?: Point): this;
+  public link(
+    arrowId: Id,
+    target: Id | Node | Edge,
+    side: Side = SIDE_END,
+    magnet?: Point
+  ): this {
     const arrow = this.getAnnotation<Arrow>(arrowId);
     if (!arrow) throw new Error(`Arrow with id ${arrowId} not found`);
-    this.editor.getArrowHandler().link(arrow, target, side);
+    this.editor.getArrowHandler().link(arrow, target, side, magnet);
     return this;
   }
 
