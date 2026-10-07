@@ -226,15 +226,16 @@ function parseSvg(markup: string): SVGSVGElement | null {
     return null;
   svg.querySelectorAll(UNSAFE_TAGS).forEach(el => el.remove());
   [svg, ...svg.querySelectorAll("*")].forEach(el => {
-    for (const a of el.attributes) {
+    for (const name of el.getAttributeNames()) {
       // browsers ignore tabs/newlines/control chars inside a URL scheme
       // ("java&#x09;script:"), so strip them before checking
-      const value = a.value.replace(/[^\x21-\x7e]/g, "");
-      if (/^on/i.test(a.name) || /^javascript:/i.test(value))
-        el.removeAttribute(a.name);
+      const value = el.getAttribute(name)!.replace(/[^\x21-\x7e]/g, "");
+      if (/^on/i.test(name) || /^javascript:/i.test(value))
+        el.removeAttribute(name);
     }
   });
-  return document.importNode(svg, true) as unknown as SVGSVGElement;
+  // appending adopts it into the host document
+  return svg as unknown as SVGSVGElement;
 }
 
 /** Control-level default icon for a comment, if any (string or callback) */
