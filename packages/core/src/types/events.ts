@@ -115,7 +115,7 @@ export type FeatureEvents = {
   /**
    * Event triggered when a comment could not be created because
    * `canComment` returned `false` for the clicked target. Comment drawing
-   * mode stays armed.
+   * mode stays active.
    */
   [EVT_COMMENT_DENIED]: (evt: { target: CommentTarget }) => void;
   /**

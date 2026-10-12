@@ -82,7 +82,7 @@ export class Drawing {
     | (<T extends MouseButtonEvent<unknown, unknown>>(evt: T) => void)
     | null = null;
 
-  // Hover listener of an armed comment drawing mode
+  // Hover listener while comment drawing mode is active
   private pendingHoverListener: ((evt: MouseMoveEvent) => void) | null = null;
 
   // Track placement mode listeners for cleanup
@@ -255,8 +255,8 @@ export class Drawing {
   ): Control {
     this.control.unselect().cancelDrawing();
 
-    // One-shot mousedown, re-armed after a denied click so the user can
-    // simply click somewhere else.
+    // One-shot mousedown, registered again after a denied click so the user
+    // can simply click somewhere else.
     const waitForClick = () => {
       const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
         this.ogma.events.off(handler);
@@ -313,7 +313,7 @@ export class Drawing {
   }
 
   /**
-   * While comment drawing mode is armed: emit `commentHover` when the target
+   * While comment drawing mode is active: emit `commentHover` when the target
    * under the cursor (or its allowed state) changes, and show `not-allowed`
    * on denied targets.
    * @private

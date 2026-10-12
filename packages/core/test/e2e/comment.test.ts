@@ -74,7 +74,7 @@ describe("Comments", () => {
     expect(result.arrowEndLink).toBeNull();
   }, 10000);
 
-  it("denies comments on edges, reports it, and stays armed", async () => {
+  it("denies comments on edges, reports it, and stays active", async () => {
     const edgePos = await session.page.evaluate(() => {
       (window as any).denied = [];
       (window as any).hovers = [];
@@ -92,7 +92,7 @@ describe("Comments", () => {
     }));
     expect(hover.hovers.at(-1)).toEqual(["edge", false]);
 
-    // click the edge: nothing created, mode still armed
+    // click the edge: nothing created, mode still active
     await session.page.mouse.down();
     await session.page.mouse.up();
     const denied = await session.page.evaluate(() => (window as any).denied);

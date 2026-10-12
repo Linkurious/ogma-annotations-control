@@ -119,13 +119,13 @@ export type ControllerOptions = {
    * Called to decide whether a comment may be attached at the given target
    * (what is under the click that starts the comment). Defaults to always
    * `true`. When it returns `false` no comment is created, a `commentDenied`
-   * event is emitted, and comment drawing mode (if armed via
-   * `enableCommentDrawing`) stays armed so the user can click elsewhere.
-   * While armed, `commentHover` events report the target under the cursor
+   * event is emitted, and comment drawing mode (if started via
+   * `enableCommentDrawing`) stays active so the user can click elsewhere.
+   * While it is active, `commentHover` events report the target under the cursor
    * so the host can show its own indication.
    *
    * Keep this cheap and synchronous - it also runs on mouse move while
-   * comment drawing mode is armed. Same reactivity note as `isEditable`
+   * comment drawing mode is active. Same reactivity note as `isEditable`
    * applies to changing this after the fact.
    */
   canComment: (target: CommentTarget) => boolean;
