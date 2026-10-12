@@ -3,7 +3,7 @@ import { getEffectiveFontSize } from "../../utils/utils";
 import {
   AnnotationStyleToolbar,
   type AnnotationStyleToolbarOptions
-} from "./AnnotationStyleToolbar";
+} from "./AnnotationStyle";
 import { ColorCell, type ColorCellOptions } from "./cells/color";
 import type { ToolbarCellContext } from "./cells/contract";
 import type { ToolbarDropdownOption, ToolbarItem } from "./cells/types";

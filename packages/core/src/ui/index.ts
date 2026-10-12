@@ -8,25 +8,25 @@
  */
 export { AnnotationPanel } from "./AnnotationPanel";
 export type { AnnotationPanelOptions } from "./AnnotationPanel";
-export { AnnotationToolbar } from "./AnnotationToolbar";
+export { AnnotationToolbar } from "./toolbar/Annotation";
 export type {
   AnnotationToolbarOptions,
   AnnotationToolbarStyles,
   ToolbarDrawingType,
   DeleteMode
-} from "./AnnotationToolbar";
+} from "./toolbar/Annotation";
 
-export { TextAnnotationToolbar } from "./FloatingTextToolbar";
-export type { TextAnnotationToolbarOptions } from "./FloatingTextToolbar";
-export { AnnotationStyleToolbar } from "./toolbar/AnnotationStyleToolbar";
-export type { AnnotationStyleToolbarOptions } from "./toolbar/AnnotationStyleToolbar";
+export { TextAnnotationToolbar } from "./toolbar/FloatingText";
+export type { TextAnnotationToolbarOptions } from "./toolbar/FloatingText";
+export { AnnotationStyleToolbar } from "./toolbar/AnnotationStyle";
+export type { AnnotationStyleToolbarOptions } from "./toolbar/AnnotationStyle";
 export {
   TextStyleToolbar,
   DEFAULT_TOOLBAR_FONTS,
   DEFAULT_TOOLBAR_FONT_SIZES
-} from "./toolbar/TextStyleToolbar";
-export type { TextStyleToolbarOptions } from "./toolbar/TextStyleToolbar";
-export { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyleToolbar";
+} from "./toolbar/TextStyle";
+export type { TextStyleToolbarOptions } from "./toolbar/TextStyle";
+export { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyle";
 export { STICKY_SWATCHES } from "./toolbar/swatches";
 export type { Swatch } from "./toolbar/swatches";
 export type { ToolbarCell, ToolbarCellContext } from "./toolbar/cells/contract";
