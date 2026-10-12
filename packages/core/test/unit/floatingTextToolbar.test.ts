@@ -283,11 +283,11 @@ describe("ui/TextAnnotationToolbar", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    // Deselect before destroying: TextHandler arms a window-level capture
+    // Deselect before destroying: TextHandler installs a window-level capture
     // "click" listener (see handlers/base.ts's `setAnnotation`) while a
     // Text/Comment is selected, keyed off `ogma.getContainer()` being
     // non-null - true here, unlike the suite's usual containerless
-    // `createOgma()`. `control.destroy()` alone doesn't appear to disarm
+    // `createOgma()`. `control.destroy()` alone doesn't appear to remove
     // it, so without this, the listener leaks on the shared `window`
     // across tests and later fires against an already-`ogma.destroy()`ed
     // (modules-nulled) instance on any click anywhere in the document.

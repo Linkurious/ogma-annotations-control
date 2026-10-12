@@ -48,6 +48,7 @@
 | [BoxMagnet](type-aliases/BoxMagnet.md) | Arrow snapped to a rectangular annotation (text, box, comment). nx/ny are center-relative fractions multiplied by width/height: left-center = { nx: -0.5, ny: 0 } right-center = { nx: 0.5, ny: 0 } center = { nx: 0, ny: 0 } |
 | [ClientMouseEvent](type-aliases/ClientMouseEvent.md) | - |
 | [Color](type-aliases/Color.md) | Any valid color format |
+| [CommentTarget](type-aliases/CommentTarget.md) | What a comment is being attached to: a graph node, a graph edge, another annotation (text, box, polygon) or an empty point of the canvas. |
 | [ControllerOptions](type-aliases/ControllerOptions.md) | Options for the annotations control |
 | [DeepPartial](type-aliases/DeepPartial.md) | - |
 | [EdgeMagnet](type-aliases/EdgeMagnet.md) | Arrow snapped at parametric position t (0–1) along an edge path. |
@@ -91,6 +92,8 @@
 | [EVT\_ADD](variables/EVT_ADD.md) | - |
 | [EVT\_CANCEL\_DRAWING](variables/EVT_CANCEL_DRAWING.md) | - |
 | [EVT\_CLICK](variables/EVT_CLICK.md) | - |
+| [EVT\_COMMENT\_DENIED](variables/EVT_COMMENT_DENIED.md) | - |
+| [EVT\_COMMENT\_HOVER](variables/EVT_COMMENT_HOVER.md) | - |
 | [EVT\_COMPLETE\_DRAWING](variables/EVT_COMPLETE_DRAWING.md) | - |
 | [EVT\_DRAG](variables/EVT_DRAG.md) | - |
 | [EVT\_DRAG\_END](variables/EVT_DRAG_END.md) | - |

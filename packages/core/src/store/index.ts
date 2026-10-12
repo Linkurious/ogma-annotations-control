@@ -8,6 +8,7 @@ import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comme
 import {
   Annotation,
   Comment,
+  CommentTarget,
   AuthorLineStyle,
   Bounds,
   ControllerOptions,
@@ -122,6 +123,8 @@ export interface AnnotationState {
     minReadableFontSize: number;
     isEditable: (annotation: Annotation) => boolean;
     isVisible: (annotation: Annotation) => boolean;
+    canComment: (target: CommentTarget) => boolean;
+    commentDeniedCursor: boolean;
   };
 
   setOptions: (options: Partial<AnnotationState["options"]>) => void;
@@ -218,7 +221,9 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             authorStyle: initialOptions?.authorStyle,
             minReadableFontSize: initialOptions?.minReadableFontSize ?? 2,
             isEditable: initialOptions?.isEditable ?? (() => true),
-            isVisible: initialOptions?.isVisible ?? (() => true)
+            isVisible: initialOptions?.isVisible ?? (() => true),
+            canComment: initialOptions?.canComment ?? (() => true),
+            commentDeniedCursor: initialOptions?.commentDeniedCursor ?? true
           },
 
           setOptions: (newOptions) =>

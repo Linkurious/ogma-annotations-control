@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-10-06 | Version: 2.x
+> Auto-generated: 2026-10-12 | Version: 2.x
 
 ---
 
@@ -417,7 +417,7 @@ enableEraseMode(): this;
 ```
 
 Enable erase mode: every click on an annotation deletes it immediately.
-Stays armed across multiple clicks until `disableEraseMode()` is called,
+Stays active across multiple clicks until `disableEraseMode()` is called,
 or another drawing tool is enabled / `cancelDrawing()` is called.
 
 #### Returns
@@ -1168,6 +1168,28 @@ the updated options
 
 ```ts
 optional authorStyle: Partial<AuthorLineStyle>;
+```
+
+##### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+###### Parameters
+
+###### target
+
+[`CommentTarget`](../type-aliases/CommentTarget.md)
+
+###### Returns
+
+`boolean`
+
+##### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
 ```
 
 ##### commentIcon?
@@ -3954,6 +3976,59 @@ Event triggered when a click completes on an annotation (mouseup without drag)
 
 ***
 
+### commentDenied()
+
+```ts
+commentDenied: (evt) => void;
+```
+
+Event triggered when a comment could not be created because
+`canComment` returned `false` for the clicked target. Comment drawing
+mode stays active.
+
+#### Parameters
+
+##### evt
+
+###### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`void`
+
+***
+
+### commentHover()
+
+```ts
+commentHover: (evt) => void;
+```
+
+Event triggered in comment drawing mode when the target under the cursor
+(or whether a comment is allowed on it) changes.
+
+#### Parameters
+
+##### evt
+
+###### allowed
+
+`boolean`
+
+Result of `canComment` for that target
+
+###### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`void`
+
+***
+
 ### completeDrawing()
 
 ```ts
@@ -4175,6 +4250,48 @@ Editor-wide default style for every Text annotation's author line. Only
 applied when an annotation's `style.showAuthor` is true and
 `properties.author` is set; a given field here is overridden by that
 annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
+
+***
+
+### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+Called to decide whether a comment may be attached at the given target
+(what is under the click that starts the comment). Defaults to always
+`true`. When it returns `false` no comment is created, a `commentDenied`
+event is emitted, and comment drawing mode (if started via
+`enableCommentDrawing`) stays active so the user can click elsewhere.
+While it is active, `commentHover` events report the target under the cursor
+so the host can show its own indication.
+
+Keep this cheap and synchronous - it also runs on mouse move while
+comment drawing mode is active. Same reactivity note as `isEditable`
+applies to changing this after the fact.
+
+#### Parameters
+
+##### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
+```
+
+Show the `not-allowed` cursor while hovering a target where
+`canComment` returns `false` in comment drawing mode. Defaults to `true`.
+Set to `false` to indicate it yourself via the `commentHover` event.
 
 ***
 

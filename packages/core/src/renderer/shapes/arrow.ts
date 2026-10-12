@@ -179,7 +179,9 @@ function addExtremity(
     );
   if (type === "dot" || type === "halo-dot")
     addDot(lineGroup, point, color, 1, strokeWidth * zoom * 2);
-  if (type === "arrow" || type === "arrow-plain")
+  // A zero-length arrow (e.g. a just-pressed comment/arrow, before any drag) has
+  // no direction, so its head would flash pointing the wrong way
+  if ((type === "arrow" || type === "arrow-plain") && length(vec) > 0)
     addArrowHead(
       lineGroup,
       point,

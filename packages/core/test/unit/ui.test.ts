@@ -233,7 +233,7 @@ describe("ui/panelVisibility", () => {
   it("shows the new annotation when selecting directly from one to another", () => {
     // Ogma fires `select` for the new annotation, then `unselect` for the
     // old one (not the other way around) - regression test for that
-    // `unselect` stomping the just-armed show for the new selection.
+    // `unselect` stomping the just-scheduled show for the new selection.
     const a = { id: "a1" } as unknown as Annotation;
     const b = { id: "b1" } as unknown as Annotation;
     const { control, emit } = createFakeControl(a, b);
@@ -272,7 +272,7 @@ describe("ui/panelVisibility", () => {
     const onShow = vi.fn();
     const detach = attachPanelVisibility(control, { onShow, onHide: vi.fn() });
 
-    emit("select", { ids: ["a1"] }); // arms the timer
+    emit("select", { ids: ["a1"] }); // starts the timer
     detach();
     expect(listenerCount("select")).toBe(0);
     expect(listenerCount("click")).toBe(0);
@@ -586,7 +586,7 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
-  it("arms arrow drawing and marks the button active until drawing ends", () => {
+  it("starts arrow drawing and marks the button active until drawing ends", () => {
     const { toolbar, control, emit } = createToolbar();
     const arrowButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Add arrow"]'
@@ -604,7 +604,7 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
-  it("arms sticky note drawing and marks the button active until drawing ends", () => {
+  it("starts sticky note drawing and marks the button active until drawing ends", () => {
     const { toolbar, control, emit } = createToolbar();
     const stickyButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Add sticky note"]'

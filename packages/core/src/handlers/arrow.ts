@@ -305,11 +305,22 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     }
   }
 
-  public startDrawing(id: Id, x: number, y: number) {
+  /**
+   * @param options.snapStart Snap and link the start point to whatever is
+   * under it (default true). Comment drawing turns it off and snaps once at
+   * the end instead, so no stray line shows from the snapped point to the
+   * cursor while the mouse is held down.
+   */
+  public startDrawing(
+    id: Id,
+    x: number,
+    y: number,
+    options?: { snapStart?: boolean }
+  ) {
     this.annotation = id;
     const annotation = this.getAnnotation()!;
     // ensure linking
-    this.snapDrawingStart(annotation, x, y);
+    if (options?.snapStart !== false) this.snapDrawingStart(annotation, x, y);
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;
     this.dragStartPoint = { x, y };
