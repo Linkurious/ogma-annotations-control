@@ -280,8 +280,8 @@ When sticky note drawing is enabled:
 ## Erasing Annotations
 
 Unlike the `enable*Drawing()` tools, erase mode isn't a one-shot draw - once
-armed with `enableEraseMode()`, every click on an annotation deletes it
-immediately, and it stays armed across multiple clicks until you turn it off.
+enabled with `enableEraseMode()`, every click on an annotation deletes it
+immediately, and it stays active across multiple clicks until you turn it off.
 
 ```typescript
 eraseButton.addEventListener("click", () => {
@@ -300,7 +300,7 @@ When erase mode is enabled:
 1. Clicking an annotation deletes it immediately (cascades to a comment's
    linked arrows, same as `remove()`)
 2. Clicking empty space does nothing
-3. Stays active across multiple clicks - no need to re-arm it between deletes
+3. Stays active across multiple clicks - no need to re-enable it between deletes
 4. Turned off by `disableEraseMode()`, or automatically when another drawing
    tool is enabled or `cancelDrawing()` is called
 

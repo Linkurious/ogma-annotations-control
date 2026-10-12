@@ -49,7 +49,7 @@ export class InteractionController extends EventTarget {
 
   private readonly DRAG_THRESHOLD = 3; // pixels
 
-  // A locked annotation never arms a Handler, so Handler.disablePanning() never runs either - handled here instead.
+  // A locked annotation never attaches a Handler, so Handler.disablePanning() never runs either - handled here instead.
   private savedPan?: boolean;
   private savedDrag?: boolean;
 
@@ -85,7 +85,7 @@ export class InteractionController extends EventTarget {
       //   on a node/edge - e.g. detaching a comment connector's node-side
       //   tip - since the "missed mousedown" recovery in
       //   Handler.handleMouseMove (base.ts) depends on the
-      //   mousePressed/mousePressPoint state this arms. It does the bare
+      //   mousePressed/mousePressPoint state this sets. It does the bare
       //   minimum so it stays correct regardless of what Ogma does next.
       // - onMouseDown (capture:false, fires later, possibly not at all on a
       //   node/edge hit): does hit-testing and selection. This needs the

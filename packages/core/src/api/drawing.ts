@@ -88,7 +88,7 @@ export class Drawing {
   // Track placement mode listeners for cleanup
   private placementCleanup: (() => void) | null = null;
 
-  // Whether erase mode (click an annotation to delete it) is armed
+  // Whether erase mode (click an annotation to delete it) is active
   private eraseModeActive = false;
 
   constructor(
@@ -146,7 +146,7 @@ export class Drawing {
 
   /**
    * Enable erase mode: every subsequent click on an annotation deletes it
-   * immediately. Stays armed across multiple clicks until `disableEraseMode()`
+   * immediately. Stays active across multiple clicks until `disableEraseMode()`
    * is called, or another tool/drawing mode is enabled (which cancels it via
    * `cancelPendingDrawing()`).
    */

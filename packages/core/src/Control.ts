@@ -609,7 +609,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   /**
    * Enable erase mode: every click on an annotation deletes it immediately.
-   * Stays armed across multiple clicks until `disableEraseMode()` is called,
+   * Stays active across multiple clicks until `disableEraseMode()` is called,
    * or another drawing tool is enabled / `cancelDrawing()` is called.
    *
    * @returns this for chaining

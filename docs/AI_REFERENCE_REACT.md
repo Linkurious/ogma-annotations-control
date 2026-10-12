@@ -1336,7 +1336,7 @@ function AddStickyNoteButton() {
 
 Unlike the drawing modes above, erase mode isn't a one-shot draw - once
 enabled, every click on an annotation deletes it immediately, and it stays
-armed across multiple clicks until turned off:
+active across multiple clicks until turned off:
 
 ```tsx
 function EraseButton() {
