@@ -257,7 +257,7 @@ export class Drawing {
 
     // One-shot mousedown, re-armed after a denied click so the user can
     // simply click somewhere else.
-    const arm = () => {
+    const waitForClick = () => {
       const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
         this.ogma.events.off(handler);
         this.pendingDrawingListener = null;
@@ -277,12 +277,12 @@ export class Drawing {
           offsetX,
           offsetY
         });
-        if (!started) arm();
+        if (!started) waitForClick();
       };
       this.pendingDrawingListener = handler;
       this.ogma.events.once("mousedown", handler);
     };
-    arm();
+    waitForClick();
     this.startCommentHover();
     return this.control;
   }
