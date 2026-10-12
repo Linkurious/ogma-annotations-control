@@ -21,6 +21,48 @@ annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
 
 ***
 
+### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+Called to decide whether a comment may be attached at the given target
+(what is under the click that starts the comment). Defaults to always
+`true`. When it returns `false` no comment is created, a `commentDenied`
+event is emitted, and comment drawing mode (if started via
+`enableCommentDrawing`) stays active so the user can click elsewhere.
+While it is active, `commentHover` events report the target under the cursor
+so the host can show its own indication.
+
+Keep this cheap and synchronous - it also runs on mouse move while
+comment drawing mode is active. Same reactivity note as `isEditable`
+applies to changing this after the fact.
+
+#### Parameters
+
+##### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
+```
+
+Show the `not-allowed` cursor while hovering a target where
+`canComment` returns `false` in comment drawing mode. Defaults to `true`.
+Set to `false` to indicate it yourself via the `commentHover` event.
+
+***
+
 ### commentIcon?
 
 ```ts

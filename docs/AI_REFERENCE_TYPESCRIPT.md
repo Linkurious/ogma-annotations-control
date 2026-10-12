@@ -1,7 +1,7 @@
 # Ogma Annotations - TypeScript Reference
 
 > Core TypeScript API, usage patterns, and examples for @linkurious/ogma-annotations
-> Auto-generated: 2026-10-06 | Version: 2.x
+> Auto-generated: 2026-10-12 | Version: 2.x
 
 ---
 
@@ -1739,6 +1739,36 @@ When comment drawing is enabled:
 3. Arrow automatically connects target to comment
 4. User can immediately start typing
 5. User presses Enter or clicks outside to finish
+
+A comment that is still empty when the user clicks away is discarded, together
+with its arrow.
+
+### Restricting where comments can be added
+
+Pass a `canComment` option to allow comments only on some targets. It receives
+`{ type: "node" | "edge" | "annotation" | "void", id?, point }` and returns a
+boolean:
+
+```typescript
+// e.g. nodes and edges only, nothing on empty canvas
+controller.setOptions({
+  canComment: (target) => target.type === "node" || target.type === "edge"
+});
+
+// A click on a denied target creates nothing, and drawing mode stays active
+controller.on("commentDenied", ({ target }) => {
+  toast(`No comments on ${target.type}`);
+});
+
+// Fires while hovering in drawing mode; the cursor turns `not-allowed` on denied
+// targets (set `commentDeniedCursor: false` to indicate it yourself)
+controller.on("commentHover", ({ target, allowed }) => {
+  highlight(target, allowed);
+});
+```
+
+`canComment` runs on mouse move while comment drawing is active, so keep it
+cheap and synchronous.
 
 ## Drawing Sticky Notes
 

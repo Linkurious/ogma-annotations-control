@@ -189,6 +189,11 @@
             "text": "createCommentWithArrow",
             "link": "/../../docs/typescript/api/functions/createCommentWithArrow.md",
             "category": "Functions"
+          },
+          {
+            "text": "CommentTarget",
+            "link": "/../../docs/typescript/api/type-aliases/CommentTarget.md",
+            "category": "Type Aliases"
           }
         ]
       }

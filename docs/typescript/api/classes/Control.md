@@ -1161,6 +1161,28 @@ the updated options
 optional authorStyle: Partial<AuthorLineStyle>;
 ```
 
+##### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+###### Parameters
+
+###### target
+
+[`CommentTarget`](../type-aliases/CommentTarget.md)
+
+###### Returns
+
+`boolean`
+
+##### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
+```
+
 ##### commentIcon?
 
 ```ts
