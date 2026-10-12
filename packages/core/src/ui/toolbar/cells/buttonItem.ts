@@ -28,6 +28,10 @@ export class ButtonItemCell implements ToolbarCell {
   };
 
   public update(annotation: Text): void {
+    const title = this.item.getTitle?.(annotation) ?? this.item.title;
+    console.log("Updating button title to:", title);
+  this.element.dataset.tooltip = title;
+  this.element.setAttribute("aria-label", title);
     if (!this.item.isActive) return;
     const active = this.item.isActive(annotation);
     this.element.classList.toggle("active", active);
