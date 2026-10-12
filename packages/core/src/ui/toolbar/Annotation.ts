@@ -1,5 +1,5 @@
-import { Control } from "../Control";
-import { EVT_COMPLETE_DRAWING, EVT_CANCEL_DRAWING, EVT_HISTORY } from "../constants";
+import { Control } from "../../Control";
+import { EVT_COMPLETE_DRAWING, EVT_CANCEL_DRAWING, EVT_HISTORY } from "../../constants";
 import type {
   Arrow,
   ArrowProperties,
@@ -7,9 +7,9 @@ import type {
   CommentProps,
   Polygon,
   Text
-} from "../types";
-import { svgIcon, type IconName } from "./icons";
-import type { PanelPlacement, PanelOrientation } from "./layout";
+} from "../../types";
+import { svgIcon, type IconName } from "../icons";
+import type { PanelPlacement, PanelOrientation } from "../layout";
 
 /** Toolbars default to a bottom-docked horizontal bar, unlike the style
  * panel's right-docked vertical default - the natural "drawing tools"
