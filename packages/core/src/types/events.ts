@@ -1,4 +1,5 @@
 import { Annotation, Arrow, Id, Link } from "./features";
+import type { CommentTarget } from "./index";
 import {
   EVT_SELECT,
   EVT_UNSELECT,
@@ -11,7 +12,9 @@ import {
   EVT_COMPLETE_DRAWING,
   EVT_DRAG_START,
   EVT_DRAG_END,
-  EVT_CLICK
+  EVT_CLICK,
+  EVT_COMMENT_DENIED,
+  EVT_COMMENT_HOVER
 } from "../constants";
 
 /** Event related to multiple annotation features */
@@ -109,4 +112,19 @@ export type FeatureEvents = {
    * Event triggered when a click completes on an annotation (mouseup without drag)
    */
   [EVT_CLICK]: (evt: ClickEvent) => void;
+  /**
+   * Event triggered when a comment could not be created because
+   * `canComment` returned `false` for the clicked target. Comment drawing
+   * mode stays armed.
+   */
+  [EVT_COMMENT_DENIED]: (evt: { target: CommentTarget }) => void;
+  /**
+   * Event triggered in comment drawing mode when the target under the cursor
+   * (or whether a comment is allowed on it) changes.
+   */
+  [EVT_COMMENT_HOVER]: (evt: {
+    target: CommentTarget;
+    /** Result of `canComment` for that target */
+    allowed: boolean;
+  }) => void;
 };

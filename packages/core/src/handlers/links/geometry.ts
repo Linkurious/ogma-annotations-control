@@ -79,7 +79,8 @@ export class LinkGeometry {
     if (link.targetType === TARGET_TYPES.NODE)
       return this.getNodeSnapPoint(
         center as XYR,
-        vec,
+        // getNodeSnapPoint wants node -> other, vec is other -> node
+        mul(vec, -1),
         this.isLinkedToCenter(link)
       );
     if (link.targetType === TARGET_TYPES.EDGE)

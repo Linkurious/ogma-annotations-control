@@ -31,12 +31,15 @@ describe("Comments", () => {
 
   async function drawComment(
     session: BrowserSession,
-    target: { x: number; y: number }
+    target: { x: number; y: number },
+    text?: string
   ) {
     await session.page.mouse.move(target.x, target.y);
     await session.page.mouse.down();
     await session.page.mouse.move(target.x + 80, target.y - 80, { steps: 10 });
     await session.page.mouse.up();
+    // A new comment is in edit mode; empty ones are discarded on deselect
+    if (text) await session.page.keyboard.type(text);
   }
 
   function getCommentResult(session: BrowserSession) {
@@ -69,6 +72,79 @@ describe("Comments", () => {
     expect(result.hasComment).toBe(true);
     expect(result.hasArrow).toBe(true);
     expect(result.arrowEndLink).toBeNull();
+  }, 10000);
+
+  it("denies comments on edges, reports it, and stays armed", async () => {
+    const edgePos = await session.page.evaluate(() => {
+      (window as any).denied = [];
+      (window as any).hovers = [];
+      editor.setOptions({ canComment: (t: any) => t.type !== "edge" });
+      editor.on("commentDenied", (e: any) => (window as any).denied.push(e.target.type));
+      editor.on("commentHover", (e: any) => (window as any).hovers.push(e));
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return screenToPage({ x: 0, y: 0 });
+    });
+
+    // hover the edge: denied + hover event
+    await session.page.mouse.move(edgePos.x, edgePos.y, { steps: 3 });
+    const hover = await session.page.evaluate(() => ({
+      hovers: (window as any).hovers.map((h: any) => [h.target.type, h.allowed])
+    }));
+    expect(hover.hovers.at(-1)).toEqual(["edge", false]);
+
+    // click the edge: nothing created, mode still armed
+    await session.page.mouse.down();
+    await session.page.mouse.up();
+    const denied = await session.page.evaluate(() => (window as any).denied);
+    expect(denied).toEqual(["edge"]);
+    expect((await getCommentResult(session)).hasComment).toBe(false);
+
+    // then click on void: comment created
+    const voidPos = await session.page.evaluate(() => screenToPage({ x: 0, y: -50 }));
+    await drawComment(session, voidPos);
+    expect((await getCommentResult(session)).hasComment).toBe(true);
+  }, 10000);
+
+  it("discards an empty comment (and its arrow) when the user clicks away", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return screenToPage({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos);
+    expect((await getCommentResult(session)).hasComment).toBe(true);
+
+    await session.page.evaluate(async () => {
+      editor.unselect();
+      // removal is deferred by a microtask
+      await new Promise((r) => setTimeout(r, 50));
+    });
+    const result = await getCommentResult(session);
+    expect(result.hasComment).toBe(false);
+    expect(result.hasArrow).toBe(false);
+  }, 10000);
+
+  it("keeps the arrow on the clicked side of the node, and the text, after clicking away", async () => {
+    const [nodePos, voidPos] = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      return [screenToPage({ x: -95, y: -105 }), screenToPage({ x: 0, y: 60 })];
+    });
+    await drawComment(session, nodePos, "hello");
+    const read = () =>
+      session.page.evaluate(() => {
+        const fs = editor.getAnnotations().features as any[];
+        return {
+          end: fs.find((f) => f.properties.type === "arrow")?.geometry.coordinates[1],
+          content: fs.find((f) => f.properties.type === "comment")?.properties.content
+        };
+      });
+    const before = await read();
+    await session.page.mouse.click(voidPos.x, voidPos.y);
+    await session.page.evaluate(() => new Promise((r) => setTimeout(r, 100)));
+    const after = await read();
+
+    expect(after.content).toBe("hello");
+    expect(after.end[0]).toBeCloseTo(before.end[0], 3);
+    expect(after.end[1]).toBeCloseTo(before.end[1], 3);
   }, 10000);
 
   it("should create comment on node", async () => {
@@ -145,14 +221,14 @@ describe("Comments", () => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       return screenToPage({ x: -40, y: -40 });
     });
-    await drawComment(session, firstPos);
+    await drawComment(session, firstPos, "note");
 
     // Second comment, drawn at a different on-screen graph point (40, 40).
     const secondPos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
       return screenToPage({ x: 40, y: 40 });
     });
-    await drawComment(session, secondPos);
+    await drawComment(session, secondPos, "note");
 
     const result = await session.page.evaluate(() => {
       const comments = editor
@@ -186,7 +262,7 @@ describe("Comments", () => {
       // On node n1 at (-100, -100)
       return screenToPage({ x: -100, y: -100 });
     });
-    await drawComment(session, pos);
+    await drawComment(session, pos, "note");
 
     const before = await getCommentResult(session);
     expect(before.arrowEndLink).not.toBeNull();
@@ -335,7 +411,7 @@ describe("Comments", () => {
       // Inside the polygon, so the arrow's free end snaps to it.
       return screenToPage({ x: 105, y: -75 });
     });
-    await drawComment(session, pos);
+    await drawComment(session, pos, "note");
     await session.page.waitForTimeout(150);
 
     const before = await session.page.evaluate(() => {

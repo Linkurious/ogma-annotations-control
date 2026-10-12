@@ -66,7 +66,9 @@ const defaultOptions: ControllerOptions = {
   minArrowHeight: 20,
   maxArrowHeight: 30,
   isEditable: () => true,
-  isVisible: () => true
+  isVisible: () => true,
+  canComment: () => true,
+  commentDeniedCursor: true
 };
 
 interface RendererMap {

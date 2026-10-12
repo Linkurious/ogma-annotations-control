@@ -341,6 +341,8 @@ describe("Annotation creation", () => {
     await session.page.mouse.down();
     await session.page.mouse.move(p.x + 60, p.y - 60, { steps: 10 });
     await session.page.mouse.up();
+    // empty comments are discarded on deselect
+    await session.page.keyboard.type("note");
 
     // Sticky note
     await session.page.evaluate(() => editor.enableStickyNoteDrawing());

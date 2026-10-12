@@ -1,4 +1,4 @@
-import type { Annotation, AuthorLineStyle, Comment } from "./features";
+import type { Annotation, AuthorLineStyle, Comment, Id } from "./features";
 
 export * from "./features";
 export * from "./geometry";
@@ -114,7 +114,41 @@ export type ControllerOptions = {
    * reactivity note as `isEditable` applies to changing this after the fact.
    */
   isVisible: (annotation: Annotation) => boolean;
+
+  /**
+   * Called to decide whether a comment may be attached at the given target
+   * (what is under the click that starts the comment). Defaults to always
+   * `true`. When it returns `false` no comment is created, a `commentDenied`
+   * event is emitted, and comment drawing mode (if armed via
+   * `enableCommentDrawing`) stays armed so the user can click elsewhere.
+   * While armed, `commentHover` events report the target under the cursor
+   * so the host can show its own indication.
+   *
+   * Keep this cheap and synchronous - it also runs on mouse move while
+   * comment drawing mode is armed. Same reactivity note as `isEditable`
+   * applies to changing this after the fact.
+   */
+  canComment: (target: CommentTarget) => boolean;
+
+  /**
+   * Show the `not-allowed` cursor while hovering a target where
+   * `canComment` returns `false` in comment drawing mode. Defaults to `true`.
+   * Set to `false` to indicate it yourself via the `commentHover` event.
+   */
+  commentDeniedCursor: boolean;
 };
+
+/**
+ * What a comment is being attached to: a graph node, a graph edge, another
+ * annotation (text, box, polygon) or an empty point of the canvas.
+ */
+export type CommentTarget =
+  | {
+      type: "node" | "edge" | "annotation";
+      id: Id;
+      point: { x: number; y: number };
+    }
+  | { type: "void"; point: { x: number; y: number } };
 
 export type AnnotationOptions = {
   handleSize: number;
@@ -147,6 +181,7 @@ export type Cursor =
   | "nesw-resize"
   | "nwse-resize"
   | "alias"
+  | "not-allowed"
   | "crosshair";
 
 export type ClientMouseEvent = {

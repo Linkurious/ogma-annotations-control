@@ -439,9 +439,18 @@ export class InteractionController extends EventTarget {
     }
   };
 
+  // Forced cursor that wins over hover-driven updates (null = none)
+  private cursorOverride: Cursor | null = null;
+
+  public setCursorOverride(cursor: Cursor | null) {
+    this.cursorOverride = cursor;
+    this.setCursor(cursor ?? cursors.default);
+  }
+
   public setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
-    if (container) (container as HTMLElement).style.cursor = cursor;
+    if (container)
+      (container as HTMLElement).style.cursor = this.cursorOverride ?? cursor;
   }
 
   public setMode(mode: "default" | "add" | "edit" | "link" | "rotate") {

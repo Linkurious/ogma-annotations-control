@@ -111,6 +111,17 @@ describe("Options Reactivity", () => {
       defaultControl.destroy();
     });
 
+    it("should default canComment to always true and replace it by reference", () => {
+      const options = () => control["store"].getState().options;
+      const target = { type: "void" as const, point: { x: 0, y: 0 } };
+      expect(options().canComment(target)).toBe(true);
+      expect(options().commentDeniedCursor).toBe(true);
+
+      const deny = () => false;
+      control.setOptions({ canComment: deny });
+      expect(options().canComment).toBe(deny);
+    });
+
     it("setOptions replaces isEditable/isVisible by reference", () => {
       const lockedId = "locked";
       const first = () => false;

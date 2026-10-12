@@ -82,7 +82,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.arrowHandler.addEventListener("dragend", this.onArrowComplete);
 
     // Start arrow drawing - ArrowHandler takes over
-    this.arrowHandler.startDrawing(arrow.id, x, y);
+    this.arrowHandler.startDrawing(arrow.id, x, y, { snapStart: false });
   }
 
   private snapArrowStart(arrow: Arrow, x: number, y: number) {
@@ -151,6 +151,8 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
 
     this.snapArrowStart(arrow, arrowStart[0], arrowStart[1]);
     const existingStartLink = arrow.properties.link?.start;
+    // The click point, moved onto the snapped target when there is one
+    const anchor = arrow.geometry.coordinates[0];
 
     // Connect the arrow from the comment edge to the original click point.
     const updatedArrow: Arrow = {
@@ -159,7 +161,7 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
         ...arrow.geometry,
         coordinates: [
           [arrowFromCommentX, arrowFromCommentY], // Start: comment bottom edge
-          arrowStart // End: original mousedown point (with any snapping from ArrowHandler)
+          anchor // End: original mousedown point, snapped onto its target if any
         ]
       },
       properties: {
