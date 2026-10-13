@@ -17,6 +17,8 @@ export const EVT_COMPLETE_DRAWING = "completeDrawing";
 export const EVT_UPDATE = "update";
 export const EVT_LINK = "link";
 export const EVT_HISTORY = "history";
+export const EVT_COMMENT_DENIED = "commentDenied";
+export const EVT_COMMENT_HOVER = "commentHover";
 
 export const DATA_ATTR = "data-annotation";
 
@@ -39,6 +41,7 @@ export const cursors: Record<string, Cursor> = {
   move: "move",
   pointer: "pointer",
   crosshair: "crosshair",
+  notAllowed: "not-allowed",
   grab: "grab",
   grabbing: "grabbing",
   ewResize: "ew-resize",

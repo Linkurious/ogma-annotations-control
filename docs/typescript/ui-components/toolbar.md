@@ -45,7 +45,7 @@ toolbar.destroy();
 
 The toolbar provides buttons for:
 
-- **Add arrow, comment, sticky note, box, text, polygon** — each arms the
+- **Add arrow, comment, sticky note, box, text, polygon** — each calls the
   matching `control.enable*Drawing()` call and marks its own button active
   until drawing completes or is cancelled. A sticky note is a plain, resizable
   `text` annotation (Miro-style: padded, colored, no connector), placed the
@@ -54,7 +54,7 @@ The toolbar provides buttons for:
 - **Undo / redo** — disabled automatically based on `control.canUndo()` /
   `control.canRedo()`, tracking the `history` event.
 - **Erase** — toggles a mode where clicking any annotation deletes it
-  immediately; stays armed across multiple clicks until toggled off or
+  immediately; stays active across multiple clicks until toggled off or
   another tool is picked. Shown by default.
 - **Delete** — removes the current selection; a no-op if nothing is selected.
   Hidden by default (overlaps with Erase) - opt in with `deleteMode`.

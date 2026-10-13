@@ -1,6 +1,14 @@
 import type { Ogma } from "@linkurious/ogma";
-import { MouseButtonEvent } from "@linkurious/ogma";
-import { cursors, EVT_ADD, EVT_CLICK } from "../constants";
+import { MouseButtonEvent, MouseMoveEvent } from "@linkurious/ogma";
+import {
+  cursors,
+  EVT_ADD,
+  EVT_CLICK,
+  EVT_COMMENT_DENIED,
+  EVT_COMMENT_HOVER,
+  EVT_UNSELECT,
+  TARGET_TYPES
+} from "../constants";
 import type { Control } from "../Control";
 import { AnnotationEditor } from "../handlers";
 import { ArrowHandler } from "../handlers/arrow";
@@ -17,6 +25,7 @@ import {
   Box,
   Comment,
   CommentProps,
+  CommentTarget,
   Id,
   Polygon,
   Text,
@@ -73,10 +82,13 @@ export class Drawing {
     | (<T extends MouseButtonEvent<unknown, unknown>>(evt: T) => void)
     | null = null;
 
+  // Hover listener while comment drawing mode is active
+  private pendingHoverListener: ((evt: MouseMoveEvent) => void) | null = null;
+
   // Track placement mode listeners for cleanup
   private placementCleanup: (() => void) | null = null;
 
-  // Whether erase mode (click an annotation to delete it) is armed
+  // Whether erase mode (click an annotation to delete it) is active
   private eraseModeActive = false;
 
   constructor(
@@ -107,6 +119,7 @@ export class Drawing {
       this.ogma.events.off(this.pendingDrawingListener);
       this.pendingDrawingListener = null;
     }
+    this.stopCommentHover();
     // Clean up placement mode
     if (this.placementCleanup) {
       this.placementCleanup();
@@ -133,7 +146,7 @@ export class Drawing {
 
   /**
    * Enable erase mode: every subsequent click on an annotation deletes it
-   * immediately. Stays armed across multiple clicks until `disableEraseMode()`
+   * immediately. Stays active across multiple clicks until `disableEraseMode()`
    * is called, or another tool/drawing mode is enabled (which cancels it via
    * `cancelPendingDrawing()`).
    */
@@ -240,22 +253,96 @@ export class Drawing {
       arrowStyle?: Partial<ArrowProperties>;
     } = {}
   ): Control {
-    return this.enableDrawingMode((x, y) => {
-      let offsetX = options.offsetX;
-      let offsetY = options.offsetY;
+    this.control.unselect().cancelDrawing();
 
-      if (offsetX === undefined && offsetY === undefined) {
-        const bestPoint = findPlace(x, y, this.index, this.ogma);
-        offsetX = bestPoint.x;
-        offsetY = bestPoint.y;
-      }
-      const comment = createComment(x, y, "", options?.commentStyle);
-      this.startComment(x, y, comment, {
-        ...options,
-        offsetX,
-        offsetY
-      });
-    });
+    // One-shot mousedown, registered again after a denied click so the user
+    // can simply click somewhere else.
+    const waitForClick = () => {
+      const handler = (evt: MouseButtonEvent<unknown, unknown>) => {
+        this.ogma.events.off(handler);
+        this.pendingDrawingListener = null;
+
+        const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+        let offsetX = options.offsetX;
+        let offsetY = options.offsetY;
+
+        if (offsetX === undefined && offsetY === undefined) {
+          const bestPoint = findPlace(x, y, this.index, this.ogma);
+          offsetX = bestPoint.x;
+          offsetY = bestPoint.y;
+        }
+        const comment = createComment(x, y, "", options?.commentStyle);
+        const started = this.tryStartComment(x, y, comment, {
+          ...options,
+          offsetX,
+          offsetY
+        });
+        if (!started) waitForClick();
+      };
+      this.pendingDrawingListener = handler;
+      this.ogma.events.once("mousedown", handler);
+    };
+    waitForClick();
+    this.startCommentHover();
+    return this.control;
+  }
+
+  /**
+   * What is under the point, and whether `canComment` allows a comment there
+   * @private
+   */
+  private resolveCommentTarget(
+    x: number,
+    y: number
+  ): { target: CommentTarget; allowed: boolean } {
+    const point = { x, y };
+    const snap = this.editor.getSnapping().snap(point);
+    const target: CommentTarget = !snap
+      ? { type: "void", point }
+      : {
+          type:
+            snap.type === TARGET_TYPES.NODE
+              ? "node"
+              : snap.type === TARGET_TYPES.EDGE
+                ? "edge"
+                : "annotation",
+          id: snap.id,
+          point
+        };
+    return { target, allowed: this.store.getState().options.canComment(target) };
+  }
+
+  /**
+   * While comment drawing mode is active: emit `commentHover` when the target
+   * under the cursor (or its allowed state) changes, and show `not-allowed`
+   * on denied targets.
+   * @private
+   */
+  private startCommentHover() {
+    this.stopCommentHover();
+    let lastKey = "";
+    const handler = (evt: MouseMoveEvent) => {
+      const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+      const { target, allowed } = this.resolveCommentTarget(x, y);
+      const key = `${target.type}:${"id" in target ? target.id : ""}:${allowed}`;
+      if (key === lastKey) return;
+      lastKey = key;
+      this.interactions.setCursorOverride(
+        !allowed && this.store.getState().options.commentDeniedCursor
+          ? cursors.notAllowed
+          : null
+      );
+      this.control.emit(EVT_COMMENT_HOVER, { target, allowed });
+    };
+    this.pendingHoverListener = handler;
+    this.ogma.events.on("mousemove", handler);
+  }
+
+  private stopCommentHover() {
+    if (!this.pendingHoverListener) return;
+    this.ogma.events.off(this.pendingHoverListener);
+    this.pendingHoverListener = null;
+    this.interactions.setCursorOverride(null);
   }
 
   /**
@@ -397,6 +484,33 @@ export class Drawing {
       arrowStyle?: Partial<ArrowProperties>;
     }
   ): Control {
+    this.tryStartComment(x, y, comment, options);
+    return this.control;
+  }
+
+  /**
+   * Starts the comment unless `canComment` denies its target (then emits
+   * `commentDenied`).
+   * @returns whether the comment was started
+   * @private
+   */
+  private tryStartComment(
+    x: number,
+    y: number,
+    comment: Comment,
+    options?: {
+      offsetX?: number;
+      offsetY?: number;
+      commentStyle?: Partial<CommentProps>;
+      arrowStyle?: Partial<ArrowProperties>;
+    }
+  ): boolean {
+    const { target, allowed } = this.resolveCommentTarget(x, y);
+    if (!allowed) {
+      this.control.emit(EVT_COMMENT_DENIED, { target });
+      return false;
+    }
+
     // stop editing any current feature
     if (this.editor.getActiveHandler())
       this.editor.getActiveHandler()!.stopEditing();
@@ -418,16 +532,31 @@ export class Drawing {
       comment,
       options
     );
+    // Discard the comment if the user clicks away without typing anything
+    const onCommentUnselected = (evt: { ids: Id[] }) => {
+      if (!evt.ids.includes(comment.id)) return;
+      this.control.off(EVT_UNSELECT, onCommentUnselected);
+      // Deferred: removing from inside the selection change that triggered
+      // this would re-enter the store mid-update, and the text editor only
+      // commits its typed content once it has been torn down.
+      setTimeout(() => {
+        // Merged: typed text may still sit in a live update, uncommitted
+        const current = this.store.getState().getMergedFeature(comment.id);
+        if (current && !(current as Comment).properties.content.trim())
+          this.control.remove(current);
+      }, 0);
+    };
     const onCommentCreated = (evt: { id: Id }) => {
       if (evt.id === comment.id) {
         this.control.select(evt.id);
         this.control.off(EVT_ADD, onCommentCreated);
+        this.control.on(EVT_UNSELECT, onCommentUnselected);
         (this.editor.getActiveHandler() as TextHandler)?.startEditingText();
       }
     };
     this.control.on(EVT_ADD, onCommentCreated);
     drawingHandler.startDrawing(comment.id, x, y);
-    return this.control;
+    return true;
   }
 
   public startBox(x: number, y: number, box?: Box): Control {

@@ -1,13 +1,13 @@
-import { EVT_UPDATE } from "../constants";
-import type { Control } from "../Control";
-import { isStickyNote, isText, type Annotation } from "../types";
-import { attachPanelVisibility } from "./panelVisibility";
-import { AnnotationStyleToolbar } from "./toolbar/AnnotationStyleToolbar";
-import { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyleToolbar";
+import { EVT_UPDATE } from "../../constants";
+import type { Control } from "../../Control";
+import { isStickyNote, isText, type Annotation } from "../../types";
+import { attachPanelVisibility } from "../panelVisibility";
+import { AnnotationStyleToolbar } from "./AnnotationStyle";
+import { StickyNoteStyleToolbar } from "./StickyNoteStyle";
 import {
   TextStyleToolbar,
   type TextStyleToolbarOptions
-} from "./toolbar/TextStyleToolbar";
+} from "./TextStyle";
 
 /** `fonts`/`fontSizes`/`swatches` (see `TextStyleToolbarOptions`) apply to
  * both the plain-Text and sticky-note pill - `StickyNoteStyleToolbar`

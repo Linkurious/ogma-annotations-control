@@ -316,7 +316,8 @@ export class LinkSync {
         // Update the arrow's position
         const snapPoint = this.geometry.getNodeSnapPoint(
           positionAndRadius,
-          mul(subtract(end, start), -1),
+          // node -> other end, whichever side the node is on
+          link.side === SIDE_START ? subtract(start, end) : subtract(end, start),
           this.geometry.isLinkedToCenter(link)
         );
 

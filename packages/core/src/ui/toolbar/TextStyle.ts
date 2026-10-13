@@ -3,7 +3,7 @@ import { getEffectiveFontSize } from "../../utils/utils";
 import {
   AnnotationStyleToolbar,
   type AnnotationStyleToolbarOptions
-} from "./AnnotationStyleToolbar";
+} from "./AnnotationStyle";
 import { ColorCell, type ColorCellOptions } from "./cells/color";
 import type { ToolbarCellContext } from "./cells/contract";
 import type { ToolbarDropdownOption, ToolbarItem } from "./cells/types";
@@ -129,6 +129,7 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         kind: "button",
         id: "showAuthor",
         title: "Show author",
+        getTitle: (a) => (a.properties.style?.showAuthor === true ? "Hide author" : "Show author"),
         icon: "user",
         isActive: (a) => a.properties.style?.showAuthor === true,
         action: (c) => {

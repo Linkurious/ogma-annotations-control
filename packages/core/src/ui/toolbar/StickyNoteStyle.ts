@@ -1,4 +1,4 @@
-import { TextStyleToolbar } from "./TextStyleToolbar";
+import { TextStyleToolbar } from "./TextStyle";
 
 /** Sticky-note style pill. Currently just `TextStyleToolbar`'s items
  * verbatim - the author-visibility toggle that used to be added here has
