@@ -129,6 +129,7 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         kind: "button",
         id: "showAuthor",
         title: "Show author",
+        getTitle: (a) => (a.properties.style?.showAuthor === true ? "Hide author" : "Show author"),
         icon: "user",
         isActive: (a) => a.properties.style?.showAuthor === true,
         action: (c) => {
