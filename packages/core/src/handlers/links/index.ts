@@ -1,4 +1,4 @@
-import type { Ogma, Point } from "@linkurious/ogma";
+import type { EdgeId, Ogma, Point } from "@linkurious/ogma";
 import { Snapping } from "../snapping";
 import { getRigidFollowComment, translateComment } from "../comment/follow";
 import { LinkGeometry } from "./geometry";
@@ -62,6 +62,11 @@ export class Links {
     this.sync = new LinkSync(ogma, store, this.registry, this.geometry, this.updatedItems);
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
+  }
+
+  /** Point on an edge at parameter `t` (0 = source, 1 = target). */
+  public getEdgePoint(edgeId: EdgeId, t: number): Point {
+    return this.geometry.getEdgeSnapPoint(edgeId, t, true);
   }
 
   /**

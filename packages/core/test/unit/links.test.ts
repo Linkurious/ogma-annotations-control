@@ -275,6 +275,40 @@ describe("Links", () => {
     `);
   });
 
+  describe("control.link() to an edge", () => {
+    it("links an existing arrow to an edge, keeping its id", () => {
+      const ogma = createOgma();
+      ogma.addNode({ id: "a", attributes: { x: 0, y: 0 } });
+      ogma.addNode({ id: "b", attributes: { x: 100, y: 0 } });
+      ogma.addEdge({ id: "e", source: "a", target: "b" });
+      const control = new Control(ogma);
+      const arrow = createArrow(0, 50, 10, 50);
+      control.add(arrow);
+
+      control.link(arrow.id, ogma.getEdge("e")!, "end");
+
+      const linked = control.getAnnotation<Arrow>(arrow.id)!;
+      expect(linked.id).toBe(arrow.id);
+      expect(linked.properties.link?.end).toMatchObject({
+        id: "e",
+        type: "edge",
+        magnet: { x: 0.5, y: 0 }
+      });
+      // middle of the straight edge
+      const [x, y] = linked.geometry.coordinates[1];
+      expect(x).toBeCloseTo(50);
+      expect(y).toBeCloseTo(0);
+
+      control.link(arrow.id, ogma.getEdge("e")!, "end", { x: 0.25, y: 0 });
+      const moved = control.getAnnotation<Arrow>(arrow.id)!;
+      expect(moved.properties.link?.end?.magnet).toEqual({ x: 0.25, y: 0 });
+      expect(moved.geometry.coordinates[1][0]).toBeCloseTo(25);
+
+      try { control.destroy(); } catch (_) { /* headless */ }
+      try { ogma.destroy(); } catch (_) { /* headless */ }
+    });
+  });
+
   describe("programmatic annotation move refreshes linked arrows", () => {
     let ogma: ReturnType<typeof createOgma>;
     let control: Control;
