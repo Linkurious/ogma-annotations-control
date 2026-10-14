@@ -92,13 +92,21 @@ function findClosestPointOnLine(
   };
 }
 
+/**
+ * With `bodyOnly`, only edges the pointer is clearly over (inside the stroke)
+ * qualify. Otherwise also edges within `magnetRadius` of the stroke.
+ * Edges the pointer is inside always beat ones it is only near; ties go to
+ * the closest centerline.
+ */
 export function snapToEdges(
   point: Point,
   edges: EdgeList,
-  magnetRadius: number
+  magnetRadius: number,
+  bodyOnly = false
 ): EdgeSnap | null {
   let closestSnap: EdgeSnap | null = null;
-  let closestDist = magnetRadius;
+  let closestDist = Infinity;
+  let closestInside = false;
   // @ts-expect-error curvatures exist is a private readonly attribute
   const curvatures = edges.getAttribute("curvature") as readonly number[];
   const extremitiesList = edges.getExtremities();
@@ -108,6 +116,10 @@ export function snapToEdges(
     const curvature = curvatures[i];
     const source = positions[2 * i];
     const target = positions[2 * i + 1];
+    // Thick edges are hit anywhere within their body, so widen the
+    // tolerance by half the stroke width. Centerline is still the snap target.
+    const halfWidth = (edge.getAttribute("width") as number) / 2;
+    const tolerance = magnetRadius + halfWidth;
 
     let result: { t: number; point: Point; distance: number } | null;
 
@@ -131,7 +143,14 @@ export function snapToEdges(
       );
     }
 
-    if (result && result.distance < closestDist) {
+    if (!result || result.distance > tolerance) continue;
+    const inside = result.distance <= halfWidth;
+    if (bodyOnly && !inside) continue;
+    const better =
+      closestSnap === null ||
+      (inside !== closestInside ? inside : result.distance < closestDist);
+    if (better) {
+      closestInside = inside;
       closestDist = result.distance;
       closestSnap = {
         point: result.point,
