@@ -13,6 +13,8 @@ import {
 } from "../../utils/vec";
 
 const HALO_OPACITY = 0.5;
+// Arrow heads are drawn at this fraction of the computed tip length
+const ARROW_HEAD_SCALE = 0.7;
 
 /**
  * @function getArrowHeight
@@ -189,7 +191,7 @@ function addExtremity(
       color,
       type === "arrow-plain",
       strokeWidth * zoom,
-      tipLength
+      tipLength * ARROW_HEAD_SCALE
     );
 }
 
