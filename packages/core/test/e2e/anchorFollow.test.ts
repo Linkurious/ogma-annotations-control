@@ -487,4 +487,36 @@ describe("Anchor follow", () => {
     expect(after).toBeLessThan(before.dist * 0.75);
     expect(after).toBeGreaterThan(before.dist * 0.25);
   }, 15000);
+
+  // Regression test: an arrow loaded with a node link whose node already sits
+  // somewhere else (moved while the annotation was stored) must snap to that
+  // node on load, not keep its stored endpoint until something moves.
+  it("should snap a loaded node-linked arrow to its node's real position on load", async () => {
+    const result = await session.page.evaluate(() => {
+      createOgma({});
+      ogma.addNode({ id: "n1", attributes: { x: 100, y: 60, radius: 20 } });
+      createEditor();
+
+      // Stored endpoint is at the origin, far from the node's real centre.
+      const arrow = createArrow(-150, -150, 0, 0);
+      arrow.properties.link = {
+        start: {
+          id: "n1",
+          side: "start",
+          type: "node",
+          magnet: { x: 0, y: 0 }
+        }
+      } as any;
+      editor.add(arrow);
+
+      const loaded = editor.getAnnotation(arrow.id) as any;
+      return {
+        node: ogma.getNode("n1")!.getPosition(),
+        start: loaded.geometry.coordinates[0] as number[]
+      };
+    });
+
+    expect(result.start[0]).toBeCloseTo(result.node.x, 0);
+    expect(result.start[1]).toBeCloseTo(result.node.y, 0);
+  }, 15000);
 });

@@ -205,6 +205,10 @@ export class LinkIndex {
       (id) => !newFeatures[id]
     );
 
+    // Detect programmatic position/size changes in annotations with linked arrows
+    // and report those arrows so the caller can refresh them.
+    const linksToRefresh: LinksByArrowId = new Map();
+
     newIds.forEach((id) => {
       const feature = state.getFeature(id);
       if (!feature || !isArrow(feature)) return;
@@ -221,6 +225,12 @@ export class LinkIndex {
         // Node/edge existence will be checked in add(). Same as the start
         // side above - this magnet is already in stored format.
         this.add(arrow, SIDE_END, linkData.id, linkData.type, linkData.magnet!, "stored");
+      }
+      // A freshly loaded arrow keeps its stored endpoints until something
+      // recomputes them, so its endpoints may not match where its node
+      // actually is. Recompute it now, as if the anchor had just been dragged.
+      if (this.linksByArrowId.has(id)) {
+        linksToRefresh.set(id, this.linksByArrowId.get(id)!);
       }
     });
 
@@ -249,9 +259,6 @@ export class LinkIndex {
       }
     });
 
-    // Detect programmatic position/size changes in annotations with linked arrows
-    // and report those arrows so the caller can refresh them.
-    const linksToRefresh: LinksByArrowId = new Map();
     for (const id of oldIds) {
       const newFeature = newFeatures[id];
       if (!newFeature || !this.annotationToLink.has(id)) continue;
