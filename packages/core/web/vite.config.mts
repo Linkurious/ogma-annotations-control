@@ -19,6 +19,11 @@ const htmlEntries = Object.fromEntries(
 export default defineConfig({
   base: "./",
   root: resolve(__dirname),
+  // Bind all interfaces so Vite detects a port already held on 0.0.0.0
+  // (localhost binds succeed on macOS even when 5173 is taken) and falls forward
+  server: {
+    host: "0.0.0.0"
+  },
   build: {
     target: "esnext",
     outDir: resolve(__dirname, "..", "..", "..", "docs", "public", "demo"),
