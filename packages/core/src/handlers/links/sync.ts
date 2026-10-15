@@ -11,7 +11,7 @@ import type {
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId } from "./registry";
 import { getRigidComment, getRigidFollowComment, translateComment } from "../comment/follow";
-import { SIDE_END, SIDE_START } from "../../constants";
+import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
 import { Store } from "../../store";
 import type { Arrow, Id, Annotation, DeepPartial } from "../../types";
 import { isText, isComment } from "../../types";
@@ -524,6 +524,16 @@ export class LinkSync {
       const start = this.index.links.get(links.start!);
       const end = this.index.links.get(links.end!);
       const arrow = state.getFeature(arrowId) as Arrow;
+
+      // Annotation target not loaded yet (arrow arrived before its annotation
+      // in the same import). Leave the arrow as stored instead of crashing.
+      // ponytail: skipped arrow is not recomputed later; add a retry when the target lands.
+      const isMissing = (link: typeof start) =>
+        !!link &&
+        link.targetType !== TARGET_TYPES.NODE &&
+        link.targetType !== TARGET_TYPES.EDGE &&
+        !state.getFeature(link.target);
+      if (isMissing(start) || isMissing(end)) return;
 
       let startPoint = arrow.geometry.coordinates[0];
       let endPoint = arrow.geometry.coordinates[1];
