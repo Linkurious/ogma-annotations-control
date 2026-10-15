@@ -104,44 +104,27 @@ export function snapToEdges(
   magnetRadius: number,
   bodyOnly = false
 ): EdgeSnap | null {
+  // @ts-expect-error curvatures exist is a private readonly attribute
+  const curvatures = edges.getAttribute("curvature") as readonly number[];
+  // getExtremities() is [source of every edge..., target of every edge...]
+  const sources = edges.getSource().getPosition();
+  const targets = edges.getTarget().getPosition();
   let closestSnap: EdgeSnap | null = null;
   let closestDist = Infinity;
   let closestInside = false;
-  // @ts-expect-error curvatures exist is a private readonly attribute
-  const curvatures = edges.getAttribute("curvature") as readonly number[];
-  const extremitiesList = edges.getExtremities();
-  const positions = extremitiesList.getPosition();
   for (let i = 0; i < edges.size; i++) {
     const edge = edges.get(i);
+    const source = sources[i];
+    const target = targets[i];
     const curvature = curvatures[i];
-    const source = positions[2 * i];
-    const target = positions[2 * i + 1];
     // Thick edges are hit anywhere within their body, so widen the
     // tolerance by half the stroke width. Centerline is still the snap target.
     const halfWidth = (edge.getAttribute("width") as number) / 2;
     const tolerance = magnetRadius + halfWidth;
 
-    let result: { t: number; point: Point; distance: number } | null;
-
-    if (curvature === 0 || curvature === undefined) {
-      // Straight edge
-      result = findClosestPointOnLine(point, source, target);
-    } else {
-      // Curved edge - get control point
-      const cp = geometry.getQuadraticCurveControlPoint(
-        source.x,
-        source.y,
-        target.x,
-        target.y,
-        curvature
-      );
-      result = findClosestPointOnQuadraticCurve(
-        point,
-        source,
-        target,
-        cp,
-      );
-    }
+    const result = curvature
+      ? findClosestPointOnQuadraticCurve(point, source, target, geometry.getQuadraticCurveControlPoint(source.x, source.y, target.x, target.y, curvature))
+      : findClosestPointOnLine(point, source, target);
 
     if (!result || result.distance > tolerance) continue;
     const inside = result.distance <= halfWidth;
