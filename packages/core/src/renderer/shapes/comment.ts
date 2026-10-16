@@ -265,7 +265,7 @@ function renderCollapsedIcon(
   } = style;
 
   // Find or create rectangle
-  let rect = iconGroup.querySelector("rect") as SVGRectElement;
+  let rect = iconGroup.querySelector(":scope > rect") as SVGRectElement;
   if (!rect) {
     rect = createSVGElement<SVGRectElement>("rect");
     rect.setAttribute("x", `${-size / 2}`);
@@ -292,17 +292,18 @@ function renderCollapsedIcon(
     rect.removeAttribute("stroke-width");
   }
 
-  // iconSymbol: "<svg ...>" string -> sanitized colorful SVG, other string
+  // iconSymbol: "<svg ...>" string -> sanitized SVG, other string
   // (e.g. emoji) -> text, unset -> built-in speech-bubble path
-  let text = iconGroup.querySelector("text") as SVGTextElement | null;
-  let path = iconGroup.querySelector("path") as SVGPathElement | null;
-  let custom = iconGroup.querySelector("svg") as SVGSVGElement | null;
+  // :scope > so we never match elements inside a custom SVG icon
+  let text = iconGroup.querySelector<SVGTextElement>(":scope > text");
+  let path = iconGroup.querySelector<SVGPathElement>(":scope > path");
+  let custom = iconGroup.querySelector<SVGSVGElement>(":scope > svg");
   const isSvg = !!iconSymbol && /^\s*<svg[\s>]/i.test(iconSymbol);
   if (!isSvg || custom?.dataset.src !== iconSymbol) custom?.remove();
   if (isSvg) {
     text?.remove();
     path?.remove();
-    let svg = iconGroup.querySelector("svg");
+    let svg = iconGroup.querySelector<SVGSVGElement>(":scope > svg");
     if (!svg) {
       svg = parseSafeSvg(iconSymbol!);
       if (svg) {
