@@ -96,4 +96,15 @@ describe("comment collapsed icon", () => {
     renderComment(root, c, g, st, true);
     expect(w()).toBe("24");
   });
+
+  it("keeps the custom svg's own children across re-renders", () => {
+    const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const symbol = '<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>';
+    const c = createComment(0, 0, "hi", { mode: "collapsed", style: { iconSymbol: symbol, iconSize: 20 } });
+    const st = { ...state, options: {} } as unknown as AnnotationState;
+    const g = renderComment(root, c, undefined, st, true);
+    c.properties.style!.iconSize = 40;
+    renderComment(root, c, g, st, true);
+    expect(g.querySelector("svg > path")).toBeTruthy();
+  });
 });
