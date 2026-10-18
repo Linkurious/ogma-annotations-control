@@ -122,7 +122,7 @@
     "@types/geojson": "7946.0.16",
     "@types/leaflet": "1.9.22",
     "@types/rbush": "4.0.0",
-    "@vitest/coverage-v8": "5.0.0",
+    "@vitest/coverage-v8": "5.0.5",
     "get-port": "7.0.0",
     "jsdom": "24.0.0",
     "leaflet": "1.9.4",
@@ -133,7 +133,7 @@
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
     "vite": "6.4.3",
-    "vitest": "5.0.0",
+    "vitest": "5.0.5",
     "vitest-canvas-mock": "1.2.0"
   },
   "prettier": {
