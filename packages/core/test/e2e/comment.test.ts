@@ -890,6 +890,25 @@ describe("Comments", () => {
     });
     await session.page.mouse.click(pos.x, pos.y);
     await session.page.keyboard.type("hello world");
+    // Grow the box with extra lines, then check the connector still touches it
+    for (let i = 0; i < 3; i++) {
+      await session.page.keyboard.down("Shift");
+      await session.page.keyboard.press("Enter");
+      await session.page.keyboard.up("Shift");
+      await session.page.keyboard.type("more");
+    }
+    const gap = await session.page.evaluate(() => {
+      const state = (editor as any).store.getState();
+      const merged = (id: string) => state.getMergedFeature(id);
+      const comment = editor.getAnnotations().features.find((f: any) => f.properties.type === "comment");
+      const arrow = editor.getAnnotations().features.find((f: any) => f.properties.type === "arrow");
+      const c = merged(comment.id);
+      const [ax, ay] = merged(arrow.id).geometry.coordinates[0];
+      const [x0, y0, x1, y1] = c.geometry.bbox;
+      // distance from the endpoint to the comment bbox (0 when inside/on it)
+      return Math.hypot(Math.max(x0 - ax, 0, ax - x1), Math.max(y0 - ay, 0, ay - y1));
+    });
+    expect(gap).toBeLessThan(2);
     await session.page.keyboard.down("Meta");
     await session.page.keyboard.press("Enter");
     await session.page.keyboard.up("Meta");
@@ -906,7 +925,7 @@ describe("Comments", () => {
             ?.properties as { content?: string }
         )?.content
     );
-    expect(content).toBe("hello world");
+    expect(content).toBe("hello world\nmore\nmore\nmore");
   }, 10000);
 
   // Regression test: while a comment is being edited, its connector line
