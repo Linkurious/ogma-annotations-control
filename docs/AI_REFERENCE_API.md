@@ -379,13 +379,13 @@ Style options for the comment box
 
 `number`
 
-Manual X offset for comment placement (overrides smart positioning)
+Manual X offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
 
 ###### offsetY?
 
 `number`
 
-Manual Y offset for comment placement (overrides smart positioning)
+Manual Y offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
 
 #### Returns
 

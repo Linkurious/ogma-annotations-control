@@ -240,7 +240,7 @@ class App {
       // Text/sticky notes are handled by TextAnnotationToolbar (see
       // setupTextAnnotationToolbar) - excluding "text" here keeps the
       // docked panel from also popping up for the same selection.
-      enabledTypes: ["arrow", "box", "comment", "polygon"]
+      enabledTypes: ["arrow", "box", "polygon"]
     });
   }
 

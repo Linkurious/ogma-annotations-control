@@ -204,6 +204,18 @@ export class LinkSync {
     const updates = this._computeArrowUpdates(linksToUpdate);
     if (Object.keys(updates).length === 0) return;
 
+    // Rigid-follow stages a copy of the *committed* annotation being edited
+    // (translateComment); applying it as-is would overwrite its live overlay
+    // and wipe the text being typed. Keep the live properties, only the
+    // translation is wanted.
+    const live = this.store.getState().liveUpdates[editing];
+    const staged = updates[editing];
+    if (live && staged) {
+      const rebased = { ...staged, properties: live.properties } as Annotation;
+      updateBbox(rebased);
+      updates[editing] = rebased;
+    }
+
     this.applyingEditingLiveUpdate = true;
     try {
       this.store.getState().applyLiveUpdates(updates);

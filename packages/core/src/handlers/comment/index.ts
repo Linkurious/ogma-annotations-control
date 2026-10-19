@@ -3,7 +3,13 @@ import { ArrowHandler } from "../arrow";
 import { Handler } from "../base";
 import { Links } from "../links";
 import { Snapping } from "../snapping";
-import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
+import {
+  DEFAULT_COMMENT_OFFSET_X,
+  DEFAULT_COMMENT_OFFSET_Y,
+  SIDE_END,
+  SIDE_START,
+  TARGET_TYPES
+} from "../../constants";
 import { Store } from "../../store";
 import { Comment, Id, ArrowProperties, isArrow } from "../../types";
 import { Arrow, createArrow, defaultArrowStyle } from "../../types/features/Arrow";
@@ -49,8 +55,8 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     this.links = links;
     this.arrowHandler = arrowHandler;
     this.snapping = snapping;
-    this.offsetX = options?.offsetX ?? 100;
-    this.offsetY = options?.offsetY ?? -50;
+    this.offsetX = options?.offsetX ?? DEFAULT_COMMENT_OFFSET_X;
+    this.offsetY = options?.offsetY ?? DEFAULT_COMMENT_OFFSET_Y;
     this.arrowStyle = options?.arrowStyle;
     this.comment = comment;
   }
@@ -127,9 +133,20 @@ export class CommentDrawingHandler extends Handler<Comment, never> {
     let commentY: number;
 
     if (dragDistance < CLICK_VS_DRAG_THRESHOLD) {
-      // Case 1: Click (small distance) - apply offset from start point
-      commentX = this.startX + this.offsetX;
-      commentY = this.startY + this.offsetY;
+      // Case 1: Click (small distance) - apply offset from start point.
+      // The offset is in screen pixels, so the comment lands at the same
+      // distance from the click at any zoom (and view rotation).
+      const { view } = this.ogma;
+      const origin = view.graphToScreenCoordinates({
+        x: this.startX,
+        y: this.startY
+      });
+      const placed = view.screenToGraphCoordinates({
+        x: origin.x + this.offsetX,
+        y: origin.y + this.offsetY
+      });
+      commentX = placed.x;
+      commentY = placed.y;
     } else {
       // Case 2: Drag - create comment at arrow end (where user released mouse)
       commentX = arrowEnd[0];

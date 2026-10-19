@@ -1,4 +1,6 @@
 import {
+  DEFAULT_COMMENT_OFFSET_X,
+  DEFAULT_COMMENT_OFFSET_Y,
   EVT_COMPLETE_DRAWING,
   EVT_CANCEL_DRAWING
 } from "@linkurious/ogma-annotations";
@@ -119,8 +121,8 @@ export const AddMenu = ({
     const commentOverride = styles.comment?.commentStyle;
     const arrowOverride = styles.comment?.arrowStyle;
     editor.enableCommentDrawing({
-      offsetX: styles.comment?.offsetX ?? 200,
-      offsetY: styles.comment?.offsetY ?? -150,
+      offsetX: styles.comment?.offsetX ?? DEFAULT_COMMENT_OFFSET_X,
+      offsetY: styles.comment?.offsetY ?? DEFAULT_COMMENT_OFFSET_Y,
       commentStyle: {
         content: "",
         ...commentOverride,
