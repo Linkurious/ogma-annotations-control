@@ -179,8 +179,12 @@ export class LinkIndex {
     this.edgeToLink.get(link.target as EdgeId)?.delete(id);
     this.annotationToLink.get(link.target)?.delete(id);
     // remove the link from the linksByArrowId
-    if (this.linksByArrowId.has(arrowId)) {
-      this.linksByArrowId.get(arrowId)![side] = undefined;
+    const arrowLinks = this.linksByArrowId.get(arrowId);
+    if (arrowLinks) {
+      arrowLinks[side] = undefined;
+      // Drop the entry once both sides are gone, otherwise a deleted arrow
+      // leaves a ghost key that every full-map recompute iterates.
+      if (!arrowLinks.start && !arrowLinks.end) this.linksByArrowId.delete(arrowId);
     }
     return this;
   }
