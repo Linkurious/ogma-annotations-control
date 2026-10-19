@@ -309,7 +309,32 @@ describe("Links", () => {
     });
   });
 
-  describe("programmatic annotation move refreshes linked arrows", () => {
+  describe("stale link registry entries", () => {
+  it("does not crash node-position updates when the linked arrow is gone", () => {
+    const ogma = createOgma();
+    ogma.addNode({ id: "A", attributes: { x: 0, y: 0, radius: 18 } });
+    const control = new Control(ogma);
+    // @ts-expect-error links is private
+    const registry = control.links["registry"];
+    registry.linksByArrowId.set("__stale_arrow__", { start: "__stale_link__" });
+    registry.links.set("__stale_link__", {
+      id: "__stale_link__",
+      arrow: "__stale_arrow__",
+      target: "A",
+      targetType: "node",
+      magnet: { type: "node", center: false },
+      side: "start"
+    });
+    registry.nodeToLink.set("A", new Set(["__stale_link__"]));
+
+    expect(() =>
+      // @ts-expect-error updateFromNodePositions is private
+      control.links["sync"].updateFromNodePositions(ogma.getNodes(["A"]))
+    ).not.toThrow();
+  });
+});
+
+describe("programmatic annotation move refreshes linked arrows", () => {
     let ogma: ReturnType<typeof createOgma>;
     let control: Control;
 

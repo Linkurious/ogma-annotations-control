@@ -319,6 +319,8 @@ export class LinkSync {
         if (!link) continue;
         const arrowId = link.arrow;
         const arrow = this.store.getState().getFeature(arrowId) as Arrow;
+        // Stale registry entry: arrow no longer in state.features.
+        if (!arrow) continue;
         const coordinates = arrow.geometry.coordinates.slice();
         const end = getArrowSide(arrow, SIDE_END);
         const start = getArrowSide(arrow, SIDE_START);
@@ -536,6 +538,8 @@ export class LinkSync {
       const start = this.index.links.get(links.start!);
       const end = this.index.links.get(links.end!);
       const arrow = state.getFeature(arrowId) as Arrow;
+      // Stale registry entry: arrow no longer in state.features.
+      if (!arrow) return;
 
       // Annotation target not loaded yet (arrow arrived before its annotation
       // in the same import). Leave the arrow as stored instead of crashing.
