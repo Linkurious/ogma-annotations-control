@@ -360,7 +360,8 @@ describe("Annotation creation", () => {
     expect(types.filter((t) => t === "box").length).toBe(1);
     expect(types.filter((t) => t === "polygon").length).toBe(1);
     expect(types.filter((t) => t === "comment").length).toBe(1);
-  }, 15000);
+    // ~8s locally, but a contended CI agent runs this several times slower.
+  }, 45000);
 
   // Undo/redo immediately after creating each annotation type. Runs
   // sequentially in one session (not resetting between types).
