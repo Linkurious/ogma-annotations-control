@@ -854,6 +854,61 @@ describe("Comments", () => {
     expect(afterSend.content).toBe("line1\nline2");
   }, 10000);
 
+  it("should place a clicked comment at its offset in screen pixels, at any zoom", async () => {
+    const pos = await session.page.evaluate(async () => {
+      await ogma.view.setZoom(4, { duration: 0 });
+      editor.enableCommentDrawing({ offsetX: 200, offsetY: -150, ...demoStyles.comment });
+      // Far from any node or edge
+      return screenToPage({ x: 0, y: -50 });
+    });
+    await session.page.mouse.click(pos.x, pos.y);
+
+    const delta = await session.page.evaluate(() => {
+      const fs = editor.getAnnotations().features as any[];
+      const comment = fs.find((f) => f.properties.type === "comment");
+      const arrow = fs.find((f) => f.properties.type === "arrow");
+      const [cx, cy] = comment.geometry.coordinates;
+      const [ax, ay] = arrow.geometry.coordinates[1];
+      const c = ogma.view.graphToScreenCoordinates({ x: cx, y: cy });
+      const a = ogma.view.graphToScreenCoordinates({ x: ax, y: ay });
+      return { x: c.x - a.x, y: c.y - a.y };
+    });
+    expect(delta.x).toBeCloseTo(200, 0);
+    expect(delta.y).toBeCloseTo(-150, 0);
+  }, 10000);
+
+  // Regression test: a comment placed with a plain click (no drag) off the
+  // centre of a node got a rigid-follow translation staged on every
+  // keystroke from a copy of the committed comment, which overwrote its live
+  // overlay - the typed text was lost on send.
+  it("should keep the typed text when sent from a comment clicked onto a node off-centre", async () => {
+    const pos = await session.page.evaluate(() => {
+      // The toolbar's own default offsets
+      editor.enableCommentDrawing({ offsetX: 200, offsetY: -150, ...demoStyles.comment });
+      // Off-centre on node n1 at (-100, -100)
+      return screenToPage({ x: -95, y: -105 });
+    });
+    await session.page.mouse.click(pos.x, pos.y);
+    await session.page.keyboard.type("hello world");
+    await session.page.keyboard.down("Meta");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.up("Meta");
+    await session.page.keyboard.down("Control");
+    await session.page.keyboard.press("Enter");
+    await session.page.keyboard.up("Control");
+
+    const content = await session.page.evaluate(
+      () =>
+        (
+          editor
+            .getAnnotations()
+            .features.find((f) => f.properties.type === "comment")
+            ?.properties as { content?: string }
+        )?.content
+    );
+    expect(content).toBe("hello world");
+  }, 10000);
+
   // Regression test: while a comment is being edited, its connector line
   // must render *behind* the box, not on top of it. LAYERS.EDITOR is a
   // higher index than LAYERS.SHAPES, but that index alone doesn't control

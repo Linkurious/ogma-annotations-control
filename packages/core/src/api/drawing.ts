@@ -238,8 +238,8 @@ export class Drawing {
 
   /**
    * @param options Drawing options including offsets and styles
-   * @param options.offsetX Manual X offset for comment placement (overrides smart positioning)
-   * @param options.offsetY Manual Y offset for comment placement (overrides smart positioning)
+   * @param options.offsetX Manual X offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
+   * @param options.offsetY Manual Y offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
    * @param options.commentStyle Style options for the comment box
    * @param options.arrowStyle Style options for the arrow
    * @returns Control instance for chaining
@@ -267,9 +267,15 @@ export class Drawing {
         let offsetY = options.offsetY;
 
         if (offsetX === undefined && offsetY === undefined) {
-          const bestPoint = findPlace(x, y, this.index, this.ogma);
-          offsetX = bestPoint.x;
-          offsetY = bestPoint.y;
+          // findPlace returns an absolute graph point, the offsets are
+          // screen-pixel distances from the click
+          const { view } = this.ogma;
+          const best = view.graphToScreenCoordinates(
+            findPlace(x, y, this.index, this.ogma)
+          );
+          const origin = view.graphToScreenCoordinates({ x, y });
+          offsetX = best.x - origin.x;
+          offsetY = best.y - origin.y;
         }
         const comment = createComment(x, y, "", options?.commentStyle);
         const started = this.tryStartComment(x, y, comment, {

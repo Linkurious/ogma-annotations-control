@@ -550,8 +550,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * ```
    *
    * @param options Drawing options including offsets and styles
-   * @param options.offsetX Manual X offset for comment placement (overrides smart positioning)
-   * @param options.offsetY Manual Y offset for comment placement (overrides smart positioning)
+   * @param options.offsetX Manual X offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
+   * @param options.offsetY Manual Y offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
    * @param options.commentStyle Style options for the comment box
    * @param options.arrowStyle Style options for the arrow
    * @returns this for chaining

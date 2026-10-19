@@ -2,6 +2,10 @@ import { Cursor } from "./types";
 
 export const NONE = -1;
 
+/** Default offset of a new comment from the click, in screen pixels */
+export const DEFAULT_COMMENT_OFFSET_X = 100;
+export const DEFAULT_COMMENT_OFFSET_Y = -50;
+
 export const EVT_DRAG = "dragging";
 export const EVT_DRAG_START = "dragstart";
 export const EVT_DRAG_END = "dragend";
