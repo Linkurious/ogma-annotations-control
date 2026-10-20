@@ -10,6 +10,7 @@ import type {
 } from "@linkurious/ogma";
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId } from "./registry";
+import { getAnchorComment } from "../comment/helpers";
 import { getRigidComment, getRigidFollowComment, translateComment } from "../comment/follow";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
 import { Store } from "../../store";
@@ -133,6 +134,7 @@ export class LinkSync {
       .on("setMultipleAttributes", this.onSetMultipleAttributes)
       .on(["addEdges", "removeEdges"], this.onAddRemoveEdges)
       .on("removeNodes", this.onRemoveNodes)
+      .on("removeEdges", this.onRemoveEdges)
       .on("viewChanged", this.refresh)
       .on(["geoEnabled", "geoDisabled"], this.onGeoModeChanged);
   }
@@ -418,13 +420,28 @@ export class LinkSync {
    * where it last was, just no longer tracked.
    */
   private onRemoveNodes = ({ nodes }: NodesEvent<unknown, unknown>) => {
-    const removedIds = nodes.getId();
+    this.onRemoveTargets(nodes.getId(), this.index.nodeToLink);
+  };
+
+  private onRemoveEdges = ({ edges }: EdgesEvent<unknown, unknown>) => {
+    this.onRemoveTargets(edges.getId(), this.index.edgeToLink);
+  };
+
+  /**
+   * Comments whose `canDetach` is false are deleted along with their
+   * connector; every other link is detached as described above.
+   */
+  private onRemoveTargets(
+    removedIds: Id[],
+    linksByTarget: Map<Id, Set<Id>>
+  ) {
     if (!removedIds.length) return;
     const state = this.store.getState();
     const updates: Record<Id, Arrow> = {};
+    const commentsToDelete = new Set<Id>();
 
-    removedIds.forEach((nodeId) => {
-      const linkIds = this.index.nodeToLink.get(nodeId);
+    removedIds.forEach((targetId) => {
+      const linkIds = linksByTarget.get(targetId);
       if (!linkIds) return;
       // index.remove() mutates this same Set as we go - snapshot first.
       Array.from(linkIds).forEach((linkId) => {
@@ -435,6 +452,11 @@ export class LinkSync {
         // this pass (both ends linked to nodes removed in the same batch).
         const arrow = updates[arrowId] ?? (state.getFeature(arrowId) as Arrow);
         if (!arrow) return;
+        const comment = getAnchorComment(arrow, state.features);
+        if (comment && !state.options.canDetach(comment)) {
+          commentsToDelete.add(comment.id);
+          return;
+        }
         const clone: Arrow = {
           ...arrow,
           properties: { ...arrow.properties, link: { ...arrow.properties.link } }
@@ -444,11 +466,17 @@ export class LinkSync {
       });
     });
 
-    if (Object.keys(updates).length === 0) return;
+    if (commentsToDelete.size === 0 && Object.keys(updates).length === 0) return;
     state.batchUpdate(() => {
-      state.updateFeatures(updates as Record<Id, Partial<Annotation>>);
+      commentsToDelete.forEach((id) => state.removeFeature(id));
+      const remaining = Object.fromEntries(
+        Object.entries(updates).filter(([id]) => state.getFeature(id))
+      );
+      if (Object.keys(remaining).length) {
+        state.updateFeatures(remaining as Record<Id, Partial<Annotation>>);
+      }
     });
-  };
+  }
 
   private commit = () => {
     const state = this.store.getState();
@@ -659,6 +687,7 @@ export class LinkSync {
       .off(this.onSetMultipleAttributes)
       .off(this.onAddRemoveEdges)
       .off(this.onRemoveNodes)
+      .off(this.onRemoveEdges)
       .off(this.refresh)
       .off(this.onGeoModeChanged);
   }

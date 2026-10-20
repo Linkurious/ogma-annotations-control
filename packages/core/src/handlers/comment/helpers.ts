@@ -1,5 +1,5 @@
 import { TARGET_TYPES } from "../../constants";
-import { Annotation, Arrow, Id, isArrow, isComment, isText } from "../../types";
+import { Annotation, Arrow, Comment, Id, isArrow, isComment, isText } from "../../types";
 
 /**
  * Helper functions for managing comment-arrow relationships
@@ -99,6 +99,34 @@ export function canDetachArrowEnd(_arrow: Arrow): boolean {
 }
 
 /**
+ * The comment a connector arrow starts from, if any.
+ */
+export function getAnchorComment(
+  arrow: Arrow,
+  features: Record<Id, Annotation>
+): Comment | undefined {
+  const start = arrow.properties.link?.start;
+  if (start?.type !== TARGET_TYPES.COMMENT) return undefined;
+  const comment = features[start.id];
+  return comment && isComment(comment) ? comment : undefined;
+}
+
+/**
+ * True when `arrow` is a comment connector attached to a target whose comment
+ * must not be detached (`canDetach` returns false). Such a connector's tip
+ * and body can't be dragged away from the target.
+ */
+export function isArrowTargetLocked(
+  arrow: Arrow,
+  features: Record<Id, Annotation>,
+  canDetach: (comment: Comment) => boolean
+): boolean {
+  if (!arrow.properties.link?.end) return false;
+  const comment = getAnchorComment(arrow, features);
+  return !!comment && !canDetach(comment);
+}
+
+/**
  * Ids that removing `id` should take with it: `id` itself, plus every arrow
  * attached to it when it's a comment or text annotation - deleting the
  * anchor takes its connectors along, since a detached comment-arrow has
@@ -110,20 +138,29 @@ export function canDetachArrowEnd(_arrow: Arrow): boolean {
  */
 export function getCascadeDeleteIds(
   features: Record<Id, Annotation>,
-  id: Id
+  id: Id,
+  canDetach: (comment: Comment) => boolean = () => false
 ): Set<Id> {
-  const toDelete = new Set<Id>([id]);
-  const feature = features[id];
-  if (!feature) return toDelete;
+  const toDelete = new Set<Id>();
+  const queue: Id[] = [id];
 
-  if (isComment(feature) || isText(feature)) {
+  while (queue.length) {
+    const current = queue.pop()!;
+    if (toDelete.has(current)) continue;
+    const feature = features[current];
+    toDelete.add(current);
+    if (!feature) continue;
+
+    const isAnchor = isComment(feature) || isText(feature);
     Object.values(features).forEach((f) => {
-      if (
-        isArrow(f) &&
-        (f.properties.link?.end?.id === id || f.properties.link?.start?.id === id)
-      ) {
-        toDelete.add(f.id);
-      }
+      if (!isArrow(f)) return;
+      const link = f.properties.link;
+      if (link?.end?.id !== current && link?.start?.id !== current) return;
+      if (isAnchor) toDelete.add(f.id);
+      // A comment connector pointing at a deleted target can't stay
+      // attached: take the comment along unless it may be detached.
+      const comment = getAnchorComment(f, features);
+      if (comment && !canDetach(comment)) queue.push(comment.id);
     });
   }
 

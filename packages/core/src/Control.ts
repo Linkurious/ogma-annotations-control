@@ -68,7 +68,8 @@ const defaultOptions: ControllerOptions = {
   isEditable: () => true,
   isVisible: () => true,
   canComment: () => true,
-  commentDeniedCursor: true
+  commentDeniedCursor: true,
+  canDetach: () => false
 };
 
 interface RendererMap {

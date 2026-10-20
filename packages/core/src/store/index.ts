@@ -125,6 +125,7 @@ export interface AnnotationState {
     isVisible: (annotation: Annotation) => boolean;
     canComment: (target: CommentTarget) => boolean;
     commentDeniedCursor: boolean;
+    canDetach: (comment: Comment) => boolean;
   };
 
   setOptions: (options: Partial<AnnotationState["options"]>) => void;
@@ -223,7 +224,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             isEditable: initialOptions?.isEditable ?? (() => true),
             isVisible: initialOptions?.isVisible ?? (() => true),
             canComment: initialOptions?.canComment ?? (() => true),
-            commentDeniedCursor: initialOptions?.commentDeniedCursor ?? true
+            commentDeniedCursor: initialOptions?.commentDeniedCursor ?? true,
+            canDetach: initialOptions?.canDetach ?? (() => false)
           },
 
           setOptions: (newOptions) =>
@@ -260,7 +262,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               }
 
               // Deleting a comment (or text) also deletes all its arrows.
-              const toDelete = getCascadeDeleteIds(features, id);
+              const toDelete = getCascadeDeleteIds(features, id, state.options.canDetach);
 
               // All or nothing - refuse the whole delete if the cascade reaches a non-editable annotation.
               for (const deleteId of toDelete) {
