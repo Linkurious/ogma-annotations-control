@@ -136,6 +136,19 @@ export type ControllerOptions = {
    * Set to `false` to indicate it yourself via the `commentHover` event.
    */
   commentDeniedCursor: boolean;
+
+  /**
+   * Called to decide whether a comment may be detached from the node, edge
+   * or annotation it points at. Defaults to always `false`. When it returns
+   * `false`, dragging the connector's tip or body away from its target is
+   * refused, and deleting the target (node, edge, text, box, polygon)
+   * deletes the comment and its connector. When it returns `true`, the
+   * connector can be dragged off, and removing the target leaves the comment
+   * in place with a free connector end.
+   *
+   * Keep this cheap and synchronous. Same reactivity note as `isEditable`.
+   */
+  canDetach: (comment: Comment) => boolean;
 };
 
 /**

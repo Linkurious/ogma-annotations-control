@@ -3,6 +3,7 @@ import { Handler } from "./base";
 import {
   canDetachArrowEnd,
   canDetachArrowStart,
+  isArrowTargetLocked
 } from "./comment/helpers";
 import { handleDrag } from "./dragging";
 import { Links } from "./links";
@@ -175,8 +176,13 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     if (!super.onDragStart(evt)) return false;
     const annotation = this.getAnnotation()!;
     const handle = this.hoveredHandle!;
+    const state = this.store.getState();
     if (
       (handle.type === HandleType.END && !canDetachArrowEnd(annotation)) ||
+      // Dragging the tip or the body of a comment connector would detach
+      // it from its target.
+      ((handle.type === HandleType.END || handle.type === HandleType.BODY) &&
+        isArrowTargetLocked(annotation, state.features, state.options.canDetach)) ||
       (handle.type === HandleType.START && !canDetachArrowStart(annotation))
     ) {
       this.clearDragState();
