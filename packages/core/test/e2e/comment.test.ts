@@ -268,6 +268,9 @@ describe("Comments", () => {
     expect(before.arrowEndLink).not.toBeNull();
     expect(before.arrowEndLink.type).toBe("node");
 
+    // Detaching is off by default; opt in for this test.
+    await session.page.evaluate(() => editor.setOptions({ canDetach: () => true }));
+
     const { arrowId, endScreen, commentBefore } = await session.page.evaluate(() => {
       const annotations = editor.getAnnotations();
       const arrow = annotations.features.find(
