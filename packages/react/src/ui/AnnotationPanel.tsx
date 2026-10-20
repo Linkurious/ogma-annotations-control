@@ -48,7 +48,6 @@ export const AnnotationPanel: React.FC<AnnotationPanelProps> = ({
   placement = DEFAULT_PANEL_PLACEMENT,
   orientation = DEFAULT_PANEL_ORIENTATION
 }) => {
-
   const renderArrow = (arrow: Arrow) => {
     const s = arrow.properties.style || {};
     const currentColor = s.strokeColor || defaultArrowStyle.strokeColor!;

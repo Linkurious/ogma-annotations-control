@@ -11,7 +11,11 @@ import type {
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId } from "./registry";
 import { getAnchorComment } from "../comment/helpers";
-import { getRigidComment, getRigidFollowComment, translateComment } from "../comment/follow";
+import {
+  getRigidComment,
+  getRigidFollowComment,
+  translateComment
+} from "../comment/follow";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
 import { Store } from "../../store";
 import type { Arrow, Id, Annotation, DeepPartial } from "../../types";
@@ -256,7 +260,10 @@ export class LinkSync {
     if (linksToUpdate.size > 0) this.update(linksToUpdate);
   };
 
-  private throttledRefresh = throttle(() => this.refresh(), REFRESH_THROTTLE_MS);
+  private throttledRefresh = throttle(
+    () => this.refresh(),
+    REFRESH_THROTTLE_MS
+  );
 
   private requestUpdateFromNodePositions(nodes: NodeList) {
     // Wait for Ogma's next rendered frame before reading node positions,
@@ -333,7 +340,9 @@ export class LinkSync {
         const snapPoint = this.geometry.getNodeSnapPoint(
           positionAndRadius,
           // node -> other end, whichever side the node is on
-          link.side === SIDE_START ? subtract(start, end) : subtract(end, start),
+          link.side === SIDE_START
+            ? subtract(start, end)
+            : subtract(end, start),
           this.geometry.isLinkedToCenter(link)
         );
 
@@ -355,8 +364,14 @@ export class LinkSync {
             { x: snapPoint[0], y: snapPoint[1] },
             { x: oldNodePoint[0], y: oldNodePoint[1] }
           );
-          coordinates[0] = [coordinates[0][0] + delta.x, coordinates[0][1] + delta.y];
-          coordinates[1] = [coordinates[1][0] + delta.x, coordinates[1][1] + delta.y];
+          coordinates[0] = [
+            coordinates[0][0] + delta.x,
+            coordinates[0][1] + delta.y
+          ];
+          coordinates[1] = [
+            coordinates[1][0] + delta.x,
+            coordinates[1][1] + delta.y
+          ];
 
           translateComment(comment, delta, updates, this.updatedItems);
         } else {
@@ -401,7 +416,10 @@ export class LinkSync {
           if (!link) return;
           const arrowId = link.arrow;
           links.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
-          edgeLinksToUpdate.set(arrowId, this.index.linksByArrowId.get(arrowId)!);
+          edgeLinksToUpdate.set(
+            arrowId,
+            this.index.linksByArrowId.get(arrowId)!
+          );
         });
       });
     // Update edge links using the general update method
@@ -431,10 +449,7 @@ export class LinkSync {
    * Comments whose `canDetach` is false are deleted along with their
    * connector; every other link is detached as described above.
    */
-  private onRemoveTargets(
-    removedIds: Id[],
-    linksByTarget: Map<Id, Set<Id>>
-  ) {
+  private onRemoveTargets(removedIds: Id[], linksByTarget: Map<Id, Set<Id>>) {
     if (!removedIds.length) return;
     const state = this.store.getState();
     const updates: Record<Id, Arrow> = {};
@@ -459,14 +474,18 @@ export class LinkSync {
         }
         const clone: Arrow = {
           ...arrow,
-          properties: { ...arrow.properties, link: { ...arrow.properties.link } }
+          properties: {
+            ...arrow.properties,
+            link: { ...arrow.properties.link }
+          }
         };
         this.index.remove(clone, link.side);
         updates[arrowId] = clone;
       });
     });
 
-    if (commentsToDelete.size === 0 && Object.keys(updates).length === 0) return;
+    if (commentsToDelete.size === 0 && Object.keys(updates).length === 0)
+      return;
     state.batchUpdate(() => {
       commentsToDelete.forEach((id) => state.removeFeature(id));
       const remaining = Object.fromEntries(
@@ -620,7 +639,10 @@ export class LinkSync {
       if (startComment && end) {
         const oldEnd = arrow.geometry.coordinates[1];
         const oldStart = arrow.geometry.coordinates[0];
-        const rawDelta = { x: endPoint[0] - oldEnd[0], y: endPoint[1] - oldEnd[1] };
+        const rawDelta = {
+          x: endPoint[0] - oldEnd[0],
+          y: endPoint[1] - oldEnd[1]
+        };
         const delta = this._geoRigidFollowDelta(rawDelta, oldEnd, oldStart);
         if (delta.x !== 0 || delta.y !== 0) {
           startPoint = [oldStart[0] + delta.x, oldStart[1] + delta.y];
@@ -629,7 +651,10 @@ export class LinkSync {
       } else if (endComment && start) {
         const oldStart = arrow.geometry.coordinates[0];
         const oldEnd = arrow.geometry.coordinates[1];
-        const rawDelta = { x: startPoint[0] - oldStart[0], y: startPoint[1] - oldStart[1] };
+        const rawDelta = {
+          x: startPoint[0] - oldStart[0],
+          y: startPoint[1] - oldStart[1]
+        };
         const delta = this._geoRigidFollowDelta(rawDelta, oldStart, oldEnd);
         if (delta.x !== 0 || delta.y !== 0) {
           endPoint = [oldEnd[0] + delta.x, oldEnd[1] + delta.y];

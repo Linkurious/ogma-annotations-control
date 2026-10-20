@@ -69,12 +69,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     const startDistance = Math.sqrt(
       Math.pow(mousePoint.x - startPoint[0], 2) +
-      Math.pow(mousePoint.y - startPoint[1], 2)
+        Math.pow(mousePoint.y - startPoint[1], 2)
     );
 
     const endDistance = Math.sqrt(
       Math.pow(mousePoint.x - endPoint[0], 2) +
-      Math.pow(mousePoint.y - endPoint[1], 2)
+        Math.pow(mousePoint.y - endPoint[1], 2)
     );
 
     if (startDistance < margin)
@@ -89,7 +89,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
           type: HandleType.BODY,
           point: mousePoint
         };
-        this.store.setState({ hoveredHandle: 2, hoveredFeature: this.annotation });
+        this.store.setState({
+          hoveredHandle: 2,
+          hoveredFeature: this.annotation
+        });
       } else {
         this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
         this.hoveredHandle = undefined;
@@ -99,7 +102,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
   private grabHandle(type: HandleType, x: number, y: number) {
     this.hoveredHandle = { type, point: { x, y } };
-    this.store.setState({ hoveredHandle: type === HandleType.START ? 0 : 1, hoveredFeature: this.annotation });
+    this.store.setState({
+      hoveredHandle: type === HandleType.START ? 0 : 1,
+      hoveredFeature: this.annotation
+    });
     this.setCursor(cursors.move);
   }
 
@@ -132,8 +138,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       handleDrag(this.store, this.links, annotation.id, { x: dx, y: dy }, true);
       this.dispatchEvent(event);
       return;
-    }
-    else if (handle.type === HandleType.START) {
+    } else if (handle.type === HandleType.START) {
       newCoordinates[0] = [point.x, point.y];
       if (this.snap) {
         link.start = {
@@ -182,7 +187,11 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       // Dragging the tip or the body of a comment connector would detach
       // it from its target.
       ((handle.type === HandleType.END || handle.type === HandleType.BODY) &&
-        isArrowTargetLocked(annotation, state.features, state.options.canDetach)) ||
+        isArrowTargetLocked(
+          annotation,
+          state.features,
+          state.options.canDetach
+        )) ||
       (handle.type === HandleType.START && !canDetachArrowStart(annotation))
     ) {
       this.clearDragState();
@@ -199,18 +208,14 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     if (this.hoveredHandle) {
       const coordinates = annotation.geometry.coordinates;
       if (this.hoveredHandle.type === HandleType.BODY) {
-        const snapStart = this.snapping.snap(
-          {
-            x: coordinates[0][0],
-            y: coordinates[0][1]
-          }
-        );
-        const snapEnd = this.snapping.snap(
-          {
-            x: coordinates[1][0],
-            y: coordinates[1][1]
-          }
-        );
+        const snapStart = this.snapping.snap({
+          x: coordinates[0][0],
+          y: coordinates[0][1]
+        });
+        const snapEnd = this.snapping.snap({
+          x: coordinates[1][0],
+          y: coordinates[1][1]
+        });
         if (snapStart) {
           this.links.add(
             annotation,
@@ -219,8 +224,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
             snapStart.type,
             snapStart.magnet
           );
-        } else if (annotation.properties.link?.start?.type !== 'comment'
-        ) {
+        } else if (annotation.properties.link?.start?.type !== "comment") {
           this.links.remove(annotation, SIDE_START);
         }
         if (snapEnd) {
@@ -231,12 +235,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
             snapEnd.type,
             snapEnd.magnet
           );
-        }
-        else if (annotation.properties.link?.end?.type !== 'comment') {
+        } else if (annotation.properties.link?.end?.type !== "comment") {
           this.links.remove(annotation, SIDE_END);
         }
-      }
-      else if (this.snap) {
+      } else if (this.snap) {
         const handle = this.hoveredHandle;
         if (handle.type !== HandleType.BODY)
           this.links.add(

@@ -17,8 +17,16 @@ describe("CommentManager - zoom-driven auto collapse/expand", () => {
   });
 
   afterEach(() => {
-    try { control.destroy(); } catch { /* headless */ }
-    try { ogma.destroy(); } catch { /* headless */ }
+    try {
+      control.destroy();
+    } catch {
+      /* headless */
+    }
+    try {
+      ogma.destroy();
+    } catch {
+      /* headless */
+    }
   });
 
   function mergedMode(id: string) {

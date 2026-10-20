@@ -4,7 +4,13 @@ import { Position } from "geojson";
 import { TARGET_TYPES } from "../../constants";
 import { AnnotationState, Store } from "../../store";
 import type { Annotation, Comment, Link, Text } from "../../types";
-import { isBox, isComment, isPolygon, isText, getCommentSize } from "../../types";
+import {
+  isBox,
+  isComment,
+  isPolygon,
+  isText,
+  getCommentSize
+} from "../../types";
 import {
   getBoxCenter,
   getBoxSize,
@@ -89,7 +95,12 @@ export class LinkGeometry {
         (link.magnet as { t: number }).t
       );
     const annotation = state.getMergedFeature(link.target)!;
-    return this.getAnnotationSnapPoint(annotation, otherCenter, link, state.zoom);
+    return this.getAnnotationSnapPoint(
+      annotation,
+      otherCenter,
+      link,
+      state.zoom
+    );
   }
 
   getAnnotationCenter(annotation: Annotation): Point {
@@ -171,7 +182,11 @@ export class LinkGeometry {
   getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint: true): Point;
   getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint?: false): Position;
 
-  getEdgeSnapPoint(edgeId: EdgeId, t: number, asPoint = false): Position | Point {
+  getEdgeSnapPoint(
+    edgeId: EdgeId,
+    t: number,
+    asPoint = false
+  ): Position | Point {
     const edge = this.ogma.getEdge(edgeId);
     if (!edge) return [0, 0];
 

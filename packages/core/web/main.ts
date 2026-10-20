@@ -8,11 +8,7 @@ import {
   TextAnnotationToolbar
 } from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
-import {
-  Control,
-  AnnotationCollection,
-  getAnnotationsBounds
-} from "../src";
+import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
 import { installBrand } from "./brand";
 
 interface ND {}
@@ -173,7 +169,10 @@ class App {
       },
       handleSvgExport: async () => {
         try {
-          const svg = await this.ogma.export.svg({ clip: true, download: false });
+          const svg = await this.ogma.export.svg({
+            clip: true,
+            download: false
+          });
           currentSvg = svg;
           const blob = new Blob([svg], { type: "image/svg+xml" });
           const url = URL.createObjectURL(blob);

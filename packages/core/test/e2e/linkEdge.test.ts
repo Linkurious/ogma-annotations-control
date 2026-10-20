@@ -59,8 +59,9 @@ describe("control.link() to an edge", () => {
     expect(res.first[0]).toBeCloseTo(100);
     expect(res.first[1]).toBeCloseTo(0);
     await session.page.waitForFunction(
-      () => (editor.getAnnotation(editor.getAnnotations().features[0].id) as any)
-        .geometry.coordinates[1][0] > 150
+      () =>
+        (editor.getAnnotation(editor.getAnnotations().features[0].id) as any)
+          .geometry.coordinates[1][0] > 150
     );
     expect(res.undoAfter).toBe(res.undoBefore);
   }, 15000);

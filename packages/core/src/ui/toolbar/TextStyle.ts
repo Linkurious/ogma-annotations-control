@@ -17,7 +17,11 @@ import { STICKY_SWATCHES, type Swatch } from "./swatches";
 export const DEFAULT_TOOLBAR_FONTS: ToolbarDropdownOption[] = [
   { value: "sans-serif", label: "Sans Serif" },
   { value: "serif", label: "Serif", style: { fontFamily: "serif" } },
-  { value: "monospace", label: "Monospace", style: { fontFamily: "monospace" } },
+  {
+    value: "monospace",
+    label: "Monospace",
+    style: { fontFamily: "monospace" }
+  },
   {
     value: "IBM Plex Sans",
     label: "IBM Plex Sans",
@@ -57,7 +61,10 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
    * `getItems()`, as a plain option instead. Defaults to the identity
    * function (`defaultItems` unchanged).
    */
-  items?: (defaultItems: ToolbarItem[], ctx: ToolbarCellContext) => ToolbarItem[];
+  items?: (
+    defaultItems: ToolbarItem[],
+    ctx: ToolbarCellContext
+  ) => ToolbarItem[];
 }
 
 /** Floating style pill for a Text annotation (plain text box or sticky
@@ -120,7 +127,8 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         icon: "bold",
         isActive: (a) => a.properties.style?.fontWeight === "bold",
         action: (c) => {
-          const isBold = c.getAnnotation().properties.style?.fontWeight === "bold";
+          const isBold =
+            c.getAnnotation().properties.style?.fontWeight === "bold";
           c.updateStyle({ fontWeight: isBold ? "normal" : "bold" });
         }
       },
@@ -129,7 +137,10 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         kind: "button",
         id: "showAuthor",
         title: "Show author",
-        getTitle: (a) => (a.properties.style?.showAuthor === true ? "Hide author" : "Show author"),
+        getTitle: (a) =>
+          a.properties.style?.showAuthor === true
+            ? "Hide author"
+            : "Show author",
         icon: "user",
         isActive: (a) => a.properties.style?.showAuthor === true,
         action: (c) => {

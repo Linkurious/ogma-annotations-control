@@ -40,9 +40,9 @@ describe("ExtremityController", () => {
     const wrappers = container.querySelectorAll(".extremity-wrapper");
     expect(wrappers.length).toBe(2);
     wrappers.forEach((wrapper) => {
-      expect(
-        wrapper.querySelectorAll(".custom-select-option").length
-      ).toBe(EXTREMITY_OPTIONS.length);
+      expect(wrapper.querySelectorAll(".custom-select-option").length).toBe(
+        EXTREMITY_OPTIONS.length
+      );
     });
   });
 

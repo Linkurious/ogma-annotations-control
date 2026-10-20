@@ -14,7 +14,7 @@ Arrow snapped to the center or perimeter of a node.
 center: boolean;
 ```
 
-***
+---
 
 ### type
 

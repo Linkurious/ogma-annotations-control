@@ -16,7 +16,7 @@ Converted to the internal Magnet type by Links.add().
 id: Id;
 ```
 
-***
+---
 
 ### magnet?
 
@@ -24,7 +24,7 @@ id: Id;
 optional magnet: Point;
 ```
 
-***
+---
 
 ### side
 
@@ -32,7 +32,7 @@ optional magnet: Point;
 side: Side;
 ```
 
-***
+---
 
 ### type
 

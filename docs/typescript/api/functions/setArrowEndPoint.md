@@ -1,11 +1,7 @@
 # Function: setArrowEndPoint()
 
 ```ts
-function setArrowEndPoint(
-   a, 
-   side, 
-   x, 
-   y): void;
+function setArrowEndPoint(a, side, x, y): void;
 ```
 
 ## Parameters

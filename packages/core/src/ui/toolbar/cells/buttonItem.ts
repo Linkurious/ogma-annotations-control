@@ -12,7 +12,7 @@ export class ButtonItemCell implements ToolbarCell {
     private ctx: ToolbarCellContext,
     private item: ToolbarButtonItem
   ) {
-    const element = this.element = document.createElement("button");
+    const element = (this.element = document.createElement("button"));
     element.type = "button";
     element.className = item.danger
       ? "oa-toolbar-button oa-toolbar-button-danger"

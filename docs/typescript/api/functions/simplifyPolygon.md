@@ -1,10 +1,7 @@
 # Function: simplifyPolygon()
 
 ```ts
-function simplifyPolygon(
-   points, 
-   tolerance, 
-   highestQuality): Position[];
+function simplifyPolygon(points, tolerance, highestQuality): Position[];
 ```
 
 Polyline simplification using a combination of

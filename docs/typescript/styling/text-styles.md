@@ -306,6 +306,7 @@ const customText = createText(50, 50, 150, 40, "Custom", {
 ```
 
 See the API reference for default styles:
+
 - [`defaultTextStyle`](/typescript/api/variables/defaultTextStyle)
 - [`defaultBoxStyle`](/typescript/api/variables/defaultBoxStyle)
 - [`defaultPolygonStyle`](/typescript/api/variables/defaultPolygonStyle)
@@ -456,7 +457,14 @@ const statusStyles = {
   } as TextStyle
 };
 
-const successLabel = createText(50, 50, 150, 40, "Success", statusStyles.success);
+const successLabel = createText(
+  50,
+  50,
+  150,
+  40,
+  "Success",
+  statusStyles.success
+);
 const errorLabel = createText(50, 100, 150, 40, "Error", statusStyles.error);
 ```
 

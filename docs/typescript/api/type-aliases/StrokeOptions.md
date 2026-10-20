@@ -21,7 +21,7 @@ optional strokeColor: Color;
 
 Stroke color: #f00, yellow...
 
-***
+---
 
 ### strokeType?
 
@@ -31,7 +31,7 @@ optional strokeType: StrokeType;
 
 Type of stroke: plain, dashed, or none
 
-***
+---
 
 ### strokeWidth?
 

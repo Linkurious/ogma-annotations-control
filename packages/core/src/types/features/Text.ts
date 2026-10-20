@@ -62,7 +62,10 @@ export interface TextStyle extends BoxStyle {
  * when `showAuthor` is true and `properties.author` is non-empty. Only
  * the line-level subset of `TextStyle` - box properties (background,
  * padding, borderRadius...) don't apply to it. */
-export type AuthorLineStyle = Pick<TextStyle, "font" | "fontSize" | "color" | "fontWeight">;
+export type AuthorLineStyle = Pick<
+  TextStyle,
+  "font" | "fontSize" | "color" | "fontWeight"
+>;
 
 export interface TextProperties extends Omit<BoxProperties, "type"> {
   type: "text";
@@ -110,7 +113,9 @@ export const isText = (
  */
 export const isStickyNote = (a: Text): boolean => {
   const style = a.properties.style;
-  return style?.scaleFontOnResize === true && style?.placeholder === "Quick note…";
+  return (
+    style?.scaleFontOnResize === true && style?.placeholder === "Quick note…"
+  );
 };
 
 /**

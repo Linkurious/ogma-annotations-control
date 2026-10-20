@@ -71,4 +71,3 @@ optional strokeWidth: number;
 ```
 
 Stroke width
-

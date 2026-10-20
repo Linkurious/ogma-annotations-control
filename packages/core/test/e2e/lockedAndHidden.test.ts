@@ -66,31 +66,30 @@ describe("Locked and hidden annotations", () => {
       editor.remove(selected);
     });
     expect(
-      await session.page.evaluate(
-        (id) => !!editor.getAnnotation(id),
-        id
-      )
+      await session.page.evaluate((id) => !!editor.getAnnotation(id), id)
     ).toBe(true);
   }, 10000);
 
   it("a hidden annotation is undrawn and unclickable, but stays in the data API and out of an SVG export", async () => {
-    const { hiddenId, otherId, hiddenScreen } = await session.page.evaluate(async () => {
-      createOgma({});
-      await ogma.view.locateGraph();
-      const hidden = createBox(-100, -100, 100, 60);
-      const other = createBox(200, 200, 100, 60);
-      const editor = new Control(ogma, {
-        isVisible: (a) => a.id !== hidden.id
-      });
-      window.editor = editor;
-      editor.add(hidden);
-      editor.add(other);
-      return {
-        hiddenId: hidden.id,
-        otherId: other.id,
-        hiddenScreen: screenToPage({ x: -50, y: -70 })
-      };
-    });
+    const { hiddenId, otherId, hiddenScreen } = await session.page.evaluate(
+      async () => {
+        createOgma({});
+        await ogma.view.locateGraph();
+        const hidden = createBox(-100, -100, 100, 60);
+        const other = createBox(200, 200, 100, 60);
+        const editor = new Control(ogma, {
+          isVisible: (a) => a.id !== hidden.id
+        });
+        window.editor = editor;
+        editor.add(hidden);
+        editor.add(other);
+        return {
+          hiddenId: hidden.id,
+          otherId: other.id,
+          hiddenScreen: screenToPage({ x: -50, y: -70 })
+        };
+      }
+    );
 
     // No DOM node for the hidden one.
     const hasNode = await session.page.evaluate(

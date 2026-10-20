@@ -14,7 +14,7 @@ Arrow snapped at parametric position t (0–1) along an edge path.
 t: number;
 ```
 
-***
+---
 
 ### type
 

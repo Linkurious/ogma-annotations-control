@@ -20,10 +20,11 @@ Color string in hex (#RRGGBB or #RGB) or rgba format
 `number`
 
 Adjustment factor between -1 and 1:
-  - Positive values (0 to 1): lighten dark colors, darken bright colors
-  - Negative values (-1 to 0): darken dark colors, lighten bright colors
-  - 0: no change
-  - Example: 0.2 applies a 20% adjustment, -0.1 applies a -10% adjustment
+
+- Positive values (0 to 1): lighten dark colors, darken bright colors
+- Negative values (-1 to 0): darken dark colors, lighten bright colors
+- 0: no change
+- Example: 0.2 applies a 20% adjustment, -0.1 applies a -10% adjustment
 
 ## Returns
 

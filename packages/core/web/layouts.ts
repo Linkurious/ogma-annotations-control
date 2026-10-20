@@ -71,7 +71,15 @@ await ogma.layouts.hierarchical({ direction: "TB", duration: 0, locate: true });
 const nodes = ogma.getNodes();
 const zoom = ogma.view.getZoom();
 const offsetPx = 90;
-const commentColors = ["#2d00a6", "#a6006b", "#00806b", "#a65200", "#2d6b00", "#0056a6", "#6b00a6"];
+const commentColors = [
+  "#2d00a6",
+  "#a6006b",
+  "#00806b",
+  "#a65200",
+  "#2d6b00",
+  "#0056a6",
+  "#6b00a6"
+];
 
 nodes.forEach((node, i) => {
   const { x, y } = node.getPosition();
@@ -97,7 +105,12 @@ nodes.forEach((node, i) => {
           borderRadius: 6
         }
       },
-      arrowStyle: { strokeType: "plain", strokeColor: color, strokeWidth: 2, head: "arrow" }
+      arrowStyle: {
+        strokeType: "plain",
+        strokeColor: color,
+        strokeWidth: 2,
+        head: "arrow"
+      }
     }
   );
   control.add(comment);
@@ -124,10 +137,16 @@ async function runLayout(name: string, run: () => Promise<unknown>) {
 const actions = {
   hierarchicalLayout: () =>
     runLayout("hierarchical", () =>
-      ogma.layouts.hierarchical({ direction: "TB", duration: 500, locate: true })
+      ogma.layouts.hierarchical({
+        direction: "TB",
+        duration: 500,
+        locate: true
+      })
     ),
   forceLayout: () =>
-    runLayout("force", () => ogma.layouts.force({ duration: 500, locate: true }))
+    runLayout("force", () =>
+      ogma.layouts.force({ duration: 500, locate: true })
+    )
 };
 
 const gui = new GUI();

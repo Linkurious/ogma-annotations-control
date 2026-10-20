@@ -51,7 +51,11 @@ const textToolbar = new TextAnnotationToolbar({
   control,
   fonts: [
     { value: "Georgia, serif", label: "Georgia" },
-    { value: "IBM Plex Mono", label: "IBM Plex Mono", style: { fontFamily: "IBM Plex Mono" } },
+    {
+      value: "IBM Plex Mono",
+      label: "IBM Plex Mono",
+      style: { fontFamily: "IBM Plex Mono" }
+    },
     { value: "Comic Sans MS", label: "Comic Sans" }
   ],
   fontSizes: [10, 12, 14, 16, 20, 28],
@@ -136,20 +140,20 @@ new TextAnnotationToolbar({
 
 ## Options
 
-| Option | Type | Description |
-| --- | --- | --- |
-| `control` | `Control` | The annotation controller to bind to. |
-| `fonts` | `ToolbarDropdownOption[]` _(optional)_ | Font-family dropdown options. Defaults to `DEFAULT_TOOLBAR_FONTS`. |
-| `fontSizes` | `number[]` _(optional)_ | Font-size dropdown presets. Defaults to `DEFAULT_TOOLBAR_FONT_SIZES`. |
-| `swatches` | `Swatch[]` _(optional)_ | Color cell's swatch-grid palette. Defaults to `STICKY_SWATCHES`. |
-| `onMoreColors` | `(ctx, anchor: HTMLElement) => void` _(optional)_ | Called instead of opening the built-in color picker when "More colors…" is clicked - hand off to your own picker. |
-| `items` | `(defaultItems: ToolbarItem[], ctx) => ToolbarItem[]` _(optional)_ | Full control over the pill's contents - reorder, drop, or add items around the built-in list. See [below](#beyond-fontssizescolors-rearranging-or-replacing-items). |
-| `hideWhenNotEditable` | `boolean` _(optional)_ | Whether a selected-but-locked (`isEditable: false`) Text keeps the pill hidden, same as no selection. Defaults to `true`. |
+| Option                | Type                                                               | Description                                                                                                                                                         |
+| --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`             | `Control`                                                          | The annotation controller to bind to.                                                                                                                               |
+| `fonts`               | `ToolbarDropdownOption[]` _(optional)_                             | Font-family dropdown options. Defaults to `DEFAULT_TOOLBAR_FONTS`.                                                                                                  |
+| `fontSizes`           | `number[]` _(optional)_                                            | Font-size dropdown presets. Defaults to `DEFAULT_TOOLBAR_FONT_SIZES`.                                                                                               |
+| `swatches`            | `Swatch[]` _(optional)_                                            | Color cell's swatch-grid palette. Defaults to `STICKY_SWATCHES`.                                                                                                    |
+| `onMoreColors`        | `(ctx, anchor: HTMLElement) => void` _(optional)_                  | Called instead of opening the built-in color picker when "More colors…" is clicked - hand off to your own picker.                                                   |
+| `items`               | `(defaultItems: ToolbarItem[], ctx) => ToolbarItem[]` _(optional)_ | Full control over the pill's contents - reorder, drop, or add items around the built-in list. See [below](#beyond-fontssizescolors-rearranging-or-replacing-items). |
+| `hideWhenNotEditable` | `boolean` _(optional)_                                             | Whether a selected-but-locked (`isEditable: false`) Text keeps the pill hidden, same as no selection. Defaults to `true`.                                           |
 
 ## Methods
 
-| Method | Description |
-| --- | --- |
+| Method      | Description                                                     |
+| ----------- | --------------------------------------------------------------- |
 | `destroy()` | Detach all event listeners and remove the toolbar from the DOM. |
 
 ## Sticky notes vs. plain Text
@@ -195,7 +199,7 @@ without relying on array position - safe even if a later version adds to
 or reorders the built-in list:
 
 ```ts
-items: (defaultItems) => defaultItems.filter((i) => i.id !== "delete")
+items: (defaultItems) => defaultItems.filter((i) => i.id !== "delete");
 ```
 
 Each entry is one of:
@@ -232,9 +236,9 @@ re-linked - this is the actual enforcement; the toolbar only decides
 what's shown.
 
 **Keep the locked-ids set outside the annotation's own data - don't try
-to store it as an annotation field.** `isEditable` gates *every* write
+to store it as an annotation field.** `isEditable` gates _every_ write
 that goes through `control.update()`/`updateStyle()`, evaluated against
-the annotation's state *before* that write applies - so a `locked` flag
+the annotation's state _before_ that write applies - so a `locked` flag
 living inside `properties` could never unlock itself: the very call that
 sets `locked: false` would already be vetoed, since at the moment it
 runs the annotation is still locked. (Worth confirming yourself before
@@ -261,7 +265,10 @@ triggers a re-render on its own - the click handler refreshes the
 button (and the grey-out class) itself, right after mutating `locked`:
 
 ```ts
-import type { ToolbarCell, ToolbarCellContext } from "@linkurious/ogma-annotations/ui";
+import type {
+  ToolbarCell,
+  ToolbarCellContext
+} from "@linkurious/ogma-annotations/ui";
 import type { Id } from "@linkurious/ogma-annotations";
 
 const LOCK_ICON =
@@ -299,7 +306,9 @@ class LockCell implements ToolbarCell {
     this.element.classList.toggle("active", isLocked);
     this.element.dataset.tooltip = isLocked ? "Unlock" : "Lock";
     // Grey out every other cell in the pill - see the CSS below.
-    this.element.closest(".annotation-style-toolbar")?.classList.toggle("locked", isLocked);
+    this.element
+      .closest(".annotation-style-toolbar")
+      ?.classList.toggle("locked", isLocked);
   }
 
   destroy() {
@@ -313,7 +322,8 @@ class LockCell implements ToolbarCell {
    covers Bold/Delete/the color swatch/the Font dropdowns alike, whatever
    kind of cell they are, since they're all direct children of the same
    row. */
-.annotation-style-toolbar.locked > *:not(.oa-lock-button):not(.oa-toolbar-separator) {
+.annotation-style-toolbar.locked
+  > *:not(.oa-lock-button):not(.oa-toolbar-separator) {
   opacity: 0.4;
   pointer-events: none;
 }
@@ -343,14 +353,18 @@ you want a locked annotation's panel to behave the same way there.
 ### Worked example: placing the lock item next to Delete instead of first
 
 The example above prepends Lock, ahead of Color - fine as a default, but
-say you want it grouped with Delete instead, at the *end* of the row
+say you want it grouped with Delete instead, at the _end_ of the row
 rather than the start. Same `LockCell` from that example, unchanged -
 only where `items` places it in the returned array differs, by finding
 `"delete"`'s index instead of spreading `defaultItems` wholesale:
 
 ```ts
 items: (defaultItems, ctx) => {
-  const lockItem = { kind: "custom" as const, id: "lock", build: () => new LockCell(ctx) };
+  const lockItem = {
+    kind: "custom" as const,
+    id: "lock",
+    build: () => new LockCell(ctx)
+  };
   const deleteIndex = defaultItems.findIndex((i) => i.id === "delete");
   return [
     ...defaultItems.slice(0, deleteIndex), // color…showAuthor, plus the separator right before Delete
@@ -358,7 +372,7 @@ items: (defaultItems, ctx) => {
     { kind: "separator" },
     ...defaultItems.slice(deleteIndex) // Delete itself
   ];
-}
+};
 ```
 
 Renders as `[…] [showAuthor] | [Lock] | [Delete]` - `deleteIndex` still

@@ -61,7 +61,11 @@ describe("Comments", () => {
 
   it("should create comment on void", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // Far from any node or edge (off-diagonal from the n1-n2 edge)
       return screenToPage({ x: 0, y: -50 });
     });
@@ -79,9 +83,15 @@ describe("Comments", () => {
       (window as any).denied = [];
       (window as any).hovers = [];
       editor.setOptions({ canComment: (t: any) => t.type !== "edge" });
-      editor.on("commentDenied", (e: any) => (window as any).denied.push(e.target.type));
+      editor.on("commentDenied", (e: any) =>
+        (window as any).denied.push(e.target.type)
+      );
       editor.on("commentHover", (e: any) => (window as any).hovers.push(e));
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: 0 });
     });
 
@@ -100,14 +110,20 @@ describe("Comments", () => {
     expect((await getCommentResult(session)).hasComment).toBe(false);
 
     // then click on void: comment created
-    const voidPos = await session.page.evaluate(() => screenToPage({ x: 0, y: -50 }));
+    const voidPos = await session.page.evaluate(() =>
+      screenToPage({ x: 0, y: -50 })
+    );
     await drawComment(session, voidPos);
     expect((await getCommentResult(session)).hasComment).toBe(true);
   }, 10000);
 
   it("discards an empty comment (and its arrow) when the user clicks away", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
@@ -125,7 +141,11 @@ describe("Comments", () => {
 
   it("keeps the arrow on the clicked side of the node, and the text, after clicking away", async () => {
     const [nodePos, voidPos] = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return [screenToPage({ x: -95, y: -105 }), screenToPage({ x: 0, y: 60 })];
     });
     await drawComment(session, nodePos, "hello");
@@ -133,8 +153,10 @@ describe("Comments", () => {
       session.page.evaluate(() => {
         const fs = editor.getAnnotations().features as any[];
         return {
-          end: fs.find((f) => f.properties.type === "arrow")?.geometry.coordinates[1],
-          content: fs.find((f) => f.properties.type === "comment")?.properties.content
+          end: fs.find((f) => f.properties.type === "arrow")?.geometry
+            .coordinates[1],
+          content: fs.find((f) => f.properties.type === "comment")?.properties
+            .content
         };
       });
     const before = await read();
@@ -149,7 +171,11 @@ describe("Comments", () => {
 
   it("should create comment on node", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // On node n1 at (-100, -100)
       return screenToPage({ x: -100, y: -100 });
     });
@@ -165,7 +191,11 @@ describe("Comments", () => {
 
   it("should create comment on edge", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // Midpoint of edge e1 between (-100,-100) and (100,100) is (0,0)
       return screenToPage({ x: 0, y: 0 });
     });
@@ -197,7 +227,11 @@ describe("Comments", () => {
       editor.add(polygon);
       editor.unselect();
 
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // Center of the polygon
       return screenToPage({ x: 105, y: -75 });
     });
@@ -218,14 +252,22 @@ describe("Comments", () => {
   it("should create a second comment at its own coordinate, not the first's", async () => {
     // First comment, drawn near graph centre at (-40, -40).
     const firstPos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: -40, y: -40 });
     });
     await drawComment(session, firstPos, "note");
 
     // Second comment, drawn at a different on-screen graph point (40, 40).
     const secondPos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 40, y: 40 });
     });
     await drawComment(session, secondPos, "note");
@@ -258,7 +300,11 @@ describe("Comments", () => {
   // stay detached - not snap back or drag the whole comment along with it.
   it("should detach the arrow's node end when dragged away by hand", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // On node n1 at (-100, -100)
       return screenToPage({ x: -100, y: -100 });
     });
@@ -269,24 +315,28 @@ describe("Comments", () => {
     expect(before.arrowEndLink.type).toBe("node");
 
     // Detaching is off by default; opt in for this test.
-    await session.page.evaluate(() => editor.setOptions({ canDetach: () => true }));
+    await session.page.evaluate(() =>
+      editor.setOptions({ canDetach: () => true })
+    );
 
-    const { arrowId, endScreen, commentBefore } = await session.page.evaluate(() => {
-      const annotations = editor.getAnnotations();
-      const arrow = annotations.features.find(
-        (f) => f.properties.type === "arrow"
-      ) as any;
-      const comment = annotations.features.find(
-        (f) => f.properties.type === "comment"
-      ) as any;
-      const end = arrow.geometry.coordinates[1];
-      editor.select(arrow.id);
-      return {
-        arrowId: arrow.id,
-        endScreen: screenToPage({ x: end[0], y: end[1] }),
-        commentBefore: comment.geometry.coordinates
-      };
-    });
+    const { arrowId, endScreen, commentBefore } = await session.page.evaluate(
+      () => {
+        const annotations = editor.getAnnotations();
+        const arrow = annotations.features.find(
+          (f) => f.properties.type === "arrow"
+        ) as any;
+        const comment = annotations.features.find(
+          (f) => f.properties.type === "comment"
+        ) as any;
+        const end = arrow.geometry.coordinates[1];
+        editor.select(arrow.id);
+        return {
+          arrowId: arrow.id,
+          endScreen: screenToPage({ x: end[0], y: end[1] }),
+          commentBefore: comment.geometry.coordinates
+        };
+      }
+    );
 
     // Clear of the click-suppression window a drag-end sets (see
     // InteractionController.suppressClicksTemporarily), which would
@@ -332,7 +382,11 @@ describe("Comments", () => {
   // host app's own detect config survives the drag untouched.
   it("should turn off node/edge detection while dragging a comment over a node", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // Far from any node, so this comment's connector doesn't attach to n1.
       return screenToPage({ x: 0, y: -50 });
     });
@@ -410,7 +464,11 @@ describe("Comments", () => {
       editor.add(polygon);
       editor.unselect();
 
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // Inside the polygon, so the arrow's free end snaps to it.
       return screenToPage({ x: 105, y: -75 });
     });
@@ -465,7 +523,11 @@ describe("Comments", () => {
   // interactive drag - a different code path, previously untested.
   it("should keep a comment at the exact same offset from its node after a real layout run", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // On node n1 at (-100, -100)
       return screenToPage({ x: -100, y: -100 });
     });
@@ -477,7 +539,10 @@ describe("Comments", () => {
       const comment = feats.find((f) => f.properties.type === "comment") as any;
       const node = ogma.getNode("n1")!.getPosition();
       return {
-        offset: [comment.geometry.coordinates[0] - node.x, comment.geometry.coordinates[1] - node.y],
+        offset: [
+          comment.geometry.coordinates[0] - node.x,
+          comment.geometry.coordinates[1] - node.y
+        ],
         node
       };
     });
@@ -499,7 +564,10 @@ describe("Comments", () => {
       const comment = feats.find((f) => f.properties.type === "comment") as any;
       const node = ogma.getNode("n1")!.getPosition();
       return {
-        offset: [comment.geometry.coordinates[0] - node.x, comment.geometry.coordinates[1] - node.y],
+        offset: [
+          comment.geometry.coordinates[0] - node.x,
+          comment.geometry.coordinates[1] - node.y
+        ],
         node
       };
     });
@@ -541,7 +609,11 @@ describe("Comments", () => {
     });
 
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 105, y: -75 });
     });
     await drawComment(session, pos);
@@ -638,9 +710,9 @@ describe("Comments", () => {
     await session.page.mouse.move(endScreen.x, endScreen.y);
     await session.page.mouse.down();
 
-    const afterDown = await session.page.evaluate(
-      () => [...editor.getSelectedAnnotations().features.map((f) => f.id)]
-    );
+    const afterDown = await session.page.evaluate(() => [
+      ...editor.getSelectedAnnotations().features.map((f) => f.id)
+    ]);
     // The arrow stays selected - the polygon underneath it doesn't steal
     // the selection just because the click also lands inside its body.
     expect(afterDown).toEqual([arrowId]);
@@ -674,7 +746,11 @@ describe("Comments", () => {
   // by the time the draw gesture ends.
   it("should drop straight into edit mode after drawing, ready to type", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
@@ -692,7 +768,9 @@ describe("Comments", () => {
     expect(liveValue).toBe("first draft");
 
     // Deselecting commits the live textarea value into the real content.
-    await session.page.evaluate(() => { editor.unselect(); });
+    await session.page.evaluate(() => {
+      editor.unselect();
+    });
     const content = await session.page.evaluate(() => {
       const comment = editor
         .getAnnotations()
@@ -712,12 +790,18 @@ describe("Comments", () => {
   // the select click, or never firing on the second click).
   it("should require a second click to edit an already-selected comment, prefilled with its existing content", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
     await session.page.keyboard.type("existing note");
-    await session.page.evaluate(() => { editor.unselect(); });
+    await session.page.evaluate(() => {
+      editor.unselect();
+    });
 
     const commentScreen = await session.page.evaluate(() => {
       const comment = editor
@@ -747,7 +831,9 @@ describe("Comments", () => {
 
     // Appending text edits the existing content in place.
     await session.page.keyboard.type(" - updated");
-    await session.page.evaluate(() => { editor.unselect(); });
+    await session.page.evaluate(() => {
+      editor.unselect();
+    });
     const content = await session.page.evaluate(() => {
       const comment = editor
         .getAnnotations()
@@ -768,7 +854,11 @@ describe("Comments", () => {
   // with the separate interactive-drag cascade.
   it("should keep the connector attached to a growing comment box while typing", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       // On node n1, so the arrow's far end has a fixed reference point.
       return screenToPage({ x: -100, y: -100 });
     });
@@ -817,7 +907,11 @@ describe("Comments", () => {
 
   it("should send on Cmd/Ctrl+Enter, and keep plain Enter as a newline", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
@@ -860,7 +954,11 @@ describe("Comments", () => {
   it("should place a clicked comment at its offset in screen pixels, at any zoom", async () => {
     const pos = await session.page.evaluate(async () => {
       await ogma.view.setZoom(4, { duration: 0 });
-      editor.enableCommentDrawing({ offsetX: 200, offsetY: -150, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 200,
+        offsetY: -150,
+        ...demoStyles.comment
+      });
       // Far from any node or edge
       return screenToPage({ x: 0, y: -50 });
     });
@@ -887,7 +985,11 @@ describe("Comments", () => {
   it("should keep the typed text when sent from a comment clicked onto a node off-centre", async () => {
     const pos = await session.page.evaluate(() => {
       // The toolbar's own default offsets
-      editor.enableCommentDrawing({ offsetX: 200, offsetY: -150, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 200,
+        offsetY: -150,
+        ...demoStyles.comment
+      });
       // Off-centre on node n1 at (-100, -100)
       return screenToPage({ x: -95, y: -105 });
     });
@@ -903,13 +1005,20 @@ describe("Comments", () => {
     const gap = await session.page.evaluate(() => {
       const state = (editor as any).store.getState();
       const merged = (id: string) => state.getMergedFeature(id);
-      const comment = editor.getAnnotations().features.find((f: any) => f.properties.type === "comment");
-      const arrow = editor.getAnnotations().features.find((f: any) => f.properties.type === "arrow");
+      const comment = editor
+        .getAnnotations()
+        .features.find((f: any) => f.properties.type === "comment");
+      const arrow = editor
+        .getAnnotations()
+        .features.find((f: any) => f.properties.type === "arrow");
       const c = merged(comment.id);
       const [ax, ay] = merged(arrow.id).geometry.coordinates[0];
       const [x0, y0, x1, y1] = c.geometry.bbox;
       // distance from the endpoint to the comment bbox (0 when inside/on it)
-      return Math.hypot(Math.max(x0 - ax, 0, ax - x1), Math.max(y0 - ay, 0, ay - y1));
+      return Math.hypot(
+        Math.max(x0 - ax, 0, ax - x1),
+        Math.max(y0 - ay, 0, ay - y1)
+      );
     });
     expect(gap).toBeLessThan(2);
     await session.page.keyboard.down("Meta");
@@ -941,7 +1050,11 @@ describe("Comments", () => {
   // ends up DOM-after (visually above) the freshly-created editor overlay.
   it("should render the connector behind the box while editing, not on top of it", async () => {
     const pos = await session.page.evaluate(() => {
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);
@@ -1007,7 +1120,11 @@ describe("Comments", () => {
           );
         }
       );
-      editor.enableCommentDrawing({ offsetX: 50, offsetY: -50, ...demoStyles.comment });
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
       return screenToPage({ x: 0, y: -50 });
     });
     await drawComment(session, pos);

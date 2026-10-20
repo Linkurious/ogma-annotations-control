@@ -2,7 +2,14 @@ import Ogma from "@linkurious/ogma";
 import type { RawGraph } from "@linkurious/ogma";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Control, createCommentWithArrow, createBox, createArrow, SIDE_END, SIDE_START } from "../src";
+import {
+  Control,
+  createCommentWithArrow,
+  createBox,
+  createArrow,
+  SIDE_END,
+  SIDE_START
+} from "../src";
 import { installBrand } from "./brand";
 import "./style.css";
 
@@ -47,11 +54,36 @@ const graph: RawGraph = {
     }
   ],
   edges: [
-    { id: "e1", source: "Paris", target: "London", attributes: { text: "Eurostar" } },
-    { id: "e2", source: "Paris", target: "Brussels", attributes: { text: "Thalys" } },
-    { id: "e3", source: "Brussels", target: "Amsterdam", attributes: { text: "Thalys" } },
-    { id: "e4", source: "Brussels", target: "Cologne", attributes: { text: "ICE" } },
-    { id: "e5", source: "Cologne", target: "Berlin", attributes: { text: "ICE" } }
+    {
+      id: "e1",
+      source: "Paris",
+      target: "London",
+      attributes: { text: "Eurostar" }
+    },
+    {
+      id: "e2",
+      source: "Paris",
+      target: "Brussels",
+      attributes: { text: "Thalys" }
+    },
+    {
+      id: "e3",
+      source: "Brussels",
+      target: "Amsterdam",
+      attributes: { text: "Thalys" }
+    },
+    {
+      id: "e4",
+      source: "Brussels",
+      target: "Cologne",
+      attributes: { text: "ICE" }
+    },
+    {
+      id: "e5",
+      source: "Cologne",
+      target: "Berlin",
+      attributes: { text: "ICE" }
+    }
   ]
 };
 
@@ -65,13 +97,26 @@ ogma.styles.addRule({
     color: "#0094FF",
     outerStroke: { color: "#004A7F", width: 4, scalingMethod: "fixed" },
     innerStroke: { width: 3 },
-    text: { font: fontFamily, color: "#fff", backgroundColor: "#333", padding: 4, margin: 8, tip: false }
+    text: {
+      font: fontFamily,
+      color: "#fff",
+      backgroundColor: "#333",
+      padding: 4,
+      margin: 8,
+      tip: false
+    }
   },
   edgeAttributes: {
     color: "#0094FF",
     width: 4,
     stroke: { color: "#004A7F", width: 1 },
-    text: { font: fontFamily, color: "#fff", backgroundColor: "#004A7F", padding: 4, margin: 4 }
+    text: {
+      font: fontFamily,
+      color: "#fff",
+      backgroundColor: "#004A7F",
+      padding: 4,
+      margin: 4
+    }
   }
 });
 
@@ -106,9 +151,21 @@ const { comment, arrow } = createCommentWithArrow(
   "HQ · Paris",
   {
     commentStyle: {
-      style: { color: "#2d00a6", background: "#ede6ff", fontSize: 14, font: fontFamily, padding: 8, borderRadius: 8 }
+      style: {
+        color: "#2d00a6",
+        background: "#ede6ff",
+        fontSize: 14,
+        font: fontFamily,
+        padding: 8,
+        borderRadius: 8
+      }
     },
-    arrowStyle: { strokeType: "plain", strokeColor: "#2d00a6", strokeWidth: 2, head: "arrow" }
+    arrowStyle: {
+      strokeType: "plain",
+      strokeColor: "#2d00a6",
+      strokeWidth: 2,
+      head: "arrow"
+    }
   }
 );
 control.add(comment);
@@ -122,11 +179,17 @@ control.link(arrow.id, anchor, SIDE_END);
 // of the gap this example demonstrates - it'll drift off the cluster
 // after the layout runs and again after any geo toggle.
 const bb = ogma.getNodes(GROUP).getBoundingBox();
-const groupBox = createBox(bb.minX - 40, bb.minY - 40, bb.width + 80, bb.height + 80, {
-  strokeColor: "#e8346d",
-  strokeWidth: 2,
-  background: "rgba(232, 52, 109, 0.12)"
-});
+const groupBox = createBox(
+  bb.minX - 40,
+  bb.minY - 40,
+  bb.width + 80,
+  bb.height + 80,
+  {
+    strokeColor: "#e8346d",
+    strokeWidth: 2,
+    background: "rgba(232, 52, 109, 0.12)"
+  }
+);
 control.add(groupBox);
 
 // Plain node-to-node arrow, no comment on either end - the case that
@@ -153,7 +216,9 @@ const status = document.getElementById("status")!;
 toggle.addEventListener("change", async () => {
   status.textContent = "switching…";
   await ogma.geo.toggle({ duration: 500, disableNodeDragging: false });
-  status.textContent = ogma.geo.enabled() ? "geo mode" : "node-link (force layout)";
+  status.textContent = ogma.geo.enabled()
+    ? "geo mode"
+    : "node-link (force layout)";
 });
 
 Object.assign(window, { ogma, control, comment, arrow, groupBox, routeArrow });

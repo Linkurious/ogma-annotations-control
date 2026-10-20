@@ -23,7 +23,6 @@ Before installing Ogma Annotations, you need:
 
 Install the package using your preferred package manager:
 
-
 ```bash [npm]
 npm install -S @linkurious/ogma-annotations
 ```
@@ -35,7 +34,6 @@ yarn add @linkurious/ogma-annotations
 ```bash [pnpm]
 pnpm add @linkurious/ogma-annotations
 ```
-
 
 ## Basic Setup
 
@@ -489,7 +487,6 @@ controller.destroy();
 ogma.destroy();
 ```
 
-
 ## Best Practices
 
 ### 1. One Controller Per Ogma Instance
@@ -903,7 +900,6 @@ controller.add(arrow);
 
 Always use `createCommentWithArrow()` for programmatic creation, as comments require at least one arrow. The arrow automatically points from the target TO the comment and is linked to it.
 
-
 ## Links
 
 Links are a powerful feature that connect arrows to other annotations or graph elements. When you create a link, the arrow automatically follows the linked target. They are encoded within the annotation arrows themselves.
@@ -971,7 +967,6 @@ controller.add(arrow);
 ```
 
 You can link both the start and end points of an arrow by setting both `arrow.properties.link.start` and `arrow.properties.link.end`.
-
 
 ### Breaking Links
 
@@ -1253,7 +1248,6 @@ controller.add(shape);
 
 Polygons use GeoJSON coordinate format: `[[[x1, y1], [x2, y2], ...]]`. Note the triple array nesting - this allows for polygons with holes (not currently supported).
 
-
 ## Creating Comments
 
 Comments combine a text box with an arrow. Use `createCommentWithArrow()` to ensure proper linking.
@@ -1290,7 +1284,6 @@ controller.add(arrow);
 ```
 
 Always use `createCommentWithArrow()` rather than creating comments manually. This ensures the arrow is properly linked to the comment, which is required for comments to work correctly.
-
 
 ## Creating Linked Arrows
 
@@ -1681,7 +1674,6 @@ When polygon drawing is enabled:
 
 Polygons require at least 3 points. The system automatically closes the polygon by connecting the last point to the first.
 
-
 ## Drawing Comments
 
 Enable comment drawing mode with `enableCommentDrawing()`:
@@ -1846,7 +1838,6 @@ When erase mode is enabled:
 
 This is a separate workflow from selecting an annotation and clicking a
 trash/delete button - use whichever fits your UI, or offer both.
-
 
 ## Canceling Drawing
 
@@ -2062,7 +2053,6 @@ ogma.events.on("click", (evt) => {
 
 Using custom mouse handling means you're responsible for handling all edge cases, cancellation, and cleanup. For most use cases, use the built-in `enable*Drawing()` methods instead.
 
-
 ## Best Practices
 
 ### 1. Provide Visual Feedback
@@ -2198,7 +2188,9 @@ controller.enableBoxDrawing({ background: "rgba(52,152,219,0.2)" });
 controller.enablePolygonDrawing({ strokeColor: "#27ae60" });
 
 // Comment - click target, auto-positions
-controller.enableCommentDrawing({ commentStyle: { style: { background: "#FFFACD" } } });
+controller.enableCommentDrawing({
+  commentStyle: { style: { background: "#FFFACD" } }
+});
 
 // Cancel
 controller.cancelDrawing();
@@ -2207,13 +2199,39 @@ controller.cancelDrawing();
 ### Programmatic Creation
 
 ```typescript
-import { createArrow, createText, createBox, createPolygon, createCommentWithArrow } from "@linkurious/ogma-annotations";
+import {
+  createArrow,
+  createText,
+  createBox,
+  createPolygon,
+  createCommentWithArrow
+} from "@linkurious/ogma-annotations";
 
-const arrow = createArrow(0, 0, 100, 100, { head: "arrow", strokeColor: "#3498db" });
+const arrow = createArrow(0, 0, 100, 100, {
+  head: "arrow",
+  strokeColor: "#3498db"
+});
 const text = createText(50, 50, 150, 40, "Label", { fontSize: 16 });
 const box = createBox(0, 0, 200, 150, { background: "rgba(52,152,219,0.2)" });
-const polygon = createPolygon([[[0,0], [100,0], [50,100], [0,0]]], { style: { strokeColor: "#27ae60" } });
-const { comment, arrow: commentArrow } = createCommentWithArrow(100, 100, 250, 50, "Note", {});
+const polygon = createPolygon(
+  [
+    [
+      [0, 0],
+      [100, 0],
+      [50, 100],
+      [0, 0]
+    ]
+  ],
+  { style: { strokeColor: "#27ae60" } }
+);
+const { comment, arrow: commentArrow } = createCommentWithArrow(
+  100,
+  100,
+  250,
+  50,
+  "Note",
+  {}
+);
 
 controller.add(arrow);
 controller.add(text);
@@ -2256,7 +2274,10 @@ controller.on("history", ({ canUndo, canRedo }) => {});
 
 ```typescript
 // Save
-localStorage.setItem("annotations", JSON.stringify(controller.getAnnotations()));
+localStorage.setItem(
+  "annotations",
+  JSON.stringify(controller.getAnnotations())
+);
 
 // Load
 const saved = localStorage.getItem("annotations");
@@ -2270,8 +2291,16 @@ if (saved) controller.add(JSON.parse(saved));
 ### Type Guards
 
 ```typescript
-import { isArrow, isText, isBox, isPolygon, isComment } from "@linkurious/ogma-annotations";
-if (isArrow(annotation)) { /* Arrow */ }
+import {
+  isArrow,
+  isText,
+  isBox,
+  isPolygon,
+  isComment
+} from "@linkurious/ogma-annotations";
+if (isArrow(annotation)) {
+  /* Arrow */
+}
 ```
 
 ### Cleanup

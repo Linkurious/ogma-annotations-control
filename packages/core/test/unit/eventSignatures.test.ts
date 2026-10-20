@@ -230,10 +230,7 @@ describe("FeatureEvents - Event Signature Validation", () => {
           // Verify the update took effect
           const arrowEvent = event as Arrow;
           assert.isDefined(arrowEvent.properties.style);
-          assert.equal(
-            arrowEvent.properties.style?.strokeColor,
-            "red"
-          );
+          assert.equal(arrowEvent.properties.style?.strokeColor, "red");
 
           resolve();
         });
@@ -418,7 +415,10 @@ describe("FeatureEvents - Event Signature Validation", () => {
 
       // Link events fire when arrow handlers detect and create links
       // This typically happens during drag operations
-      assert.isFalse(linkCalled, "Link not called in this test (requires handler interaction)");
+      assert.isFalse(
+        linkCalled,
+        "Link not called in this test (requires handler interaction)"
+      );
     });
   });
 

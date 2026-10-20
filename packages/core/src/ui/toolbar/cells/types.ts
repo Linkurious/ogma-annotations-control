@@ -39,7 +39,7 @@ export interface ToolbarButtonItem {
   /** Tooltip label, shown on hover via the existing `data-tooltip` CSS. */
   title: string;
   /** Dynamic tooltip - overrides `title` per annotation when set. */
-getTitle?: (annotation: Text) => string;
+  getTitle?: (annotation: Text) => string;
   icon: IconName;
   action: (ctx: ToolbarCellContext) => void;
   /** Toggle state - button gets the `.active` class when this returns

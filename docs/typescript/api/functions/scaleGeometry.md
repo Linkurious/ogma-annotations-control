@@ -1,11 +1,7 @@
 # Function: scaleGeometry()
 
 ```ts
-function scaleGeometry(
-   geometry, 
-   scale, 
-   ox, 
-   oy): LineString | Polygon;
+function scaleGeometry(geometry, scale, ox, oy): LineString | Polygon;
 ```
 
 ## Parameters

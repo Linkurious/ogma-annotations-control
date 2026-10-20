@@ -1,10 +1,7 @@
 # Function: getAttachmentPointOnNode()
 
 ```ts
-function getAttachmentPointOnNode(
-   start, 
-   nodeCenter, 
-   nodeRadius): object;
+function getAttachmentPointOnNode(start, nodeCenter, nodeRadius): object;
 ```
 
 ## Parameters

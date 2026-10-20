@@ -12,7 +12,11 @@ import {
 } from "../../constants";
 import { Store } from "../../store";
 import { Comment, Id, ArrowProperties, isArrow } from "../../types";
-import { Arrow, createArrow, defaultArrowStyle } from "../../types/features/Arrow";
+import {
+  Arrow,
+  createArrow,
+  defaultArrowStyle
+} from "../../types/features/Arrow";
 
 // Below this distance (in graph units) between the drag's start and end
 // point, treat the gesture as a click rather than a drag.

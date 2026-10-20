@@ -74,9 +74,13 @@ describe("Multi-select drag", () => {
     // A brief engaging move, then the rest - a real click rarely lands on
     // the exact same pixel it's released from (see stickyNote.test.ts's
     // panning test for the same convention).
-    await session.page.mouse.move(from.x + Math.sign(dx || 1) * 5, from.y + Math.sign(dy || 1) * 5, {
-      steps: 2
-    });
+    await session.page.mouse.move(
+      from.x + Math.sign(dx || 1) * 5,
+      from.y + Math.sign(dy || 1) * 5,
+      {
+        steps: 2
+      }
+    );
     await session.page.mouse.move(from.x + dx, from.y + dy, { steps: 5 });
     await session.page.mouse.up();
   }

@@ -13,10 +13,7 @@ import {
 import { Store } from "../store";
 import { ClientMouseEvent, Id, Polygon } from "../types";
 import { detectPolygon } from "../types/features/Polygon";
-import {
-  simplifyPolygon,
-  updatePolygonBbox
-} from "../utils/polygon";
+import { simplifyPolygon, updatePolygonBbox } from "../utils/polygon";
 import { containerToClientPosition, updateBbox } from "../utils/utils";
 
 enum HandleType {
@@ -145,7 +142,10 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
       point: { x, y },
       vertexIndex
     };
-    this.store.setState({ hoveredHandle: vertexIndex ?? 0, hoveredFeature: this.annotation });
+    this.store.setState({
+      hoveredHandle: vertexIndex ?? 0,
+      hoveredFeature: this.annotation
+    });
   }
 
   handleMouseDown = (evt: MouseEvent): void => {
@@ -158,15 +158,17 @@ export class PolygonHandler extends Handler<Polygon, Handle> {
 
     this.dragStartPoint = this.clientToCanvas(evt);
     this.onDragStart(evt);
-    this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
-      detail: {
-        id: this.annotation,
-        position: {
-          x: evt.clientX,
-          y: evt.clientY
+    this.dispatchEvent(
+      new CustomEvent(EVT_DRAG_START, {
+        detail: {
+          id: this.annotation,
+          position: {
+            x: evt.clientX,
+            y: evt.clientY
+          }
         }
-      }
-    }));
+      })
+    );
     this.disablePanning();
   };
 

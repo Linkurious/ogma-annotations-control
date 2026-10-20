@@ -80,10 +80,10 @@ A turnkey style panel. It listens to the editor's selection and shows the
 [`AnnotationPanel`](#annotationpanel) for the selected annotation, hiding it
 during drags and when nothing is selected.
 
-| Prop | Type | Description |
-| --- | --- | --- |
-| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
-| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`. |
+| Prop          | Type                            | Description                                                         |
+| ------------- | ------------------------------- | ------------------------------------------------------------------- |
+| `placement`   | `PanelPlacement` _(optional)_   | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
+| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`.                           |
 
 ```tsx
 <AnnotationPanelController placement="top-right" orientation="horizontal" />
@@ -104,7 +104,10 @@ If you want to control rendering yourself, use the `useAnnotationPanel` hook,
 which returns the current `annotation` and `visible` state:
 
 ```tsx
-import { useAnnotationPanel, AnnotationPanel } from "@linkurious/ogma-annotations-react/ui";
+import {
+  useAnnotationPanel,
+  AnnotationPanel
+} from "@linkurious/ogma-annotations-react/ui";
 
 function MyPanel() {
   const { annotation, visible } = useAnnotationPanel();
@@ -118,12 +121,12 @@ The presentational style panel. Renders the right set of controls for the given
 annotation type (arrow, text/box/comment, or polygon). You normally render it
 via `AnnotationPanelController`, but you can drive it directly.
 
-| Prop | Type | Description |
-| --- | --- | --- |
-| `annotation` | `Annotation \| null` | The annotation to edit. |
-| `visible` | `boolean` | Whether the panel is shown. |
-| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
-| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`. |
+| Prop          | Type                            | Description                                                         |
+| ------------- | ------------------------------- | ------------------------------------------------------------------- |
+| `annotation`  | `Annotation \| null`            | The annotation to edit.                                             |
+| `visible`     | `boolean`                       | Whether the panel is shown.                                         |
+| `placement`   | `PanelPlacement` _(optional)_   | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
+| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`.                           |
 
 `PanelPlacement` is one of `"left"`, `"right"` (default), `"top"`, `"bottom"`,
 `"top-left"`, `"top-right"`, `"bottom-left"`, `"bottom-right"` — applied as a
@@ -146,13 +149,13 @@ it and is opt-in via `deleteMode`.
 
 <img src="/ui/add-menu.png" alt="AddMenu toolbar with drawing, history, erase, delete and export buttons" />
 
-| Prop | Type | Description |
-| --- | --- | --- |
-| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_ | Which drawing tools to show, and in what order. Defaults to all six: `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`. |
-| `styles` | `AnnotationToolbarStyles` _(optional)_ | Per-type default style overrides for the drawing tool buttons. |
-| `deleteMode` | `"select" \| "erase" \| "both"` _(optional)_ | Which deletion control(s) to show. Defaults to `"erase"`. |
-| `onJsonExport` | `() => void` _(optional)_ | Show a JSON export button that calls this. |
-| `onSvgExport` | `() => void` _(optional)_ | Show an SVG export button that calls this. |
+| Prop           | Type                                         | Description                                                                                                                           |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_          | Which drawing tools to show, and in what order. Defaults to all six: `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`. |
+| `styles`       | `AnnotationToolbarStyles` _(optional)_       | Per-type default style overrides for the drawing tool buttons.                                                                        |
+| `deleteMode`   | `"select" \| "erase" \| "both"` _(optional)_ | Which deletion control(s) to show. Defaults to `"erase"`.                                                                             |
+| `onJsonExport` | `() => void` _(optional)_                    | Show a JSON export button that calls this.                                                                                            |
+| `onSvgExport`  | `() => void` _(optional)_                    | Show an SVG export button that calls this.                                                                                            |
 
 ```tsx
 <AddMenu onJsonExport={exportJson} onSvgExport={exportSvg} />
@@ -193,12 +196,12 @@ target `annotation` and renders one section.
 The inline-SVG icon used throughout the components, in case you want to match
 the look in your own UI.
 
-| Prop | Type | Description |
-| --- | --- | --- |
-| `name` | `IconName` | One of the shared icon names. |
-| `size` | `number` _(optional, default 18)_ | Width/height in px. |
-| `rotate` | `boolean` _(optional)_ | Rotate 180°. |
-| `className` | `string` _(optional)_ | Extra class. |
+| Prop        | Type                              | Description                   |
+| ----------- | --------------------------------- | ----------------------------- |
+| `name`      | `IconName`                        | One of the shared icon names. |
+| `size`      | `number` _(optional, default 18)_ | Width/height in px.           |
+| `rotate`    | `boolean` _(optional)_            | Rotate 180°.                  |
+| `className` | `string` _(optional)_             | Extra class.                  |
 
 ## Theming
 

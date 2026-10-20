@@ -34,7 +34,7 @@ export interface BoxProperties extends AnnotationProps {
 /**
  * Box annotation feature
  */
-export interface Box extends AnnotationFeature<GeoJSONPoint, BoxProperties> { }
+export interface Box extends AnnotationFeature<GeoJSONPoint, BoxProperties> {}
 
 export const isBox = (
   a: AnnotationFeature<Geometry, AnnotationProps>

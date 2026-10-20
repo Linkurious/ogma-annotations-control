@@ -3,6 +3,7 @@
 Properties for Comment annotations
 
 Comments are specialized annotations that:
+
 - Always maintain fixed screen-space size
 - Always have at least one arrow pointing TO them
 - Can be collapsed (icon) or expanded (text box)
@@ -22,7 +23,7 @@ optional author: string;
 
 Optional metadata
 
-***
+---
 
 ### content
 
@@ -32,7 +33,7 @@ content: string;
 
 Text content (similar to text annotation)
 
-***
+---
 
 ### height
 
@@ -42,7 +43,7 @@ height: number;
 
 Height (auto-grows with content, pixels)
 
-***
+---
 
 ### mode
 
@@ -52,7 +53,7 @@ mode: "collapsed" | "expanded";
 
 Display mode: collapsed (icon) or expanded (text box)
 
-***
+---
 
 ### style?
 
@@ -68,7 +69,7 @@ Styling
 optional timestamp: Date;
 ```
 
-***
+---
 
 ### type
 

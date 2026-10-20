@@ -1,17 +1,14 @@
 # Function: getBoxPosition()
 
 ```ts
-function getBoxPosition<T>(
-   t, 
-   fixedSize, 
-   zoom): object;
+function getBoxPosition<T>(t, fixedSize, zoom): object;
 ```
 
 ## Type Parameters
 
 ### T
 
-`T` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`T` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 ## Parameters
 

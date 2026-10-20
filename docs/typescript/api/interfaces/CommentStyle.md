@@ -29,7 +29,7 @@ optional autoGrow: boolean;
 
 Auto-grow height with content (default: true)
 
-***
+---
 
 ### background?
 
@@ -63,7 +63,7 @@ optional collapseZoomThreshold: number;
 
 Zoom threshold below which comment auto-collapses (default: 0.5)
 
-***
+---
 
 ### color?
 
@@ -80,12 +80,13 @@ optional connectorMode: "rigid" | "elastic";
 ```
 
 Connector-line behavior when the attachment point moves (default: "rigid").
+
 - "rigid": the comment translates by the same offset as the moved
   attachment point — the arrow keeps its length/angle, whole callout moves.
 - "elastic": the comment stays put; the arrow re-anchors to the nearest
   point on the comment box, so the line can stretch/rotate.
 
-***
+---
 
 ### expandOnSelect?
 
@@ -95,7 +96,7 @@ optional expandOnSelect: boolean;
 
 Expand to full width when selected (default: false)
 
-***
+---
 
 ### fixedSize?
 
@@ -149,7 +150,7 @@ optional iconBorderColor: string;
 
 Border color for collapsed icon
 
-***
+---
 
 ### iconBorderWidth?
 
@@ -159,7 +160,7 @@ optional iconBorderWidth: number;
 
 Border width for collapsed icon
 
-***
+---
 
 ### iconColor?
 
@@ -169,7 +170,7 @@ optional iconColor: string;
 
 Background color for collapsed icon (default: "#FFD700")
 
-***
+---
 
 ### iconSize?
 
@@ -179,7 +180,7 @@ optional iconSize: number;
 
 Size when collapsed (default: 32px)
 
-***
+---
 
 ### iconSymbol?
 
@@ -189,7 +190,7 @@ optional iconSymbol: string;
 
 Icon to display when collapsed (default: built-in SVG message icon; set e.g. "💬" for a text/emoji icon, or an `<svg viewBox=...>` string for a colorful icon; scripts/handlers are stripped)
 
-***
+---
 
 ### maxHeight?
 
@@ -199,7 +200,7 @@ optional maxHeight: number;
 
 Maximum height before scrolling (default: 480px, undefined = no limit)
 
-***
+---
 
 ### minHeight?
 
@@ -209,7 +210,7 @@ optional minHeight: number;
 
 Minimum height (default: 60px)
 
-***
+---
 
 ### padding?
 
@@ -256,7 +257,7 @@ optional shadow: boolean;
 
 Show drop shadow on comment box (default: true)
 
-***
+---
 
 ### showAuthor?
 
@@ -277,7 +278,7 @@ optional showSendButton: boolean;
 
 Show "send" button in edit mode (default: true)
 
-***
+---
 
 ### strokeColor?
 
@@ -302,4 +303,3 @@ optional strokeWidth: number;
 ```
 
 Stroke width
-

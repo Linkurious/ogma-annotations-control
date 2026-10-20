@@ -1,10 +1,7 @@
 # Function: setArrowStart()
 
 ```ts
-function setArrowStart(
-   a, 
-   x, 
-   y): void;
+function setArrowStart(a, x, y): void;
 ```
 
 ## Parameters

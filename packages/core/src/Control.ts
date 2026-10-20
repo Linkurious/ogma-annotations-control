@@ -100,8 +100,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private updateManager: UpdateManager;
   private commentManager: CommentManager;
 
-  constructor(ogma: Ogma,
-    options: Partial<ControllerOptions> = {}) {
+  constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
     this.ogma = ogma;
 
@@ -110,13 +109,25 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store = createStore(mergedOptions);
     this.index = new Index(this.store);
 
-    this.snapping = new Snapping(this.ogma, {
-      detectMargin: options.detectMargin === undefined ? 10 : options.detectMargin,
-      magnetRadius: options.magnetRadius === undefined ? 10 : options.magnetRadius,
-    }, this.index, this.store);
-    this.links = new Links(this.ogma, this.snapping, this.store, (arrow, link) => {
-      this.emit(EVT_LINK, { arrow, link });
-    });
+    this.snapping = new Snapping(
+      this.ogma,
+      {
+        detectMargin:
+          options.detectMargin === undefined ? 10 : options.detectMargin,
+        magnetRadius:
+          options.magnetRadius === undefined ? 10 : options.magnetRadius
+      },
+      this.index,
+      this.store
+    );
+    this.links = new Links(
+      this.ogma,
+      this.snapping,
+      this.store,
+      (arrow, link) => {
+        this.emit(EVT_LINK, { arrow, link });
+      }
+    );
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
@@ -168,15 +179,21 @@ export class Control extends EventEmitter<FeatureEvents> {
         position: (evt as CustomEvent).detail.position
       })
     );
-    this.editor.addEventListener(EVT_DRAG_END, (evt) => this.emit(EVT_DRAG_END, {
-      id: (evt as CustomEvent).detail.id,
-      position: (evt as CustomEvent).detail.position
-    }));
+    this.editor.addEventListener(EVT_DRAG_END, (evt) =>
+      this.emit(EVT_DRAG_END, {
+        id: (evt as CustomEvent).detail.id,
+        position: (evt as CustomEvent).detail.position
+      })
+    );
 
     // Forward click event from interaction controller
-    this.interactions.addEventListener(EVT_CLICK, ((evt: CustomEvent<ClickEvent>) => this.emit(EVT_CLICK, {
-      id: evt.detail.id, position: evt.detail.position
-    })) as unknown as EventListener);
+    this.interactions.addEventListener(EVT_CLICK, ((
+      evt: CustomEvent<ClickEvent>
+    ) =>
+      this.emit(EVT_CLICK, {
+        id: evt.detail.id,
+        position: evt.detail.position
+      })) as unknown as EventListener);
 
     this.store.temporal.subscribe((state) => {
       this.emit(EVT_HISTORY, {
@@ -911,10 +928,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events
-      .off(this.onRotate)
-      .off(this.onZoom)
-      .off(this.onLayout);
+    this.ogma.events.off(this.onRotate).off(this.onZoom).off(this.onLayout);
     this.links.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();

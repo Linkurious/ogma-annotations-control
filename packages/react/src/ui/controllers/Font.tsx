@@ -35,7 +35,12 @@ export const FontController: React.FC<FontControllerProps> = ({
   };
 
   const open = () => {
-    setActiveIndex(Math.max(FONTS.findIndex((f) => f.value === currentFont), 0));
+    setActiveIndex(
+      Math.max(
+        FONTS.findIndex((f) => f.value === currentFont),
+        0
+      )
+    );
     setIsOpen(true);
     // Actual focus move happens in the effect below, once the "open" class
     // (and so real visibility/focusability - the popup is `display: none`

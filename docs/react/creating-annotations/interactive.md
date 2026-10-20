@@ -155,7 +155,9 @@ boolean:
 editor.setOptions({ canComment: (target) => target.type !== "edge" });
 
 // A click on a denied target creates nothing, and drawing mode stays active
-editor.on("commentDenied", ({ target }) => toast(`No comments on ${target.type}`));
+editor.on("commentDenied", ({ target }) =>
+  toast(`No comments on ${target.type}`)
+);
 
 // Fires while hovering in drawing mode; the cursor turns `not-allowed` on denied
 // targets (disable with `commentDeniedCursor: false` to indicate it yourself)

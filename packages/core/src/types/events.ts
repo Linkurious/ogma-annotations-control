@@ -37,7 +37,6 @@ export interface ClickEvent {
   position: { x: number; y: number };
 }
 
-
 /** Event related to a single annotation feature */
 export interface DragEvent {
   /** Annotation ID involved in the event */

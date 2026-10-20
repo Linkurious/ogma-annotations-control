@@ -70,14 +70,8 @@ describe("useAnnotationPanel / AnnotationPanelController", () => {
 
     act(() => handlers.onShow(arrow));
 
-    expect(container.firstChild).toHaveProperty(
-      "dataset.visible",
-      "true"
-    );
-    expect(container.firstChild).toHaveProperty(
-      "dataset.annotationId",
-      "a1"
-    );
+    expect(container.firstChild).toHaveProperty("dataset.visible", "true");
+    expect(container.firstChild).toHaveProperty("dataset.annotationId", "a1");
   });
 
   it("stays hidden when onShow fires for a type not in enabledTypes", () => {

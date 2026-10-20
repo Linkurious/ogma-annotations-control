@@ -60,9 +60,7 @@ describe("BackgroundController", () => {
         currentBackground={BACKGROUNDS[1].value}
       />
     );
-    expect(
-      container.querySelectorAll(".color-circle-primary").length
-    ).toBe(1);
+    expect(container.querySelectorAll(".color-circle-primary").length).toBe(1);
   });
 
   it("exposes an aria-label per swatch and aria-pressed on the current one", () => {
@@ -93,9 +91,8 @@ describe("BackgroundController", () => {
         currentBackground={BACKGROUNDS[0].value}
       />
     );
-    const swatch = container.querySelectorAll(".color-circle")[
-      transparentIndex
-    ];
+    const swatch =
+      container.querySelectorAll(".color-circle")[transparentIndex];
     expect(swatch.getAttribute("aria-label")).toBe("No background");
   });
 

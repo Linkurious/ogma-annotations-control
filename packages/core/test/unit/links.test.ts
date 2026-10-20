@@ -27,7 +27,7 @@ describe("Links", () => {
         getFeature: (_id: string) => undefined
       }))
     } as unknown as Store;
-    
+
     mockSnapping = {} as unknown as Snapping;
   });
 
@@ -47,7 +47,9 @@ describe("Links", () => {
 
     // Check that the link was created
     expect(links["registry"]["links"].size).toBeGreaterThan(0);
-    expect(links["registry"]["linksByArrowId"].get(arrowId)?.[side]).toBeDefined();
+    expect(
+      links["registry"]["linksByArrowId"].get(arrowId)?.[side]
+    ).toBeDefined();
   });
 
   // Add a link between an arrow and an edge
@@ -119,7 +121,9 @@ describe("Links", () => {
     links.remove(arrow, side);
 
     expect(links["registry"]["links"].size).toBe(0);
-    expect(links["registry"]["linksByArrowId"].get(arrowId)?.[side]).toBeUndefined();
+    expect(
+      links["registry"]["linksByArrowId"].get(arrowId)?.[side]
+    ).toBeUndefined();
   });
 
   // Remove a non-existing link
@@ -304,37 +308,47 @@ describe("Links", () => {
       expect(moved.properties.link?.end?.magnet).toEqual({ x: 0.25, y: 0 });
       expect(moved.geometry.coordinates[1][0]).toBeCloseTo(25);
 
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
   });
 
   describe("stale link registry entries", () => {
-  it("does not crash node-position updates when the linked arrow is gone", () => {
-    const ogma = createOgma();
-    ogma.addNode({ id: "A", attributes: { x: 0, y: 0, radius: 18 } });
-    const control = new Control(ogma);
-    // @ts-expect-error links is private
-    const registry = control.links["registry"];
-    registry.linksByArrowId.set("__stale_arrow__", { start: "__stale_link__" });
-    registry.links.set("__stale_link__", {
-      id: "__stale_link__",
-      arrow: "__stale_arrow__",
-      target: "A",
-      targetType: "node",
-      magnet: { type: "node", center: false },
-      side: "start"
+    it("does not crash node-position updates when the linked arrow is gone", () => {
+      const ogma = createOgma();
+      ogma.addNode({ id: "A", attributes: { x: 0, y: 0, radius: 18 } });
+      const control = new Control(ogma);
+      // @ts-expect-error links is private
+      const registry = control.links["registry"];
+      registry.linksByArrowId.set("__stale_arrow__", {
+        start: "__stale_link__"
+      });
+      registry.links.set("__stale_link__", {
+        id: "__stale_link__",
+        arrow: "__stale_arrow__",
+        target: "A",
+        targetType: "node",
+        magnet: { type: "node", center: false },
+        side: "start"
+      });
+      registry.nodeToLink.set("A", new Set(["__stale_link__"]));
+
+      expect(() =>
+        // @ts-expect-error updateFromNodePositions is private
+        control.links["sync"].updateFromNodePositions(ogma.getNodes(["A"]))
+      ).not.toThrow();
     });
-    registry.nodeToLink.set("A", new Set(["__stale_link__"]));
-
-    expect(() =>
-      // @ts-expect-error updateFromNodePositions is private
-      control.links["sync"].updateFromNodePositions(ogma.getNodes(["A"]))
-    ).not.toThrow();
   });
-});
 
-describe("programmatic annotation move refreshes linked arrows", () => {
+  describe("programmatic annotation move refreshes linked arrows", () => {
     let ogma: ReturnType<typeof createOgma>;
     let control: Control;
 
@@ -344,8 +358,16 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     });
 
     afterEach(() => {
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
 
     it("should update arrow endpoint when linked text is moved programmatically", () => {
@@ -354,13 +376,19 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // snap point = center(100,100) + (0.5*100, 0*50) = (150, 100)
       const arrow = createArrow(0, 100, 150, 100);
       arrow.properties.link = {
-        end: { id: text.id, side: "end", type: "text", magnet: { x: 0.5, y: 0 } }
+        end: {
+          id: text.id,
+          side: "end",
+          type: "text",
+          magnet: { x: 0.5, y: 0 }
+        }
       };
 
       control.add(text);
       control.add(arrow);
 
-      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+      const beforeEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[1].slice();
 
       control.update({
@@ -368,8 +396,8 @@ describe("programmatic annotation move refreshes linked arrows", () => {
         geometry: { type: "Point", coordinates: [300, 300] }
       });
 
-      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[1];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
 
       expect(afterEnd[0]).not.toEqual(beforeEnd[0]);
       expect(afterEnd[1]).not.toEqual(beforeEnd[1]);
@@ -381,13 +409,19 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       const comment = createComment(100, 100, "review");
       const arrow = createArrow(0, 100, 200, 100);
       arrow.properties.link = {
-        end: { id: comment.id, side: "end", type: "comment", magnet: { x: 0.5, y: 0 } }
+        end: {
+          id: comment.id,
+          side: "end",
+          type: "comment",
+          magnet: { x: 0.5, y: 0 }
+        }
       };
 
       control.add(comment);
       control.add(arrow);
 
-      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+      const beforeEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[1].slice();
 
       control.update({
@@ -395,8 +429,8 @@ describe("programmatic annotation move refreshes linked arrows", () => {
         geometry: { type: "Point", coordinates: [300, 300] }
       });
 
-      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[1];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
 
       expect(afterEnd[0]).not.toEqual(beforeEnd[0]);
       expect(afterEnd[1]).not.toEqual(beforeEnd[1]);
@@ -406,19 +440,25 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       const text = createText(100, 100, 100, 50, "Hello");
       const arrow = createArrow(0, 100, 150, 100);
       arrow.properties.link = {
-        end: { id: text.id, side: "end", type: "text", magnet: { x: 0.5, y: 0 } }
+        end: {
+          id: text.id,
+          side: "end",
+          type: "text",
+          magnet: { x: 0.5, y: 0 }
+        }
       };
 
       control.add(text);
       control.add(arrow);
 
-      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+      const beforeEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[1].slice();
 
       control.updateStyle(text.id, { color: "red" });
 
-      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[1];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
 
       expect(afterEnd[0]).toEqual(beforeEnd[0]);
       expect(afterEnd[1]).toEqual(beforeEnd[1]);
@@ -434,8 +474,18 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // Arrow pre-placed at the actual snap points
       const arrow = createArrow(100, 25, 200, 25);
       arrow.properties.link = {
-        start: { id: textA.id, side: "start", type: "text", magnet: { x: 0.5, y: 0 } },
-        end: { id: textB.id, side: "end", type: "text", magnet: { x: -0.5, y: 0 } }
+        start: {
+          id: textA.id,
+          side: "start",
+          type: "text",
+          magnet: { x: 0.5, y: 0 }
+        },
+        end: {
+          id: textB.id,
+          side: "end",
+          type: "text",
+          magnet: { x: -0.5, y: 0 }
+        }
       };
 
       control.add(textA);
@@ -443,12 +493,15 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       control.add(arrow);
 
       // Move textA center to [50, 225]: new right-edge snap = [100, 225]
-      control.update({ id: textA.id, geometry: { type: "Point", coordinates: [50, 225] } });
+      control.update({
+        id: textA.id,
+        geometry: { type: "Point", coordinates: [50, 225] }
+      });
 
-      const afterStart = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[0];
-      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[1];
+      const afterStart = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[0];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
 
       // Start should have moved to textA's new right edge
       expect(afterStart[0]).toBeCloseTo(100);
@@ -469,8 +522,16 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     });
 
     afterEach(() => {
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
 
     it("should move arrow endpoint to icon edge when comment collapses", () => {
@@ -508,9 +569,8 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // @ts-expect-error commit is private
       control.links["sync"].commit();
 
-      const collapsedEnd = control
-        .getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[1];
+      const collapsedEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
 
       // Endpoint should shift inward from the expanded right edge (100) to the icon right edge (16)
       expect(expandedEnd[0]).toBeCloseTo(100);
@@ -529,8 +589,16 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     });
 
     afterEach(() => {
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
 
     it("translates the comment and the whole arrow by the node's delta", () => {
@@ -554,9 +622,11 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // @ts-expect-error commit is private
       control.links["sync"].commit();
 
-      const beforeStart = control.getAnnotation<Arrow>(arrow.id)!
+      const beforeStart = control
+        .getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[0].slice();
-      const beforeEnd = control.getAnnotation<Arrow>(arrow.id)!
+      const beforeEnd = control
+        .getAnnotation<Arrow>(arrow.id)!
         .geometry.coordinates[1].slice();
       const beforeComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -575,10 +645,10 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // @ts-expect-error nodePositionTimeout is private
       clearTimeout(control.links["sync"].nodePositionTimeout);
 
-      const afterStart = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[0];
-      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!
-        .geometry.coordinates[1];
+      const afterStart = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[0];
+      const afterEnd = control.getAnnotation<Arrow>(arrow.id)!.geometry
+        .coordinates[1];
       const afterComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
       ).coordinates;
@@ -610,7 +680,10 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // @ts-expect-error links is private
       control.links.add(arrow1, "start", "node1", "node", { x: 0, y: 0 });
       // @ts-expect-error links is private
-      control.links.add(arrow1, "end", comment.id, "comment", { x: -0.5, y: 0 });
+      control.links.add(arrow1, "end", comment.id, "comment", {
+        x: -0.5,
+        y: 0
+      });
       // arrow2 also targets the comment, from an unrelated free point — it's
       // no longer a 1:1 attachment, but rigid-follow no longer requires one.
       // @ts-expect-error links is private
@@ -711,8 +784,16 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     });
 
     afterEach(() => {
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
 
     it("translates the comment when its edge attachment point moves", () => {
@@ -729,7 +810,10 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       control.add(arrow);
 
       // @ts-expect-error links is private
-      control.links.add(arrow, "start", comment.id, "comment", { x: 0, y: 0.5 });
+      control.links.add(arrow, "start", comment.id, "comment", {
+        x: 0,
+        y: 0.5
+      });
       // @ts-expect-error links is private
       control.links.add(arrow, "end", "edge1", "edge", { x: 0.5, y: 0 });
 
@@ -827,8 +911,16 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     });
 
     afterEach(() => {
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
 
     it("moves only the tip, leaving the comment in place so it can be detached", () => {
@@ -840,7 +932,10 @@ describe("programmatic annotation move refreshes linked arrows", () => {
 
       // Start -> comment's left edge; end is a free point (no link).
       // @ts-expect-error links is private
-      control.links.add(arrow, "start", comment.id, "comment", { x: -0.5, y: 0 });
+      control.links.add(arrow, "start", comment.id, "comment", {
+        x: -0.5,
+        y: 0
+      });
       // @ts-expect-error links is private
       control.links.refresh();
       // @ts-expect-error commit is private
@@ -862,7 +957,10 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       };
       // Deterministic client->graph mapping — the headless test ogma has no
       // real viewport/container to derive it from.
-      arrowHandler.clientToCanvas = (evt) => ({ x: evt.clientX, y: evt.clientY });
+      arrowHandler.clientToCanvas = (evt) => ({
+        x: evt.clientX,
+        y: evt.clientY
+      });
 
       const beforeComment = (
         control.getAnnotation(comment.id)!.geometry as { coordinates: number[] }
@@ -913,8 +1011,16 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     });
 
     afterEach(() => {
-      try { control.destroy(); } catch (_) { /* headless */ }
-      try { ogma.destroy(); } catch (_) { /* headless */ }
+      try {
+        control.destroy();
+      } catch (_) {
+        /* headless */
+      }
+      try {
+        ogma.destroy();
+      } catch (_) {
+        /* headless */
+      }
     });
 
     // Regression test: dragging a polygon body used to leave its attached
@@ -925,7 +1031,13 @@ describe("programmatic annotation move refreshes linked arrows", () => {
     // call stack once the drag committed.
     it("translates two attached comments by the drag delta across many mousemove frames, without compounding", () => {
       const polygon = createPolygon([
-        [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]]
+        [
+          [0, 0],
+          [100, 0],
+          [100, 100],
+          [0, 100],
+          [0, 0]
+        ]
       ]);
       const comment1 = createComment(300, 0, "c1");
       const comment2 = createComment(300, 100, "c2");
@@ -939,12 +1051,32 @@ describe("programmatic annotation move refreshes linked arrows", () => {
       // convert it again). The polygon's bbox here is [0,0,100,100], so its
       // corners (100,0) and (100,100) are relative (1,0) and (1,1).
       arrow1.properties.link = {
-        start: { id: comment1.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
-        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 1, y: 0 } }
+        start: {
+          id: comment1.id,
+          side: "start",
+          type: "comment",
+          magnet: { x: -0.5, y: 0 }
+        },
+        end: {
+          id: polygon.id,
+          side: "end",
+          type: "polygon",
+          magnet: { x: 1, y: 0 }
+        }
       };
       arrow2.properties.link = {
-        start: { id: comment2.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
-        end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 1, y: 1 } }
+        start: {
+          id: comment2.id,
+          side: "start",
+          type: "comment",
+          magnet: { x: -0.5, y: 0 }
+        },
+        end: {
+          id: polygon.id,
+          side: "end",
+          type: "polygon",
+          magnet: { x: 1, y: 1 }
+        }
       };
 
       control.add(polygon);
@@ -1000,15 +1132,31 @@ describe("programmatic annotation move refreshes linked arrows", () => {
 
     it("does not exceed the call stack with many comments and many drag frames", () => {
       const polygon = createPolygon([
-        [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0]]
+        [
+          [0, 0],
+          [100, 0],
+          [100, 100],
+          [0, 100],
+          [0, 0]
+        ]
       ]);
       control.add(polygon);
       for (let n = 0; n < 5; n++) {
         const comment = createComment(300 + n * 10, n * 20, `c${n}`);
         const arrow = createArrow(100, n * 20, 100, n * 20);
         arrow.properties.link = {
-          start: { id: comment.id, side: "start", type: "comment", magnet: { x: -0.5, y: 0 } },
-          end: { id: polygon.id, side: "end", type: "polygon", magnet: { x: 1, y: (20 * n) / 100 } }
+          start: {
+            id: comment.id,
+            side: "start",
+            type: "comment",
+            magnet: { x: -0.5, y: 0 }
+          },
+          end: {
+            id: polygon.id,
+            side: "end",
+            type: "polygon",
+            magnet: { x: 1, y: (20 * n) / 100 }
+          }
         };
         control.add(comment);
         control.add(arrow);

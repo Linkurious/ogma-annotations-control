@@ -284,8 +284,7 @@ export class InteractionController extends EventTarget {
   };
 
   private onMouseDown = (evt: MouseEvent) => {
-    if (Date.now() < this.suppressClickUntil)
-      return;
+    if (Date.now() < this.suppressClickUntil) return;
 
     // A click on a URL inside text/comment content should open the link, not
     // select or edit the annotation. Skip hit-detection and selection entirely
@@ -341,9 +340,11 @@ export class InteractionController extends EventTarget {
     // id at a time - so when two same-type annotations are both selected,
     // only one is draggable. Switch the handler onto whatever's clicked.
     if (annotation) {
-      this.dispatchEvent(new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
-        detail: { id: annotation.id }
-      }));
+      this.dispatchEvent(
+        new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
+          detail: { id: annotation.id }
+        })
+      );
     }
   };
 
@@ -358,7 +359,10 @@ export class InteractionController extends EventTarget {
 
     if (this.savedPan !== undefined) {
       this.ogma.setOptions({
-        interactions: { pan: { enabled: this.savedPan }, drag: { enabled: this.savedDrag } }
+        interactions: {
+          pan: { enabled: this.savedPan },
+          drag: { enabled: this.savedDrag }
+        }
       });
       this.savedPan = undefined;
       this.savedDrag = undefined;
@@ -385,7 +389,8 @@ export class InteractionController extends EventTarget {
         // onMouseDown already added it above if it wasn't selected before -
         // toggling again here would immediately undo that add.
         if (evt.ctrlKey || evt.metaKey) {
-          if (this.mouseDownState.wasSelected) state.toggleSelection(annotation.id);
+          if (this.mouseDownState.wasSelected)
+            state.toggleSelection(annotation.id);
         } else if (!state.selectedFeatures.has(annotation.id)) {
           state.setSelectedFeatures([annotation.id]);
         }
@@ -395,14 +400,17 @@ export class InteractionController extends EventTarget {
       }
 
       // Dispatch click event for UI components to respond
-      this.dispatchEvent(new CustomEvent(EVT_CLICK, {
-        detail: {
-          id: annotation?.id ?? null, position: {
-            x: evt.clientX,
-            y: evt.clientY
+      this.dispatchEvent(
+        new CustomEvent(EVT_CLICK, {
+          detail: {
+            id: annotation?.id ?? null,
+            position: {
+              x: evt.clientX,
+              y: evt.clientY
+            }
           }
-        }
-      }));
+        })
+      );
     }
 
     this.mouseDownState = null;

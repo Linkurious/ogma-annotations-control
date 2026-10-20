@@ -64,7 +64,10 @@ export class ColorCell implements ToolbarCell {
     this.swatch.className = "oa-toolbar-swatch";
     this.dropdown.element
       .querySelector(".oa-toolbar-dropdown-trigger")!
-      .insertBefore(this.swatch, this.dropdown.element.querySelector(".oa-toolbar-dropdown-label"));
+      .insertBefore(
+        this.swatch,
+        this.dropdown.element.querySelector(".oa-toolbar-dropdown-label")
+      );
 
     const grid = document.createElement("div");
     grid.className = "oa-toolbar-swatch-grid";
@@ -72,7 +75,10 @@ export class ColorCell implements ToolbarCell {
       const cell = document.createElement("button");
       cell.type = "button";
       cell.className = "oa-toolbar-swatch-cell";
-      cell.classList.toggle("oa-toolbar-swatch-cell-transparent", s.fill === "transparent");
+      cell.classList.toggle(
+        "oa-toolbar-swatch-cell-transparent",
+        s.fill === "transparent"
+      );
       cell.title = s.fill;
       cell.setAttribute(
         "aria-label",
@@ -138,7 +144,10 @@ export class ColorCell implements ToolbarCell {
     const current =
       annotation.properties.style?.background || defaultTextStyle.background!;
     this.swatch.style.setProperty("--oa-swatch-fill", current);
-    this.swatch.classList.toggle("oa-toolbar-swatch-transparent", current === "transparent");
+    this.swatch.classList.toggle(
+      "oa-toolbar-swatch-transparent",
+      current === "transparent"
+    );
   }
 
   public destroy(): void {

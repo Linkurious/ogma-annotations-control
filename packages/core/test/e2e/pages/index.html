@@ -1,23 +1,22 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>text annotations</title>
-  <style>
-    #graph-container {
-      width: 512px;
-      height: 512px;
-      background: #fff;
-      /* Ogma's HTML overlay layer (used for text/box/comment bodies) isn't
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>text annotations</title>
+    <style>
+      #graph-container {
+        width: 512px;
+        height: 512px;
+        background: #fff;
+        /* Ogma's HTML overlay layer (used for text/box/comment bodies) isn't
          clipped to the container by itself - a note dragged out large
          enough, or placed near the edge, visibly spills onto the blank
          page past this box otherwise. overflow doesn't affect the content
          box's size/position (unlike border/padding), so this is safe for
          the e2e tests' pixel-exact screen<->graph coordinate math. */
-      overflow: hidden;
-      /* Off the viewport's (0,0) origin by default, and asymmetric (so a
+        overflow: hidden;
+        /* Off the viewport's (0,0) origin by default, and asymmetric (so a
          swapped x/y coordinate-transform regression would also be caught) -
          every e2e spec drives the mouse through screenToPage()/
          containerToPage() (see index.ts), which account for wherever this
@@ -27,22 +26,21 @@
          one. A library that works correctly here works correctly at (0,0)
          too; the reverse isn't true - see utils/utils.ts's
          containerToClientPosition. */
-      margin-left: 137px;
-      margin-top: 83px;
-    }
+        margin-left: 137px;
+        margin-top: 83px;
+      }
 
-    body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: #f2f2f2;
-    }
-  </style>
-</head>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #f2f2f2;
+      }
+    </style>
+  </head>
 
-<body>
-  <div id="graph-container"></div>
-  <script type="module" src="/index.ts"></script>
-</body>
-
+  <body>
+    <div id="graph-container"></div>
+    <script type="module" src="/index.ts"></script>
+  </body>
 </html>

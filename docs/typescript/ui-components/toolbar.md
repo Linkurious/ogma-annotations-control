@@ -68,25 +68,25 @@ settled on what fits your app.
 
 ## Options
 
-| Option | Type | Description |
-| --- | --- | --- |
-| `control` | `Control` | The annotation controller to bind to. |
-| `container` | `HTMLElement` _(optional)_ | Element the toolbar mounts into. Defaults to `document.body`. |
-| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the toolbar docks to. Defaults to `"bottom"`. |
-| `orientation` | `PanelOrientation` _(optional)_ | `"horizontal"` (default) or `"vertical"`. |
-| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_ | Which drawing tools to show, and in what order. Defaults to all six: `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`. |
-| `styles` | `AnnotationToolbarStyles` _(optional)_ | Per-type default style overrides for the drawing tool buttons. |
-| `deleteMode` | `"select" \| "erase" \| "both"` _(optional)_ | Which deletion control(s) to show. Defaults to `"erase"`. |
-| `onJsonExport` | `() => void` _(optional)_ | Show a JSON export button that calls this. |
-| `onSvgExport` | `() => void` _(optional)_ | Show an SVG export button that calls this. |
+| Option         | Type                                         | Description                                                                                                                           |
+| -------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `control`      | `Control`                                    | The annotation controller to bind to.                                                                                                 |
+| `container`    | `HTMLElement` _(optional)_                   | Element the toolbar mounts into. Defaults to `document.body`.                                                                         |
+| `placement`    | `PanelPlacement` _(optional)_                | Which screen edge/corner the toolbar docks to. Defaults to `"bottom"`.                                                                |
+| `orientation`  | `PanelOrientation` _(optional)_              | `"horizontal"` (default) or `"vertical"`.                                                                                             |
+| `enabledTypes` | `ToolbarDrawingType[]` _(optional)_          | Which drawing tools to show, and in what order. Defaults to all six: `["arrow", "comment", "sticky-note", "box", "text", "polygon"]`. |
+| `styles`       | `AnnotationToolbarStyles` _(optional)_       | Per-type default style overrides for the drawing tool buttons.                                                                        |
+| `deleteMode`   | `"select" \| "erase" \| "both"` _(optional)_ | Which deletion control(s) to show. Defaults to `"erase"`.                                                                             |
+| `onJsonExport` | `() => void` _(optional)_                    | Show a JSON export button that calls this.                                                                                            |
+| `onSvgExport`  | `() => void` _(optional)_                    | Show an SVG export button that calls this.                                                                                            |
 
 ## Methods
 
-| Method | Description |
-| --- | --- |
-| `setPlacement(placement)` | Change which edge/corner the toolbar docks to at runtime. |
-| `setOrientation(orientation)` | Switch between horizontal and vertical layout at runtime. |
-| `destroy()` | Detach all event listeners and remove the toolbar from the DOM. |
+| Method                        | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `setPlacement(placement)`     | Change which edge/corner the toolbar docks to at runtime.       |
+| `setOrientation(orientation)` | Switch between horizontal and vertical layout at runtime.       |
+| `destroy()`                   | Detach all event listeners and remove the toolbar from the DOM. |
 
 ## Layout
 
@@ -150,7 +150,7 @@ built-in defaults still apply. This is separate from the package-level
 `defaultArrowStyle` / `defaultTextStyle` / etc. singletons (see
 [Arrow Styles](../styling/arrow-styles) and
 [Text Styles](../styling/text-styles)): those are global fallbacks used when
-*no* style value is given anywhere; `styles` here is scoped to this one
+_no_ style value is given anywhere; `styles` here is scoped to this one
 toolbar instance and always wins for the keys it sets.
 
 ## Theming

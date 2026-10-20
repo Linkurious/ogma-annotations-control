@@ -22,7 +22,8 @@ const FILES = {
   typescript: {
     output: "AI_REFERENCE_TYPESCRIPT.md",
     title: "Ogma Annotations - TypeScript Reference",
-    description: "Core TypeScript API, usage patterns, and examples for @linkurious/ogma-annotations",
+    description:
+      "Core TypeScript API, usage patterns, and examples for @linkurious/ogma-annotations",
     sections: [
       {
         title: "Installation & Setup",
@@ -50,7 +51,8 @@ const FILES = {
   react: {
     output: "AI_REFERENCE_REACT.md",
     title: "Ogma Annotations - React Reference",
-    description: "React integration with hooks, context provider, and component patterns",
+    description:
+      "React integration with hooks, context provider, and component patterns",
     sections: [
       {
         title: "Installation & Setup",
@@ -74,7 +76,8 @@ const FILES = {
   api: {
     output: "AI_REFERENCE_API.md",
     title: "Ogma Annotations - API Reference",
-    description: "Complete API reference: Control class, interfaces, factory functions, types, and events",
+    description:
+      "Complete API reference: Control class, interfaces, factory functions, types, and events",
     sections: [
       {
         title: "Control Class",
@@ -83,12 +86,52 @@ const FILES = {
       {
         title: "Interfaces",
         subsections: [
-          { title: "Arrow", files: ["typescript/api/interfaces/Arrow.md", "typescript/api/interfaces/ArrowProperties.md", "typescript/api/interfaces/ArrowStyles.md"] },
-          { title: "Text", files: ["typescript/api/interfaces/Text.md", "typescript/api/interfaces/TextStyle.md"] },
-          { title: "Box", files: ["typescript/api/interfaces/Box.md", "typescript/api/interfaces/BoxStyle.md", "typescript/api/interfaces/BoxProperties.md"] },
-          { title: "Polygon", files: ["typescript/api/interfaces/Polygon.md", "typescript/api/interfaces/PolygonStyle.md", "typescript/api/interfaces/PolygonProperties.md"] },
-          { title: "Comment", files: ["typescript/api/interfaces/Comment.md", "typescript/api/interfaces/CommentStyle.md", "typescript/api/interfaces/CommentProps.md"] },
-          { title: "Other", files: ["typescript/api/interfaces/AnnotationCollection.md", "typescript/api/interfaces/Link.md"] }
+          {
+            title: "Arrow",
+            files: [
+              "typescript/api/interfaces/Arrow.md",
+              "typescript/api/interfaces/ArrowProperties.md",
+              "typescript/api/interfaces/ArrowStyles.md"
+            ]
+          },
+          {
+            title: "Text",
+            files: [
+              "typescript/api/interfaces/Text.md",
+              "typescript/api/interfaces/TextStyle.md"
+            ]
+          },
+          {
+            title: "Box",
+            files: [
+              "typescript/api/interfaces/Box.md",
+              "typescript/api/interfaces/BoxStyle.md",
+              "typescript/api/interfaces/BoxProperties.md"
+            ]
+          },
+          {
+            title: "Polygon",
+            files: [
+              "typescript/api/interfaces/Polygon.md",
+              "typescript/api/interfaces/PolygonStyle.md",
+              "typescript/api/interfaces/PolygonProperties.md"
+            ]
+          },
+          {
+            title: "Comment",
+            files: [
+              "typescript/api/interfaces/Comment.md",
+              "typescript/api/interfaces/CommentStyle.md",
+              "typescript/api/interfaces/CommentProps.md"
+            ]
+          },
+          {
+            title: "Other",
+            files: [
+              "typescript/api/interfaces/AnnotationCollection.md",
+              "typescript/api/interfaces/Link.md"
+            ]
+          }
         ]
       },
       {
@@ -530,10 +573,18 @@ async function main() {
 
   console.log("\n✓ All files generated successfully!");
   console.log("\nAI Reference URLs (after deployment):");
-  console.log("  https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_TYPESCRIPT.md");
-  console.log("  https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_REACT.md");
-  console.log("  https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_API.md");
-  console.log("  https://linkurious.github.io/ogma-annotations-control/llms.txt");
+  console.log(
+    "  https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_TYPESCRIPT.md"
+  );
+  console.log(
+    "  https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_REACT.md"
+  );
+  console.log(
+    "  https://linkurious.github.io/ogma-annotations-control/AI_REFERENCE_API.md"
+  );
+  console.log(
+    "  https://linkurious.github.io/ogma-annotations-control/llms.txt"
+  );
 }
 
 main().catch(console.error);

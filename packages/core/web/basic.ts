@@ -27,9 +27,11 @@ await ogma.setGraph({
 await ogma.view.set({ x: 0, y: 0, zoom: 0.5 }, { duration: 0 });
 
 // Comments are not allowed on edges; hover/click feedback shown in #status
-control.setOptions({ canComment: (target) => {
-  return target.type !== "edge" || target.id === 'e01';
- }});
+control.setOptions({
+  canComment: (target) => {
+    return target.type !== "edge" || target.id === "e01";
+  }
+});
 const status = document.getElementById("status")!;
 control.on("commentHover", ({ target, allowed }) => {
   status.textContent = `${target.type}: ${allowed ? "allowed" : "not allowed"}`;

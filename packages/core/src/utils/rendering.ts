@@ -14,10 +14,7 @@ export const ANNOTATION_LINK_CLASS = "ogma-annotation-link";
 export function isAnnotationLinkTarget(target: EventTarget | null): boolean {
   let el = target as Element | null;
   while (el) {
-    if (
-      el.classList &&
-      el.classList.contains(ANNOTATION_LINK_CLASS)
-    )
+    if (el.classList && el.classList.contains(ANNOTATION_LINK_CLASS))
       return true;
     el = el.parentElement;
   }
@@ -50,7 +47,8 @@ export function createUrlPattern(): RegExp {
  * label can never be split across two wrapped lines by a naive
  * post-wrap regex pass. Groups: 1 = label, 2 = url.
  */
-const MARKDOWN_LINK_REGEX_SOURCE = "\\[([^\\]\\n]+)\\]\\((https?://[^\\s)<]+)\\)";
+const MARKDOWN_LINK_REGEX_SOURCE =
+  "\\[([^\\]\\n]+)\\]\\((https?://[^\\s)<]+)\\)";
 
 /**
  * Returns a fresh global RegExp matching a markdown-style `[label](url)`

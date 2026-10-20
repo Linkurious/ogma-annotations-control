@@ -62,7 +62,9 @@ describe("isVisible", () => {
   it("removes an existing DOM node once a feature goes visible -> hidden", () => {
     const text = createText(0, 0, 50, 50, "a");
     let hidden = false;
-    control = new Control(ogma, { isVisible: (a) => !(hidden && a.id === text.id) });
+    control = new Control(ogma, {
+      isVisible: (a) => !(hidden && a.id === text.id)
+    });
     control.add(text);
 
     let root = renderAll();
@@ -83,11 +85,13 @@ describe("isVisible", () => {
     control.add(text);
     control.select(text.id);
 
-    expect(control.getAnnotations().features.map((f) => f.id)).toContain(text.id);
-    expect(control.getAnnotation(text.id)).toBeDefined();
-    expect(control.getSelectedAnnotations().features.map((f) => f.id)).toContain(
+    expect(control.getAnnotations().features.map((f) => f.id)).toContain(
       text.id
     );
+    expect(control.getAnnotation(text.id)).toBeDefined();
+    expect(
+      control.getSelectedAnnotations().features.map((f) => f.id)
+    ).toContain(text.id);
     expect(control.isAnnotationVisible(text.id)).toBe(false);
   });
 });

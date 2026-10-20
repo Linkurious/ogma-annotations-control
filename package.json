@@ -4,6 +4,9 @@
   "description": "A tool to draw texts and arrows on top of Ogma",
   "type": "module",
   "scripts": {
+    "prepare": "husky",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "e2e:test": "npm run test:e2e -ws --if-present",
     "test": "npm run test:unit -ws --if-present",
     "test:ogma-floor": "node scripts/test-ogma-floor.mjs",
@@ -62,15 +65,13 @@
     "packages/core",
     "packages/react"
   ],
-  "prettier": {
-    "printWidth": 80,
-    "trailingComma": "none"
-  },
   "devDependencies": {
     "@linkurious/code-tools": "^0.0.15",
     "@types/node": "^22.20.2",
     "gh-pages": "^6.1.1",
+    "husky": "9.1.7",
     "ogma-5-3-11": "npm:@linkurious/ogma@5.3.12",
+    "oxfmt": "0.73.0",
     "rollup": "4.62.4",
     "rollup-plugin-dts": "6.5.1",
     "vitepress": "^1.1.3",

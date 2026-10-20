@@ -8,7 +8,7 @@ function getBbox<T>(b): BBox;
 
 ### T
 
-`T` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`T` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 ## Parameters
 

@@ -1,10 +1,7 @@
 # Function: setArrowEnd()
 
 ```ts
-function setArrowEnd(
-   a, 
-   x, 
-   y): void;
+function setArrowEnd(a, x, y): void;
 ```
 
 ## Parameters

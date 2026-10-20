@@ -1,0 +1,4 @@
+files=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$files" ] && exit 0
+echo "$files" | xargs npx oxfmt --no-error-on-unmatched-pattern
+echo "$files" | xargs git add

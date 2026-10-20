@@ -1,4 +1,4 @@
-import type { Point, EdgeList, EdgeId, } from "@linkurious/ogma";
+import type { Point, EdgeList, EdgeId } from "@linkurious/ogma";
 import { geometry } from "@linkurious/ogma";
 import { TARGET_TYPES } from "../../constants";
 import { subtract, length } from "../../utils/vec";
@@ -123,7 +123,18 @@ export function snapToEdges(
     const tolerance = magnetRadius + halfWidth;
 
     const result = curvature
-      ? findClosestPointOnQuadraticCurve(point, source, target, geometry.getQuadraticCurveControlPoint(source.x, source.y, target.x, target.y, curvature))
+      ? findClosestPointOnQuadraticCurve(
+          point,
+          source,
+          target,
+          geometry.getQuadraticCurveControlPoint(
+            source.x,
+            source.y,
+            target.x,
+            target.y,
+            curvature
+          )
+        )
       : findClosestPointOnLine(point, source, target);
 
     if (!result || result.distance > tolerance) continue;

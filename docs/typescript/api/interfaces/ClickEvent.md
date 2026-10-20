@@ -12,7 +12,7 @@ optional id: Id;
 
 Annotation ID involved in the event
 
-***
+---
 
 ### position
 

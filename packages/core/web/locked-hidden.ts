@@ -41,9 +41,19 @@ const { comment, arrow: commentArrow } = createCommentWithArrow(
   "Comment",
   {
     commentStyle: {
-      style: { color: "#00806B", background: "#fff", font: fontFamily, fontSize: 14 }
+      style: {
+        color: "#00806B",
+        background: "#fff",
+        font: fontFamily,
+        fontSize: 14
+      }
     },
-    arrowStyle: { strokeType: "plain", strokeColor: "#00806B", strokeWidth: 2, head: "arrow" }
+    arrowStyle: {
+      strokeType: "plain",
+      strokeColor: "#00806B",
+      strokeWidth: 2,
+      head: "arrow"
+    }
   }
 );
 const arrow = createArrow(-60, 60, 140, 60, {

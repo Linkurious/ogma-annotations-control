@@ -59,14 +59,14 @@ The annotation to add
 
 `this`
 
-***
+---
 
 ### addListener()
 
 ```ts
 addListener<T>(
-   event, 
-   fn, 
+   event,
+   fn,
    context?): this;
 ```
 
@@ -74,7 +74,7 @@ addListener<T>(
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -108,7 +108,7 @@ Cancel the current drawing operation
 
 this for chaining
 
-***
+---
 
 ### canRedo()
 
@@ -124,7 +124,7 @@ Check if there are changes to redo
 
 true if redo is possible
 
-***
+---
 
 ### canUndo()
 
@@ -140,7 +140,7 @@ Check if there are changes to undo
 
 true if undo is possible
 
-***
+---
 
 ### clearHistory()
 
@@ -154,7 +154,7 @@ Clear the undo/redo history
 
 `void`
 
-***
+---
 
 ### destroy()
 
@@ -168,7 +168,7 @@ Destroy the controller and its elements
 
 `void`
 
-***
+---
 
 ### disableEraseMode()
 
@@ -182,7 +182,7 @@ Turn erase mode off. No-op if it isn't active.
 
 `this`
 
-***
+---
 
 ### editFeature()
 
@@ -210,7 +210,7 @@ editable again.
 
 `this`
 
-***
+---
 
 ### emit()
 
@@ -224,7 +224,7 @@ Calls each of the listeners registered for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -249,6 +249,7 @@ enableArrowDrawing(style?): this;
 Enable arrow drawing mode - the recommended way to add arrows.
 
 Call this method when the user clicks an "Add Arrow" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create an arrow at that position with the specified style
 3. Start the interactive drawing process
@@ -274,8 +275,8 @@ this for chaining
 #### Example
 
 ```ts
-addArrowButton.addEventListener('click', () => {
-  control.enableArrowDrawing({ strokeColor: '#3A03CF', strokeWidth: 2 });
+addArrowButton.addEventListener("click", () => {
+  control.enableArrowDrawing({ strokeColor: "#3A03CF", strokeWidth: 2 });
 });
 ```
 
@@ -283,7 +284,7 @@ addArrowButton.addEventListener('click', () => {
 
 startArrow for low-level programmatic control
 
-***
+---
 
 ### enableBoxDrawing()
 
@@ -294,6 +295,7 @@ enableBoxDrawing(style?): this;
 Enable box drawing mode - the recommended way to add boxes.
 
 Call this method when the user clicks an "Add Box" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a box at that position with the specified style
 3. Start the interactive drawing process (drag to size)
@@ -319,8 +321,8 @@ this for chaining
 #### Example
 
 ```ts
-addBoxButton.addEventListener('click', () => {
-  control.enableBoxDrawing({ background: '#EDE6FF', borderRadius: 8 });
+addBoxButton.addEventListener("click", () => {
+  control.enableBoxDrawing({ background: "#EDE6FF", borderRadius: 8 });
 });
 ```
 
@@ -328,7 +330,7 @@ addBoxButton.addEventListener('click', () => {
 
 startBox for low-level programmatic control
 
-***
+---
 
 ### enableCommentDrawing()
 
@@ -339,6 +341,7 @@ enableCommentDrawing(options): this;
 Enable comment drawing mode - the recommended way to add comments.
 
 Call this method when the user clicks an "Add Comment" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a comment with an arrow pointing to that position
 3. Smart positioning: automatically finds the best placement for the comment box
@@ -387,10 +390,10 @@ this for chaining
 #### Example
 
 ```ts
-addCommentButton.addEventListener('click', () => {
+addCommentButton.addEventListener("click", () => {
   control.enableCommentDrawing({
-    commentStyle: { color: '#3A03CF', background: '#EDE6FF' },
-    arrowStyle: { strokeColor: '#3A03CF', head: 'halo-dot' }
+    commentStyle: { color: "#3A03CF", background: "#EDE6FF" },
+    arrowStyle: { strokeColor: "#3A03CF", head: "halo-dot" }
   });
 });
 ```
@@ -399,7 +402,7 @@ addCommentButton.addEventListener('click', () => {
 
 startComment for low-level programmatic control
 
-***
+---
 
 ### enableEraseMode()
 
@@ -421,7 +424,7 @@ this for chaining
 
 disableEraseMode to turn erase mode off
 
-***
+---
 
 ### enablePlacement()
 
@@ -447,7 +450,7 @@ The text or box annotation to place
 
 this for chaining
 
-***
+---
 
 ### enablePolygonDrawing()
 
@@ -458,6 +461,7 @@ enablePolygonDrawing(style?): this;
 Enable polygon drawing mode - the recommended way to add polygons.
 
 Call this method when the user clicks an "Add Polygon" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a polygon starting at that position with the specified style
 3. Start the interactive drawing process (click points to draw shape)
@@ -483,8 +487,11 @@ this for chaining
 #### Example
 
 ```ts
-addPolygonButton.addEventListener('click', () => {
-  control.enablePolygonDrawing({ strokeColor: '#3A03CF', background: 'rgba(58, 3, 207, 0.15)' });
+addPolygonButton.addEventListener("click", () => {
+  control.enablePolygonDrawing({
+    strokeColor: "#3A03CF",
+    background: "rgba(58, 3, 207, 0.15)"
+  });
 });
 ```
 
@@ -492,7 +499,7 @@ addPolygonButton.addEventListener('click', () => {
 
 startPolygon for low-level programmatic control
 
-***
+---
 
 ### enableStickyNoteDrawing()
 
@@ -510,6 +517,7 @@ handles to resize it afterward.
 
 Call this method when the user clicks an "Add sticky note" button. The
 control will:
+
 1. Wait for the next mousedown event
 2. Create the note at that position and start the interactive
    corner-drag, already selected
@@ -536,8 +544,8 @@ this for chaining
 #### Example
 
 ```ts
-addStickyNoteButton.addEventListener('click', () => {
-  control.enableStickyNoteDrawing({ background: '#FFEB99' });
+addStickyNoteButton.addEventListener("click", () => {
+  control.enableStickyNoteDrawing({ background: "#FFEB99" });
 });
 ```
 
@@ -545,7 +553,7 @@ addStickyNoteButton.addEventListener('click', () => {
 
 startStickyNote for low-level programmatic control
 
-***
+---
 
 ### enableTextDrawing()
 
@@ -556,6 +564,7 @@ enableTextDrawing(style?): this;
 Enable text drawing mode - the recommended way to add text annotations.
 
 Call this method when the user clicks an "Add Text" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a text box at that position with the specified style
 3. Start the interactive drawing/editing process
@@ -581,8 +590,8 @@ this for chaining
 #### Example
 
 ```ts
-addTextButton.addEventListener('click', () => {
-  control.enableTextDrawing({ color: '#3A03CF', fontSize: 24 });
+addTextButton.addEventListener("click", () => {
+  control.enableTextDrawing({ color: "#3A03CF", fontSize: 24 });
 });
 ```
 
@@ -590,7 +599,7 @@ addTextButton.addEventListener('click', () => {
 
 startText for low-level programmatic control
 
-***
+---
 
 ### eventNames()
 
@@ -633,7 +642,7 @@ The id of the annotation to retrieve
 
 The annotation with the given id, or undefined if not found
 
-***
+---
 
 ### getAnnotations()
 
@@ -649,7 +658,7 @@ Get all annotations in the controller
 
 A FeatureCollection containing all annotations
 
-***
+---
 
 ### getOgma()
 
@@ -666,7 +675,7 @@ going through a renderer/handler internal to `Control`.
 
 `Ogma`
 
-***
+---
 
 ### getRotation()
 
@@ -683,7 +692,7 @@ Text box's world-space bounds.
 
 `number`
 
-***
+---
 
 ### getSelected()
 
@@ -699,7 +708,7 @@ Get the first selected annotation (for backwards compatibility)
 
 The currently selected annotation, or null if none selected
 
-***
+---
 
 ### getSelectedAnnotations()
 
@@ -715,7 +724,7 @@ Get the currently selected annotations as a collection
 
 A FeatureCollection of selected annotations
 
-***
+---
 
 ### getZoom()
 
@@ -731,7 +740,7 @@ units for its anchor-point math (same conversion `Handles` does).
 
 `number`
 
-***
+---
 
 ### isAnnotationEditable()
 
@@ -752,7 +761,7 @@ right now, per the `isEditable` option? `false` for an unknown id.
 
 `boolean`
 
-***
+---
 
 ### isAnnotationVisible()
 
@@ -773,7 +782,7 @@ option? `false` for an unknown id.
 
 `boolean`
 
-***
+---
 
 ### isDrawing()
 
@@ -785,7 +794,7 @@ isDrawing(): boolean;
 
 `boolean`
 
-***
+---
 
 ### isEraseModeActive()
 
@@ -799,7 +808,7 @@ Whether erase mode is currently active.
 
 `boolean`
 
-***
+---
 
 ### link()
 
@@ -807,8 +816,8 @@ Whether erase mode is currently active.
 
 ```ts
 link(
-   arrowId, 
-   targetNode, 
+   arrowId,
+   targetNode,
    side): this;
 ```
 
@@ -836,8 +845,8 @@ Attach an arrow to a node at the specified side
 
 ```ts
 link(
-   arrowId, 
-   target, 
+   arrowId,
+   target,
    side): this;
 ```
 
@@ -861,7 +870,7 @@ Attach an arrow to an annotation at the specified side
 
 `this`
 
-***
+---
 
 ### listenerCount()
 
@@ -893,7 +902,7 @@ Return the listeners registered for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -909,9 +918,9 @@ Return the listeners registered for a given event.
 
 ```ts
 off<T>(
-   event, 
-   fn?, 
-   context?, 
+   event,
+   fn?,
+   context?,
    once?): this;
 ```
 
@@ -919,7 +928,7 @@ off<T>(
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -947,8 +956,8 @@ off<T>(
 
 ```ts
 on<T>(
-   event, 
-   fn, 
+   event,
+   fn,
    context?): this;
 ```
 
@@ -958,7 +967,7 @@ Add a listener for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -982,8 +991,8 @@ Add a listener for a given event.
 
 ```ts
 once<T>(
-   event, 
-   fn, 
+   event,
+   fn,
    context?): this;
 ```
 
@@ -993,7 +1002,7 @@ Add a one-time listener for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -1027,7 +1036,7 @@ Redo the last undone change
 
 true if redo was successful, false if no changes to redo
 
-***
+---
 
 ### remove()
 
@@ -1049,7 +1058,7 @@ The annotation(s) to remove
 
 `this`
 
-***
+---
 
 ### removeAllListeners()
 
@@ -1073,9 +1082,9 @@ keyof FeatureEvents
 
 ```ts
 removeListener<T>(
-   event, 
-   fn?, 
-   context?, 
+   event,
+   fn?,
+   context?,
    once?): this;
 ```
 
@@ -1085,7 +1094,7 @@ Remove the listeners of a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -1131,7 +1140,7 @@ The id(s) of the annotation(s) to select
 
 this for chaining
 
-***
+---
 
 ### setOptions()
 
@@ -1287,15 +1296,15 @@ showSendButton: boolean;
 textPlaceholder: string;
 ```
 
-***
+---
 
 ### setScale()
 
 ```ts
 setScale(
-   id, 
-   scale, 
-   ox, 
+   id,
+   scale,
+   ox,
    oy): this;
 ```
 
@@ -1333,14 +1342,14 @@ Origin y coordinate
 
 this for chaining
 
-***
+---
 
 ### startArrow()
 
 ```ts
 startArrow(
-   x, 
-   y, 
+   x,
+   y,
    arrow?): Control;
 ```
 
@@ -1353,6 +1362,7 @@ You must handle mouse events and optionally create the arrow object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1387,10 +1397,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const arrow = createArrow(x, y, x, y, { strokeColor: '#3A03CF' });
+  const arrow = createArrow(x, y, x, y, { strokeColor: "#3A03CF" });
   control.startArrow(x, y, arrow);
 });
 ```
@@ -1399,14 +1409,14 @@ ogma.events.once('mousedown', (evt) => {
 
 enableArrowDrawing for the recommended high-level API
 
-***
+---
 
 ### startBox()
 
 ```ts
 startBox(
-   x, 
-   y, 
+   x,
+   y,
    box?): Control;
 ```
 
@@ -1419,6 +1429,7 @@ You must handle mouse events and optionally create the box object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1453,10 +1464,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const box = createBox(x, y, 100, 50, { background: '#EDE6FF' });
+  const box = createBox(x, y, 100, 50, { background: "#EDE6FF" });
   control.startBox(x, y, box);
 });
 ```
@@ -1465,15 +1476,15 @@ ogma.events.once('mousedown', (evt) => {
 
 enableBoxDrawing for the recommended high-level API
 
-***
+---
 
 ### startComment()
 
 ```ts
 startComment(
-   x, 
-   y, 
-   comment, 
+   x,
+   y,
+   comment,
    options?): this;
 ```
 
@@ -1486,6 +1497,7 @@ You must handle mouse events and create the comment object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1540,10 +1552,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const comment = createComment(x, y, 'My comment', { color: '#3A03CF' });
+  const comment = createComment(x, y, "My comment", { color: "#3A03CF" });
   control.startComment(x, y, comment);
 });
 ```
@@ -1552,14 +1564,14 @@ ogma.events.once('mousedown', (evt) => {
 
 enableCommentDrawing for the recommended high-level API
 
-***
+---
 
 ### startPolygon()
 
 ```ts
 startPolygon(
-   x, 
-   y, 
+   x,
+   y,
    polygon): this;
 ```
 
@@ -1572,6 +1584,7 @@ You must handle mouse events and create the polygon object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1606,10 +1619,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const polygon = createPolygon([[[x, y]]], { strokeColor: '#3A03CF' });
+  const polygon = createPolygon([[[x, y]]], { strokeColor: "#3A03CF" });
   control.startPolygon(x, y, polygon);
 });
 ```
@@ -1618,14 +1631,14 @@ ogma.events.once('mousedown', (evt) => {
 
 enablePolygonDrawing for the recommended high-level API
 
-***
+---
 
 ### startStickyNote()
 
 ```ts
 startStickyNote(
-   x, 
-   y, 
+   x,
+   y,
    style?): this;
 ```
 
@@ -1666,14 +1679,14 @@ this for chaining
 
 enableStickyNoteDrawing for the recommended high-level API
 
-***
+---
 
 ### startText()
 
 ```ts
 startText(
-   x, 
-   y, 
+   x,
+   y,
    text?): Control;
 ```
 
@@ -1686,6 +1699,7 @@ You must handle mouse events and optionally create the text object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1720,10 +1734,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const text = createText(x, y, 0, 0, 'Hello', { color: '#3A03CF' });
+  const text = createText(x, y, 0, 0, "Hello", { color: "#3A03CF" });
   control.startText(x, y, text);
 });
 ```
@@ -1732,7 +1746,7 @@ ogma.events.once('mousedown', (evt) => {
 
 enableTextDrawing for the recommended high-level API
 
-***
+---
 
 ### toggleComment()
 
@@ -1756,7 +1770,7 @@ The id of the comment to toggle
 
 this for chaining
 
-***
+---
 
 ### undo()
 
@@ -1772,7 +1786,7 @@ Undo the last change
 
 true if undo was successful, false if no changes to undo
 
-***
+---
 
 ### unselect()
 
@@ -1796,7 +1810,7 @@ The id(s) of the annotation(s) to unselect, or undefined to unselect all
 
 this for chaining
 
-***
+---
 
 ### update()
 
@@ -1813,7 +1827,7 @@ geometry, properties, and style. Updates are merged with existing data.
 
 ##### A
 
-`A` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`A` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 #### Parameters
 
@@ -1836,8 +1850,11 @@ this for chaining
 controller.update({
   id: arrowId,
   geometry: {
-    type: 'LineString',
-    coordinates: [[0, 0], [200, 200]]
+    type: "LineString",
+    coordinates: [
+      [0, 0],
+      [200, 200]
+    ]
   }
 });
 
@@ -1845,11 +1862,11 @@ controller.update({
 controller.update({
   id: textId,
   geometry: {
-    type: 'Point',
+    type: "Point",
     coordinates: [100, 100]
   },
   properties: {
-    content: 'Updated text'
+    content: "Updated text"
   }
 });
 
@@ -1858,13 +1875,13 @@ controller.update({
   id: boxId,
   properties: {
     style: {
-      background: '#ff0000'
+      background: "#ff0000"
     }
   }
 });
 ```
 
-***
+---
 
 ### updateStyle()
 
@@ -1878,7 +1895,7 @@ Update the style of the annotation with the given id
 
 ##### A
 
-`A` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`A` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 #### Parameters
 

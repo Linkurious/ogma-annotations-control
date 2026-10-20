@@ -14,7 +14,7 @@ Base properties for all annotations.
 optional link: Partial<Record<Side, ExportedLink>>;
 ```
 
-***
+---
 
 ### style?
 
@@ -31,4 +31,3 @@ type: "arrow";
 ```
 
 Type of annotation
-

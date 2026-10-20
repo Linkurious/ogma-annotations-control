@@ -132,7 +132,10 @@ export abstract class AnnotationStyleToolbar<
    * none (handled by `setItems` directly), `"custom"` calls its own
    * `build()` (the color picker's escape hatch), `"button"`/`"dropdown"`
    * go through the two generic cell classes. */
-  private buildCell(item: ToolbarItem, ctx: ToolbarCellContext): ToolbarCell | null {
+  private buildCell(
+    item: ToolbarItem,
+    ctx: ToolbarCellContext
+  ): ToolbarCell | null {
     switch (item.kind) {
       case "separator":
         return null;

@@ -79,9 +79,7 @@ describe("FontController", () => {
     expect(trigger.tagName).toBe("BUTTON");
     expect(trigger.getAttribute("aria-haspopup")).toBe("listbox");
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
-    expect(trigger.getAttribute("aria-label")).toBe(
-      `Font: ${FONTS[0].label}`
-    );
+    expect(trigger.getAttribute("aria-label")).toBe(`Font: ${FONTS[0].label}`);
 
     const list = container.querySelector(".custom-select-options")!;
     expect(list.getAttribute("role")).toBe("listbox");
@@ -116,9 +114,9 @@ describe("FontController", () => {
     );
 
     fireEvent.keyDown(trigger, { key: "Escape" });
-    expect(
-      container.querySelector(".custom-select")!.className
-    ).not.toContain("open");
+    expect(container.querySelector(".custom-select")!.className).not.toContain(
+      "open"
+    );
   });
 
   it("opening moves focus to the currently-selected option (roving tabIndex)", () => {

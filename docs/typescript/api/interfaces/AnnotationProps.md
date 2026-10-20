@@ -19,7 +19,7 @@ optional style: unknown;
 
 Optional style configuration
 
-***
+---
 
 ### type
 

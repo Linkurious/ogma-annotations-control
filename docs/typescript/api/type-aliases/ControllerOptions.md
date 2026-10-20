@@ -19,7 +19,7 @@ applied when an annotation's `style.showAuthor` is true and
 `properties.author` is set; a given field here is overridden by that
 annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
 
-***
+---
 
 ### canComment()
 
@@ -49,7 +49,7 @@ applies to changing this after the fact.
 
 `boolean`
 
-***
+---
 
 ### commentDeniedCursor
 
@@ -61,7 +61,7 @@ Show the `not-allowed` cursor while hovering a target where
 `canComment` returns `false` in comment drawing mode. Defaults to `true`.
 Set to `false` to indicate it yourself via the `commentHover` event.
 
-***
+---
 
 ### commentIcon?
 
@@ -75,7 +75,7 @@ symbol (e.g. an emoji). Used by every comment that has no own
 the built-in SVG icon. May be a function to pick the icon per comment;
 return undefined for the built-in one.
 
-***
+---
 
 ### detectMargin
 
@@ -85,7 +85,7 @@ detectMargin: number;
 
 The margin in which the Texts are detected when looking for magnet points
 
-***
+---
 
 ### editButtonIcon
 
@@ -96,7 +96,7 @@ editButtonIcon: string;
 SVG icon for the edit button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
 
-***
+---
 
 ### isEditable()
 
@@ -126,7 +126,7 @@ no-op.
 
 `boolean`
 
-***
+---
 
 ### isVisible()
 
@@ -154,7 +154,7 @@ reactivity note as `isEditable` applies to changing this after the fact.
 
 `boolean`
 
-***
+---
 
 ### magnetHandleRadius
 
@@ -164,7 +164,7 @@ magnetHandleRadius: number;
 
 Display size of the magnet point
 
-***
+---
 
 ### magnetRadius
 
@@ -174,7 +174,7 @@ magnetRadius: number;
 
 The radius in which arrows are attracted
 
-***
+---
 
 ### maxArrowHeight
 
@@ -184,7 +184,7 @@ maxArrowHeight: number;
 
 Maximum height of the arrow in units
 
-***
+---
 
 ### minArrowHeight
 
@@ -194,7 +194,7 @@ minArrowHeight: number;
 
 Minimum height of the arrow in units
 
-***
+---
 
 ### minReadableFontSize
 
@@ -210,7 +210,7 @@ produces it. Ignored for `fixedSize` text (its on-screen size never
 shrinks with zoom) and during SVG/PNG export (export always renders
 in full, same as viewport culling). Set to 0 to disable.
 
-***
+---
 
 ### sendButtonIcon
 
@@ -221,7 +221,7 @@ sendButtonIcon: string;
 SVG icon for the send button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
 
-***
+---
 
 ### showEditButton
 
@@ -231,7 +231,7 @@ showEditButton: boolean;
 
 Show edit button in text editor
 
-***
+---
 
 ### showSendButton
 
@@ -241,7 +241,7 @@ showSendButton: boolean;
 
 Show send button in text editor
 
-***
+---
 
 ### textPlaceholder
 

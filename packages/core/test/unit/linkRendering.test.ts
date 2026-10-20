@@ -70,7 +70,9 @@ describe("markdown link pattern (createMarkdownLinkPattern)", () => {
   });
 
   it("does not match a bare URL", () => {
-    expect(createMarkdownLinkPattern().exec("see https://example.com now")).toBeNull();
+    expect(
+      createMarkdownLinkPattern().exec("see https://example.com now")
+    ).toBeNull();
   });
 
   it("matches multiple markdown links in one string", () => {
@@ -122,7 +124,7 @@ describe("comment content formatting (formatContent)", () => {
   });
 
   it("escapes HTML before linkifying (no XSS via raw markup)", () => {
-    const html = formatContent('<img src=x onerror=alert(1)> https://ok.com');
+    const html = formatContent("<img src=x onerror=alert(1)> https://ok.com");
     expect(html).not.toContain("<img");
     expect(html).toContain("&lt;img");
     // the real URL is still linked
