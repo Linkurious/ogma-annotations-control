@@ -15,8 +15,16 @@ describe("spatial index while dragging", () => {
   let control: Control;
 
   afterEach(() => {
-    try { control.destroy(); } catch (_) { /* headless */ }
-    try { ogma.destroy(); } catch (_) { /* headless */ }
+    try {
+      control.destroy();
+    } catch (_) {
+      /* headless */
+    }
+    try {
+      ogma.destroy();
+    } catch (_) {
+      /* headless */
+    }
   });
 
   const setup = () => {
@@ -65,7 +73,10 @@ describe("spatial index while dragging", () => {
     const before = index.all().slice();
 
     store.setState({ isDragging: true });
-    const moved = { ...comment, geometry: { type: "Point", coordinates: [5000, 5000] } };
+    const moved = {
+      ...comment,
+      geometry: { type: "Point", coordinates: [5000, 5000] }
+    };
     store.getState().applyLiveUpdates({ [comment.id]: moved as Annotation });
     store.getState().commitLiveUpdates(new Set([comment.id]));
 
@@ -88,10 +99,10 @@ describe("spatial index while dragging", () => {
     let missing = 0;
     for (let s0 = 1; s0 < 60; s0++) {
       let seed = s0;
-      const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
       index.clear();
       const texts = Array.from({ length: 300 }, (_, i) =>
-        createText((i * 13) % 1000 + rnd() * 50, rnd() * 10000, 10, 10)
+        createText(((i * 13) % 1000) + rnd() * 50, rnd() * 10000, 10, 10)
       );
       texts.forEach((t) => index.insert(t));
       for (const t of texts) if (!searchAt(index, t).includes(t.id)) missing++;

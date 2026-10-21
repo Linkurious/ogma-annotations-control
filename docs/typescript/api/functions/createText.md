@@ -1,13 +1,7 @@
 # Function: createText()
 
 ```ts
-function createText(
-   x, 
-   y, 
-   width, 
-   height, 
-   content, 
-   styles): Text;
+function createText(x, y, width, height, content, styles): Text;
 ```
 
 ## Parameters

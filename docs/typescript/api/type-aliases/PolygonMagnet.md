@@ -15,7 +15,7 @@ rx/ry are 0–1 fractions of the polygon's bounding box from its top-left corner
 rx: number;
 ```
 
-***
+---
 
 ### ry
 
@@ -23,7 +23,7 @@ rx: number;
 ry: number;
 ```
 
-***
+---
 
 ### type
 

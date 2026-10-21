@@ -146,7 +146,10 @@ export default defineConfig({
                   text: "Arrow Styles",
                   link: "/typescript/styling/arrow-styles"
                 },
-                { text: "Text Styles", link: "/typescript/styling/text-styles" },
+                {
+                  text: "Text Styles",
+                  link: "/typescript/styling/text-styles"
+                },
                 {
                   text: "Comment Icons",
                   link: "/typescript/styling/comment-icons"

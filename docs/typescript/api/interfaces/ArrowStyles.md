@@ -16,7 +16,7 @@ optional head: Extremity;
 
 Head extremity style
 
-***
+---
 
 ### strokeColor?
 

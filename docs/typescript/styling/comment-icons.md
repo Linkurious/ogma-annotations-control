@@ -53,11 +53,11 @@ The function runs on every render of a collapsed comment, so keep it cheap and r
 
 ## How values are rendered
 
-| Value | Rendered as |
-| --- | --- |
+| Value              | Rendered as                                             |
+| ------------------ | ------------------------------------------------------- |
 | Starts with `<svg` | Sanitized SVG, scaled to 60% of `iconSize` and centered |
-| Any other string | Text (e.g. an emoji), sized to 50% of `iconSize` |
-| `undefined` | Next step in the resolution order |
+| Any other string   | Text (e.g. an emoji), sized to 50% of `iconSize`        |
+| `undefined`        | Next step in the resolution order                       |
 
 SVG icons should have a `viewBox` so they scale. Colors in the SVG are kept as written. For safety, `<script>`, `<foreignObject>`, `<iframe>`, `<object>`, `<embed>`, `<animate>`, `<set>`, `on*` event attributes and `javascript:` values are removed. Invalid SVG renders nothing. Parsed SVGs are cached per unique string.
 

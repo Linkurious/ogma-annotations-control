@@ -2,12 +2,13 @@
 
 ```ts
 function createCommentWithArrow(
-   targetX, 
-   targetY, 
-   commentX, 
-   commentY, 
-   content, 
-   options?): object;
+  targetX,
+  targetY,
+  commentX,
+  commentY,
+  content,
+  options?
+): object;
 ```
 
 Create a comment with an arrow pointing to a target location
@@ -84,13 +85,15 @@ comment: Comment;
 ## Example
 
 ```typescript
-import { createCommentWithArrow } from '@linkurious/ogma-annotations';
+import { createCommentWithArrow } from "@linkurious/ogma-annotations";
 
 // Create a comment pointing to a node at (100, 100)
 const { comment, arrow } = createCommentWithArrow(
-  100, 100,           // Target position (where arrow points)
-  300, 50,            // Comment position
-  "Important node!",  // Comment text
+  100,
+  100, // Target position (where arrow points)
+  300,
+  50, // Comment position
+  "Important node!", // Comment text
   {
     commentStyle: {
       style: {

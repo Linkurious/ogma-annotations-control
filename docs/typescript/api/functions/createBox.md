@@ -1,12 +1,7 @@
 # Function: createBox()
 
 ```ts
-function createBox(
-   x, 
-   y, 
-   width, 
-   height, 
-   styles): Box;
+function createBox(x, y, width, height, styles): Box;
 ```
 
 ## Parameters

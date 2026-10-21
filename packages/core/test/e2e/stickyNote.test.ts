@@ -79,7 +79,9 @@ describe("Sticky notes", () => {
     // Deselecting (e.g. clicking elsewhere) is what actually ends the edit
     // session and commits the live update into the annotation's real
     // content - a bare DOM blur() only syncs into liveUpdates.
-    await session.page.evaluate(() => { editor.unselect(); });
+    await session.page.evaluate(() => {
+      editor.unselect();
+    });
 
     const content = await session.page.evaluate(() => {
       const note = editor
@@ -359,8 +361,8 @@ describe("Sticky notes", () => {
     });
 
     // Hidden until both showAuthor and a non-empty author are set.
-    const beforeToggle = await session.page.evaluate(
-      () => document.querySelector(".annotation-text-author")
+    const beforeToggle = await session.page.evaluate(() =>
+      document.querySelector(".annotation-text-author")
     );
     expect(beforeToggle).toBeNull();
 
@@ -375,7 +377,9 @@ describe("Sticky notes", () => {
       });
     }, setup.id);
     await session.page.waitForFunction(
-      () => document.querySelector(".annotation-text-author")?.textContent === "Jane Doe"
+      () =>
+        document.querySelector(".annotation-text-author")?.textContent ===
+        "Jane Doe"
     );
 
     // Toggling off removes it again.
@@ -403,7 +407,10 @@ describe("Sticky notes", () => {
       { id: setup.id, longAuthor }
     );
     await session.page.waitForFunction(
-      () => document.querySelector(".annotation-text-author")?.textContent?.endsWith("…") === true
+      () =>
+        document
+          .querySelector(".annotation-text-author")
+          ?.textContent?.endsWith("…") === true
     );
     const truncated = await session.page.evaluate(
       () => document.querySelector(".annotation-text-author")?.textContent
@@ -423,7 +430,10 @@ describe("Sticky notes", () => {
       });
     }, setup.id);
     await session.page.waitForFunction(
-      () => !!document.querySelector(".annotation-text-author a.ogma-annotation-link")
+      () =>
+        !!document.querySelector(
+          ".annotation-text-author a.ogma-annotation-link"
+        )
     );
 
     const link = await session.page.evaluate(() => {
@@ -446,7 +456,9 @@ describe("Sticky notes", () => {
       });
     }, setup.id);
     await session.page.waitForFunction(
-      () => document.querySelector(".annotation-text-author a.ogma-annotation-link")?.textContent === "get in touch"
+      () =>
+        document.querySelector(".annotation-text-author a.ogma-annotation-link")
+          ?.textContent === "get in touch"
     );
 
     const mdLink = await session.page.evaluate(() => {

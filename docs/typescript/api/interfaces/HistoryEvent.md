@@ -12,7 +12,7 @@ canRedo: boolean;
 
 Indicates if redo operation is available
 
-***
+---
 
 ### canUndo
 

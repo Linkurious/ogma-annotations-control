@@ -1,11 +1,7 @@
 # Function: createComment()
 
 ```ts
-function createComment(
-   x, 
-   y, 
-   content, 
-   options?): Comment;
+function createComment(x, y, content, options?): Comment;
 ```
 
 Create a new Comment annotation

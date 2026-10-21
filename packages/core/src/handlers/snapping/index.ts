@@ -8,7 +8,6 @@ import { Index } from "../../interaction/spatialIndex";
 import { Store } from "../../store";
 import { Text, Polygon, isBox, isText, isPolygon } from "../../types";
 
-
 export type { TextSnap } from "./text";
 export type { PolygonSnap } from "./polygon";
 export type { NodeSnap } from "./node";
@@ -99,7 +98,13 @@ export class Snapping extends EventTarget {
 
   public snapToText(point: Point, texts: Text[]): TextSnap | null {
     const { zoom } = this.store.getState();
-    return snapToText(point, texts, zoom, this.options.magnetRadius, this.store);
+    return snapToText(
+      point,
+      texts,
+      zoom,
+      this.options.magnetRadius,
+      this.store
+    );
   }
 
   public snapToPolygon(point: Point, polygons: Polygon[]): PolygonSnap | null {

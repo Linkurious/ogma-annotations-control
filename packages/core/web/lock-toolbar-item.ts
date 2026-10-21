@@ -60,7 +60,9 @@ class LockCell implements ToolbarCell {
     this.element.classList.toggle("active", isLocked);
     this.element.dataset.tooltip = isLocked ? "Unlock" : "Lock";
     // Grey out every other cell in the pill - see the CSS below.
-    this.element.closest(".annotation-style-toolbar")?.classList.toggle("locked", isLocked);
+    this.element
+      .closest(".annotation-style-toolbar")
+      ?.classList.toggle("locked", isLocked);
   }
 
   destroy() {

@@ -1,7 +1,10 @@
 # Type Alias: AuthorLineStyle
 
 ```ts
-type AuthorLineStyle = Pick<TextStyle, "font" | "fontSize" | "color" | "fontWeight">;
+type AuthorLineStyle = Pick<
+  TextStyle,
+  "font" | "fontSize" | "color" | "fontWeight"
+>;
 ```
 
 Style overrides for the author line rendered under a Text's content

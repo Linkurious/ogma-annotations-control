@@ -21,7 +21,7 @@ installBrand(ogma);
 const fontFamily = "IBM Plex Sans, sans-serif";
 
 ogma.addNodes([
-  { id: "n1", attributes: { x: -200, y: 0,  radius: 18 } },
+  { id: "n1", attributes: { x: -200, y: 0, radius: 18 } },
   { id: "n2", attributes: { x: 100, y: 0, radius: 18 } }
 ]);
 ogma.addEdge({
@@ -56,9 +56,19 @@ function attachComment(
 ) {
   const { comment, arrow } = createCommentWithArrow(tipX, tipY, x, y, text, {
     commentStyle: {
-      style: { color: darkBlue, background: "#fff", font: fontFamily, fontSize: 14 }
+      style: {
+        color: darkBlue,
+        background: "#fff",
+        font: fontFamily,
+        fontSize: 14
+      }
     },
-    arrowStyle: { strokeType: "plain", strokeColor: darkBlue, strokeWidth: 2, head: "arrow" }
+    arrowStyle: {
+      strokeType: "plain",
+      strokeColor: darkBlue,
+      strokeWidth: 2,
+      head: "arrow"
+    }
   });
   (arrow as Arrow).properties.link = {
     ...arrow.properties.link,
@@ -84,13 +94,22 @@ await ogma.view.set({ x: 0, y: 0, zoom: 1 }, { duration: 0 });
 const gui = new GUI();
 gui.add(state, "canDetach").name("canDetach (comments)");
 gui
-  .add({ removeN1: () => ogma.getNode("n1") && ogma.removeNode("n1") }, "removeN1")
+  .add(
+    { removeN1: () => ogma.getNode("n1") && ogma.removeNode("n1") },
+    "removeN1"
+  )
   .name("Remove node n1");
 gui
-  .add({ removeE1: () => ogma.getEdge("e1") && ogma.removeEdge("e1") }, "removeE1")
+  .add(
+    { removeE1: () => ogma.getEdge("e1") && ogma.removeEdge("e1") },
+    "removeE1"
+  )
   .name("Remove edge e1");
 gui
-  .add({ removeBox: () => control.getAnnotation(box.id) && control.remove(box) }, "removeBox")
+  .add(
+    { removeBox: () => control.getAnnotation(box.id) && control.remove(box) },
+    "removeBox"
+  )
   .name("Delete box");
 
 Object.assign(window, { ogma, control });

@@ -24,7 +24,8 @@ export class Index extends Rtree<Annotation> {
     this.store.subscribe(
       (state) => state.isDragging,
       (isDragging) => {
-        if (!isDragging && this.dirty) this.rebuild(this.store.getState().features);
+        if (!isDragging && this.dirty)
+          this.rebuild(this.store.getState().features);
       }
     );
     this.store.subscribe((state) => state.rotation, this.onRotationChange);
@@ -85,7 +86,8 @@ export class Index extends Rtree<Annotation> {
     this.clear();
     for (const feature of Object.values(features)) {
       if (!this.isVisible(feature)) continue;
-      if (isText(feature) || isComment(feature)) this.updateRotatedText(feature);
+      if (isText(feature) || isComment(feature))
+        this.updateRotatedText(feature);
       else {
         // Drag handlers spread the old geometry into their updates, so a
         // committed arrow/polygon can carry a stale cached bbox.

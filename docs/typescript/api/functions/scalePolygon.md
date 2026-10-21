@@ -1,11 +1,7 @@
 # Function: scalePolygon()
 
 ```ts
-function scalePolygon(
-   polygon, 
-   scale, 
-   originX, 
-   originY): Polygon;
+function scalePolygon(polygon, scale, originX, originY): Polygon;
 ```
 
 Scale polygon around an origin point

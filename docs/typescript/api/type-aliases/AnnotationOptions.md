@@ -12,7 +12,7 @@ type AnnotationOptions = object;
 handleSize: number;
 ```
 
-***
+---
 
 ### placeholder?
 

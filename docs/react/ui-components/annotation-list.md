@@ -133,7 +133,8 @@ function AnnotationList() {
       text: annotations.filter((a) => a.properties.type === "text").length,
       arrow: annotations.filter((a) => a.properties.type === "arrow").length,
       box: annotations.filter((a) => a.properties.type === "box").length,
-      polygon: annotations.filter((a) => a.properties.type === "polygon").length,
+      polygon: annotations.filter((a) => a.properties.type === "polygon")
+        .length,
       comment: annotations.filter((a) => a.properties.type === "comment").length
     };
   }, [annotations]);
@@ -244,9 +245,7 @@ function AnnotationList() {
 
       <ul>
         {annotations.map((annotation) => (
-          <li key={annotation.id}>
-            {annotation.properties.type}
-          </li>
+          <li key={annotation.id}>{annotation.properties.type}</li>
         ))}
       </ul>
     </div>

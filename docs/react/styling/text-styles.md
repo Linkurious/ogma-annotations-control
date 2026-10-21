@@ -35,9 +35,7 @@ function TextStyleControls({ textId }: { textId: string }) {
           type="number"
           min="8"
           max="32"
-          onChange={(e) =>
-            updateStyle({ fontSize: Number(e.target.value) })
-          }
+          onChange={(e) => updateStyle({ fontSize: Number(e.target.value) })}
         />
       </label>
 
@@ -119,15 +117,11 @@ function BulkStyleControls() {
 
   return (
     <div className="theme-controls">
-      <button onClick={() => applyTheme(themes.primary)}>
-        Primary Theme
-      </button>
+      <button onClick={() => applyTheme(themes.primary)}>Primary Theme</button>
       <button onClick={() => applyTheme(themes.highlight)}>
         Highlight Theme
       </button>
-      <button onClick={() => applyTheme(themes.success)}>
-        Success Theme
-      </button>
+      <button onClick={() => applyTheme(themes.success)}>Success Theme</button>
     </div>
   );
 }
@@ -176,6 +170,7 @@ function BoxStyleControls({ boxId }: { boxId: string }) {
 For comprehensive information about styling text, boxes, polygons, and comments, including all available style options, typography settings, color formats, and best practices, see the [TypeScript Text and Shape Styles guide](/typescript/styling/text-styles).
 
 The TypeScript documentation covers:
+
 - Text typography (font family, size, weight, alignment)
 - Background and border styling
 - Fixed-size text annotations

@@ -92,7 +92,9 @@ describe("AnnotationPanel", () => {
   });
 
   it("treats box and comment annotations as text for panel purposes", () => {
-    const boxPanel = render(<AnnotationPanel visible={true} annotation={box} />);
+    const boxPanel = render(
+      <AnnotationPanel visible={true} annotation={box} />
+    );
     expect(boxPanel.getByText("Font")).toBeTruthy();
     boxPanel.unmount();
 

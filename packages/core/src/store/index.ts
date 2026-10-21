@@ -4,7 +4,10 @@ import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
 import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
-import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comment/helpers";
+import {
+  getCascadeDeleteIds,
+  getCommentLeftOrphanedBy
+} from "../handlers/comment/helpers";
 import {
   Annotation,
   Comment,
@@ -239,7 +242,10 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               if (!feature) return state;
 
               // A feature still being drawn is exempt, or its draft could get stuck uncancelable.
-              if (id !== state.drawingFeature && !state.options.isEditable(feature)) {
+              if (
+                id !== state.drawingFeature &&
+                !state.options.isEditable(feature)
+              ) {
                 // eslint-disable-next-line no-console
                 console.error(`Cannot delete annotation ${id}: not editable`);
                 return state;
@@ -262,7 +268,11 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               }
 
               // Deleting a comment (or text) also deletes all its arrows.
-              const toDelete = getCascadeDeleteIds(features, id, state.options.canDetach);
+              const toDelete = getCascadeDeleteIds(
+                features,
+                id,
+                state.options.canDetach
+              );
 
               // All or nothing - refuse the whole delete if the cascade reaches a non-editable annotation.
               for (const deleteId of toDelete) {
@@ -322,7 +332,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
                 ...state.features,
                 [feature.id]: feature as Annotation
               }
-            }))
+            }));
           },
 
           // Start live update - snapshot current state
@@ -428,7 +438,11 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           updateFeature: (id, updates) =>
             set((state) => {
               const feature = state.features[id];
-              if (feature && id !== state.drawingFeature && !state.options.isEditable(feature)) {
+              if (
+                feature &&
+                id !== state.drawingFeature &&
+                !state.options.isEditable(feature)
+              ) {
                 // eslint-disable-next-line no-console
                 console.error(`Cannot update annotation ${id}: not editable`);
                 return state;
@@ -459,7 +473,11 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               Object.entries(updates).forEach(([id, update]) => {
                 const feature = newFeatures[id];
                 if (!feature) return;
-                if (id !== state.drawingFeature && !state.options.isEditable(feature)) return;
+                if (
+                  id !== state.drawingFeature &&
+                  !state.options.isEditable(feature)
+                )
+                  return;
                 newFeatures[id] = {
                   ...feature,
                   ...update

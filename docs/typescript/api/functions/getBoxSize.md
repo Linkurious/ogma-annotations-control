@@ -8,7 +8,7 @@ function getBoxSize<T>(t): object;
 
 ### T
 
-`T` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`T` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 ## Parameters
 

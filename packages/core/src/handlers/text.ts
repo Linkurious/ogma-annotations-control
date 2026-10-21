@@ -183,7 +183,10 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
             type: HandleType.CORNER,
             corner: i
           };
-          this.store.setState({ hoveredHandle: i, hoveredFeature: this.annotation });
+          this.store.setState({
+            hoveredHandle: i,
+            hoveredFeature: this.annotation
+          });
           this.setCursor(this.getCornerCursor(i));
           return; // Exit early if corner handle found
         }
@@ -206,7 +209,10 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
           my <= maxY + margin
         ) {
           this.hoveredHandle = { type: HandleType.EDGE, edge, corner: -1 };
-          this.store.setState({ hoveredHandle: points[edge][0] + 4, hoveredFeature: this.annotation }); // Offset edge handles
+          this.store.setState({
+            hoveredHandle: points[edge][0] + 4,
+            hoveredFeature: this.annotation
+          }); // Offset edge handles
           this.setCursor(this.getEdgeCursor(edge));
           return;
         }
@@ -220,7 +226,10 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       my >= -height / 2 - margin &&
       my <= height / 2 + margin
     ) {
-      this.store.setState({ hoveredHandle: 8, hoveredFeature: this.annotation }); // 8 = body
+      this.store.setState({
+        hoveredHandle: 8,
+        hoveredFeature: this.annotation
+      }); // 8 = body
       // Treat body as edge for dragging
       this.hoveredHandle = { type: HandleType.BODY, corner: -1 };
       this.setCursor(cursors.grab);
@@ -483,7 +492,9 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     } as Partial<Text | Box>);
   }
 
-  protected onClick = (evt: ClientMouseEvent & { target?: EventTarget | null }) => {
+  protected onClick = (
+    evt: ClientMouseEvent & { target?: EventTarget | null }
+  ) => {
     // A click on a URL inside the content should open the link, not select or
     // edit the annotation. Let native anchor navigation proceed untouched.
     // (Synthetic calls from handleMouseUp pass no target and fall through.)
@@ -496,8 +507,9 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     // still-selected annotation wouldn't otherwise block a further click
     // from expanding/entering edit mode on it.
     if (!this.store.getState().options.isEditable(annotation)) return;
-    if (isComment(annotation)
-      && annotation.properties.mode === COMMENT_MODE_COLLAPSED
+    if (
+      isComment(annotation) &&
+      annotation.properties.mode === COMMENT_MODE_COLLAPSED
     ) {
       this.store.getState().updateFeature(annotation.id, {
         properties: {
@@ -520,7 +532,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     if (annotation && (isText(annotation) || isComment(annotation))) {
       this.startEditingText();
     }
-  }
+  };
 
   public startEditingText() {
     if (this.textEditor === null) {
@@ -563,7 +575,11 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     } else {
       this.commitChange();
       const annotation = this.getAnnotation();
-      if (autoEdit && annotation && (isText(annotation) || isComment(annotation))) {
+      if (
+        autoEdit &&
+        annotation &&
+        (isText(annotation) || isComment(annotation))
+      ) {
         this.startEditingText();
       }
     }

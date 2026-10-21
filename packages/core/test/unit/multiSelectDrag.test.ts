@@ -28,7 +28,9 @@ describe("handleDrag: carries the rest of a multi-selection along", () => {
 
     handleDrag(store, links, a.id, { x: 10, y: -5 });
 
-    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([35, 20]);
+    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([
+      35, 20
+    ]);
   });
 
   it("moves every selected annotation by the same displacement", () => {
@@ -40,8 +42,12 @@ describe("handleDrag: carries the rest of a multi-selection along", () => {
 
     handleDrag(store, links, a.id, { x: 10, y: -5 });
 
-    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([35, 20]);
-    expect(store.getState().liveUpdates[b.id]?.geometry?.coordinates).toEqual([135, 120]);
+    expect(store.getState().liveUpdates[a.id]?.geometry?.coordinates).toEqual([
+      35, 20
+    ]);
+    expect(store.getState().liveUpdates[b.id]?.geometry?.coordinates).toEqual([
+      135, 120
+    ]);
   });
 
   it("ignores annotations outside the current selection", () => {

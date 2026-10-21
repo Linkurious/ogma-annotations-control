@@ -77,9 +77,9 @@ describe("AddMenu", () => {
     expect(container.querySelector(".add-menu")?.getAttribute("role")).toBe(
       "group"
     );
-    expect(container.querySelector(".add-menu")?.getAttribute("aria-label")).toBe(
-      "Annotation tools"
-    );
+    expect(
+      container.querySelector(".add-menu")?.getAttribute("aria-label")
+    ).toBe("Annotation tools");
     container.querySelectorAll(".add-menu > button").forEach((btn) => {
       expect(btn.getAttribute("aria-label")).toBe(
         btn.getAttribute("data-tooltip")
@@ -92,7 +92,9 @@ describe("AddMenu", () => {
     expect(tooltip(container, "Add arrow")).toBeTruthy();
     expect(tooltip(container, "Add text")).toBeTruthy();
     expect(tooltip(container, "Add box")).toBeNull();
-    expect(tooltip(container, "Add polygon (click points, Esc to finish)")).toBeNull();
+    expect(
+      tooltip(container, "Add polygon (click points, Esc to finish)")
+    ).toBeNull();
   });
 
   it("enables arrow drawing and marks the button active when clicked", () => {
@@ -154,7 +156,10 @@ describe("AddMenu", () => {
 
   it("toggles erase mode on the erase button", () => {
     const { container } = render(<AddMenu />);
-    const eraseBtn = tooltip(container, "Erase (click annotations to delete them)");
+    const eraseBtn = tooltip(
+      container,
+      "Erase (click annotations to delete them)"
+    );
 
     fireEvent.click(eraseBtn);
     expect(editor.enableEraseMode).toHaveBeenCalled();
@@ -171,7 +176,9 @@ describe("AddMenu", () => {
 
     rerender(<AddMenu deleteMode="select" />);
     expect(tooltip(container, "Delete selected")).toBeTruthy();
-    expect(tooltip(container, "Erase (click annotations to delete them)")).toBeNull();
+    expect(
+      tooltip(container, "Erase (click annotations to delete them)")
+    ).toBeNull();
   });
 
   it("removes the current selection when 'Delete selected' is clicked", () => {

@@ -53,4 +53,3 @@ type: "Feature";
 ```
 
 Specifies the type of GeoJSON object.
-

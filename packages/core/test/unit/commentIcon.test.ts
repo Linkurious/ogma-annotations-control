@@ -11,9 +11,15 @@ const state = {
   getScreenAlignedTransform: () => ""
 } as unknown as AnnotationState;
 
-function icon(iconSymbol?: string, commentIcon?: string | ((c: any) => string | undefined)) {
+function icon(
+  iconSymbol?: string,
+  commentIcon?: string | ((c: any) => string | undefined)
+) {
   const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  const c = createComment(0, 0, "hi", { mode: "collapsed", style: { iconSymbol } });
+  const c = createComment(0, 0, "hi", {
+    mode: "collapsed",
+    style: { iconSymbol }
+  });
   const g = renderComment(
     root,
     c,
@@ -54,17 +60,25 @@ describe("comment collapsed icon", () => {
   });
 
   it("falls back to the control-level commentIcon, own iconSymbol wins", () => {
-    expect(icon(undefined, "🔔").group.querySelector("text")!.textContent).toBe("🔔");
-    expect(icon("💬", "🔔").group.querySelector("text")!.textContent).toBe("💬");
+    expect(icon(undefined, "🔔").group.querySelector("text")!.textContent).toBe(
+      "🔔"
+    );
+    expect(icon("💬", "🔔").group.querySelector("text")!.textContent).toBe(
+      "💬"
+    );
   });
 
   it("supports a per-comment commentIcon callback", () => {
     const fn = (c: any) => (c.properties.content === "hi" ? "🔔" : undefined);
-    expect(icon(undefined, fn).group.querySelector("text")!.textContent).toBe("🔔");
+    expect(icon(undefined, fn).group.querySelector("text")!.textContent).toBe(
+      "🔔"
+    );
   });
 
   it("drops <style> elements", () => {
-    const { group } = icon("<svg viewBox='0 0 1 1'><style>body{display:none}</style><rect/></svg>");
+    const { group } = icon(
+      "<svg viewBox='0 0 1 1'><style>body{display:none}</style><rect/></svg>"
+    );
     expect(group.querySelector("style")).toBeNull();
     expect(group.querySelector("rect")).toBeTruthy();
   });
@@ -79,15 +93,22 @@ describe("comment collapsed icon", () => {
   });
 
   it("rejects a non-SVG root namespace and tolerates descendant xmlns", () => {
-    expect(icon('<svg xmlns="urn:not-svg"/>').group.querySelector("svg")).toBeNull();
-    const { group } = icon('<svg viewBox="0 0 1 1"><g xmlns="http://www.w3.org/2000/svg"><rect/></g></svg>');
+    expect(
+      icon('<svg xmlns="urn:not-svg"/>').group.querySelector("svg")
+    ).toBeNull();
+    const { group } = icon(
+      '<svg viewBox="0 0 1 1"><g xmlns="http://www.w3.org/2000/svg"><rect/></g></svg>'
+    );
     expect(group.querySelector("svg rect")).toBeTruthy();
   });
 
   it("resizes the custom svg when iconSize changes", () => {
     const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const symbol = '<svg viewBox="0 0 1 1"><rect/></svg>';
-    const c = createComment(0, 0, "hi", { mode: "collapsed", style: { iconSymbol: symbol, iconSize: 20 } });
+    const c = createComment(0, 0, "hi", {
+      mode: "collapsed",
+      style: { iconSymbol: symbol, iconSize: 20 }
+    });
     const st = { ...state, options: {} } as unknown as AnnotationState;
     const g = renderComment(root, c, undefined, st, true);
     const w = () => g.querySelector("svg")!.getAttribute("width");
@@ -100,7 +121,10 @@ describe("comment collapsed icon", () => {
   it("keeps the custom svg's own children across re-renders", () => {
     const root = document.createElementNS("http://www.w3.org/2000/svg", "svg");
     const symbol = '<svg viewBox="0 0 1 1"><path d="M0 0"/></svg>';
-    const c = createComment(0, 0, "hi", { mode: "collapsed", style: { iconSymbol: symbol, iconSize: 20 } });
+    const c = createComment(0, 0, "hi", {
+      mode: "collapsed",
+      style: { iconSymbol: symbol, iconSize: 20 }
+    });
     const st = { ...state, options: {} } as unknown as AnnotationState;
     const g = renderComment(root, c, undefined, st, true);
     c.properties.style!.iconSize = 40;

@@ -16,7 +16,7 @@ Author/signature line shown under the content when `style.showAuthor`
 is true. Set by the host app (via `properties.author` at creation or
 `control.update()`) - no built-in UI writes this string.
 
-***
+---
 
 ### content
 
@@ -26,7 +26,7 @@ content: string;
 
 text to display
 
-***
+---
 
 ### height
 
@@ -50,7 +50,7 @@ Style options for the box
 type: "text";
 ```
 
-***
+---
 
 ### width
 
@@ -59,4 +59,3 @@ width: number;
 ```
 
 Width of the text box
-

@@ -28,14 +28,9 @@ describe("Small on-screen font size culling", () => {
       // Wide enough that the fontSize-20 content never wraps - keeps the
       // exported SVG's <text> a single unbroken run for a simple substring
       // assertion below.
-      const text = createText(
-        0,
-        0,
-        600,
-        100,
-        "ZoomCullTestContent",
-        { fontSize: 20 }
-      );
+      const text = createText(0, 0, 600, 100, "ZoomCullTestContent", {
+        fontSize: 20
+      });
       editor.add(text);
       return { id: text.id };
     });

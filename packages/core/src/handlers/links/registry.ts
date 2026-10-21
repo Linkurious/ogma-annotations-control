@@ -40,8 +40,7 @@ export type MagnetSource = "absolute" | "stored";
 function toMagnet(raw: Point, targetType: TargetType): Magnet {
   if (targetType === TARGET_TYPES.NODE)
     return { type: "node", center: raw.x === 0 && raw.y === 0 };
-  if (targetType === TARGET_TYPES.EDGE)
-    return { type: "edge", t: raw.x };
+  if (targetType === TARGET_TYPES.EDGE) return { type: "edge", t: raw.x };
   if (targetType === TARGET_TYPES.POLYGON)
     return { type: "polygon", rx: raw.x, ry: raw.y };
   // text, box, comment — center-relative fraction of dimension
@@ -184,7 +183,8 @@ export class LinkIndex {
       arrowLinks[side] = undefined;
       // Drop the entry once both sides are gone, otherwise a deleted arrow
       // leaves a ghost key that every full-map recompute iterates.
-      if (!arrowLinks.start && !arrowLinks.end) this.linksByArrowId.delete(arrowId);
+      if (!arrowLinks.start && !arrowLinks.end)
+        this.linksByArrowId.delete(arrowId);
     }
     return this;
   }
@@ -222,13 +222,27 @@ export class LinkIndex {
         // Node/edge existence will be checked in add(). The magnet on
         // arrow.properties.link is always this class's own stored (already
         // bbox-relative, for polygon) format - never re-convert it.
-        this.add(arrow, SIDE_START, linkData.id, linkData.type, linkData.magnet!, "stored");
+        this.add(
+          arrow,
+          SIDE_START,
+          linkData.id,
+          linkData.type,
+          linkData.magnet!,
+          "stored"
+        );
       }
       if (arrow.properties.link?.end) {
         const linkData = arrow.properties.link.end;
         // Node/edge existence will be checked in add(). Same as the start
         // side above - this magnet is already in stored format.
-        this.add(arrow, SIDE_END, linkData.id, linkData.type, linkData.magnet!, "stored");
+        this.add(
+          arrow,
+          SIDE_END,
+          linkData.id,
+          linkData.type,
+          linkData.magnet!,
+          "stored"
+        );
       }
       // A freshly loaded arrow keeps its stored endpoints until something
       // recomputes them, so its endpoints may not match where its node
@@ -273,9 +287,12 @@ export class LinkIndex {
       const positionChanged =
         prevFeature.geometry.coordinates !== newFeature.geometry.coordinates;
       const sizeChanged =
-        (prevFeature.properties as { width?: number; height?: number }).width !==
-          (newFeature.properties as { width?: number; height?: number }).width ||
-        (prevFeature.properties as { width?: number; height?: number }).height !==
+        (prevFeature.properties as { width?: number; height?: number })
+          .width !==
+          (newFeature.properties as { width?: number; height?: number })
+            .width ||
+        (prevFeature.properties as { width?: number; height?: number })
+          .height !==
           (newFeature.properties as { width?: number; height?: number }).height;
 
       if (!positionChanged && !sizeChanged) continue;

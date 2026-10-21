@@ -71,16 +71,21 @@ describe("isEditable", () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
 
     control.update({ id: text.id, properties: { content: "changed" } });
-    expect((control.getAnnotation(text.id)?.properties as { content?: string }).content).toBe(
-      "a"
-    );
+    expect(
+      (control.getAnnotation(text.id)?.properties as { content?: string })
+        .content
+    ).toBe("a");
 
     control.updateStyle(text.id, { color: "red" });
-    expect(control.getAnnotation(text.id)?.properties.style?.color).not.toBe("red");
+    expect(control.getAnnotation(text.id)?.properties.style?.color).not.toBe(
+      "red"
+    );
 
     const before = control.getAnnotation(text.id)?.geometry.coordinates;
     control.setScale(text.id, 2, 0, 0);
-    expect(control.getAnnotation(text.id)?.geometry.coordinates).toEqual(before);
+    expect(control.getAnnotation(text.id)?.geometry.coordinates).toEqual(
+      before
+    );
 
     control.remove(text);
     expect(control.getAnnotation(text.id)).toBeDefined();

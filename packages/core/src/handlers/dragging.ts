@@ -33,7 +33,8 @@ export function handleDrag(
 
   moveOne(state, links, annotationId, displacement, moveConnected, liveUpdates);
   for (const id of state.selectedFeatures) {
-    if (id !== annotationId) moveOne(state, links, id, displacement, false, liveUpdates);
+    if (id !== annotationId)
+      moveOne(state, links, id, displacement, false, liveUpdates);
   }
 
   state.applyLiveUpdates(liveUpdates);
@@ -110,7 +111,10 @@ function moveAnnotation(
   if (isPolygon(annotation)) {
     const polygon = annotation as Polygon;
     const newCoordinates = polygon.geometry.coordinates.map((ring) =>
-      ring.map((coord) => [coord[0] + displacement.x, coord[1] + displacement.y])
+      ring.map((coord) => [
+        coord[0] + displacement.x,
+        coord[1] + displacement.y
+      ])
     );
     return {
       geometry: {

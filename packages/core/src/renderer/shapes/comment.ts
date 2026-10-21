@@ -7,10 +7,7 @@ import {
   createSVGElement,
   getBoxCenter
 } from "../../utils/utils";
-import {
-  createUrlPattern,
-  ANNOTATION_LINK_CLASS
-} from "../../utils/rendering";
+import { createUrlPattern, ANNOTATION_LINK_CLASS } from "../../utils/rendering";
 
 // Canvas context for measuring text
 let measureContext: CanvasRenderingContext2D | null = null;
@@ -224,8 +221,8 @@ function parseSvg(markup: string): SVGSVGElement | null {
     doc.querySelector("parsererror")
   )
     return null;
-  svg.querySelectorAll(UNSAFE_TAGS).forEach(el => el.remove());
-  [svg, ...svg.querySelectorAll("*")].forEach(el => {
+  svg.querySelectorAll(UNSAFE_TAGS).forEach((el) => el.remove());
+  [svg, ...svg.querySelectorAll("*")].forEach((el) => {
     for (const name of el.getAttributeNames()) {
       // browsers ignore tabs/newlines/control chars inside a URL scheme
       // ("java&#x09;script:"), so strip them before checking
@@ -346,7 +343,10 @@ function renderCollapsedIcon(
       iconGroup.appendChild(path);
     }
     // 24x24 viewBox path, scaled to half the icon size and centred
-    path.setAttribute("transform", `scale(${(size * 0.55) / 24}) translate(-12 -12)`);
+    path.setAttribute(
+      "transform",
+      `scale(${(size * 0.55) / 24}) translate(-12 -12)`
+    );
     path.setAttribute("stroke", "#333");
   }
 }
@@ -606,7 +606,11 @@ export function renderComment(
   // auto-selected right after creation - lands above any pre-existing
   // comment it overlaps instead of staying wherever it first happened to be
   // inserted relative to them.
-  if (!g.parentNode || g.parentNode !== root || state.selectedFeatures.has(annotation.id)) {
+  if (
+    !g.parentNode ||
+    g.parentNode !== root ||
+    state.selectedFeatures.has(annotation.id)
+  ) {
     bringToTop(root, g);
   }
 

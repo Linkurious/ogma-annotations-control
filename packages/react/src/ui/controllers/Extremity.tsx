@@ -1,5 +1,8 @@
 import { Extremity, Arrow } from "@linkurious/ogma-annotations";
-import { EXTREMITY_OPTIONS, type IconName } from "@linkurious/ogma-annotations/ui";
+import {
+  EXTREMITY_OPTIONS,
+  type IconName
+} from "@linkurious/ogma-annotations/ui";
 import React, { useEffect, useRef, useState } from "react";
 import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 import { Icon } from "../Icon";
@@ -49,7 +52,12 @@ const ExtremityDropdown: React.FC<ExtremityDropdownProps> = ({
   const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   const open = () => {
-    setActiveIndex(Math.max(options.findIndex((o) => o.selected), 0));
+    setActiveIndex(
+      Math.max(
+        options.findIndex((o) => o.selected),
+        0
+      )
+    );
     onOpen();
   };
 

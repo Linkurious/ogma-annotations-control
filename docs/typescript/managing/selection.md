@@ -136,7 +136,8 @@ ogma.events.on("click", (event) => {
 let lastSelectedId: string | null = null;
 
 controller.on("select", (event) => {
-  const isMultiSelect = event.originalEvent?.ctrlKey || event.originalEvent?.metaKey;
+  const isMultiSelect =
+    event.originalEvent?.ctrlKey || event.originalEvent?.metaKey;
 
   if (!isMultiSelect && lastSelectedId && lastSelectedId !== event.feature.id) {
     // Single select mode: unselect previous

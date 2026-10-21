@@ -59,7 +59,13 @@ export class Links {
     this.snapping = snapping;
     this.registry = new LinkIndex(ogma, store, onLinkCreated);
     this.geometry = new LinkGeometry(ogma, store);
-    this.sync = new LinkSync(ogma, store, this.registry, this.geometry, this.updatedItems);
+    this.sync = new LinkSync(
+      ogma,
+      store,
+      this.registry,
+      this.geometry,
+      this.updatedItems
+    );
 
     this.store.subscribe((state) => state.features, this.onAddArrow);
   }
@@ -94,7 +100,12 @@ export class Links {
     // the rigid-comment cascade below can see updates staged earlier in the
     // very same call instead of clobbering them.
     const batched = liveUpdates ?? {};
-    this._collectLinkedArrowUpdates(annotationId, displacement, batched, new Set());
+    this._collectLinkedArrowUpdates(
+      annotationId,
+      displacement,
+      batched,
+      new Set()
+    );
     if (!liveUpdates) this.store.getState().applyLiveUpdates(batched);
   }
 
@@ -177,7 +188,12 @@ export class Links {
 
       // Cascade: move every other arrow attached to this comment too (and,
       // transitively, anything rigidly attached beyond that).
-      this._collectLinkedArrowUpdates(commentId, displacement, liveUpdates, visited);
+      this._collectLinkedArrowUpdates(
+        commentId,
+        displacement,
+        liveUpdates,
+        visited
+      );
     }
   }
 
@@ -248,7 +264,14 @@ export class Links {
     magnet: Point,
     magnetSource: MagnetSource = "absolute"
   ): this | undefined {
-    const result = this.registry.add(arrow, side, targetId, targetType, magnet, magnetSource);
+    const result = this.registry.add(
+      arrow,
+      side,
+      targetId,
+      targetType,
+      magnet,
+      magnetSource
+    );
     return result ? this : undefined;
   }
 
@@ -272,7 +295,10 @@ export class Links {
     newFeatures: Record<string, Annotation>,
     prevFeatures: Record<string, Annotation>
   ) => {
-    const linksToRefresh = this.registry.syncFromFeatureChange(newFeatures, prevFeatures);
+    const linksToRefresh = this.registry.syncFromFeatureChange(
+      newFeatures,
+      prevFeatures
+    );
     if (linksToRefresh.size > 0) this.sync.updateAndCommitSync(linksToRefresh);
   };
 

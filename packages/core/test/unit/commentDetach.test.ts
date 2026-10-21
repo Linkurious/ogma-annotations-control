@@ -1,12 +1,7 @@
 import { Ogma } from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import {
-  Arrow,
-  Control,
-  createBox,
-  createCommentWithArrow
-} from "../../src";
+import { Arrow, Control, createBox, createCommentWithArrow } from "../../src";
 
 describe("canDetach", () => {
   let ogma: Ogma;
@@ -37,7 +32,12 @@ describe("canDetach", () => {
     const { comment, arrow } = createCommentWithArrow(0, 0, 100, 100, "note");
     arrow.properties.link = {
       ...arrow.properties.link,
-      end: { side: "end", id: target.id, type: target.type, magnet: { x: 0, y: 0 } }
+      end: {
+        side: "end",
+        id: target.id,
+        type: target.type,
+        magnet: { x: 0, y: 0 }
+      }
     };
     control.add(comment);
     control.add(arrow);

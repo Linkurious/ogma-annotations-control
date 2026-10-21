@@ -18,12 +18,16 @@ function makeEdges(edges: FakeEdge[]): EdgeList {
   });
   return {
     getExtremities: () => ({
-      getPosition: () => [...edges.map((e) => e.source), ...edges.map((e) => e.target)]
+      getPosition: () => [
+        ...edges.map((e) => e.source),
+        ...edges.map((e) => e.target)
+      ]
     }),
     size: edges.length,
     get: (i: number) => ({
       getId: () => edges[i].id,
-      getAttribute: (key: string) => (key === "width" ? edges[i].width ?? 1 : undefined)
+      getAttribute: (key: string) =>
+        key === "width" ? (edges[i].width ?? 1) : undefined
     }),
     getAttribute: (key: string) =>
       key === "curvature" ? edges.map((e) => e.curvature ?? 0) : undefined,

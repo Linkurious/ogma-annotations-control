@@ -315,7 +315,10 @@ export class Drawing {
           id: snap.id,
           point
         };
-    return { target, allowed: this.store.getState().options.canComment(target) };
+    return {
+      target,
+      allowed: this.store.getState().options.canComment(target)
+    };
   }
 
   /**

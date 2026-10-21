@@ -291,19 +291,20 @@ describe("Annotation creation", () => {
   // a single session and confirm nothing throws and nothing collides.
   it("should create one of every annotation type in sequence without throwing", async () => {
     const screen = (x: number, y: number) =>
-      session.page.evaluate(
-        (p) => screenToPage(p),
-        { x, y }
-      );
+      session.page.evaluate((p) => screenToPage(p), { x, y });
 
     // Arrow
-    await session.page.evaluate(() => editor.enableArrowDrawing(demoStyles.arrow));
+    await session.page.evaluate(() =>
+      editor.enableArrowDrawing(demoStyles.arrow)
+    );
     let from = await screen(-150, -150);
     let to = await screen(-120, -120);
     await drawArrow(from, to);
 
     // Text
-    await session.page.evaluate(() => editor.enableTextDrawing(demoStyles.text));
+    await session.page.evaluate(() =>
+      editor.enableTextDrawing(demoStyles.text)
+    );
     let p = await screen(-80, -80);
     await session.page.mouse.move(p.x, p.y);
     await session.page.mouse.down();
@@ -318,7 +319,9 @@ describe("Annotation creation", () => {
     await session.page.mouse.up();
 
     // Polygon
-    await session.page.evaluate(() => editor.enablePolygonDrawing(demoStyles.polygon));
+    await session.page.evaluate(() =>
+      editor.enablePolygonDrawing(demoStyles.polygon)
+    );
     const poly = [
       await screen(100, -150),
       await screen(150, -150),
@@ -334,7 +337,11 @@ describe("Annotation creation", () => {
 
     // Comment
     await session.page.evaluate(() =>
-      editor.enableCommentDrawing({ offsetX: 30, offsetY: -30, ...demoStyles.comment })
+      editor.enableCommentDrawing({
+        offsetX: 30,
+        offsetY: -30,
+        ...demoStyles.comment
+      })
     );
     p = await screen(-150, 100);
     await session.page.mouse.move(p.x, p.y);
@@ -386,16 +393,14 @@ describe("Annotation creation", () => {
   // carefully before touching this).
   it("should record exactly one history entry per creation, and keep undo/redo consistent", async () => {
     const screen = (x: number, y: number) =>
-      session.page.evaluate(
-        (p) => screenToPage(p),
-        { x, y }
-      );
+      session.page.evaluate((p) => screenToPage(p), { x, y });
 
     let prevPastStates = 0;
 
     async function undoRedoCheck(expectedNewEntries: number) {
       const before = await session.page.evaluate(() => ({
-        pastStates: (editor as any)["store"].temporal.getState().pastStates.length,
+        pastStates: (editor as any)["store"].temporal.getState().pastStates
+          .length,
         count: editor.getAnnotations().features.length
       }));
       // Exactly the expected number of history entries for the gesture
@@ -426,7 +431,9 @@ describe("Annotation creation", () => {
     }
 
     // Text (click-default)
-    await session.page.evaluate(() => editor.enableTextDrawing(demoStyles.text));
+    await session.page.evaluate(() =>
+      editor.enableTextDrawing(demoStyles.text)
+    );
     let p = await screen(0, 0);
     await session.page.mouse.move(p.x, p.y);
     await session.page.mouse.down();
@@ -443,14 +450,18 @@ describe("Annotation creation", () => {
     await undoRedoCheck(1);
 
     // Arrow
-    await session.page.evaluate(() => editor.enableArrowDrawing(demoStyles.arrow));
+    await session.page.evaluate(() =>
+      editor.enableArrowDrawing(demoStyles.arrow)
+    );
     const arrowFrom = await screen(150, -150);
     const arrowTo = await screen(180, -120);
     await drawArrow(arrowFrom, arrowTo);
     await undoRedoCheck(1);
 
     // Polygon
-    await session.page.evaluate(() => editor.enablePolygonDrawing(demoStyles.polygon));
+    await session.page.evaluate(() =>
+      editor.enablePolygonDrawing(demoStyles.polygon)
+    );
     const poly = [
       await screen(-150, 100),
       await screen(-100, 100),
@@ -481,7 +492,11 @@ describe("Annotation creation", () => {
     // the same class of gap), but undo/redo stay internally consistent
     // and never throw.
     await session.page.evaluate(() =>
-      editor.enableCommentDrawing({ offsetX: 30, offsetY: -30, ...demoStyles.comment })
+      editor.enableCommentDrawing({
+        offsetX: 30,
+        offsetY: -30,
+        ...demoStyles.comment
+      })
     );
     p = await screen(0, 150);
     await session.page.mouse.move(p.x, p.y);

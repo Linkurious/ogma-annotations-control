@@ -1,5 +1,13 @@
 import { TARGET_TYPES } from "../../constants";
-import { Annotation, Arrow, Comment, Id, isArrow, isComment, isText } from "../../types";
+import {
+  Annotation,
+  Arrow,
+  Comment,
+  Id,
+  isArrow,
+  isComment,
+  isText
+} from "../../types";
 
 /**
  * Helper functions for managing comment-arrow relationships

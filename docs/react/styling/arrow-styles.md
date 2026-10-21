@@ -53,10 +53,7 @@ function ArrowStyleControls({ arrowId }: { arrowId: string }) {
     <div className="arrow-controls">
       <label>
         Color:
-        <input
-          type="color"
-          onChange={(e) => updateColor(e.target.value)}
-        />
+        <input type="color" onChange={(e) => updateColor(e.target.value)} />
       </label>
 
       <label>
@@ -69,9 +66,7 @@ function ArrowStyleControls({ arrowId }: { arrowId: string }) {
         />
       </label>
 
-      <button onClick={toggleBidirectional}>
-        Toggle Bidirectional
-      </button>
+      <button onClick={toggleBidirectional}>Toggle Bidirectional</button>
     </div>
   );
 }
@@ -135,6 +130,7 @@ function StyleSelectedArrows() {
 For comprehensive information about arrow styling, including all available style options, extremity types, color formats, and best practices, see the [TypeScript Arrow Styles guide](/typescript/styling/arrow-styles).
 
 The TypeScript documentation covers:
+
 - All stroke types and their visual appearance
 - Extremity styles (arrow heads, tails, dots, halo-dots)
 - Color options and formats

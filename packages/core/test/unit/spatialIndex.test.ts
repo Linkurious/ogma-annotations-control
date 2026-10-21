@@ -39,7 +39,10 @@ describe("Index (Spatial Index)", () => {
         // Determine which subscription this is based on selector
         const selectorResult = selector(mockStore.getState());
 
-        if (selectorResult === undefined || typeof selectorResult === "boolean") {
+        if (
+          selectorResult === undefined ||
+          typeof selectorResult === "boolean"
+        ) {
           // The isDragging (drag-end catch-up) subscription - not needed for these tests
           return vi.fn();
         } else if (typeof selectorResult === "function") {

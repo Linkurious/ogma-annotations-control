@@ -1,9 +1,5 @@
 # Type Alias: Magnet
 
 ```ts
-type Magnet = 
-  | NodeMagnet
-  | EdgeMagnet
-  | BoxMagnet
-  | PolygonMagnet;
+type Magnet = NodeMagnet | EdgeMagnet | BoxMagnet | PolygonMagnet;
 ```
