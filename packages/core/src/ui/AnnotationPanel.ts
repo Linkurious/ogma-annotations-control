@@ -15,12 +15,7 @@ import {
   defaultTextStyle
 } from "../types";
 import { parseColor } from "../utils/utils";
-import {
-  BACKGROUNDS,
-  FONTS,
-  EXTREMITY_OPTIONS,
-  LINE_TYPES
-} from "./config";
+import { BACKGROUNDS, FONTS, EXTREMITY_OPTIONS, LINE_TYPES } from "./config";
 import {
   rgbaToString,
   initialRecentColors,
@@ -109,7 +104,11 @@ export class AnnotationPanel {
     // getOgma() is only on the real Control - guard it so a minimal fake
     // control (unit tests construct these) doesn't blow up the constructor.
     const ogmaContainer = this.control.getOgma?.()?.getContainer?.();
-    if (!options.container && ogmaContainer && ogmaContainer !== document.body) {
+    if (
+      !options.container &&
+      ogmaContainer &&
+      ogmaContainer !== document.body
+    ) {
       // eslint-disable-next-line no-console
       console.error(
         "[ogma-annotations-control] AnnotationPanel: no `container` option " +
@@ -497,12 +496,10 @@ export class AnnotationPanel {
       .forEach((btn) => {
         btn.addEventListener("click", () => {
           const type = btn.dataset.linetype as "plain" | "dashed";
-          this.panelBody
-            .querySelectorAll(".linetype-button")
-            .forEach((b) => {
-              b.classList.remove("active");
-              b.setAttribute("aria-pressed", "false");
-            });
+          this.panelBody.querySelectorAll(".linetype-button").forEach((b) => {
+            b.classList.remove("active");
+            b.setAttribute("aria-pressed", "false");
+          });
           btn.classList.add("active");
           btn.setAttribute("aria-pressed", "true");
           this.updateStyle({ strokeType: type });
@@ -519,7 +516,10 @@ export class AnnotationPanel {
   private updateColorCircles() {
     this.colorCircles.forEach((circle, i) => {
       circle.setAttribute("data-color", this.recent.colors[i]);
-      circle.setAttribute("aria-label", `Set color to ${this.recent.colors[i]}`);
+      circle.setAttribute(
+        "aria-label",
+        `Set color to ${this.recent.colors[i]}`
+      );
       circle.style.setProperty("--circle-color", this.recent.colors[i]);
       const active = i === this.recent.activeIndex;
       circle.classList.toggle("color-circle-primary", active);

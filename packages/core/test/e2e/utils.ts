@@ -1,11 +1,8 @@
 import { Ogma, OgmaParameters } from "@linkurious/ogma";
-import getPort from "get-port";
 import { mkdir } from "node:fs/promises";
 import { chromium } from "playwright";
-import type { Browser, Page } from "playwright";
-import { preview, build } from "vite";
-import type { InlineConfig, PreviewServer } from "vite";
-import { onTestFailed, onTestFinished } from "vitest";
+import type { Browser, BrowserContext, Page } from "playwright";
+import { inject, onTestFailed, onTestFinished } from "vitest";
 
 declare global {
   function createOgma(options: OgmaParameters): Ogma;
@@ -27,47 +24,32 @@ declare global {
 }
 
 export class BrowserSession {
-  public server!: PreviewServer;
   public browser!: Browser;
+  public context!: BrowserContext;
   public page!: Page;
-  public port!: number;
 
+  // The demo page build, its preview server and the Chromium process are
+  // shared by every test file - see globalSetup.mts. Each file connects to
+  // that Chromium and gets its own isolated BrowserContext.
+  //
   // Overridable at the CLI without touching any test file:
   //   E2E_HEADFUL=1 npx vitest run -c test/e2e/vitest.config.mts <file>
   //   E2E_SLOWMO=500 npx vitest run -c test/e2e/vitest.config.mts <file>
-  // The explicit `headless` param still wins over the env var when a test
-  // passes one deliberately (e.g. session.start(false)).
-  async start(
-    headless = process.env.E2E_HEADFUL !== "1",
-    options: InlineConfig = {}
-  ) {
-    this.port = await getPort();
-    await build({
-      root: "test/e2e/pages",
-      ...options
-    });
-    this.server = await preview({
-      root: "test/e2e/pages",
-      preview: { port: this.port },
-      ...options
-    });
-    this.browser = await chromium.launch({
-      headless,
-      devtools: false,
+  async start() {
+    this.browser = await chromium.connect(inject("e2eWsEndpoint"), {
       slowMo: Number(process.env.E2E_SLOWMO ?? 100)
     });
-    this.page = await this.browser.newPage();
-    await this.page.goto(`http://localhost:${this.port}`);
+    this.context = await this.browser.newContext();
+    this.page = await this.context.newPage();
+    await this.page.goto(inject("e2eBaseUrl"));
     await this.waitForReady();
   }
 
   async close() {
+    await this.context.close();
+    // On a connect()-ed browser this only disconnects; globalSetup owns
+    // the actual Chromium process.
     await this.browser.close();
-    await new Promise<void>((resolve, reject) => {
-      this.server.httpServer.close((error) =>
-        error ? reject(error) : resolve()
-      );
-    });
   }
   async emptyPage() {
     await this.page.evaluate(() => {
@@ -85,8 +67,7 @@ export class BrowserSession {
    * is supposed to wait for module-script execution) isn't a reliable
    * guarantee that the demo page's own bootstrap script has actually run
    * and defined its globals (createOgma et al.) - under CPU contention
-   * (e.g. several e2e test files building their own preview server
-   * concurrently in CI), that gap has been wide enough to lose the race,
+   * in CI, that gap has been wide enough to lose the race,
    * causing a `createOgma is not defined` failure in whatever runs right
    * after. Wait for the actual readiness signal instead of trusting the
    * navigation lifecycle event.
@@ -102,9 +83,13 @@ export class BrowserSession {
    * exceeded` in test/e2e/snapping.test.ts.
    */
   private async waitForReady() {
-    await this.page.waitForFunction(() => typeof createOgma === "function", undefined, {
-      timeout: 60000
-    });
+    await this.page.waitForFunction(
+      () => typeof createOgma === "function",
+      undefined,
+      {
+        timeout: 60000
+      }
+    );
   }
 
   /**
@@ -145,9 +130,7 @@ export function captureScreenshotOnTestEnd(
 
   onTestFailed(async (ctx) => {
     try {
-      await session.screenshot(
-        `${suiteLabel}/${ctx.task.name}.failed`
-      );
+      await session.screenshot(`${suiteLabel}/${ctx.task.name}.failed`);
     } catch {
       // The page/browser may already be gone (e.g. a crashed session) -
       // the failure itself is what matters, don't mask it with a

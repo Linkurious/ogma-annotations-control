@@ -1,10 +1,7 @@
 # Function: translatePolygon()
 
 ```ts
-function translatePolygon(
-   polygon, 
-   dx, 
-   dy): Polygon;
+function translatePolygon(polygon, dx, dy): Polygon;
 ```
 
 Translate (move) a polygon by dx, dy

@@ -16,7 +16,7 @@ color: Color;
 
 Stroke color
 
-***
+---
 
 ### type
 
@@ -26,7 +26,7 @@ type: StrokeType;
 
 Stroke type
 
-***
+---
 
 ### width
 

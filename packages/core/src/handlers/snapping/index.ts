@@ -8,7 +8,6 @@ import { Index } from "../../interaction/spatialIndex";
 import { Store } from "../../store";
 import { Text, Polygon, isBox, isText, isPolygon } from "../../types";
 
-
 export type { TextSnap } from "./text";
 export type { PolygonSnap } from "./polygon";
 export type { NodeSnap } from "./node";
@@ -75,6 +74,13 @@ export class Snapping extends EventTarget {
       snapWindow.maxY
     );
 
+    // Priority: inside a node > clearly over an edge > near a node > near an edge
+    const snapToNodeBodyResult = this.snapToNodes(point, nodes, 0);
+    if (snapToNodeBodyResult) return snapToNodeBodyResult;
+
+    const snapToEdgeBodyResult = this.snapToEdges(point, edges, true);
+    if (snapToEdgeBodyResult) return snapToEdgeBodyResult;
+
     const snapToNodeResult = this.snapToNodes(point, nodes);
     if (snapToNodeResult) return snapToNodeResult;
 
@@ -92,22 +98,33 @@ export class Snapping extends EventTarget {
 
   public snapToText(point: Point, texts: Text[]): TextSnap | null {
     const { zoom } = this.store.getState();
-    return snapToText(point, texts, zoom, this.options.magnetRadius, this.store);
+    return snapToText(
+      point,
+      texts,
+      zoom,
+      this.options.magnetRadius,
+      this.store
+    );
   }
 
   public snapToPolygon(point: Point, polygons: Polygon[]): PolygonSnap | null {
     return snapToPolygon(point, polygons, this.options.magnetRadius);
   }
 
-  public snapToNodes(point: Point, nodes: Parameters<typeof snapToNodes>[1]): NodeSnap | null {
-    return snapToNodes(point, nodes, this.options.detectMargin);
+  public snapToNodes(
+    point: Point,
+    nodes: Parameters<typeof snapToNodes>[1],
+    margin = this.options.detectMargin
+  ): NodeSnap | null {
+    return snapToNodes(point, nodes, margin);
   }
 
   public snapToEdges(
     point: Point,
     edges: Parameters<typeof snapToEdges>[1],
+    bodyOnly = false
   ): EdgeSnap | null {
-    return snapToEdges(point, edges, this.options.magnetRadius);
+    return snapToEdges(point, edges, this.options.magnetRadius, bodyOnly);
   }
 
   public getHoveredNode(): Node | null {

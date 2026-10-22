@@ -18,7 +18,10 @@ import {
   ColorCell
 } from "../../src/ui";
 import type { ToolbarCellContext } from "../../src/ui/toolbar/cells/contract";
-import type { ToolbarButtonItem, ToolbarDropdownItem } from "../../src/ui/toolbar/cells/types";
+import type {
+  ToolbarButtonItem,
+  ToolbarDropdownItem
+} from "../../src/ui/toolbar/cells/types";
 
 /** Minimal fake `AnnotationState` covering only what `renderText`/`renderBox`
  * read - no need to spin up a real store for a pure rendering test. */
@@ -131,12 +134,17 @@ describe("ui/toolbar/cells - generic item renderers", () => {
 
     expect(cell.element.dataset.tooltip).toBe("Bold");
     expect(cell.element.getAttribute("aria-label")).toBe("Bold");
-    expect(cell.element.classList.contains("oa-toolbar-button-danger")).toBe(true);
+    expect(cell.element.classList.contains("oa-toolbar-button-danger")).toBe(
+      true
+    );
 
     cell.element.click();
     expect(action).toHaveBeenCalledWith(ctx);
 
-    cell.update({ ...text, properties: { ...text.properties, style: { fontWeight: "bold" } } });
+    cell.update({
+      ...text,
+      properties: { ...text.properties, style: { fontWeight: "bold" } }
+    });
     expect(cell.element.classList.contains("active")).toBe(true);
   });
 
@@ -200,9 +208,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     // Every other swatch is a real color, so none should carry the marker.
     cells.forEach((c) => {
       if (c !== transparentCell) {
-        expect(
-          c.classList.contains("oa-toolbar-swatch-cell-transparent")
-        ).toBe(false);
+        expect(c.classList.contains("oa-toolbar-swatch-cell-transparent")).toBe(
+          false
+        );
       }
     });
 
@@ -237,7 +245,10 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const text = createText(0, 0, 100, 50, "Hi", { background: "#FFE49B" });
     const { ctx } = fakeCellContext(text);
     const onMoreColors = vi.fn();
-    const cell = new ColorCell(ctx, { swatches: STICKY_SWATCHES, onMoreColors });
+    const cell = new ColorCell(ctx, {
+      swatches: STICKY_SWATCHES,
+      onMoreColors
+    });
 
     const moreBtn = cell.element.querySelector<HTMLButtonElement>(
       ".oa-toolbar-more-colors"
@@ -246,7 +257,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
 
     expect(onMoreColors).toHaveBeenCalledWith(ctx, moreBtn);
     // The built-in vanilla-colorful popover must not have been built.
-    expect(cell.element.querySelector(".oa-toolbar-more-colors-host")).toBeNull();
+    expect(
+      cell.element.querySelector(".oa-toolbar-more-colors-host")
+    ).toBeNull();
 
     // The host is expected to call ctx.updateStyle itself - simulate that
     // and confirm it lands the same way a built-in pick would.
@@ -258,7 +271,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     // Exercised end-to-end (real tooltips in the mounted pill) in the
     // ui/TextAnnotationToolbar block below - this just checks the default
     // font list includes the requested monospace option.
-    expect(DEFAULT_TOOLBAR_FONTS.map((f) => f.value)).toContain("IBM Plex Mono");
+    expect(DEFAULT_TOOLBAR_FONTS.map((f) => f.value)).toContain(
+      "IBM Plex Mono"
+    );
   });
 });
 
@@ -283,11 +298,11 @@ describe("ui/TextAnnotationToolbar", () => {
 
   afterEach(() => {
     vi.useRealTimers();
-    // Deselect before destroying: TextHandler arms a window-level capture
+    // Deselect before destroying: TextHandler installs a window-level capture
     // "click" listener (see handlers/base.ts's `setAnnotation`) while a
     // Text/Comment is selected, keyed off `ogma.getContainer()` being
     // non-null - true here, unlike the suite's usual containerless
-    // `createOgma()`. `control.destroy()` alone doesn't appear to disarm
+    // `createOgma()`. `control.destroy()` alone doesn't appear to remove
     // it, so without this, the listener leaks on the shared `window`
     // across tests and later fires against an already-`ogma.destroy()`ed
     // (modules-nulled) instance on any click anywhere in the document.
@@ -461,7 +476,9 @@ describe("ui/TextAnnotationToolbar", () => {
           action: () => {}
         },
         { kind: "separator" },
-        ...defaultItems.filter((i) => (i.kind === "separator" ? true : i.id !== "delete"))
+        ...defaultItems.filter((i) =>
+          i.kind === "separator" ? true : i.id !== "delete"
+        )
       ]
     });
     control.select(text.id);

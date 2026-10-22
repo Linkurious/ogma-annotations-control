@@ -8,11 +8,7 @@ import {
   TextAnnotationToolbar
 } from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
-import {
-  Control,
-  AnnotationCollection,
-  getAnnotationsBounds
-} from "../src";
+import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
 import { installBrand } from "./brand";
 
 interface ND {}
@@ -173,7 +169,10 @@ class App {
       },
       handleSvgExport: async () => {
         try {
-          const svg = await this.ogma.export.svg({ clip: true, download: false });
+          const svg = await this.ogma.export.svg({
+            clip: true,
+            download: false
+          });
           currentSvg = svg;
           const blob = new Blob([svg], { type: "image/svg+xml" });
           const url = URL.createObjectURL(blob);
@@ -236,10 +235,11 @@ class App {
   private setupAnnotationPanel() {
     this.annotationPanel = new AnnotationPanel({
       control: this.control,
+      container: this.ogma.getContainer()!,
       // Text/sticky notes are handled by TextAnnotationToolbar (see
       // setupTextAnnotationToolbar) - excluding "text" here keeps the
       // docked panel from also popping up for the same selection.
-      enabledTypes: ["arrow", "box", "comment", "polygon"]
+      enabledTypes: ["arrow", "box", "polygon"]
     });
   }
 
@@ -247,6 +247,7 @@ class App {
     const { handleJsonExport, handleSvgExport } = this.setupExportPopups();
     this.annotationToolbar = new AnnotationToolbar({
       control: this.control,
+      container: this.ogma.getContainer()!,
       onJsonExport: handleJsonExport,
       onSvgExport: handleSvgExport
     });

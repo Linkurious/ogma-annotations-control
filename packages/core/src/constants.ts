@@ -2,6 +2,10 @@ import { Cursor } from "./types";
 
 export const NONE = -1;
 
+/** Default offset of a new comment from the click, in screen pixels */
+export const DEFAULT_COMMENT_OFFSET_X = 100;
+export const DEFAULT_COMMENT_OFFSET_Y = -50;
+
 export const EVT_DRAG = "dragging";
 export const EVT_DRAG_START = "dragstart";
 export const EVT_DRAG_END = "dragend";
@@ -17,6 +21,8 @@ export const EVT_COMPLETE_DRAWING = "completeDrawing";
 export const EVT_UPDATE = "update";
 export const EVT_LINK = "link";
 export const EVT_HISTORY = "history";
+export const EVT_COMMENT_DENIED = "commentDenied";
+export const EVT_COMMENT_HOVER = "commentHover";
 
 export const DATA_ATTR = "data-annotation";
 
@@ -39,6 +45,7 @@ export const cursors: Record<string, Cursor> = {
   move: "move",
   pointer: "pointer",
   crosshair: "crosshair",
+  notAllowed: "not-allowed",
   grab: "grab",
   grabbing: "grabbing",
   ewResize: "ew-resize",

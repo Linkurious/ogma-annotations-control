@@ -35,8 +35,14 @@ export function renderBox(
   const size = getBoxSize(annotation);
 
   const g = createDom(cachedElement, id, annotation.properties.type);
-  const { strokeColor, strokeWidth, strokeType, background, borderRadius, boxShadow } =
-    annotation.properties.style || defaultBoxStyle;
+  const {
+    strokeColor,
+    strokeWidth,
+    strokeType,
+    background,
+    borderRadius,
+    boxShadow
+  } = annotation.properties.style || defaultBoxStyle;
   g.classList.add("annotation-box");
   g.setAttribute("fill", `${background || "transparent"}`);
 

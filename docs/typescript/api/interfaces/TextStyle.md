@@ -25,7 +25,7 @@ same precedence pattern as `placeholder` vs
 default (`DEFAULT_AUTHOR_STYLE` in `renderer/shapes/text.ts`) for any
 field neither this nor the global option sets.
 
-***
+---
 
 ### background?
 
@@ -59,7 +59,7 @@ optional color: string;
 
 text color: #f00, yellow...
 
-***
+---
 
 ### fixedSize?
 
@@ -69,7 +69,7 @@ optional fixedSize: boolean;
 
 When true, text maintains constant size regardless of zoom level
 
-***
+---
 
 ### font?
 
@@ -79,7 +79,7 @@ optional font: string;
 
 Helvetica, sans-serif...
 
-***
+---
 
 ### fontScale?
 
@@ -92,7 +92,7 @@ effectiveFontSize = fontSize * (fontScale ?? 1). Updated incrementally
 by TextHandler's corner/edge drag when scaleFontOnResize is true;
 absent (≡ 1) for every annotation that doesn't opt in.
 
-***
+---
 
 ### fontSize?
 
@@ -102,7 +102,7 @@ optional fontSize: string | number;
 
 Font size, in pixels
 
-***
+---
 
 ### fontWeight?
 
@@ -113,7 +113,7 @@ optional fontWeight: "normal" | "bold";
 Bold the rendered/edited text. Absent (≡ "normal") for every
 annotation that doesn't opt in - no italic, no other weights for v1.
 
-***
+---
 
 ### padding?
 
@@ -134,7 +134,7 @@ while `content` is empty - disappears the instant the user types, no
 selection/focus tricks needed. Overrides the global
 `ControllerOptions.textPlaceholder` for this annotation.
 
-***
+---
 
 ### scaled?
 
@@ -154,7 +154,7 @@ Opt-in: when true, corner/edge-drag resize also updates fontScale, so
 the rendered font size scales with the box instead of the text
 rewrapping/truncating. Only set by defaultStickyNoteStyle.
 
-***
+---
 
 ### showAuthor?
 
@@ -167,7 +167,7 @@ signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
 author-visibility cell. No-op when `properties.author` is unset or
 blank. Hidden (≡ false) by default.
 
-***
+---
 
 ### strokeColor?
 
@@ -192,4 +192,3 @@ optional strokeWidth: number;
 ```
 
 Stroke width
-

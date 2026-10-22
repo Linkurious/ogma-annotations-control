@@ -15,8 +15,10 @@ export interface PolygonProperties extends AnnotationProps {
 /**
  * Polygon placed on the graph, use it to highlight areas
  */
-export interface Polygon
-  extends AnnotationFeature<GeoJSONPolygon, PolygonProperties> {}
+export interface Polygon extends AnnotationFeature<
+  GeoJSONPolygon,
+  PolygonProperties
+> {}
 
 export const isPolygon = (
   a: AnnotationFeature<Geometry, AnnotationProps>

@@ -85,10 +85,15 @@ describe("real @linkurious/svg-font-embedder against this app's export", () => {
   it("keeps the converted text at the note's actual position", () => {
     const svg = buildNoteSvg("Hello World");
     const doc = new DOMParser().parseFromString(svg, "image/svg+xml");
-    const originalTransform = doc.querySelector("text")!.getAttribute("transform");
+    const originalTransform = doc
+      .querySelector("text")!
+      .getAttribute("transform");
 
     const processed: string = processWithFontEmbedder(svg);
-    const processedDoc = new DOMParser().parseFromString(processed, "image/svg+xml");
+    const processedDoc = new DOMParser().parseFromString(
+      processed,
+      "image/svg+xml"
+    );
     const wrapper = processedDoc.querySelector("g[data-text]")!.parentElement!;
 
     expect(wrapper.getAttribute("transform")).toBe(originalTransform);

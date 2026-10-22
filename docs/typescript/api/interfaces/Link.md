@@ -12,7 +12,7 @@ arrow: Id;
 
 arrow attached to the text or node
 
-***
+---
 
 ### id
 
@@ -22,7 +22,7 @@ id: Id;
 
 id of the text the arrow is attached to
 
-***
+---
 
 ### magnet
 
@@ -32,7 +32,7 @@ magnet: Magnet;
 
 Typed snap point — semantics depend on targetType, see Magnet union.
 
-***
+---
 
 ### side
 
@@ -42,7 +42,7 @@ side: Side;
 
 On which end the arrow is tighten to the text
 
-***
+---
 
 ### target
 
@@ -50,9 +50,9 @@ On which end the arrow is tighten to the text
 target: Id;
 ```
 
-id of the text or node  the arrow is attached to
+id of the text or node the arrow is attached to
 
-***
+---
 
 ### targetType
 

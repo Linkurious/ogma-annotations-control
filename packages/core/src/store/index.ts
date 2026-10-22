@@ -4,9 +4,14 @@ import { temporal } from "zundo";
 import { subscribeWithSelector } from "zustand/middleware";
 import { createStore as createVanillaStore } from "zustand/vanilla";
 import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
-import { getCascadeDeleteIds, getCommentLeftOrphanedBy } from "../handlers/comment/helpers";
+import {
+  getCascadeDeleteIds,
+  getCommentLeftOrphanedBy
+} from "../handlers/comment/helpers";
 import {
   Annotation,
+  Comment,
+  CommentTarget,
   AuthorLineStyle,
   Bounds,
   ControllerOptions,
@@ -110,6 +115,7 @@ export interface AnnotationState {
     showEditButton: boolean;
     sendButtonIcon: string;
     editButtonIcon: string;
+    commentIcon?: string | ((comment: Comment) => string | undefined);
     minArrowHeight: number;
     maxArrowHeight: number;
     detectMargin: number;
@@ -120,6 +126,9 @@ export interface AnnotationState {
     minReadableFontSize: number;
     isEditable: (annotation: Annotation) => boolean;
     isVisible: (annotation: Annotation) => boolean;
+    canComment: (target: CommentTarget) => boolean;
+    commentDeniedCursor: boolean;
+    canDetach: (comment: Comment) => boolean;
   };
 
   setOptions: (options: Partial<AnnotationState["options"]>) => void;
@@ -206,6 +215,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             sendButtonIcon: initialOptions?.sendButtonIcon ?? DEFAULT_SEND_ICON,
             showEditButton: initialOptions?.showEditButton ?? true,
             editButtonIcon: initialOptions?.editButtonIcon ?? DEFAULT_EDIT_ICON,
+            commentIcon: initialOptions?.commentIcon,
             minArrowHeight: initialOptions?.minArrowHeight ?? 20,
             maxArrowHeight: initialOptions?.maxArrowHeight ?? 30,
             detectMargin: initialOptions?.detectMargin ?? 2,
@@ -215,7 +225,10 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             authorStyle: initialOptions?.authorStyle,
             minReadableFontSize: initialOptions?.minReadableFontSize ?? 2,
             isEditable: initialOptions?.isEditable ?? (() => true),
-            isVisible: initialOptions?.isVisible ?? (() => true)
+            isVisible: initialOptions?.isVisible ?? (() => true),
+            canComment: initialOptions?.canComment ?? (() => true),
+            commentDeniedCursor: initialOptions?.commentDeniedCursor ?? true,
+            canDetach: initialOptions?.canDetach ?? (() => false)
           },
 
           setOptions: (newOptions) =>
@@ -229,7 +242,10 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               if (!feature) return state;
 
               // A feature still being drawn is exempt, or its draft could get stuck uncancelable.
-              if (id !== state.drawingFeature && !state.options.isEditable(feature)) {
+              if (
+                id !== state.drawingFeature &&
+                !state.options.isEditable(feature)
+              ) {
                 // eslint-disable-next-line no-console
                 console.error(`Cannot delete annotation ${id}: not editable`);
                 return state;
@@ -252,7 +268,11 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               }
 
               // Deleting a comment (or text) also deletes all its arrows.
-              const toDelete = getCascadeDeleteIds(features, id);
+              const toDelete = getCascadeDeleteIds(
+                features,
+                id,
+                state.options.canDetach
+              );
 
               // All or nothing - refuse the whole delete if the cascade reaches a non-editable annotation.
               for (const deleteId of toDelete) {
@@ -312,7 +332,7 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
                 ...state.features,
                 [feature.id]: feature as Annotation
               }
-            }))
+            }));
           },
 
           // Start live update - snapshot current state
@@ -386,11 +406,14 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             set({
               features: updatedFeatures,
               liveUpdates: remainingLiveUpdates,
-              // Only declare dragging over once nothing else is still
-              // live - a scoped commit (e.g. a comment auto-grow finalize)
-              // must not end an unrelated drag that's still in progress.
+              // A scoped commit (LinkSync's debounced arrow commit, a
+              // comment auto-grow finalize) never ends a drag - it can fire
+              // mid-gesture (e.g. while a node is still being dragged, with
+              // no annotation overlay of its own left in `liveUpdates`).
+              // Only an unscoped commit, and only once nothing else is
+              // still live, declares dragging over.
               isDragging:
-                Object.keys(remainingLiveUpdates).length === 0
+                !ids && Object.keys(remainingLiveUpdates).length === 0
                   ? false
                   : get().isDragging,
               lastChangedFeatures: changedFeatureIds // Track which features changed
@@ -415,7 +438,11 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
           updateFeature: (id, updates) =>
             set((state) => {
               const feature = state.features[id];
-              if (feature && id !== state.drawingFeature && !state.options.isEditable(feature)) {
+              if (
+                feature &&
+                id !== state.drawingFeature &&
+                !state.options.isEditable(feature)
+              ) {
                 // eslint-disable-next-line no-console
                 console.error(`Cannot update annotation ${id}: not editable`);
                 return state;
@@ -446,7 +473,11 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               Object.entries(updates).forEach(([id, update]) => {
                 const feature = newFeatures[id];
                 if (!feature) return;
-                if (id !== state.drawingFeature && !state.options.isEditable(feature)) return;
+                if (
+                  id !== state.drawingFeature &&
+                  !state.options.isEditable(feature)
+                )
+                  return;
                 newFeatures[id] = {
                   ...feature,
                   ...update

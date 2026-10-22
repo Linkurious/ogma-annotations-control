@@ -1,7 +1,14 @@
-import { getCommentLinkId, isCommentArrow } from "../../handlers/comment/helpers";
+import {
+  getCommentLinkId,
+  isCommentArrow
+} from "../../handlers/comment/helpers";
 import { AnnotationState } from "../../store";
 import { Arrow, Extremity, Id, Point, defaultArrowStyle } from "../../types";
-import { bringToTop, createSVGElement, getArrowEndPoints } from "../../utils/utils";
+import {
+  bringToTop,
+  createSVGElement,
+  getArrowEndPoints
+} from "../../utils/utils";
 import {
   subtract,
   length,
@@ -13,6 +20,8 @@ import {
 } from "../../utils/vec";
 
 const HALO_OPACITY = 0.5;
+// Arrow heads are drawn at this fraction of the computed tip length
+const ARROW_HEAD_SCALE = 0.7;
 
 /**
  * @function getArrowHeight
@@ -179,7 +188,9 @@ function addExtremity(
     );
   if (type === "dot" || type === "halo-dot")
     addDot(lineGroup, point, color, 1, strokeWidth * zoom * 2);
-  if (type === "arrow" || type === "arrow-plain")
+  // A zero-length arrow (e.g. a just-pressed comment/arrow, before any drag) has
+  // no direction, so its head would flash pointing the wrong way
+  if ((type === "arrow" || type === "arrow-plain") && length(vec) > 0)
     addArrowHead(
       lineGroup,
       point,
@@ -187,7 +198,7 @@ function addExtremity(
       color,
       type === "arrow-plain",
       strokeWidth * zoom,
-      tipLength
+      tipLength * ARROW_HEAD_SCALE
     );
 }
 

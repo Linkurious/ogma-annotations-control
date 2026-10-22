@@ -1,6 +1,12 @@
 import { Ogma } from "@linkurious/ogma";
 import { AugmentedWindow } from "./types.ts";
-import { Control, createArrow, createBox, createPolygon, createText } from "../../../src";
+import {
+  Control,
+  createArrow,
+  createBox,
+  createPolygon,
+  createText
+} from "../../../src";
 declare global {
   // eslint-disable-next-line
   interface Window extends AugmentedWindow {

@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "printWidth": 80,
+  "trailingComma": "none",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "**/dist",
+    "**/node_modules",
+    "docs/public",
+    "docs/react/api",
+    "docs/react/typescript/api",
+    "package-lock.json",
+    "**/*.json"
+  ]
+}

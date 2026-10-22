@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-09-17 | Version: 2.x
+> Auto-generated: 2026-10-12 | Version: 2.x
 
 ---
 
@@ -68,14 +68,14 @@ The annotation to add
 
 `this`
 
-***
+---
 
 ### addListener()
 
 ```ts
 addListener<T>(
-   event, 
-   fn, 
+   event,
+   fn,
    context?): this;
 ```
 
@@ -83,7 +83,7 @@ addListener<T>(
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -117,7 +117,7 @@ Cancel the current drawing operation
 
 this for chaining
 
-***
+---
 
 ### canRedo()
 
@@ -133,7 +133,7 @@ Check if there are changes to redo
 
 true if redo is possible
 
-***
+---
 
 ### canUndo()
 
@@ -149,7 +149,7 @@ Check if there are changes to undo
 
 true if undo is possible
 
-***
+---
 
 ### clearHistory()
 
@@ -163,7 +163,7 @@ Clear the undo/redo history
 
 `void`
 
-***
+---
 
 ### destroy()
 
@@ -177,7 +177,7 @@ Destroy the controller and its elements
 
 `void`
 
-***
+---
 
 ### disableEraseMode()
 
@@ -191,7 +191,35 @@ Turn erase mode off. No-op if it isn't active.
 
 `this`
 
-***
+---
+
+### editFeature()
+
+```ts
+editFeature(id): this;
+```
+
+(Re-)apply `id`'s handler attachment (drag/resize/text-edit) to match
+`isEditable` right now, instead of waiting for a deselect/reselect -
+this is the same call a selection change makes internally. Call it
+directly after changing whatever external state your `isEditable`
+predicate depends on (e.g. a `locked` flag kept outside the
+annotation - see the lock-toolbar-item.ts example): closes any open
+text editor and detaches the handler if `id` just became
+non-editable, or attaches it if `id` is selected and just became
+editable again.
+
+#### Parameters
+
+##### id
+
+[`Id`](../type-aliases/Id.md)
+
+#### Returns
+
+`this`
+
+---
 
 ### emit()
 
@@ -205,7 +233,7 @@ Calls each of the listeners registered for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -230,6 +258,7 @@ enableArrowDrawing(style?): this;
 Enable arrow drawing mode - the recommended way to add arrows.
 
 Call this method when the user clicks an "Add Arrow" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create an arrow at that position with the specified style
 3. Start the interactive drawing process
@@ -255,8 +284,8 @@ this for chaining
 #### Example
 
 ```ts
-addArrowButton.addEventListener('click', () => {
-  control.enableArrowDrawing({ strokeColor: '#3A03CF', strokeWidth: 2 });
+addArrowButton.addEventListener("click", () => {
+  control.enableArrowDrawing({ strokeColor: "#3A03CF", strokeWidth: 2 });
 });
 ```
 
@@ -264,7 +293,7 @@ addArrowButton.addEventListener('click', () => {
 
 startArrow for low-level programmatic control
 
-***
+---
 
 ### enableBoxDrawing()
 
@@ -275,6 +304,7 @@ enableBoxDrawing(style?): this;
 Enable box drawing mode - the recommended way to add boxes.
 
 Call this method when the user clicks an "Add Box" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a box at that position with the specified style
 3. Start the interactive drawing process (drag to size)
@@ -300,8 +330,8 @@ this for chaining
 #### Example
 
 ```ts
-addBoxButton.addEventListener('click', () => {
-  control.enableBoxDrawing({ background: '#EDE6FF', borderRadius: 8 });
+addBoxButton.addEventListener("click", () => {
+  control.enableBoxDrawing({ background: "#EDE6FF", borderRadius: 8 });
 });
 ```
 
@@ -309,7 +339,7 @@ addBoxButton.addEventListener('click', () => {
 
 startBox for low-level programmatic control
 
-***
+---
 
 ### enableCommentDrawing()
 
@@ -320,6 +350,7 @@ enableCommentDrawing(options): this;
 Enable comment drawing mode - the recommended way to add comments.
 
 Call this method when the user clicks an "Add Comment" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a comment with an arrow pointing to that position
 3. Smart positioning: automatically finds the best placement for the comment box
@@ -351,13 +382,13 @@ Style options for the comment box
 
 `number`
 
-Manual X offset for comment placement (overrides smart positioning)
+Manual X offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
 
 ###### offsetY?
 
 `number`
 
-Manual Y offset for comment placement (overrides smart positioning)
+Manual Y offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
 
 #### Returns
 
@@ -368,10 +399,10 @@ this for chaining
 #### Example
 
 ```ts
-addCommentButton.addEventListener('click', () => {
+addCommentButton.addEventListener("click", () => {
   control.enableCommentDrawing({
-    commentStyle: { color: '#3A03CF', background: '#EDE6FF' },
-    arrowStyle: { strokeColor: '#3A03CF', head: 'halo-dot' }
+    commentStyle: { color: "#3A03CF", background: "#EDE6FF" },
+    arrowStyle: { strokeColor: "#3A03CF", head: "halo-dot" }
   });
 });
 ```
@@ -380,7 +411,7 @@ addCommentButton.addEventListener('click', () => {
 
 startComment for low-level programmatic control
 
-***
+---
 
 ### enableEraseMode()
 
@@ -389,7 +420,7 @@ enableEraseMode(): this;
 ```
 
 Enable erase mode: every click on an annotation deletes it immediately.
-Stays armed across multiple clicks until `disableEraseMode()` is called,
+Stays active across multiple clicks until `disableEraseMode()` is called,
 or another drawing tool is enabled / `cancelDrawing()` is called.
 
 #### Returns
@@ -402,7 +433,7 @@ this for chaining
 
 disableEraseMode to turn erase mode off
 
-***
+---
 
 ### enablePlacement()
 
@@ -428,7 +459,7 @@ The text or box annotation to place
 
 this for chaining
 
-***
+---
 
 ### enablePolygonDrawing()
 
@@ -439,6 +470,7 @@ enablePolygonDrawing(style?): this;
 Enable polygon drawing mode - the recommended way to add polygons.
 
 Call this method when the user clicks an "Add Polygon" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a polygon starting at that position with the specified style
 3. Start the interactive drawing process (click points to draw shape)
@@ -464,8 +496,11 @@ this for chaining
 #### Example
 
 ```ts
-addPolygonButton.addEventListener('click', () => {
-  control.enablePolygonDrawing({ strokeColor: '#3A03CF', background: 'rgba(58, 3, 207, 0.15)' });
+addPolygonButton.addEventListener("click", () => {
+  control.enablePolygonDrawing({
+    strokeColor: "#3A03CF",
+    background: "rgba(58, 3, 207, 0.15)"
+  });
 });
 ```
 
@@ -473,7 +508,7 @@ addPolygonButton.addEventListener('click', () => {
 
 startPolygon for low-level programmatic control
 
-***
+---
 
 ### enableStickyNoteDrawing()
 
@@ -491,6 +526,7 @@ handles to resize it afterward.
 
 Call this method when the user clicks an "Add sticky note" button. The
 control will:
+
 1. Wait for the next mousedown event
 2. Create the note at that position and start the interactive
    corner-drag, already selected
@@ -517,8 +553,8 @@ this for chaining
 #### Example
 
 ```ts
-addStickyNoteButton.addEventListener('click', () => {
-  control.enableStickyNoteDrawing({ background: '#FFEB99' });
+addStickyNoteButton.addEventListener("click", () => {
+  control.enableStickyNoteDrawing({ background: "#FFEB99" });
 });
 ```
 
@@ -526,7 +562,7 @@ addStickyNoteButton.addEventListener('click', () => {
 
 startStickyNote for low-level programmatic control
 
-***
+---
 
 ### enableTextDrawing()
 
@@ -537,6 +573,7 @@ enableTextDrawing(style?): this;
 Enable text drawing mode - the recommended way to add text annotations.
 
 Call this method when the user clicks an "Add Text" button. The control will:
+
 1. Wait for the next mousedown event
 2. Create a text box at that position with the specified style
 3. Start the interactive drawing/editing process
@@ -562,8 +599,8 @@ this for chaining
 #### Example
 
 ```ts
-addTextButton.addEventListener('click', () => {
-  control.enableTextDrawing({ color: '#3A03CF', fontSize: 24 });
+addTextButton.addEventListener("click", () => {
+  control.enableTextDrawing({ color: "#3A03CF", fontSize: 24 });
 });
 ```
 
@@ -571,7 +608,7 @@ addTextButton.addEventListener('click', () => {
 
 startText for low-level programmatic control
 
-***
+---
 
 ### eventNames()
 
@@ -614,7 +651,7 @@ The id of the annotation to retrieve
 
 The annotation with the given id, or undefined if not found
 
-***
+---
 
 ### getAnnotations()
 
@@ -630,7 +667,7 @@ Get all annotations in the controller
 
 A FeatureCollection containing all annotations
 
-***
+---
 
 ### getOgma()
 
@@ -647,7 +684,7 @@ going through a renderer/handler internal to `Control`.
 
 `Ogma`
 
-***
+---
 
 ### getRotation()
 
@@ -664,7 +701,7 @@ Text box's world-space bounds.
 
 `number`
 
-***
+---
 
 ### getSelected()
 
@@ -680,7 +717,7 @@ Get the first selected annotation (for backwards compatibility)
 
 The currently selected annotation, or null if none selected
 
-***
+---
 
 ### getSelectedAnnotations()
 
@@ -696,7 +733,7 @@ Get the currently selected annotations as a collection
 
 A FeatureCollection of selected annotations
 
-***
+---
 
 ### getZoom()
 
@@ -712,7 +749,7 @@ units for its anchor-point math (same conversion `Handles` does).
 
 `number`
 
-***
+---
 
 ### isAnnotationEditable()
 
@@ -733,7 +770,7 @@ right now, per the `isEditable` option? `false` for an unknown id.
 
 `boolean`
 
-***
+---
 
 ### isAnnotationVisible()
 
@@ -754,7 +791,7 @@ option? `false` for an unknown id.
 
 `boolean`
 
-***
+---
 
 ### isDrawing()
 
@@ -766,7 +803,7 @@ isDrawing(): boolean;
 
 `boolean`
 
-***
+---
 
 ### isEraseModeActive()
 
@@ -780,7 +817,7 @@ Whether erase mode is currently active.
 
 `boolean`
 
-***
+---
 
 ### link()
 
@@ -788,8 +825,8 @@ Whether erase mode is currently active.
 
 ```ts
 link(
-   arrowId, 
-   targetNode, 
+   arrowId,
+   targetNode,
    side): this;
 ```
 
@@ -817,8 +854,8 @@ Attach an arrow to a node at the specified side
 
 ```ts
 link(
-   arrowId, 
-   target, 
+   arrowId,
+   target,
    side): this;
 ```
 
@@ -842,7 +879,7 @@ Attach an arrow to an annotation at the specified side
 
 `this`
 
-***
+---
 
 ### listenerCount()
 
@@ -874,7 +911,7 @@ Return the listeners registered for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -890,9 +927,9 @@ Return the listeners registered for a given event.
 
 ```ts
 off<T>(
-   event, 
-   fn?, 
-   context?, 
+   event,
+   fn?,
+   context?,
    once?): this;
 ```
 
@@ -900,7 +937,7 @@ off<T>(
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -928,8 +965,8 @@ off<T>(
 
 ```ts
 on<T>(
-   event, 
-   fn, 
+   event,
+   fn,
    context?): this;
 ```
 
@@ -939,7 +976,7 @@ Add a listener for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -963,8 +1000,8 @@ Add a listener for a given event.
 
 ```ts
 once<T>(
-   event, 
-   fn, 
+   event,
+   fn,
    context?): this;
 ```
 
@@ -974,7 +1011,7 @@ Add a one-time listener for a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -1008,7 +1045,7 @@ Redo the last undone change
 
 true if redo was successful, false if no changes to redo
 
-***
+---
 
 ### remove()
 
@@ -1030,7 +1067,7 @@ The annotation(s) to remove
 
 `this`
 
-***
+---
 
 ### removeAllListeners()
 
@@ -1054,9 +1091,9 @@ keyof FeatureEvents
 
 ```ts
 removeListener<T>(
-   event, 
-   fn?, 
-   context?, 
+   event,
+   fn?,
+   context?,
    once?): this;
 ```
 
@@ -1066,7 +1103,7 @@ Remove the listeners of a given event.
 
 ##### T
 
-`T` *extends* keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
+`T` _extends_ keyof [`FeatureEvents`](../type-aliases/FeatureEvents.md)
 
 #### Parameters
 
@@ -1112,7 +1149,7 @@ The id(s) of the annotation(s) to select
 
 this for chaining
 
-***
+---
 
 ### setOptions()
 
@@ -1140,6 +1177,34 @@ the updated options
 
 ```ts
 optional authorStyle: Partial<AuthorLineStyle>;
+```
+
+##### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+###### Parameters
+
+###### target
+
+[`CommentTarget`](../type-aliases/CommentTarget.md)
+
+###### Returns
+
+`boolean`
+
+##### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
+```
+
+##### commentIcon?
+
+```ts
+optional commentIcon: string | (comment) => string | undefined;
 ```
 
 ##### detectMargin
@@ -1240,15 +1305,15 @@ showSendButton: boolean;
 textPlaceholder: string;
 ```
 
-***
+---
 
 ### setScale()
 
 ```ts
 setScale(
-   id, 
-   scale, 
-   ox, 
+   id,
+   scale,
+   ox,
    oy): this;
 ```
 
@@ -1286,14 +1351,14 @@ Origin y coordinate
 
 this for chaining
 
-***
+---
 
 ### startArrow()
 
 ```ts
 startArrow(
-   x, 
-   y, 
+   x,
+   y,
    arrow?): Control;
 ```
 
@@ -1306,6 +1371,7 @@ You must handle mouse events and optionally create the arrow object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1340,10 +1406,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const arrow = createArrow(x, y, x, y, { strokeColor: '#3A03CF' });
+  const arrow = createArrow(x, y, x, y, { strokeColor: "#3A03CF" });
   control.startArrow(x, y, arrow);
 });
 ```
@@ -1352,14 +1418,14 @@ ogma.events.once('mousedown', (evt) => {
 
 enableArrowDrawing for the recommended high-level API
 
-***
+---
 
 ### startBox()
 
 ```ts
 startBox(
-   x, 
-   y, 
+   x,
+   y,
    box?): Control;
 ```
 
@@ -1372,6 +1438,7 @@ You must handle mouse events and optionally create the box object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1406,10 +1473,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const box = createBox(x, y, 100, 50, { background: '#EDE6FF' });
+  const box = createBox(x, y, 100, 50, { background: "#EDE6FF" });
   control.startBox(x, y, box);
 });
 ```
@@ -1418,15 +1485,15 @@ ogma.events.once('mousedown', (evt) => {
 
 enableBoxDrawing for the recommended high-level API
 
-***
+---
 
 ### startComment()
 
 ```ts
 startComment(
-   x, 
-   y, 
-   comment, 
+   x,
+   y,
+   comment,
    options?): this;
 ```
 
@@ -1439,6 +1506,7 @@ You must handle mouse events and create the comment object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1493,10 +1561,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const comment = createComment(x, y, 'My comment', { color: '#3A03CF' });
+  const comment = createComment(x, y, "My comment", { color: "#3A03CF" });
   control.startComment(x, y, comment);
 });
 ```
@@ -1505,14 +1573,14 @@ ogma.events.once('mousedown', (evt) => {
 
 enableCommentDrawing for the recommended high-level API
 
-***
+---
 
 ### startPolygon()
 
 ```ts
 startPolygon(
-   x, 
-   y, 
+   x,
+   y,
    polygon): this;
 ```
 
@@ -1525,6 +1593,7 @@ You must handle mouse events and create the polygon object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1559,10 +1628,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const polygon = createPolygon([[[x, y]]], { strokeColor: '#3A03CF' });
+  const polygon = createPolygon([[[x, y]]], { strokeColor: "#3A03CF" });
   control.startPolygon(x, y, polygon);
 });
 ```
@@ -1571,14 +1640,14 @@ ogma.events.once('mousedown', (evt) => {
 
 enablePolygonDrawing for the recommended high-level API
 
-***
+---
 
 ### startStickyNote()
 
 ```ts
 startStickyNote(
-   x, 
-   y, 
+   x,
+   y,
    style?): this;
 ```
 
@@ -1619,14 +1688,14 @@ this for chaining
 
 enableStickyNoteDrawing for the recommended high-level API
 
-***
+---
 
 ### startText()
 
 ```ts
 startText(
-   x, 
-   y, 
+   x,
+   y,
    text?): Control;
 ```
 
@@ -1639,6 +1708,7 @@ You must handle mouse events and optionally create the text object yourself.
 mouse events and annotation creation automatically.
 
 Use this method only when you need:
+
 - Custom mouse event handling (e.g., custom cursors, right-click menus)
 - Programmatic placement without user interaction
 - Integration with custom UI frameworks
@@ -1673,10 +1743,10 @@ this for chaining
 
 ```ts
 // Custom cursor example
-ogma.setOptions({ cursor: { default: 'crosshair' } });
-ogma.events.once('mousedown', (evt) => {
+ogma.setOptions({ cursor: { default: "crosshair" } });
+ogma.events.once("mousedown", (evt) => {
   const { x, y } = ogma.view.screenToGraphCoordinates(evt);
-  const text = createText(x, y, 0, 0, 'Hello', { color: '#3A03CF' });
+  const text = createText(x, y, 0, 0, "Hello", { color: "#3A03CF" });
   control.startText(x, y, text);
 });
 ```
@@ -1685,7 +1755,7 @@ ogma.events.once('mousedown', (evt) => {
 
 enableTextDrawing for the recommended high-level API
 
-***
+---
 
 ### toggleComment()
 
@@ -1709,7 +1779,7 @@ The id of the comment to toggle
 
 this for chaining
 
-***
+---
 
 ### undo()
 
@@ -1725,7 +1795,7 @@ Undo the last change
 
 true if undo was successful, false if no changes to undo
 
-***
+---
 
 ### unselect()
 
@@ -1749,7 +1819,7 @@ The id(s) of the annotation(s) to unselect, or undefined to unselect all
 
 this for chaining
 
-***
+---
 
 ### update()
 
@@ -1766,7 +1836,7 @@ geometry, properties, and style. Updates are merged with existing data.
 
 ##### A
 
-`A` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`A` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 #### Parameters
 
@@ -1789,8 +1859,11 @@ this for chaining
 controller.update({
   id: arrowId,
   geometry: {
-    type: 'LineString',
-    coordinates: [[0, 0], [200, 200]]
+    type: "LineString",
+    coordinates: [
+      [0, 0],
+      [200, 200]
+    ]
   }
 });
 
@@ -1798,11 +1871,11 @@ controller.update({
 controller.update({
   id: textId,
   geometry: {
-    type: 'Point',
+    type: "Point",
     coordinates: [100, 100]
   },
   properties: {
-    content: 'Updated text'
+    content: "Updated text"
   }
 });
 
@@ -1811,13 +1884,13 @@ controller.update({
   id: boxId,
   properties: {
     style: {
-      background: '#ff0000'
+      background: "#ff0000"
     }
   }
 });
 ```
 
-***
+---
 
 ### updateStyle()
 
@@ -1831,7 +1904,7 @@ Update the style of the annotation with the given id
 
 ##### A
 
-`A` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`A` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 #### Parameters
 
@@ -1931,7 +2004,7 @@ Base properties for all annotations.
 optional link: Partial<Record<Side, ExportedLink>>;
 ```
 
-***
+---
 
 ### style?
 
@@ -1969,7 +2042,7 @@ optional head: Extremity;
 
 Head extremity style
 
-***
+---
 
 ### strokeColor?
 
@@ -2091,7 +2164,7 @@ same precedence pattern as `placeholder` vs
 default (`DEFAULT_AUTHOR_STYLE` in `renderer/shapes/text.ts`) for any
 field neither this nor the global option sets.
 
-***
+---
 
 ### background?
 
@@ -2125,7 +2198,7 @@ optional color: string;
 
 text color: #f00, yellow...
 
-***
+---
 
 ### fixedSize?
 
@@ -2135,7 +2208,7 @@ optional fixedSize: boolean;
 
 When true, text maintains constant size regardless of zoom level
 
-***
+---
 
 ### font?
 
@@ -2145,7 +2218,7 @@ optional font: string;
 
 Helvetica, sans-serif...
 
-***
+---
 
 ### fontScale?
 
@@ -2158,7 +2231,7 @@ effectiveFontSize = fontSize * (fontScale ?? 1). Updated incrementally
 by TextHandler's corner/edge drag when scaleFontOnResize is true;
 absent (≡ 1) for every annotation that doesn't opt in.
 
-***
+---
 
 ### fontSize?
 
@@ -2168,7 +2241,7 @@ optional fontSize: string | number;
 
 Font size, in pixels
 
-***
+---
 
 ### fontWeight?
 
@@ -2179,7 +2252,7 @@ optional fontWeight: "normal" | "bold";
 Bold the rendered/edited text. Absent (≡ "normal") for every
 annotation that doesn't opt in - no italic, no other weights for v1.
 
-***
+---
 
 ### padding?
 
@@ -2200,7 +2273,7 @@ while `content` is empty - disappears the instant the user types, no
 selection/focus tricks needed. Overrides the global
 `ControllerOptions.textPlaceholder` for this annotation.
 
-***
+---
 
 ### scaled?
 
@@ -2220,7 +2293,7 @@ Opt-in: when true, corner/edge-drag resize also updates fontScale, so
 the rendered font size scales with the box instead of the text
 rewrapping/truncating. Only set by defaultStickyNoteStyle.
 
-***
+---
 
 ### showAuthor?
 
@@ -2233,7 +2306,7 @@ signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
 author-visibility cell. No-op when `properties.author` is unset or
 blank. Hidden (≡ false) by default.
 
-***
+---
 
 ### strokeColor?
 
@@ -2343,7 +2416,7 @@ optional background: string;
 
 background color: empty for transparent #f00, yellow...
 
-***
+---
 
 ### borderRadius?
 
@@ -2353,7 +2426,7 @@ optional borderRadius: number;
 
 border radius
 
-***
+---
 
 ### boxShadow?
 
@@ -2363,7 +2436,7 @@ optional boxShadow: string;
 
 box shadow in CSS format, e.g. "0px 4px 6px rgba(0, 0, 0, 0.1)"
 
-***
+---
 
 ### padding?
 
@@ -2373,7 +2446,7 @@ optional padding: number;
 
 padding around the box
 
-***
+---
 
 ### scaled?
 
@@ -2383,7 +2456,7 @@ optional scaled: boolean;
 
 if true, the box scales with zoom. Default is true
 
-***
+---
 
 ### strokeColor?
 
@@ -2429,7 +2502,7 @@ height: number;
 
 Height of the box
 
-***
+---
 
 ### style?
 
@@ -2714,7 +2787,7 @@ optional autoGrow: boolean;
 
 Auto-grow height with content (default: true)
 
-***
+---
 
 ### background?
 
@@ -2748,7 +2821,7 @@ optional collapseZoomThreshold: number;
 
 Zoom threshold below which comment auto-collapses (default: 0.5)
 
-***
+---
 
 ### color?
 
@@ -2765,12 +2838,13 @@ optional connectorMode: "rigid" | "elastic";
 ```
 
 Connector-line behavior when the attachment point moves (default: "rigid").
+
 - "rigid": the comment translates by the same offset as the moved
   attachment point — the arrow keeps its length/angle, whole callout moves.
 - "elastic": the comment stays put; the arrow re-anchors to the nearest
   point on the comment box, so the line can stretch/rotate.
 
-***
+---
 
 ### expandOnSelect?
 
@@ -2780,7 +2854,7 @@ optional expandOnSelect: boolean;
 
 Expand to full width when selected (default: false)
 
-***
+---
 
 ### fixedSize?
 
@@ -2834,7 +2908,7 @@ optional iconBorderColor: string;
 
 Border color for collapsed icon
 
-***
+---
 
 ### iconBorderWidth?
 
@@ -2844,7 +2918,7 @@ optional iconBorderWidth: number;
 
 Border width for collapsed icon
 
-***
+---
 
 ### iconColor?
 
@@ -2854,7 +2928,7 @@ optional iconColor: string;
 
 Background color for collapsed icon (default: "#FFD700")
 
-***
+---
 
 ### iconSize?
 
@@ -2864,7 +2938,7 @@ optional iconSize: number;
 
 Size when collapsed (default: 32px)
 
-***
+---
 
 ### iconSymbol?
 
@@ -2872,9 +2946,9 @@ Size when collapsed (default: 32px)
 optional iconSymbol: string;
 ```
 
-Icon to display when collapsed (default: "💬")
+Icon to display when collapsed (default: built-in SVG message icon; set e.g. "💬" for a text/emoji icon, or an `<svg viewBox=...>` string for a colorful icon; scripts/handlers are stripped)
 
-***
+---
 
 ### maxHeight?
 
@@ -2884,7 +2958,7 @@ optional maxHeight: number;
 
 Maximum height before scrolling (default: 480px, undefined = no limit)
 
-***
+---
 
 ### minHeight?
 
@@ -2894,7 +2968,7 @@ optional minHeight: number;
 
 Minimum height (default: 60px)
 
-***
+---
 
 ### padding?
 
@@ -2941,7 +3015,7 @@ optional shadow: boolean;
 
 Show drop shadow on comment box (default: true)
 
-***
+---
 
 ### showAuthor?
 
@@ -2962,7 +3036,7 @@ optional showSendButton: boolean;
 
 Show "send" button in edit mode (default: true)
 
-***
+---
 
 ### strokeColor?
 
@@ -2995,6 +3069,7 @@ Stroke width
 Properties for Comment annotations
 
 Comments are specialized annotations that:
+
 - Always maintain fixed screen-space size
 - Always have at least one arrow pointing TO them
 - Can be collapsed (icon) or expanded (text box)
@@ -3014,7 +3089,7 @@ optional author: string;
 
 Optional metadata
 
-***
+---
 
 ### content
 
@@ -3024,7 +3099,7 @@ content: string;
 
 Text content (similar to text annotation)
 
-***
+---
 
 ### height
 
@@ -3034,7 +3109,7 @@ height: number;
 
 Height (auto-grows with content, pixels)
 
-***
+---
 
 ### mode
 
@@ -3044,7 +3119,7 @@ mode: "collapsed" | "expanded";
 
 Display mode: collapsed (icon) or expanded (text box)
 
-***
+---
 
 ### style?
 
@@ -3060,7 +3135,7 @@ Styling
 optional timestamp: Date;
 ```
 
-***
+---
 
 ### type
 
@@ -3135,7 +3210,7 @@ arrow: Id;
 
 arrow attached to the text or node
 
-***
+---
 
 ### id
 
@@ -3145,7 +3220,7 @@ id: Id;
 
 id of the text the arrow is attached to
 
-***
+---
 
 ### magnet
 
@@ -3155,7 +3230,7 @@ magnet: Magnet;
 
 Typed snap point — semantics depend on targetType, see Magnet union.
 
-***
+---
 
 ### side
 
@@ -3165,7 +3240,7 @@ side: Side;
 
 On which end the arrow is tighten to the text
 
-***
+---
 
 ### target
 
@@ -3173,9 +3248,9 @@ On which end the arrow is tighten to the text
 target: Id;
 ```
 
-id of the text or node  the arrow is attached to
+id of the text or node the arrow is attached to
 
-***
+---
 
 ### targetType
 
@@ -3192,12 +3267,7 @@ Text or node
 # Function: createArrow()
 
 ```ts
-function createArrow(
-   x0, 
-   y0, 
-   x1, 
-   y1, 
-   styles): Arrow;
+function createArrow(x0, y0, x1, y1, styles): Arrow;
 ```
 
 ## Parameters
@@ -3259,13 +3329,7 @@ Tail extremity style
 # Function: createText()
 
 ```ts
-function createText(
-   x, 
-   y, 
-   width, 
-   height, 
-   content, 
-   styles): Text;
+function createText(x, y, width, height, content, styles): Text;
 ```
 
 ## Parameters
@@ -3303,12 +3367,7 @@ function createText(
 # Function: createBox()
 
 ```ts
-function createBox(
-   x, 
-   y, 
-   width, 
-   height, 
-   styles): Box;
+function createBox(x, y, width, height, styles): Box;
 ```
 
 ## Parameters
@@ -3366,11 +3425,7 @@ Create a polygon annotation
 # Function: createComment()
 
 ```ts
-function createComment(
-   x, 
-   y, 
-   content, 
-   options?): Comment;
+function createComment(x, y, content, options?): Comment;
 ```
 
 Create a new Comment annotation
@@ -3424,12 +3479,13 @@ createCommentWithArrow for creating comments programmatically
 
 ```ts
 function createCommentWithArrow(
-   targetX, 
-   targetY, 
-   commentX, 
-   commentY, 
-   content, 
-   options?): object;
+  targetX,
+  targetY,
+  commentX,
+  commentY,
+  content,
+  options?
+): object;
 ```
 
 Create a comment with an arrow pointing to a target location
@@ -3506,13 +3562,15 @@ comment: Comment;
 ## Example
 
 ```typescript
-import { createCommentWithArrow } from '@linkurious/ogma-annotations';
+import { createCommentWithArrow } from "@linkurious/ogma-annotations";
 
 // Create a comment pointing to a node at (100, 100)
 const { comment, arrow } = createCommentWithArrow(
-  100, 100,           // Target position (where arrow points)
-  300, 50,            // Comment position
-  "Important node!",  // Comment text
+  100,
+  100, // Target position (where arrow points)
+  300,
+  50, // Comment position
+  "Important node!", // Comment text
   {
     commentStyle: {
       style: {
@@ -3697,7 +3755,7 @@ function getBbox<T>(b): BBox;
 
 ### T
 
-`T` *extends* [`Annotation`](../type-aliases/Annotation.md)
+`T` _extends_ [`Annotation`](../type-aliases/Annotation.md)
 
 ## Parameters
 
@@ -3774,10 +3832,7 @@ y: number;
 # Function: setArrowStart()
 
 ```ts
-function setArrowStart(
-   a, 
-   x, 
-   y): void;
+function setArrowStart(a, x, y): void;
 ```
 
 ## Parameters
@@ -3803,10 +3858,7 @@ function setArrowStart(
 # Function: setArrowEnd()
 
 ```ts
-function setArrowEnd(
-   a, 
-   x, 
-   y): void;
+function setArrowEnd(a, x, y): void;
 ```
 
 ## Parameters
@@ -3834,12 +3886,7 @@ function setArrowEnd(
 # Type Alias: Annotation
 
 ```ts
-type Annotation = 
-  | Arrow
-  | Box
-  | Text
-  | Comment
-  | Polygon;
+type Annotation = Arrow | Box | Text | Comment | Polygon;
 ```
 
 Union type of all Annotation features
@@ -3884,7 +3931,7 @@ The annotation added
 
 `void`
 
-***
+---
 
 ### cancelDrawing()
 
@@ -3898,7 +3945,7 @@ Event trigerred when canceling drawing mode
 
 `void`
 
-***
+---
 
 ### click()
 
@@ -3918,7 +3965,60 @@ Event triggered when a click completes on an annotation (mouseup without drag)
 
 `void`
 
-***
+---
+
+### commentDenied()
+
+```ts
+commentDenied: (evt) => void;
+```
+
+Event triggered when a comment could not be created because
+`canComment` returned `false` for the clicked target. Comment drawing
+mode stays active.
+
+#### Parameters
+
+##### evt
+
+###### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`void`
+
+---
+
+### commentHover()
+
+```ts
+commentHover: (evt) => void;
+```
+
+Event triggered in comment drawing mode when the target under the cursor
+(or whether a comment is allowed on it) changes.
+
+#### Parameters
+
+##### evt
+
+###### allowed
+
+`boolean`
+
+Result of `canComment` for that target
+
+###### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`void`
+
+---
 
 ### completeDrawing()
 
@@ -3940,7 +4040,7 @@ Contains the ID of the completed annotation
 
 `void`
 
-***
+---
 
 ### dragend()
 
@@ -3960,7 +4060,7 @@ Event triggered when a drag operation ends on an annotation
 
 `void`
 
-***
+---
 
 ### dragstart()
 
@@ -3980,7 +4080,7 @@ Event triggered when a drag operation starts on an annotation
 
 `void`
 
-***
+---
 
 ### history()
 
@@ -4002,7 +4102,7 @@ Contains boolean flags for undo/redo availability
 
 `void`
 
-***
+---
 
 ### link()
 
@@ -4030,7 +4130,7 @@ Contains the arrow and link details
 
 `void`
 
-***
+---
 
 ### remove()
 
@@ -4052,7 +4152,7 @@ The annotation removed
 
 `void`
 
-***
+---
 
 ### select()
 
@@ -4074,7 +4174,7 @@ The annotation selected
 
 `void`
 
-***
+---
 
 ### unselect()
 
@@ -4096,7 +4196,7 @@ The annotation unselected
 
 `void`
 
-***
+---
 
 ### update()
 
@@ -4142,7 +4242,63 @@ applied when an annotation's `style.showAuthor` is true and
 `properties.author` is set; a given field here is overridden by that
 annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
 
-***
+---
+
+### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+Called to decide whether a comment may be attached at the given target
+(what is under the click that starts the comment). Defaults to always
+`true`. When it returns `false` no comment is created, a `commentDenied`
+event is emitted, and comment drawing mode (if started via
+`enableCommentDrawing`) stays active so the user can click elsewhere.
+While it is active, `commentHover` events report the target under the cursor
+so the host can show its own indication.
+
+Keep this cheap and synchronous - it also runs on mouse move while
+comment drawing mode is active. Same reactivity note as `isEditable`
+applies to changing this after the fact.
+
+#### Parameters
+
+##### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`boolean`
+
+---
+
+### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
+```
+
+Show the `not-allowed` cursor while hovering a target where
+`canComment` returns `false` in comment drawing mode. Defaults to `true`.
+Set to `false` to indicate it yourself via the `commentHover` event.
+
+---
+
+### commentIcon?
+
+```ts
+optional commentIcon: string | (comment) => string | undefined;
+```
+
+Default collapsed-comment icon: an `<svg viewBox=...>` string or a text
+symbol (e.g. an emoji). Used by every comment that has no own
+`style.iconSymbol`, so it isn't repeated in each annotation. Defaults to
+the built-in SVG icon. May be a function to pick the icon per comment;
+return undefined for the built-in one.
+
+---
 
 ### detectMargin
 
@@ -4152,7 +4308,7 @@ detectMargin: number;
 
 The margin in which the Texts are detected when looking for magnet points
 
-***
+---
 
 ### editButtonIcon
 
@@ -4163,7 +4319,7 @@ editButtonIcon: string;
 SVG icon for the edit button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
 
-***
+---
 
 ### isEditable()
 
@@ -4193,7 +4349,7 @@ no-op.
 
 `boolean`
 
-***
+---
 
 ### isVisible()
 
@@ -4221,7 +4377,7 @@ reactivity note as `isEditable` applies to changing this after the fact.
 
 `boolean`
 
-***
+---
 
 ### magnetHandleRadius
 
@@ -4231,7 +4387,7 @@ magnetHandleRadius: number;
 
 Display size of the magnet point
 
-***
+---
 
 ### magnetRadius
 
@@ -4241,7 +4397,7 @@ magnetRadius: number;
 
 The radius in which arrows are attracted
 
-***
+---
 
 ### maxArrowHeight
 
@@ -4251,7 +4407,7 @@ maxArrowHeight: number;
 
 Maximum height of the arrow in units
 
-***
+---
 
 ### minArrowHeight
 
@@ -4261,7 +4417,7 @@ minArrowHeight: number;
 
 Minimum height of the arrow in units
 
-***
+---
 
 ### minReadableFontSize
 
@@ -4277,7 +4433,7 @@ produces it. Ignored for `fixedSize` text (its on-screen size never
 shrinks with zoom) and during SVG/PNG export (export always renders
 in full, same as viewport culling). Set to 0 to disable.
 
-***
+---
 
 ### sendButtonIcon
 
@@ -4288,7 +4444,7 @@ sendButtonIcon: string;
 SVG icon for the send button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
 
-***
+---
 
 ### showEditButton
 
@@ -4298,7 +4454,7 @@ showEditButton: boolean;
 
 Show edit button in text editor
 
-***
+---
 
 ### showSendButton
 
@@ -4308,7 +4464,7 @@ showSendButton: boolean;
 
 Show send button in text editor
 
-***
+---
 
 ### textPlaceholder
 
@@ -4323,9 +4479,7 @@ Placeholder for the text input
 # Type Alias: Side
 
 ```ts
-type Side = 
-  | typeof SIDE_START
-  | typeof SIDE_END;
+type Side = typeof SIDE_START | typeof SIDE_END;
 ```
 
 ---
@@ -4343,13 +4497,7 @@ Extremity types for arrow annotations.
 # Type Alias: Color
 
 ```ts
-type Color = 
-  | HexColor
-  | RgbColor
-  | RgbaColor
-  | "transparent"
-  | "none"
-  | string;
+type Color = HexColor | RgbColor | RgbaColor | "transparent" | "none" | string;
 ```
 
 Any valid color format
@@ -4551,4 +4699,3 @@ const EVT_CANCEL_DRAWING: "cancelDrawing" = "cancelDrawing";
 ```
 
 ---
-

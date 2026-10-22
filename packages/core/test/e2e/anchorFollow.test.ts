@@ -169,11 +169,9 @@ describe("Anchor follow", () => {
     );
     await session.page.mouse.move(setup.n1Center.x, setup.n1Center.y);
     await session.page.mouse.down();
-    await session.page.mouse.move(
-      setup.n1Center.x + 5,
-      setup.n1Center.y - 5,
-      { steps: 3 }
-    );
+    await session.page.mouse.move(setup.n1Center.x + 5, setup.n1Center.y - 5, {
+      steps: 3
+    });
     await session.page.mouse.move(target.x, target.y, { steps: 10 });
     await session.page.mouse.up();
 
@@ -194,10 +192,7 @@ describe("Anchor follow", () => {
       .map(([x, y]) =>
         Math.hypot(x - after.expectedMid.x, y - after.expectedMid.y)
       )
-      .reduce(
-        (bestIdx, d, i, arr) => (d < arr[bestIdx] ? i : bestIdx),
-        0
-      );
+      .reduce((bestIdx, d, i, arr) => (d < arr[bestIdx] ? i : bestIdx), 0);
     const [ex, ey] = after.coords[closestIndex];
     expect(ex).toBeCloseTo(after.expectedMid.x, 0);
     expect(ey).toBeCloseTo(after.expectedMid.y, 0);
@@ -245,7 +240,9 @@ describe("Anchor follow", () => {
     });
 
     // Sanity: grid() actually spread the nodes out (not all still at 0,0).
-    expect(new Set(result.map((r) => `${r.dx}-${r.dy}`)).size).toBeGreaterThan(0);
+    expect(new Set(result.map((r) => `${r.dx}-${r.dy}`)).size).toBeGreaterThan(
+      0
+    );
     for (const r of result) {
       expect(r.dx).toBeLessThan(1);
       expect(r.dy).toBeLessThan(1);
@@ -375,7 +372,10 @@ describe("Anchor follow", () => {
           const node = ogma.getNode(id)!.getPosition();
           const arrow = editor.getAnnotation(arrowIds[id]) as any;
           const end = arrow.geometry.coordinates[1];
-          return { dx: Math.abs(end[0] - node.x), dy: Math.abs(end[1] - node.y) };
+          return {
+            dx: Math.abs(end[0] - node.x),
+            dy: Math.abs(end[1] - node.y)
+          };
         })
       };
     });
@@ -466,7 +466,10 @@ describe("Anchor follow", () => {
     const before = await session.page.evaluate((id) => {
       const arrow = editor.getAnnotation(id) as any;
       const end = arrow.geometry.coordinates[1];
-      return { dist: Math.hypot(end[0] - 0, end[1] - 0), link: arrow.properties.link };
+      return {
+        dist: Math.hypot(end[0] - 0, end[1] - 0),
+        link: arrow.properties.link
+      };
     }, arrowId!);
     // Only meaningful if it actually snapped to the text (not left free).
     expect(before.link?.end?.type ?? before.link?.start?.type).toBe("text");
@@ -486,5 +489,37 @@ describe("Anchor follow", () => {
     // corner magnet.
     expect(after).toBeLessThan(before.dist * 0.75);
     expect(after).toBeGreaterThan(before.dist * 0.25);
+  }, 15000);
+
+  // Regression test: an arrow loaded with a node link whose node already sits
+  // somewhere else (moved while the annotation was stored) must snap to that
+  // node on load, not keep its stored endpoint until something moves.
+  it("should snap a loaded node-linked arrow to its node's real position on load", async () => {
+    const result = await session.page.evaluate(() => {
+      createOgma({});
+      ogma.addNode({ id: "n1", attributes: { x: 100, y: 60, radius: 20 } });
+      createEditor();
+
+      // Stored endpoint is at the origin, far from the node's real centre.
+      const arrow = createArrow(-150, -150, 0, 0);
+      arrow.properties.link = {
+        start: {
+          id: "n1",
+          side: "start",
+          type: "node",
+          magnet: { x: 0, y: 0 }
+        }
+      } as any;
+      editor.add(arrow);
+
+      const loaded = editor.getAnnotation(arrow.id) as any;
+      return {
+        node: ogma.getNode("n1")!.getPosition(),
+        start: loaded.geometry.coordinates[0] as number[]
+      };
+    });
+
+    expect(result.start[0]).toBeCloseTo(result.node.x, 0);
+    expect(result.start[1]).toBeCloseTo(result.node.y, 0);
   }, 15000);
 });

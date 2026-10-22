@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Headless annotation plugin for Ogma",
   "type": "module",
   "main": "dist/index.mjs",
@@ -110,7 +110,6 @@
   "dependencies": {
     "@chenglou/pretext": "0.0.7",
     "eventemitter3": "5.0.1",
-    "geojson": "0.5.0",
     "rbush": "4.0.1",
     "vanilla-colorful": "0.7.2",
     "zundo": "2.3.0",
@@ -136,9 +135,5 @@
     "vite": "6.4.3",
     "vitest": "5.0.0",
     "vitest-canvas-mock": "1.2.0"
-  },
-  "prettier": {
-    "printWidth": 80,
-    "trailingComma": "none"
   }
 }

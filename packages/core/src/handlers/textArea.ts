@@ -376,7 +376,8 @@ export class TextArea {
       const sendButtonHeight = this.sendButton
         ? parseFloat(this.sendButton.style.height || "0")
         : 0;
-      const requiredHeight = textareaScrollHeight + padding * 2 + sendButtonHeight;
+      const requiredHeight =
+        textareaScrollHeight + padding * 2 + sendButtonHeight;
 
       // Get minimum height from style (default if not specified)
       const minHeight =

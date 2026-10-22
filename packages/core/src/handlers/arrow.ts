@@ -1,8 +1,9 @@
-import { Ogma, Node, type Point } from "@linkurious/ogma";
+import { Ogma, Node, Edge, type Point } from "@linkurious/ogma";
 import { Handler } from "./base";
 import {
   canDetachArrowEnd,
   canDetachArrowStart,
+  isArrowTargetLocked
 } from "./comment/helpers";
 import { handleDrag } from "./dragging";
 import { Links } from "./links";
@@ -10,6 +11,7 @@ import { Snap, Snapping } from "./snapping";
 import {
   EVT_DRAG,
   SIDE_END,
+  TARGET_TYPES,
   SIDE_START,
   cursors,
   handleDetectionThreshold
@@ -67,12 +69,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
     const startDistance = Math.sqrt(
       Math.pow(mousePoint.x - startPoint[0], 2) +
-      Math.pow(mousePoint.y - startPoint[1], 2)
+        Math.pow(mousePoint.y - startPoint[1], 2)
     );
 
     const endDistance = Math.sqrt(
       Math.pow(mousePoint.x - endPoint[0], 2) +
-      Math.pow(mousePoint.y - endPoint[1], 2)
+        Math.pow(mousePoint.y - endPoint[1], 2)
     );
 
     if (startDistance < margin)
@@ -87,7 +89,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
           type: HandleType.BODY,
           point: mousePoint
         };
-        this.store.setState({ hoveredHandle: 2, hoveredFeature: this.annotation });
+        this.store.setState({
+          hoveredHandle: 2,
+          hoveredFeature: this.annotation
+        });
       } else {
         this.store.setState({ hoveredHandle: -1, hoveredFeature: null });
         this.hoveredHandle = undefined;
@@ -97,7 +102,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
 
   private grabHandle(type: HandleType, x: number, y: number) {
     this.hoveredHandle = { type, point: { x, y } };
-    this.store.setState({ hoveredHandle: type === HandleType.START ? 0 : 1, hoveredFeature: this.annotation });
+    this.store.setState({
+      hoveredHandle: type === HandleType.START ? 0 : 1,
+      hoveredFeature: this.annotation
+    });
     this.setCursor(cursors.move);
   }
 
@@ -130,8 +138,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       handleDrag(this.store, this.links, annotation.id, { x: dx, y: dy }, true);
       this.dispatchEvent(event);
       return;
-    }
-    else if (handle.type === HandleType.START) {
+    } else if (handle.type === HandleType.START) {
       newCoordinates[0] = [point.x, point.y];
       if (this.snap) {
         link.start = {
@@ -174,8 +181,17 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     if (!super.onDragStart(evt)) return false;
     const annotation = this.getAnnotation()!;
     const handle = this.hoveredHandle!;
+    const state = this.store.getState();
     if (
       (handle.type === HandleType.END && !canDetachArrowEnd(annotation)) ||
+      // Dragging the tip or the body of a comment connector would detach
+      // it from its target.
+      ((handle.type === HandleType.END || handle.type === HandleType.BODY) &&
+        isArrowTargetLocked(
+          annotation,
+          state.features,
+          state.options.canDetach
+        )) ||
       (handle.type === HandleType.START && !canDetachArrowStart(annotation))
     ) {
       this.clearDragState();
@@ -192,18 +208,14 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     if (this.hoveredHandle) {
       const coordinates = annotation.geometry.coordinates;
       if (this.hoveredHandle.type === HandleType.BODY) {
-        const snapStart = this.snapping.snap(
-          {
-            x: coordinates[0][0],
-            y: coordinates[0][1]
-          }
-        );
-        const snapEnd = this.snapping.snap(
-          {
-            x: coordinates[1][0],
-            y: coordinates[1][1]
-          }
-        );
+        const snapStart = this.snapping.snap({
+          x: coordinates[0][0],
+          y: coordinates[0][1]
+        });
+        const snapEnd = this.snapping.snap({
+          x: coordinates[1][0],
+          y: coordinates[1][1]
+        });
         if (snapStart) {
           this.links.add(
             annotation,
@@ -212,8 +224,7 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
             snapStart.type,
             snapStart.magnet
           );
-        } else if (annotation.properties.link?.start?.type !== 'comment'
-        ) {
+        } else if (annotation.properties.link?.start?.type !== "comment") {
           this.links.remove(annotation, SIDE_START);
         }
         if (snapEnd) {
@@ -224,12 +235,10 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
             snapEnd.type,
             snapEnd.magnet
           );
-        }
-        else if (annotation.properties.link?.end?.type !== 'comment') {
+        } else if (annotation.properties.link?.end?.type !== "comment") {
           this.links.remove(annotation, SIDE_END);
         }
-      }
-      else if (this.snap) {
+      } else if (this.snap) {
         const handle = this.hoveredHandle;
         if (handle.type !== HandleType.BODY)
           this.links.add(
@@ -305,11 +314,22 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     }
   }
 
-  public startDrawing(id: Id, x: number, y: number) {
+  /**
+   * @param options.snapStart Snap and link the start point to whatever is
+   * under it (default true). Comment drawing turns it off and snaps once at
+   * the end instead, so no stray line shows from the snapped point to the
+   * cursor while the mouse is held down.
+   */
+  public startDrawing(
+    id: Id,
+    x: number,
+    y: number,
+    options?: { snapStart?: boolean }
+  ) {
     this.annotation = id;
     const annotation = this.getAnnotation()!;
     // ensure linking
-    this.snapDrawingStart(annotation, x, y);
+    if (options?.snapStart !== false) this.snapDrawingStart(annotation, x, y);
     this.grabHandle(HandleType.END, x, y);
     this.dragging = true;
     this.dragStartPoint = { x, y };
@@ -323,7 +343,12 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
     this.onDragStart({ clientX: clientPos.x, clientY: clientPos.y });
   }
 
-  public link(arrow: Arrow, target: Id | Node, side: Side) {
+  public link(
+    arrow: Arrow,
+    target: Id | Node | Edge,
+    side: Side,
+    magnet: Point = { x: 0.5, y: 0 }
+  ) {
     // links.add() below mutates arrow.properties.link directly, bypassing the store, so it's refused here too.
     if (!this.store.getState().options.isEditable(arrow)) {
       // eslint-disable-next-line no-console
@@ -338,6 +363,15 @@ export class ArrowHandler extends Handler<Arrow, Handle> {
       extremity = target.getPosition();
       // find the snapping point to use
       snap = this.snapping.snapToNodes(extremity, target.toList());
+    } else if (target instanceof Edge) {
+      // magnet.x is the position along the edge, 0..1
+      extremity = this.links.getEdgePoint(target.getId(), magnet.x);
+      snap = {
+        point: extremity,
+        id: target.getId(),
+        magnet,
+        type: TARGET_TYPES.EDGE
+      };
     } else {
       const other = this.store.getState().getFeature(target);
       if (!other) {

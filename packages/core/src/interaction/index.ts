@@ -49,7 +49,7 @@ export class InteractionController extends EventTarget {
 
   private readonly DRAG_THRESHOLD = 3; // pixels
 
-  // A locked annotation never arms a Handler, so Handler.disablePanning() never runs either - handled here instead.
+  // A locked annotation never attaches a Handler, so Handler.disablePanning() never runs either - handled here instead.
   private savedPan?: boolean;
   private savedDrag?: boolean;
 
@@ -85,7 +85,7 @@ export class InteractionController extends EventTarget {
       //   on a node/edge - e.g. detaching a comment connector's node-side
       //   tip - since the "missed mousedown" recovery in
       //   Handler.handleMouseMove (base.ts) depends on the
-      //   mousePressed/mousePressPoint state this arms. It does the bare
+      //   mousePressed/mousePressPoint state this sets. It does the bare
       //   minimum so it stays correct regardless of what Ogma does next.
       // - onMouseDown (capture:false, fires later, possibly not at all on a
       //   node/edge hit): does hit-testing and selection. This needs the
@@ -284,8 +284,7 @@ export class InteractionController extends EventTarget {
   };
 
   private onMouseDown = (evt: MouseEvent) => {
-    if (Date.now() < this.suppressClickUntil)
-      return;
+    if (Date.now() < this.suppressClickUntil) return;
 
     // A click on a URL inside text/comment content should open the link, not
     // select or edit the annotation. Skip hit-detection and selection entirely
@@ -341,9 +340,11 @@ export class InteractionController extends EventTarget {
     // id at a time - so when two same-type annotations are both selected,
     // only one is draggable. Switch the handler onto whatever's clicked.
     if (annotation) {
-      this.dispatchEvent(new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
-        detail: { id: annotation.id }
-      }));
+      this.dispatchEvent(
+        new CustomEvent(EVT_MOUSEDOWN_ANNOTATION, {
+          detail: { id: annotation.id }
+        })
+      );
     }
   };
 
@@ -358,7 +359,10 @@ export class InteractionController extends EventTarget {
 
     if (this.savedPan !== undefined) {
       this.ogma.setOptions({
-        interactions: { pan: { enabled: this.savedPan }, drag: { enabled: this.savedDrag } }
+        interactions: {
+          pan: { enabled: this.savedPan },
+          drag: { enabled: this.savedDrag }
+        }
       });
       this.savedPan = undefined;
       this.savedDrag = undefined;
@@ -385,7 +389,8 @@ export class InteractionController extends EventTarget {
         // onMouseDown already added it above if it wasn't selected before -
         // toggling again here would immediately undo that add.
         if (evt.ctrlKey || evt.metaKey) {
-          if (this.mouseDownState.wasSelected) state.toggleSelection(annotation.id);
+          if (this.mouseDownState.wasSelected)
+            state.toggleSelection(annotation.id);
         } else if (!state.selectedFeatures.has(annotation.id)) {
           state.setSelectedFeatures([annotation.id]);
         }
@@ -395,14 +400,17 @@ export class InteractionController extends EventTarget {
       }
 
       // Dispatch click event for UI components to respond
-      this.dispatchEvent(new CustomEvent(EVT_CLICK, {
-        detail: {
-          id: annotation?.id ?? null, position: {
-            x: evt.clientX,
-            y: evt.clientY
+      this.dispatchEvent(
+        new CustomEvent(EVT_CLICK, {
+          detail: {
+            id: annotation?.id ?? null,
+            position: {
+              x: evt.clientX,
+              y: evt.clientY
+            }
           }
-        }
-      }));
+        })
+      );
     }
 
     this.mouseDownState = null;
@@ -439,9 +447,18 @@ export class InteractionController extends EventTarget {
     }
   };
 
+  // Forced cursor that wins over hover-driven updates (null = none)
+  private cursorOverride: Cursor | null = null;
+
+  public setCursorOverride(cursor: Cursor | null) {
+    this.cursorOverride = cursor;
+    this.setCursor(cursor ?? cursors.default);
+  }
+
   public setCursor(cursor: Cursor) {
     const container = this.ogma.getContainer()?.firstChild;
-    if (container) (container as HTMLElement).style.cursor = cursor;
+    if (container)
+      (container as HTMLElement).style.cursor = this.cursorOverride ?? cursor;
   }
 
   public setMode(mode: "default" | "add" | "edit" | "link" | "rotate") {

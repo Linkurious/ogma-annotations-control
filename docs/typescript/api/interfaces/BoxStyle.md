@@ -21,7 +21,7 @@ optional background: string;
 
 background color: empty for transparent #f00, yellow...
 
-***
+---
 
 ### borderRadius?
 
@@ -31,7 +31,7 @@ optional borderRadius: number;
 
 border radius
 
-***
+---
 
 ### boxShadow?
 
@@ -41,7 +41,7 @@ optional boxShadow: string;
 
 box shadow in CSS format, e.g. "0px 4px 6px rgba(0, 0, 0, 0.1)"
 
-***
+---
 
 ### padding?
 
@@ -51,7 +51,7 @@ optional padding: number;
 
 padding around the box
 
-***
+---
 
 ### scaled?
 
@@ -61,7 +61,7 @@ optional scaled: boolean;
 
 if true, the box scales with zoom. Default is true
 
-***
+---
 
 ### strokeColor?
 
@@ -86,4 +86,3 @@ optional strokeWidth: number;
 ```
 
 Stroke width
-

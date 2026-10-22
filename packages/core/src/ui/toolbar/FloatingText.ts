@@ -1,13 +1,10 @@
-import { EVT_UPDATE } from "../constants";
-import type { Control } from "../Control";
-import { isStickyNote, isText, type Annotation } from "../types";
-import { attachPanelVisibility } from "./panelVisibility";
-import { AnnotationStyleToolbar } from "./toolbar/AnnotationStyleToolbar";
-import { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyleToolbar";
-import {
-  TextStyleToolbar,
-  type TextStyleToolbarOptions
-} from "./toolbar/TextStyleToolbar";
+import { EVT_UPDATE } from "../../constants";
+import type { Control } from "../../Control";
+import { isStickyNote, isText, type Annotation } from "../../types";
+import { attachPanelVisibility } from "../panelVisibility";
+import { AnnotationStyleToolbar } from "./AnnotationStyle";
+import { StickyNoteStyleToolbar } from "./StickyNoteStyle";
+import { TextStyleToolbar, type TextStyleToolbarOptions } from "./TextStyle";
 
 /** `fonts`/`fontSizes`/`swatches` (see `TextStyleToolbarOptions`) apply to
  * both the plain-Text and sticky-note pill - `StickyNoteStyleToolbar`
@@ -41,7 +38,11 @@ export class TextAnnotationToolbar {
   private current: AnnotationStyleToolbar | null = null;
   private detachVisibility: () => void;
   private handleUpdate = (annotation: Annotation) => {
-    if (this.current && annotation.id === this.current.annotationId && isText(annotation)) {
+    if (
+      this.current &&
+      annotation.id === this.current.annotationId &&
+      isText(annotation)
+    ) {
       this.current.update(annotation);
     }
   };
@@ -69,7 +70,11 @@ export class TextAnnotationToolbar {
       ? StickyNoteStyleToolbar
       : TextStyleToolbar;
 
-    if (this.current && this.current.annotationId === annotation.id && this.current instanceof Toolbar) {
+    if (
+      this.current &&
+      this.current.annotationId === annotation.id &&
+      this.current instanceof Toolbar
+    ) {
       this.current.update(annotation);
       return;
     }

@@ -1,6 +1,6 @@
 {
   "name": "@linkurious/ogma-annotations-react",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "A react component to add ogma annotations with  react",
   "type": "module",
   "main": "dist/index.mjs",
@@ -82,14 +82,13 @@
     "typedoc-plugin-markdown": "4.9.0",
     "typedoc-vitepress-theme": "1.1.2",
     "typescript": "5.3.3",
-    "vanilla-colorful": "0.7.2",
     "vite": "6.4.3",
     "vite-plugin-lib-inject-css": "1.3.0",
-    "vitest": "5.0.0"
+    "vitest": "5.0.0",
+    "vitest-canvas-mock": "1.2.0"
   },
   "dependencies": {
-    "@linkurious/ogma-annotations": "2.1.4",
-    "@linkurious/ogma-react": "5.1.15",
-    "vanilla-colorful": "0.7.2"
+    "@linkurious/ogma-annotations": "2.1.5",
+    "@linkurious/ogma-react": "5.1.15"
   }
 }

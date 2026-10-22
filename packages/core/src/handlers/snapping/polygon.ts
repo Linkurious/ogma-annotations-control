@@ -14,7 +14,10 @@ export type PolygonSnap = {
 /**
  * Check if a point is inside a polygon using ray casting algorithm
  */
-export function isPointInsidePolygon(point: Point, points: Position[]): boolean {
+export function isPointInsidePolygon(
+  point: Point,
+  points: Position[]
+): boolean {
   let inside = false;
   for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
     const xi = points[i][0];

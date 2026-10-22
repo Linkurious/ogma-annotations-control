@@ -1,12 +1,7 @@
 # Function: createArrow()
 
 ```ts
-function createArrow(
-   x0, 
-   y0, 
-   x1, 
-   y1, 
-   styles): Arrow;
+function createArrow(x0, y0, x1, y1, styles): Arrow;
 ```
 
 ## Parameters

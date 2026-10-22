@@ -111,7 +111,6 @@ export function renderText(
   return g;
 }
 
-
 let _measureCtx: CanvasRenderingContext2D | null = null;
 const _baselineCache = new Map<string, number>();
 
@@ -134,16 +133,20 @@ function firstLineDy(fontString: string, lineHeight: number): number {
     const outer = document.createElement("div");
     const probe = document.createElement("span");
     outer.style.cssText = `font:${fontString};line-height:${lineHeight}px;position:fixed;left:-9999px;top:0;margin:0;padding:0;visibility:hidden;`;
-    probe.style.cssText = "display:inline-block;width:1px;height:1px;vertical-align:baseline;";
+    probe.style.cssText =
+      "display:inline-block;width:1px;height:1px;vertical-align:baseline;";
     outer.appendChild(probe);
     document.body.appendChild(outer);
-    const dy = probe.getBoundingClientRect().bottom - outer.getBoundingClientRect().top;
+    const dy =
+      probe.getBoundingClientRect().bottom - outer.getBoundingClientRect().top;
     document.body.removeChild(outer);
     if (dy > 0 && dy <= lineHeight) {
       _baselineCache.set(key, dy);
       return dy;
     }
-  } catch { /* non-browser env */ }
+  } catch {
+    /* non-browser env */
+  }
 
   // Canvas fallback
   try {
@@ -155,11 +158,14 @@ function firstLineDy(fontString: string, lineHeight: number): number {
         fontBoundingBoxAscent?: number;
         fontBoundingBoxDescent?: number;
       };
-      const a = m.fontBoundingBoxAscent, d = m.fontBoundingBoxDescent;
+      const a = m.fontBoundingBoxAscent,
+        d = m.fontBoundingBoxDescent;
       if (a != null && d != null)
         return Math.max(0, (lineHeight - a - d) / 2) + a;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 
   return lineHeight;
 }
@@ -186,10 +192,14 @@ function resolveAuthorStyle(
   return {
     font: perAnnotation?.font ?? global?.font ?? DEFAULT_AUTHOR_STYLE.font,
     fontSize:
-      perAnnotation?.fontSize ?? global?.fontSize ?? DEFAULT_AUTHOR_STYLE.fontSize,
+      perAnnotation?.fontSize ??
+      global?.fontSize ??
+      DEFAULT_AUTHOR_STYLE.fontSize,
     color: perAnnotation?.color ?? global?.color ?? DEFAULT_AUTHOR_STYLE.color,
     fontWeight:
-      perAnnotation?.fontWeight ?? global?.fontWeight ?? DEFAULT_AUTHOR_STYLE.fontWeight
+      perAnnotation?.fontWeight ??
+      global?.fontWeight ??
+      DEFAULT_AUTHOR_STYLE.fontWeight
   };
 }
 
@@ -217,20 +227,22 @@ export function getAuthorReservedHeight(
   const authorText = annotation.properties.author?.trim();
   if (annotation.properties.style?.showAuthor !== true || !authorText) return 0;
 
-  const {
-    fixedSize = defaultTextStyle.fixedSize,
-    padding = 0
-  } = annotation.properties.style || {};
+  const { fixedSize = defaultTextStyle.fixedSize, padding = 0 } =
+    annotation.properties.style || {};
   const resolvedAuthorStyle = resolveAuthorStyle(
     annotation.properties.style?.authorStyle,
     state?.options?.authorStyle
   );
-  const authorFontSize = getEffectiveFontSize(resolvedAuthorStyle.fontSize, undefined);
+  const authorFontSize = getEffectiveFontSize(
+    resolvedAuthorStyle.fontSize,
+    undefined
+  );
 
   const zoomScale = fixedSize ? 1 : (state?.zoom ?? 1);
   const minReadableFontSize = state?.options?.minReadableFontSize ?? 0;
   const canSkipForSize = !isExporting && minReadableFontSize > 0;
-  const authorTooSmall = canSkipForSize && authorFontSize * zoomScale < minReadableFontSize;
+  const authorTooSmall =
+    canSkipForSize && authorFontSize * zoomScale < minReadableFontSize;
   if (authorTooSmall) return 0;
 
   return padding + authorFontSize * TEXT_LINE_HEIGHT;
@@ -331,7 +343,9 @@ function appendLineWithLinks(
 
   while ((match = pattern.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      tspan.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+      tspan.appendChild(
+        document.createTextNode(text.slice(lastIndex, match.index))
+      );
     }
     const mdHref = hrefByToken?.get(match[0]);
     const href = mdHref ?? match[0];
@@ -361,7 +375,11 @@ function appendLineWithLinks(
  * the leftover half no longer matches any `mdLinks` token exactly, so
  * `appendLineWithLinks` just renders it as plain (glued-looking) text
  * instead of a link - a cosmetic edge case, not a crash. */
-function truncateToOneLine(text: string, fontString: string, maxWidth: number): string {
+function truncateToOneLine(
+  text: string,
+  fontString: string,
+  maxWidth: number
+): string {
   const prepared = prepareWithSegments(text, fontString, {
     whiteSpace: "pre-wrap",
     wordBreak: "normal"
@@ -406,7 +424,11 @@ function drawContent(
   // measurement/wrap (which reads this exact string) and firstLineDy()'s
   // metrics cache (keyed on it below) account for bold's wider glyphs -
   // a plain `font-weight` SVG attribute wouldn't reach either of those.
-  const fontString = `${fontWeight === "bold" ? "bold " : ""}${effectiveFontSize}px ${font}`.replace(/(px)+/g, "px");
+  const fontString =
+    `${fontWeight === "bold" ? "bold " : ""}${effectiveFontSize}px ${font}`.replace(
+      /(px)+/g,
+      "px"
+    );
   const maxWidth = width - padding * 2;
 
   // Scalable (non-fixedSize) text's on-screen size is effectiveFontSize *
@@ -429,9 +451,13 @@ function drawContent(
   // Fixed one-line height regardless of content length; box never grows to
   // fit it (ellipsis-truncated instead, see below).
   const authorText = annotation.properties.author?.trim();
-  const showAuthorLine = annotation.properties.style?.showAuthor === true && !!authorText;
+  const showAuthorLine =
+    annotation.properties.style?.showAuthor === true && !!authorText;
   const resolvedAuthorStyle = showAuthorLine
-    ? resolveAuthorStyle(annotation.properties.style?.authorStyle, state?.options?.authorStyle)
+    ? resolveAuthorStyle(
+        annotation.properties.style?.authorStyle,
+        state?.options?.authorStyle
+      )
     : null;
   const authorFontSize = resolvedAuthorStyle
     ? getEffectiveFontSize(resolvedAuthorStyle.fontSize, undefined)
@@ -442,7 +468,9 @@ function drawContent(
   const authorTooSmall =
     canSkipForSize && authorFontSize * zoomScale < minReadableFontSize;
   const renderAuthorLine = showAuthorLine && !authorTooSmall;
-  const authorLineHeight = renderAuthorLine ? authorFontSize * TEXT_LINE_HEIGHT : 0;
+  const authorLineHeight = renderAuthorLine
+    ? authorFontSize * TEXT_LINE_HEIGHT
+    : 0;
   const authorReserved = renderAuthorLine ? authorLineHeight + AUTHOR_GAP : 0;
 
   // Tiny box + author line can push this to <= 0; maxLineCount's own
@@ -525,15 +553,22 @@ function drawContent(
     authorEl.setAttribute("font-size", `${authorFontSize}`);
     authorEl.setAttribute("font-family", resolvedAuthorStyle.font);
     authorEl.setAttribute("fill", resolvedAuthorStyle.color);
-    if (resolvedAuthorStyle.fontWeight === "bold") authorEl.setAttribute("font-weight", "bold");
+    if (resolvedAuthorStyle.fontWeight === "bold")
+      authorEl.setAttribute("font-weight", "bold");
     authorEl.classList.add("annotation-text-author");
 
     const authorTop = y + height - padding - authorLineHeight;
-    authorEl.setAttribute("transform", `translate(${x + padding}, ${authorTop})`);
+    authorEl.setAttribute(
+      "transform",
+      `translate(${x + padding}, ${authorTop})`
+    );
 
     const tspan = createSVGElement<SVGTSpanElement>("tspan");
     tspan.setAttribute("x", "0");
-    tspan.setAttribute("dy", `${firstLineDy(authorFontString, authorLineHeight)}`);
+    tspan.setAttribute(
+      "dy",
+      `${firstLineDy(authorFontString, authorLineHeight)}`
+    );
     appendLineWithLinks(tspan, truncatedAuthor, authorLinkMatcher);
     authorEl.appendChild(tspan);
 

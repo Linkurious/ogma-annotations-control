@@ -6,7 +6,10 @@ import { PolygonHandler } from "./polygon";
 import { Snapping } from "./snapping";
 import { TextHandler } from "./text";
 import { EVT_DRAG_END, EVT_DRAG_START } from "../constants";
-import { EVT_MOUSEDOWN_ANNOTATION, InteractionController } from "../interaction/index";
+import {
+  EVT_MOUSEDOWN_ANNOTATION,
+  InteractionController
+} from "../interaction/index";
 import { Store } from "../store";
 import { Annotation, AnnotationType, Id, Text } from "../types";
 export { handleDrag } from "./dragging";
@@ -45,21 +48,23 @@ export class AnnotationEditor extends EventTarget {
 
     this.handlers.forEach((handler) => {
       handler.addEventListener("dragstart", ((evt: CustomEvent) => {
-        this.dispatchEvent(new CustomEvent(EVT_DRAG_START, {
-          detail: {
-            ...evt.detail
-          }
-        })
+        this.dispatchEvent(
+          new CustomEvent(EVT_DRAG_START, {
+            detail: {
+              ...evt.detail
+            }
+          })
         );
         this.store.setState({ isDragging: true });
         this.interaction.setMode("edit");
       }) as unknown as EventListener);
       handler.addEventListener("dragend", ((evt: CustomEvent) => {
-        this.dispatchEvent(new CustomEvent(EVT_DRAG_END, {
-          detail: {
-            ...evt.detail
-          }
-        })
+        this.dispatchEvent(
+          new CustomEvent(EVT_DRAG_END, {
+            detail: {
+              ...evt.detail
+            }
+          })
         );
         this.store.setState({ isDragging: false });
         // Suppress clicks briefly after drag ends to prevent accidental deselection

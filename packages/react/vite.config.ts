@@ -55,7 +55,7 @@ export default defineConfig({
     // same convention as packages/core/test/unit.
     include: ["test/**/*.test.{ts,tsx}"],
     globalSetup: ["./test/print-ogma-build.ts"],
-    //setupFiles: "./test/setup.ts",
+    setupFiles: ["vitest-canvas-mock"],
     coverage: {
       // CI's "test:unit" (no --coverage flag) is what actually runs per-PR —
       // must be on unconditionally or the cobertura file never gets written.

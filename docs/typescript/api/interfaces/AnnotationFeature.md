@@ -18,7 +18,7 @@ Base interface for all annotation features.
 
 ### G
 
-`G` *extends* `GeometryObject` = `GeometryObject`
+`G` _extends_ `GeometryObject` = `GeometryObject`
 
 Geometry type
 
@@ -74,4 +74,3 @@ type: "Feature";
 ```
 
 Specifies the type of GeoJSON object.
-

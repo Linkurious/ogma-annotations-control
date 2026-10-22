@@ -232,7 +232,9 @@ export class Shapes extends Renderer<SVGLayer> {
   private throttleRender = throttle(
     () => {
       this.render(this.layer.element as unknown as SVGSVGElement);
-      this.renderUnderGraph(this.underLayer.element as unknown as SVGSVGElement);
+      this.renderUnderGraph(
+        this.underLayer.element as unknown as SVGSVGElement
+      );
     },
     16,
     true
@@ -290,12 +292,10 @@ export class Shapes extends Renderer<SVGLayer> {
 
     // Check if bboxes intersect
     return !(
-      (
-        x1 < viewport[0] || // feature is left of viewport
-        x0 > viewport[2] || // feature is right of viewport
-        y1 < viewport[1] || // feature is above viewport
-        y0 > viewport[3]
-      ) // feature is below viewport
+      x1 < viewport[0] || // feature is left of viewport
+      x0 > viewport[2] || // feature is right of viewport
+      y1 < viewport[1] || // feature is above viewport
+      y0 > viewport[3] // feature is below viewport
     );
   }
 

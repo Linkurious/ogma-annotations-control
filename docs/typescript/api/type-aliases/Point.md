@@ -14,7 +14,7 @@ type Point = object;
 x: number;
 ```
 
-***
+---
 
 ### y
 

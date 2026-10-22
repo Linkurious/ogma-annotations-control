@@ -51,7 +51,9 @@ export const BackgroundController: React.FC<BackgroundControllerProps> = ({
               type="button"
               className={`color-circle ${value === currentBackground ? "color-circle-primary" : ""}`}
               aria-label={
-                value === "transparent" ? "No background" : `Background ${value}`
+                value === "transparent"
+                  ? "No background"
+                  : `Background ${value}`
               }
               aria-pressed={value === currentBackground}
               onClick={() => handleBackgroundClick(value)}

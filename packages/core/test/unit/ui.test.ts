@@ -233,7 +233,7 @@ describe("ui/panelVisibility", () => {
   it("shows the new annotation when selecting directly from one to another", () => {
     // Ogma fires `select` for the new annotation, then `unselect` for the
     // old one (not the other way around) - regression test for that
-    // `unselect` stomping the just-armed show for the new selection.
+    // `unselect` stomping the just-scheduled show for the new selection.
     const a = { id: "a1" } as unknown as Annotation;
     const b = { id: "b1" } as unknown as Annotation;
     const { control, emit } = createFakeControl(a, b);
@@ -272,7 +272,7 @@ describe("ui/panelVisibility", () => {
     const onShow = vi.fn();
     const detach = attachPanelVisibility(control, { onShow, onHide: vi.fn() });
 
-    emit("select", { ids: ["a1"] }); // arms the timer
+    emit("select", { ids: ["a1"] }); // starts the timer
     detach();
     expect(listenerCount("select")).toBe(0);
     expect(listenerCount("click")).toBe(0);
@@ -354,7 +354,9 @@ describe("ui/AnnotationPanel enabledTypes", () => {
   it("shows every annotation kind by default", () => {
     const text = createText(0, 0, 100, 50, "Hi");
     const { control, emit } = createFakeControl(text as unknown as Annotation);
-    const panel = new AnnotationPanel({ control: control as unknown as Control });
+    const panel = new AnnotationPanel({
+      control: control as unknown as Control
+    });
 
     emit("select", { ids: [text.id] });
     vi.runAllTimers();
@@ -391,7 +393,9 @@ describe("ui/AnnotationPanel accessibility", () => {
       strokeType: "plain"
     });
     const { control, emit } = createFakeControl(text as unknown as Annotation);
-    const panel = new AnnotationPanel({ control: control as unknown as Control });
+    const panel = new AnnotationPanel({
+      control: control as unknown as Control
+    });
     emit("select", { ids: [text.id] });
     vi.runAllTimers();
     return { panel, root: document.querySelector(".annotation-panel")! };
@@ -448,7 +452,8 @@ describe("ui/AnnotationPanel accessibility", () => {
 
   it("line-type buttons have an aria-label and aria-pressed reflecting the current selection", () => {
     const { panel, root } = createSelectedTextPanel();
-    const buttons = root.querySelectorAll<HTMLButtonElement>(".linetype-button");
+    const buttons =
+      root.querySelectorAll<HTMLButtonElement>(".linetype-button");
     expect(buttons.length).toBeGreaterThan(0);
     const active = Array.from(buttons).find(
       (b) => b.dataset.linetype === "plain"
@@ -460,7 +465,9 @@ describe("ui/AnnotationPanel accessibility", () => {
 
   it("the font-size/stroke-width sliders are labeled inputs", () => {
     const { panel, root } = createSelectedTextPanel();
-    const sliders = root.querySelectorAll<HTMLInputElement>("input[type='range']");
+    const sliders = root.querySelectorAll<HTMLInputElement>(
+      "input[type='range']"
+    );
     expect(sliders.length).toBeGreaterThan(0);
     sliders.forEach((input) => {
       expect(input.getAttribute("aria-label")).toBeTruthy();
@@ -524,7 +531,10 @@ function createFakeToolbarControl(selected: AnnotationCollection) {
 }
 
 describe("ui/AnnotationToolbar", () => {
-  const empty = { type: "FeatureCollection", features: [] } as AnnotationCollection;
+  const empty = {
+    type: "FeatureCollection",
+    features: []
+  } as AnnotationCollection;
 
   function createToolbar(
     options?: Partial<{
@@ -586,7 +596,7 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
-  it("arms arrow drawing and marks the button active until drawing ends", () => {
+  it("starts arrow drawing and marks the button active until drawing ends", () => {
     const { toolbar, control, emit } = createToolbar();
     const arrowButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Add arrow"]'
@@ -604,7 +614,7 @@ describe("ui/AnnotationToolbar", () => {
     toolbar.destroy();
   });
 
-  it("arms sticky note drawing and marks the button active until drawing ends", () => {
+  it("starts sticky note drawing and marks the button active until drawing ends", () => {
     const { toolbar, control, emit } = createToolbar();
     const stickyButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Add sticky note"]'
@@ -640,9 +650,13 @@ describe("ui/AnnotationToolbar", () => {
   it("shows only erase by default", () => {
     const { toolbar } = createToolbar();
     expect(
-      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+      document.querySelector(
+        '[data-tooltip="Erase (click annotations to delete them)"]'
+      )
     ).not.toBeNull();
-    expect(document.querySelector('[data-tooltip="Delete selected"]')).toBeNull();
+    expect(
+      document.querySelector('[data-tooltip="Delete selected"]')
+    ).toBeNull();
     toolbar.destroy();
   });
 
@@ -653,9 +667,13 @@ describe("ui/AnnotationToolbar", () => {
       deleteMode: "both"
     });
     expect(
-      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+      document.querySelector(
+        '[data-tooltip="Erase (click annotations to delete them)"]'
+      )
     ).not.toBeNull();
-    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-tooltip="Delete selected"]')
+    ).not.toBeNull();
     toolbar.destroy();
   });
 
@@ -666,14 +684,19 @@ describe("ui/AnnotationToolbar", () => {
       deleteMode: "select"
     });
     expect(
-      document.querySelector('[data-tooltip="Erase (click annotations to delete them)"]')
+      document.querySelector(
+        '[data-tooltip="Erase (click annotations to delete them)"]'
+      )
     ).toBeNull();
-    expect(document.querySelector('[data-tooltip="Delete selected"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-tooltip="Delete selected"]')
+    ).not.toBeNull();
     toolbar.destroy();
   });
 
   it("reflects canUndo/canRedo and calls undo/redo on click", () => {
-    const { toolbar, control, emit, setUndoable, setRedoable } = createToolbar();
+    const { toolbar, control, emit, setUndoable, setRedoable } =
+      createToolbar();
     const undoButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Undo"]'
     )!;
@@ -703,7 +726,10 @@ describe("ui/AnnotationToolbar", () => {
       type: "FeatureCollection",
       features: [{ id: "a1" }]
     } as unknown as AnnotationCollection;
-    const { toolbar, control } = createToolbar({ deleteMode: "both" }, selected);
+    const { toolbar, control } = createToolbar(
+      { deleteMode: "both" },
+      selected
+    );
     const deleteButton = document.querySelector<HTMLButtonElement>(
       '[data-tooltip="Delete selected"]'
     )!;
@@ -747,7 +773,9 @@ describe("ui/AnnotationToolbar", () => {
     expect(document.querySelector('[data-tooltip="Add comment"]')).toBeNull();
     expect(document.querySelector('[data-tooltip="Add box"]')).toBeNull();
     expect(
-      document.querySelector('[data-tooltip="Add polygon (click points, Esc to finish)"]')
+      document.querySelector(
+        '[data-tooltip="Add polygon (click points, Esc to finish)"]'
+      )
     ).toBeNull();
 
     toolbar.destroy();
@@ -760,7 +788,9 @@ describe("ui/AnnotationToolbar", () => {
       styles: { arrow: { strokeColor: "#00ff00" } }
     });
 
-    document.querySelector<HTMLButtonElement>('[data-tooltip="Add arrow"]')!.click();
+    document
+      .querySelector<HTMLButtonElement>('[data-tooltip="Add arrow"]')!
+      .click();
 
     expect(fake.control.enableArrowDrawing).toHaveBeenCalledWith(
       expect.objectContaining({ strokeColor: "#00ff00", strokeWidth: 2 })

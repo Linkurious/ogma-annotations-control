@@ -21,7 +21,12 @@ import {
   type Annotation
 } from "../types";
 
-export type PanelAnnotationType = "arrow" | "text" | "box" | "comment" | "polygon";
+export type PanelAnnotationType =
+  | "arrow"
+  | "text"
+  | "box"
+  | "comment"
+  | "polygon";
 
 export const ALL_PANEL_ANNOTATION_TYPES: PanelAnnotationType[] = [
   "arrow",

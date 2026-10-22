@@ -36,8 +36,12 @@ describe("Offset/non-fullscreen container", () => {
   // dragged out under an offset container would land at the wrong position
   // and/or size before the fix.
   it("should size and position a box annotation to a drag at the intended graph coordinates", async () => {
-    const from = await session.page.evaluate(() => screenToPage({ x: -50, y: -50 }));
-    const to = await session.page.evaluate(() => screenToPage({ x: 50, y: 30 }));
+    const from = await session.page.evaluate(() =>
+      screenToPage({ x: -50, y: -50 })
+    );
+    const to = await session.page.evaluate(() =>
+      screenToPage({ x: 50, y: 30 })
+    );
     await session.page.evaluate(() => editor.enableBoxDrawing(demoStyles.box));
     await session.page.mouse.move(from.x, from.y);
     await session.page.mouse.down();
@@ -67,9 +71,15 @@ describe("Offset/non-fullscreen container", () => {
   // Same TextHandler.startDrawing()/onDrag path as the box case above, for
   // the text annotation type specifically.
   it("should size and position a text annotation to a drag at the intended graph coordinates", async () => {
-    const from = await session.page.evaluate(() => screenToPage({ x: -40, y: -60 }));
-    const to = await session.page.evaluate(() => screenToPage({ x: 60, y: 10 }));
-    await session.page.evaluate(() => editor.enableTextDrawing(demoStyles.text));
+    const from = await session.page.evaluate(() =>
+      screenToPage({ x: -40, y: -60 })
+    );
+    const to = await session.page.evaluate(() =>
+      screenToPage({ x: 60, y: 10 })
+    );
+    await session.page.evaluate(() =>
+      editor.enableTextDrawing(demoStyles.text)
+    );
     await session.page.mouse.move(from.x, from.y);
     await session.page.mouse.down();
     await session.page.mouse.move(to.x, to.y, { steps: 10 });
@@ -133,8 +143,7 @@ describe("Offset/non-fullscreen container", () => {
       () =>
         editor
           .getAnnotations()
-          .features.find((f) => f.properties.type === "polygon")?.geometry
-          .type
+          .features.find((f) => f.properties.type === "polygon")?.geometry.type
     );
     expect(polygonType).toBe("Polygon");
   }, 10000);
@@ -149,7 +158,9 @@ describe("Offset/non-fullscreen container", () => {
   // fed an Ogma-native event and was already correct, so checking only
   // after clicking would mask this bug.
   it("should track the true graph position while placing a pre-created annotation", async () => {
-    const target = await session.page.evaluate(() => screenToPage({ x: 30, y: -20 }));
+    const target = await session.page.evaluate(() =>
+      screenToPage({ x: 30, y: -20 })
+    );
     const setup = await session.page.evaluate(() => {
       const text = createText(0, 0, 100, 50);
       editor.enablePlacement(text);
@@ -177,9 +188,15 @@ describe("Offset/non-fullscreen container", () => {
   // covering so a future change that starts relying on dragStartPoint's
   // value for arrows is caught under an offset container too.
   it("should draw an arrow at the intended graph coordinates", async () => {
-    const from = await session.page.evaluate(() => screenToPage({ x: -40, y: -40 }));
-    const to = await session.page.evaluate(() => screenToPage({ x: 40, y: 40 }));
-    await session.page.evaluate(() => editor.enableArrowDrawing(demoStyles.arrow));
+    const from = await session.page.evaluate(() =>
+      screenToPage({ x: -40, y: -40 })
+    );
+    const to = await session.page.evaluate(() =>
+      screenToPage({ x: 40, y: 40 })
+    );
+    await session.page.evaluate(() =>
+      editor.enableArrowDrawing(demoStyles.arrow)
+    );
     await session.page.mouse.move(from.x, from.y);
     await session.page.mouse.down();
     await session.page.mouse.move(to.x, to.y, { steps: 10 });
@@ -213,8 +230,12 @@ describe("Offset/non-fullscreen container", () => {
     // InteractionController.suppressClicksTemporarily).
     await session.page.waitForTimeout(150);
 
-    const center = await session.page.evaluate(() => screenToPage({ x: 0, y: 0 }));
-    const target = await session.page.evaluate(() => screenToPage({ x: 40, y: 25 }));
+    const center = await session.page.evaluate(() =>
+      screenToPage({ x: 0, y: 0 })
+    );
+    const target = await session.page.evaluate(() =>
+      screenToPage({ x: 40, y: 25 })
+    );
     await session.page.mouse.move(center.x, center.y);
     await session.page.mouse.down();
     await session.page.mouse.move(target.x, target.y, { steps: 10 });

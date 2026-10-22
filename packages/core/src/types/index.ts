@@ -1,4 +1,4 @@
-import type { Annotation, AuthorLineStyle } from "./features";
+import type { Annotation, AuthorLineStyle, Comment, Id } from "./features";
 
 export * from "./features";
 export * from "./geometry";
@@ -69,6 +69,15 @@ export type ControllerOptions = {
   editButtonIcon: string;
 
   /**
+   * Default collapsed-comment icon: an `<svg viewBox=...>` string or a text
+   * symbol (e.g. an emoji). Used by every comment that has no own
+   * `style.iconSymbol`, so it isn't repeated in each annotation. Defaults to
+   * the built-in SVG icon. May be a function to pick the icon per comment;
+   * return undefined for the built-in one.
+   */
+  commentIcon?: string | ((comment: Comment) => string | undefined);
+
+  /**
    * Minimum height of the arrow in units
    */
   minArrowHeight: number;
@@ -105,7 +114,54 @@ export type ControllerOptions = {
    * reactivity note as `isEditable` applies to changing this after the fact.
    */
   isVisible: (annotation: Annotation) => boolean;
+
+  /**
+   * Called to decide whether a comment may be attached at the given target
+   * (what is under the click that starts the comment). Defaults to always
+   * `true`. When it returns `false` no comment is created, a `commentDenied`
+   * event is emitted, and comment drawing mode (if started via
+   * `enableCommentDrawing`) stays active so the user can click elsewhere.
+   * While it is active, `commentHover` events report the target under the cursor
+   * so the host can show its own indication.
+   *
+   * Keep this cheap and synchronous - it also runs on mouse move while
+   * comment drawing mode is active. Same reactivity note as `isEditable`
+   * applies to changing this after the fact.
+   */
+  canComment: (target: CommentTarget) => boolean;
+
+  /**
+   * Show the `not-allowed` cursor while hovering a target where
+   * `canComment` returns `false` in comment drawing mode. Defaults to `true`.
+   * Set to `false` to indicate it yourself via the `commentHover` event.
+   */
+  commentDeniedCursor: boolean;
+
+  /**
+   * Called to decide whether a comment may be detached from the node, edge
+   * or annotation it points at. Defaults to always `false`. When it returns
+   * `false`, dragging the connector's tip or body away from its target is
+   * refused, and deleting the target (node, edge, text, box, polygon)
+   * deletes the comment and its connector. When it returns `true`, the
+   * connector can be dragged off, and removing the target leaves the comment
+   * in place with a free connector end.
+   *
+   * Keep this cheap and synchronous. Same reactivity note as `isEditable`.
+   */
+  canDetach: (comment: Comment) => boolean;
 };
+
+/**
+ * What a comment is being attached to: a graph node, a graph edge, another
+ * annotation (text, box, polygon) or an empty point of the canvas.
+ */
+export type CommentTarget =
+  | {
+      type: "node" | "edge" | "annotation";
+      id: Id;
+      point: { x: number; y: number };
+    }
+  | { type: "void"; point: { x: number; y: number } };
 
 export type AnnotationOptions = {
   handleSize: number;
@@ -138,6 +194,7 @@ export type Cursor =
   | "nesw-resize"
   | "nwse-resize"
   | "alias"
+  | "not-allowed"
   | "crosshair";
 
 export type ClientMouseEvent = {

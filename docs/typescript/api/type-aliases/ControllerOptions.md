@@ -19,7 +19,63 @@ applied when an annotation's `style.showAuthor` is true and
 `properties.author` is set; a given field here is overridden by that
 annotation's own `style.authorStyle` if set (see `TextStyle.authorStyle`).
 
-***
+---
+
+### canComment()
+
+```ts
+canComment: (target) => boolean;
+```
+
+Called to decide whether a comment may be attached at the given target
+(what is under the click that starts the comment). Defaults to always
+`true`. When it returns `false` no comment is created, a `commentDenied`
+event is emitted, and comment drawing mode (if started via
+`enableCommentDrawing`) stays active so the user can click elsewhere.
+While it is active, `commentHover` events report the target under the cursor
+so the host can show its own indication.
+
+Keep this cheap and synchronous - it also runs on mouse move while
+comment drawing mode is active. Same reactivity note as `isEditable`
+applies to changing this after the fact.
+
+#### Parameters
+
+##### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`boolean`
+
+---
+
+### commentDeniedCursor
+
+```ts
+commentDeniedCursor: boolean;
+```
+
+Show the `not-allowed` cursor while hovering a target where
+`canComment` returns `false` in comment drawing mode. Defaults to `true`.
+Set to `false` to indicate it yourself via the `commentHover` event.
+
+---
+
+### commentIcon?
+
+```ts
+optional commentIcon: string | (comment) => string | undefined;
+```
+
+Default collapsed-comment icon: an `<svg viewBox=...>` string or a text
+symbol (e.g. an emoji). Used by every comment that has no own
+`style.iconSymbol`, so it isn't repeated in each annotation. Defaults to
+the built-in SVG icon. May be a function to pick the icon per comment;
+return undefined for the built-in one.
+
+---
 
 ### detectMargin
 
@@ -29,7 +85,7 @@ detectMargin: number;
 
 The margin in which the Texts are detected when looking for magnet points
 
-***
+---
 
 ### editButtonIcon
 
@@ -40,7 +96,7 @@ editButtonIcon: string;
 SVG icon for the edit button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
 
-***
+---
 
 ### isEditable()
 
@@ -70,7 +126,7 @@ no-op.
 
 `boolean`
 
-***
+---
 
 ### isVisible()
 
@@ -98,7 +154,7 @@ reactivity note as `isEditable` applies to changing this after the fact.
 
 `boolean`
 
-***
+---
 
 ### magnetHandleRadius
 
@@ -108,7 +164,7 @@ magnetHandleRadius: number;
 
 Display size of the magnet point
 
-***
+---
 
 ### magnetRadius
 
@@ -118,7 +174,7 @@ magnetRadius: number;
 
 The radius in which arrows are attracted
 
-***
+---
 
 ### maxArrowHeight
 
@@ -128,7 +184,7 @@ maxArrowHeight: number;
 
 Maximum height of the arrow in units
 
-***
+---
 
 ### minArrowHeight
 
@@ -138,7 +194,7 @@ minArrowHeight: number;
 
 Minimum height of the arrow in units
 
-***
+---
 
 ### minReadableFontSize
 
@@ -154,7 +210,7 @@ produces it. Ignored for `fixedSize` text (its on-screen size never
 shrinks with zoom) and during SVG/PNG export (export always renders
 in full, same as viewport culling). Set to 0 to disable.
 
-***
+---
 
 ### sendButtonIcon
 
@@ -165,7 +221,7 @@ sendButtonIcon: string;
 SVG icon for the send button in text editor
 Should be a complete SVG string (e.g., '<svg>...</svg>')
 
-***
+---
 
 ### showEditButton
 
@@ -175,7 +231,7 @@ showEditButton: boolean;
 
 Show edit button in text editor
 
-***
+---
 
 ### showSendButton
 
@@ -185,7 +241,7 @@ showSendButton: boolean;
 
 Show send button in text editor
 
-***
+---
 
 ### textPlaceholder
 

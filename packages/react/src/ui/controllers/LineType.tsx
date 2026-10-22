@@ -16,7 +16,8 @@ export const LineTypeController: React.FC<LineTypeControllerProps> = ({
   const { editor } = useAnnotationsContext();
 
   const handleLineTypeClick = (lineType: "plain" | "dashed") => {
-    if (annotation) editor?.updateStyle(annotation.id, { strokeType: lineType });
+    if (annotation)
+      editor?.updateStyle(annotation.id, { strokeType: lineType });
   };
 
   return (

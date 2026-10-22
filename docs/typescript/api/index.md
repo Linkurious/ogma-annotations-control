@@ -2,189 +2,193 @@
 
 ## Classes
 
-| Class | Description |
-| ------ | ------ |
+| Class                         | Description                                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
 | [Control](classes/Control.md) | Main controller class for managing annotations. It manages rendering and editing of annotations. |
 
 ## Interfaces
 
-| Interface | Description |
-| ------ | ------ |
-| [AnnotationCollection](interfaces/AnnotationCollection.md) | Collection of Annotations, GeoJSON FeatureCollection |
-| [AnnotationFeature](interfaces/AnnotationFeature.md) | Base interface for all annotation features. |
-| [AnnotationProps](interfaces/AnnotationProps.md) | Base properties for all annotations. |
-| [Arrow](interfaces/Arrow.md) | Arrow annotation feature. Represents a directed line between two points, can connect a textbox to a shape. |
-| [ArrowProperties](interfaces/ArrowProperties.md) | Base properties for all annotations. |
-| [ArrowStyles](interfaces/ArrowStyles.md) | Styles specific to arrow annotations. |
-| [Box](interfaces/Box.md) | Box annotation feature |
-| [BoxProperties](interfaces/BoxProperties.md) | Properties specific to box annotations. |
-| [BoxStyle](interfaces/BoxStyle.md) | Styles specific to box annotations. |
-| [ClickEvent](interfaces/ClickEvent.md) | Event related to a single annotation feature |
-| [Comment](interfaces/Comment.md) | Comment annotation type Geometry: Point (center position of comment box/icon) |
-| [CommentProps](interfaces/CommentProps.md) | Properties for Comment annotations |
-| [CommentStyle](interfaces/CommentStyle.md) | Style configuration for Comment annotations |
-| [DragEvent](interfaces/DragEvent.md) | Event related to a single annotation feature |
-| [FeatureEvent](interfaces/FeatureEvent.md) | Event related to a single annotation feature |
-| [FeaturesEvent](interfaces/FeaturesEvent.md) | Event related to multiple annotation features |
-| [HistoryEvent](interfaces/HistoryEvent.md) | History stack change event |
-| [Link](interfaces/Link.md) | Link between an arrow and a text or node |
-| [Polygon](interfaces/Polygon.md) | Polygon placed on the graph, use it to highlight areas |
-| [PolygonProperties](interfaces/PolygonProperties.md) | Base properties for all annotations. |
-| [PolygonStyle](interfaces/PolygonStyle.md) | Styles specific to box annotations. |
-| [Text](interfaces/Text.md) | Text annotation feature, represents a text box at a specific position |
-| [TextProperties](interfaces/TextProperties.md) | - |
-| [TextStyle](interfaces/TextStyle.md) | Styles specific to box annotations. |
+| Interface                                                  | Description                                                                                                |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| [AnnotationCollection](interfaces/AnnotationCollection.md) | Collection of Annotations, GeoJSON FeatureCollection                                                       |
+| [AnnotationFeature](interfaces/AnnotationFeature.md)       | Base interface for all annotation features.                                                                |
+| [AnnotationProps](interfaces/AnnotationProps.md)           | Base properties for all annotations.                                                                       |
+| [Arrow](interfaces/Arrow.md)                               | Arrow annotation feature. Represents a directed line between two points, can connect a textbox to a shape. |
+| [ArrowProperties](interfaces/ArrowProperties.md)           | Base properties for all annotations.                                                                       |
+| [ArrowStyles](interfaces/ArrowStyles.md)                   | Styles specific to arrow annotations.                                                                      |
+| [Box](interfaces/Box.md)                                   | Box annotation feature                                                                                     |
+| [BoxProperties](interfaces/BoxProperties.md)               | Properties specific to box annotations.                                                                    |
+| [BoxStyle](interfaces/BoxStyle.md)                         | Styles specific to box annotations.                                                                        |
+| [ClickEvent](interfaces/ClickEvent.md)                     | Event related to a single annotation feature                                                               |
+| [Comment](interfaces/Comment.md)                           | Comment annotation type Geometry: Point (center position of comment box/icon)                              |
+| [CommentProps](interfaces/CommentProps.md)                 | Properties for Comment annotations                                                                         |
+| [CommentStyle](interfaces/CommentStyle.md)                 | Style configuration for Comment annotations                                                                |
+| [DragEvent](interfaces/DragEvent.md)                       | Event related to a single annotation feature                                                               |
+| [FeatureEvent](interfaces/FeatureEvent.md)                 | Event related to a single annotation feature                                                               |
+| [FeaturesEvent](interfaces/FeaturesEvent.md)               | Event related to multiple annotation features                                                              |
+| [HistoryEvent](interfaces/HistoryEvent.md)                 | History stack change event                                                                                 |
+| [Link](interfaces/Link.md)                                 | Link between an arrow and a text or node                                                                   |
+| [Polygon](interfaces/Polygon.md)                           | Polygon placed on the graph, use it to highlight areas                                                     |
+| [PolygonProperties](interfaces/PolygonProperties.md)       | Base properties for all annotations.                                                                       |
+| [PolygonStyle](interfaces/PolygonStyle.md)                 | Styles specific to box annotations.                                                                        |
+| [Text](interfaces/Text.md)                                 | Text annotation feature, represents a text box at a specific position                                      |
+| [TextProperties](interfaces/TextProperties.md)             | -                                                                                                          |
+| [TextStyle](interfaces/TextStyle.md)                       | Styles specific to box annotations.                                                                        |
 
 ## Type Aliases
 
-| Type Alias | Description |
-| ------ | ------ |
-| [Annotation](type-aliases/Annotation.md) | Union type of all Annotation features |
-| [AnnotationGetter](type-aliases/AnnotationGetter.md) | Function type to get an Annotation by its id |
-| [AnnotationOptions](type-aliases/AnnotationOptions.md) | - |
-| [AnnotationType](type-aliases/AnnotationType.md) | Types of annotations supported |
-| [AuthorLineStyle](type-aliases/AuthorLineStyle.md) | Style overrides for the author line rendered under a Text's content when `showAuthor` is true and `properties.author` is non-empty. Only the line-level subset of `TextStyle` - box properties (background, padding, borderRadius...) don't apply to it. |
-| [Bounds](type-aliases/Bounds.md) | Bounding box object, with the following properties: - [0]: min x - [1]: min y - [2]: max x - [3]: max y |
-| [BoxMagnet](type-aliases/BoxMagnet.md) | Arrow snapped to a rectangular annotation (text, box, comment). nx/ny are center-relative fractions multiplied by width/height: left-center = { nx: -0.5, ny: 0 } right-center = { nx: 0.5, ny: 0 } center = { nx: 0, ny: 0 } |
-| [ClientMouseEvent](type-aliases/ClientMouseEvent.md) | - |
-| [Color](type-aliases/Color.md) | Any valid color format |
-| [ControllerOptions](type-aliases/ControllerOptions.md) | Options for the annotations control |
-| [DeepPartial](type-aliases/DeepPartial.md) | - |
-| [EdgeMagnet](type-aliases/EdgeMagnet.md) | Arrow snapped at parametric position t (0–1) along an edge path. |
-| [ExportedLink](type-aliases/ExportedLink.md) | Serialized link stored inside arrow.properties.link. Uses plain { x, y } for backward compatibility with saved annotations. Converted to the internal Magnet type by Links.add(). |
-| [Extremity](type-aliases/Extremity.md) | Extremity types for arrow annotations. |
-| [FeatureEvents](type-aliases/FeatureEvents.md) | - |
-| [HexColor](type-aliases/HexColor.md) | Hex color string in format #RGB or #RRGGBB |
-| [Id](type-aliases/Id.md) | Unique identifier type for annotations |
-| [Magnet](type-aliases/Magnet.md) | - |
-| [NodeMagnet](type-aliases/NodeMagnet.md) | Arrow snapped to the center or perimeter of a node. |
-| [Point](type-aliases/Point.md) | 2D coordinate |
-| [PolygonMagnet](type-aliases/PolygonMagnet.md) | Arrow snapped to a polygon annotation. rx/ry are 0–1 fractions of the polygon's bounding box from its top-left corner. |
-| [RgbaColor](type-aliases/RgbaColor.md) | RGBA color string in format rgba(r, g, b, a) |
-| [RgbColor](type-aliases/RgbColor.md) | RGB color string in format rgb(r, g, b) |
-| [Side](type-aliases/Side.md) | - |
-| [Stroke](type-aliases/Stroke.md) | Stroke style for arrow annotations |
-| [StrokeOptions](type-aliases/StrokeOptions.md) | Stroke style options for annotations |
-| [StrokeStyle](type-aliases/StrokeStyle.md) | - |
-| [StrokeType](type-aliases/StrokeType.md) | Stroke types available for annotations |
-| [TargetType](type-aliases/TargetType.md) | - |
+| Type Alias                                             | Description                                                                                                                                                                                                                                              |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Annotation](type-aliases/Annotation.md)               | Union type of all Annotation features                                                                                                                                                                                                                    |
+| [AnnotationGetter](type-aliases/AnnotationGetter.md)   | Function type to get an Annotation by its id                                                                                                                                                                                                             |
+| [AnnotationOptions](type-aliases/AnnotationOptions.md) | -                                                                                                                                                                                                                                                        |
+| [AnnotationType](type-aliases/AnnotationType.md)       | Types of annotations supported                                                                                                                                                                                                                           |
+| [AuthorLineStyle](type-aliases/AuthorLineStyle.md)     | Style overrides for the author line rendered under a Text's content when `showAuthor` is true and `properties.author` is non-empty. Only the line-level subset of `TextStyle` - box properties (background, padding, borderRadius...) don't apply to it. |
+| [Bounds](type-aliases/Bounds.md)                       | Bounding box object, with the following properties: - [0]: min x - [1]: min y - [2]: max x - [3]: max y                                                                                                                                                  |
+| [BoxMagnet](type-aliases/BoxMagnet.md)                 | Arrow snapped to a rectangular annotation (text, box, comment). nx/ny are center-relative fractions multiplied by width/height: left-center = { nx: -0.5, ny: 0 } right-center = { nx: 0.5, ny: 0 } center = { nx: 0, ny: 0 }                            |
+| [ClientMouseEvent](type-aliases/ClientMouseEvent.md)   | -                                                                                                                                                                                                                                                        |
+| [Color](type-aliases/Color.md)                         | Any valid color format                                                                                                                                                                                                                                   |
+| [CommentTarget](type-aliases/CommentTarget.md)         | What a comment is being attached to: a graph node, a graph edge, another annotation (text, box, polygon) or an empty point of the canvas.                                                                                                                |
+| [ControllerOptions](type-aliases/ControllerOptions.md) | Options for the annotations control                                                                                                                                                                                                                      |
+| [DeepPartial](type-aliases/DeepPartial.md)             | -                                                                                                                                                                                                                                                        |
+| [EdgeMagnet](type-aliases/EdgeMagnet.md)               | Arrow snapped at parametric position t (0–1) along an edge path.                                                                                                                                                                                         |
+| [ExportedLink](type-aliases/ExportedLink.md)           | Serialized link stored inside arrow.properties.link. Uses plain { x, y } for backward compatibility with saved annotations. Converted to the internal Magnet type by Links.add().                                                                        |
+| [Extremity](type-aliases/Extremity.md)                 | Extremity types for arrow annotations.                                                                                                                                                                                                                   |
+| [FeatureEvents](type-aliases/FeatureEvents.md)         | -                                                                                                                                                                                                                                                        |
+| [HexColor](type-aliases/HexColor.md)                   | Hex color string in format #RGB or #RRGGBB                                                                                                                                                                                                               |
+| [Id](type-aliases/Id.md)                               | Unique identifier type for annotations                                                                                                                                                                                                                   |
+| [Magnet](type-aliases/Magnet.md)                       | -                                                                                                                                                                                                                                                        |
+| [NodeMagnet](type-aliases/NodeMagnet.md)               | Arrow snapped to the center or perimeter of a node.                                                                                                                                                                                                      |
+| [Point](type-aliases/Point.md)                         | 2D coordinate                                                                                                                                                                                                                                            |
+| [PolygonMagnet](type-aliases/PolygonMagnet.md)         | Arrow snapped to a polygon annotation. rx/ry are 0–1 fractions of the polygon's bounding box from its top-left corner.                                                                                                                                   |
+| [RgbaColor](type-aliases/RgbaColor.md)                 | RGBA color string in format rgba(r, g, b, a)                                                                                                                                                                                                             |
+| [RgbColor](type-aliases/RgbColor.md)                   | RGB color string in format rgb(r, g, b)                                                                                                                                                                                                                  |
+| [Side](type-aliases/Side.md)                           | -                                                                                                                                                                                                                                                        |
+| [Stroke](type-aliases/Stroke.md)                       | Stroke style for arrow annotations                                                                                                                                                                                                                       |
+| [StrokeOptions](type-aliases/StrokeOptions.md)         | Stroke style options for annotations                                                                                                                                                                                                                     |
+| [StrokeStyle](type-aliases/StrokeStyle.md)             | -                                                                                                                                                                                                                                                        |
+| [StrokeType](type-aliases/StrokeType.md)               | Stroke types available for annotations                                                                                                                                                                                                                   |
+| [TargetType](type-aliases/TargetType.md)               | -                                                                                                                                                                                                                                                        |
 
 ## Variables
 
-| Variable | Description |
-| ------ | ------ |
-| [COMMENT\_MODE\_COLLAPSED](variables/COMMENT_MODE_COLLAPSED.md) | - |
-| [COMMENT\_MODE\_EXPANDED](variables/COMMENT_MODE_EXPANDED.md) | - |
-| [DATA\_ATTR](variables/DATA_ATTR.md) | - |
-| [DEFAULT\_EDIT\_ICON](variables/DEFAULT_EDIT_ICON.md) | - |
-| [DEFAULT\_SEND\_ICON](variables/DEFAULT_SEND_ICON.md) | Default send button icon (paper plane) |
-| [defaultArrowOptions](variables/defaultArrowOptions.md) | Default options for creating new Arrow annotations. Contains the default arrow structure with [defaultArrowStyle](variables/defaultArrowStyle.md). |
-| [defaultArrowStyle](variables/defaultArrowStyle.md) | Default style configuration for arrow annotations. |
-| [defaultBoxOptions](variables/defaultBoxOptions.md) | Default options for creating new Box annotations. Contains the default box structure with [defaultBoxStyle](variables/defaultBoxStyle.md). |
-| [defaultBoxStyle](variables/defaultBoxStyle.md) | Default style configuration for box annotations. |
-| [defaultCommentOptions](variables/defaultCommentOptions.md) | Default options for creating new Comments. Contains the default comment configuration with [defaultCommentStyle](variables/defaultCommentStyle.md). |
-| [defaultCommentStyle](variables/defaultCommentStyle.md) | Default style for Comment annotations |
+| Variable                                                          | Description                                                                                                                                                               |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [COMMENT\_MODE\_COLLAPSED](variables/COMMENT_MODE_COLLAPSED.md)   | -                                                                                                                                                                         |
+| [COMMENT\_MODE\_EXPANDED](variables/COMMENT_MODE_EXPANDED.md)     | -                                                                                                                                                                         |
+| [DATA\_ATTR](variables/DATA_ATTR.md)                              | -                                                                                                                                                                         |
+| [DEFAULT\_EDIT\_ICON](variables/DEFAULT_EDIT_ICON.md)             | -                                                                                                                                                                         |
+| [DEFAULT\_SEND\_ICON](variables/DEFAULT_SEND_ICON.md)             | Default send button icon (paper plane)                                                                                                                                    |
+| [defaultArrowOptions](variables/defaultArrowOptions.md)           | Default options for creating new Arrow annotations. Contains the default arrow structure with [defaultArrowStyle](variables/defaultArrowStyle.md).                        |
+| [defaultArrowStyle](variables/defaultArrowStyle.md)               | Default style configuration for arrow annotations.                                                                                                                        |
+| [defaultBoxOptions](variables/defaultBoxOptions.md)               | Default options for creating new Box annotations. Contains the default box structure with [defaultBoxStyle](variables/defaultBoxStyle.md).                                |
+| [defaultBoxStyle](variables/defaultBoxStyle.md)                   | Default style configuration for box annotations.                                                                                                                          |
+| [defaultCommentOptions](variables/defaultCommentOptions.md)       | Default options for creating new Comments. Contains the default comment configuration with [defaultCommentStyle](variables/defaultCommentStyle.md).                       |
+| [defaultCommentStyle](variables/defaultCommentStyle.md)           | Default style for Comment annotations                                                                                                                                     |
 | [defaultPolygonProperties](variables/defaultPolygonProperties.md) | Default polygon properties for creating new Polygon annotations. Contains the default polygon configuration with [defaultPolygonStyle](variables/defaultPolygonStyle.md). |
-| [defaultPolygonStyle](variables/defaultPolygonStyle.md) | Default style configuration for polygon annotations. |
-| [defaultTextOptions](variables/defaultTextOptions.md) | Default options for creating new Text annotations. Contains the default text structure with [defaultTextStyle](variables/defaultTextStyle.md). |
-| [defaultTextStyle](variables/defaultTextStyle.md) | Default style configuration for text annotations. |
-| [EVT\_ADD](variables/EVT_ADD.md) | - |
-| [EVT\_CANCEL\_DRAWING](variables/EVT_CANCEL_DRAWING.md) | - |
-| [EVT\_CLICK](variables/EVT_CLICK.md) | - |
-| [EVT\_COMPLETE\_DRAWING](variables/EVT_COMPLETE_DRAWING.md) | - |
-| [EVT\_DRAG](variables/EVT_DRAG.md) | - |
-| [EVT\_DRAG\_END](variables/EVT_DRAG_END.md) | - |
-| [EVT\_DRAG\_START](variables/EVT_DRAG_START.md) | - |
-| [EVT\_HISTORY](variables/EVT_HISTORY.md) | - |
-| [EVT\_HOVER](variables/EVT_HOVER.md) | - |
-| [EVT\_LINK](variables/EVT_LINK.md) | - |
-| [EVT\_REMOVE](variables/EVT_REMOVE.md) | - |
-| [EVT\_SELECT](variables/EVT_SELECT.md) | - |
-| [EVT\_UNHOVER](variables/EVT_UNHOVER.md) | - |
-| [EVT\_UNSELECT](variables/EVT_UNSELECT.md) | - |
-| [EVT\_UPDATE](variables/EVT_UPDATE.md) | - |
-| [handleDetectionThreshold](variables/handleDetectionThreshold.md) | - |
-| [handleRadius](variables/handleRadius.md) | - |
-| [HL\_BRIGHTEN](variables/HL_BRIGHTEN.md) | - |
-| [MAX\_FONT\_SCALE](variables/MAX_FONT_SCALE.md) | - |
-| [MIN\_FONT\_SCALE](variables/MIN_FONT_SCALE.md) | - |
-| [NONE](variables/NONE.md) | - |
-| [SIDE\_END](variables/SIDE_END.md) | - |
-| [SIDE\_START](variables/SIDE_START.md) | - |
-| [TEXT\_LINE\_HEIGHT](variables/TEXT_LINE_HEIGHT.md) | - |
+| [defaultPolygonStyle](variables/defaultPolygonStyle.md)           | Default style configuration for polygon annotations.                                                                                                                      |
+| [defaultTextOptions](variables/defaultTextOptions.md)             | Default options for creating new Text annotations. Contains the default text structure with [defaultTextStyle](variables/defaultTextStyle.md).                            |
+| [defaultTextStyle](variables/defaultTextStyle.md)                 | Default style configuration for text annotations.                                                                                                                         |
+| [EVT\_ADD](variables/EVT_ADD.md)                                  | -                                                                                                                                                                         |
+| [EVT\_CANCEL\_DRAWING](variables/EVT_CANCEL_DRAWING.md)           | -                                                                                                                                                                         |
+| [EVT\_CLICK](variables/EVT_CLICK.md)                              | -                                                                                                                                                                         |
+| [EVT\_COMMENT\_DENIED](variables/EVT_COMMENT_DENIED.md)           | -                                                                                                                                                                         |
+| [EVT\_COMMENT\_HOVER](variables/EVT_COMMENT_HOVER.md)             | -                                                                                                                                                                         |
+| [EVT\_COMPLETE\_DRAWING](variables/EVT_COMPLETE_DRAWING.md)       | -                                                                                                                                                                         |
+| [EVT\_DRAG](variables/EVT_DRAG.md)                                | -                                                                                                                                                                         |
+| [EVT\_DRAG\_END](variables/EVT_DRAG_END.md)                       | -                                                                                                                                                                         |
+| [EVT\_DRAG\_START](variables/EVT_DRAG_START.md)                   | -                                                                                                                                                                         |
+| [EVT\_HISTORY](variables/EVT_HISTORY.md)                          | -                                                                                                                                                                         |
+| [EVT\_HOVER](variables/EVT_HOVER.md)                              | -                                                                                                                                                                         |
+| [EVT\_LINK](variables/EVT_LINK.md)                                | -                                                                                                                                                                         |
+| [EVT\_REMOVE](variables/EVT_REMOVE.md)                            | -                                                                                                                                                                         |
+| [EVT\_SELECT](variables/EVT_SELECT.md)                            | -                                                                                                                                                                         |
+| [EVT\_UNHOVER](variables/EVT_UNHOVER.md)                          | -                                                                                                                                                                         |
+| [EVT\_UNSELECT](variables/EVT_UNSELECT.md)                        | -                                                                                                                                                                         |
+| [EVT\_UPDATE](variables/EVT_UPDATE.md)                            | -                                                                                                                                                                         |
+| [handleDetectionThreshold](variables/handleDetectionThreshold.md) | -                                                                                                                                                                         |
+| [handleRadius](variables/handleRadius.md)                         | -                                                                                                                                                                         |
+| [HL\_BRIGHTEN](variables/HL_BRIGHTEN.md)                          | -                                                                                                                                                                         |
+| [MAX\_FONT\_SCALE](variables/MAX_FONT_SCALE.md)                   | -                                                                                                                                                                         |
+| [MIN\_FONT\_SCALE](variables/MIN_FONT_SCALE.md)                   | -                                                                                                                                                                         |
+| [NONE](variables/NONE.md)                                         | -                                                                                                                                                                         |
+| [SIDE\_END](variables/SIDE_END.md)                                | -                                                                                                                                                                         |
+| [SIDE\_START](variables/SIDE_START.md)                            | -                                                                                                                                                                         |
+| [TEXT\_LINE\_HEIGHT](variables/TEXT_LINE_HEIGHT.md)               | -                                                                                                                                                                         |
 
 ## Functions
 
-| Function | Description |
-| ------ | ------ |
-| [adjustColorBrightness](functions/adjustColorBrightness.md) | Adjusts the brightness of a color (hex or rgba) based on its perceived luminance. For bright colors, the adjustment is applied as darkening; for dark colors, as lightening. |
-| [asColor](functions/asColor.md) | Safely cast a string to a Color type with runtime validation |
-| [asHexColor](functions/asHexColor.md) | Safely cast a string to a HexColor type with runtime validation |
-| [asRgbaColor](functions/asRgbaColor.md) | Safely cast a string to an RgbaColor type with runtime validation |
-| [asRgbColor](functions/asRgbColor.md) | Safely cast a string to an RgbColor type with runtime validation |
-| [brighten](functions/brighten.md) | Brighten a color for highlight purposes. |
-| [bringToTop](functions/bringToTop.md) | Move `el` to the end of `root`'s children. SVG paint order is DOM order, so this is how a shape gets raised to the top of its group. Safe to call every render even when `el` is already last - `appendChild` on an existing child just re-positions it, it doesn't clone or re-trigger insertion. |
-| [calculateCommentZoomThreshold](functions/calculateCommentZoomThreshold.md) | Calculate optimal zoom threshold for auto-collapse based on comment dimensions |
-| [canDetachArrowEnd](functions/canDetachArrowEnd.md) | Check if arrow endpoint can be detached from its target |
-| [canDetachArrowStart](functions/canDetachArrowStart.md) | Check if arrow start point can be detached from its source |
-| [clientToContainerPosition](functions/clientToContainerPosition.md) | - |
-| [colorToRgba](functions/colorToRgba.md) | - |
-| [createArrow](functions/createArrow.md) | - |
-| [createBox](functions/createBox.md) | - |
-| [createComment](functions/createComment.md) | Create a new Comment annotation |
-| [createCommentWithArrow](functions/createCommentWithArrow.md) | Create a comment with an arrow pointing to a target location |
-| [createPolygon](functions/createPolygon.md) | Create a polygon annotation |
-| [createText](functions/createText.md) | - |
-| [darken](functions/darken.md) | Darken a color for highlight purposes. |
-| [getAnnotationsBounds](functions/getAnnotationsBounds.md) | Calculate the bounds of a collection of annotations |
-| [getArrowEnd](functions/getArrowEnd.md) | - |
-| [getArrowEndPoints](functions/getArrowEndPoints.md) | - |
-| [getArrowSide](functions/getArrowSide.md) | - |
-| [getArrowStart](functions/getArrowStart.md) | - |
-| [getAttachmentPointOnNode](functions/getAttachmentPointOnNode.md) | - |
-| [getBbox](functions/getBbox.md) | - |
-| [getBoxCenter](functions/getBoxCenter.md) | - |
-| [getBoxPosition](functions/getBoxPosition.md) | - |
-| [getBoxSize](functions/getBoxSize.md) | - |
-| [getCascadeDeleteIds](functions/getCascadeDeleteIds.md) | Ids that removing `id` should take with it: `id` itself, plus every arrow attached to it when it's a comment or text annotation - deleting the anchor takes its connectors along, since a detached comment-arrow has nothing to point at. |
-| [getCommentLeftOrphanedBy](functions/getCommentLeftOrphanedBy.md) | Comments must always keep at least one arrow. Returns the comment's id when deleting `arrowId` would leave it with none, so the caller can block the deletion instead - or `null` when it's safe to proceed. |
-| [getCommentLinkId](functions/getCommentLinkId.md) | Get the id of the comment an arrow is connected to, if any. |
-| [getCommentPosition](functions/getCommentPosition.md) | Get the position (center) of a comment |
-| [getCommentSize](functions/getCommentSize.md) | Get the dimensions of a comment based on its mode |
-| [getCommentZoomThreshold](functions/getCommentZoomThreshold.md) | Get the effective zoom threshold for a comment Uses explicit threshold if set, otherwise calculates from dimensions |
-| [getCoordinates](functions/getCoordinates.md) | - |
-| [getEffectiveFontSize](functions/getEffectiveFontSize.md) | fontSize * fontScale, the number to actually render/edit at. Shared by the SVG renderer (text.ts) and the live-edit overlay (textArea.ts) so both stay in sync. fontScale absent/undefined is a no-op (×1). |
-| [getHandleId](functions/getHandleId.md) | - |
-| [getPolygonBounds](functions/getPolygonBounds.md) | Get bounding box of a polygon |
-| [getPolygonCenter](functions/getPolygonCenter.md) | Get centroid (geometric center) of a polygon |
-| [hexShortToLong](functions/hexShortToLong.md) | - |
-| [hexToRgba](functions/hexToRgba.md) | Adds alpha channel to a hex color |
-| [isAnnotationCollection](functions/isAnnotationCollection.md) | Helper to check if a feature collection is an annotation collection |
-| [isArrow](functions/isArrow.md) | - |
-| [isBox](functions/isBox.md) | - |
-| [isColor](functions/isColor.md) | Type guard to check if a string is a valid color |
-| [isComment](functions/isComment.md) | Type guard to check if an annotation is a Comment |
-| [isCommentArrow](functions/isCommentArrow.md) | Check if an arrow is connected to a comment |
-| [isHexColor](functions/isHexColor.md) | Type guard to check if a string is a valid hex color |
-| [isPolygon](functions/isPolygon.md) | - |
-| [isRgbaColor](functions/isRgbaColor.md) | Type guard to check if a string is a valid RGBA color |
-| [isRgbColor](functions/isRgbColor.md) | Type guard to check if a string is a valid RGB color |
-| [isRigidConnector](functions/isRigidConnector.md) | Whether a comment's connector line should rigidly follow its attachment point (translate the comment by the same offset) rather than elastically re-anchoring to the nearest point on the comment box. |
-| [isStickyNote](functions/isStickyNote.md) | Heuristic "is this Text a sticky note" check. Sticky notes are not a distinct annotation type - they're `Text` created via `Control.enableStickyNoteDrawing()` with `defaultStickyNoteStyle` (see `api/drawing.ts`) - so there is no dedicated marker to check yet. |
-| [isText](functions/isText.md) | - |
-| [parseColor](functions/parseColor.md) | - |
-| [rgbToRgba](functions/rgbToRgba.md) | Adds alpha channel to an rgb color |
-| [scaleGeometry](functions/scaleGeometry.md) | - |
-| [scalePolygon](functions/scalePolygon.md) | Scale polygon around an origin point |
-| [setArrowEnd](functions/setArrowEnd.md) | - |
-| [setArrowEndPoint](functions/setArrowEndPoint.md) | - |
-| [setArrowStart](functions/setArrowStart.md) | - |
-| [setBbox](functions/setBbox.md) | - |
-| [simplifyPolygon](functions/simplifyPolygon.md) | Polyline simplification using a combination of the Radial Distance and the Douglas-Peucker algorithms See https://github.com/mourner/simplify-js for more details |
-| [toggleCommentMode](functions/toggleCommentMode.md) | Toggle comment mode between collapsed and expanded |
-| [translatePolygon](functions/translatePolygon.md) | Translate (move) a polygon by dx, dy |
-| [updateBbox](functions/updateBbox.md) | - |
-| [updatePolygonBbox](functions/updatePolygonBbox.md) | Update bbox for a polygon |
+| Function                                                                    | Description                                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [adjustColorBrightness](functions/adjustColorBrightness.md)                 | Adjusts the brightness of a color (hex or rgba) based on its perceived luminance. For bright colors, the adjustment is applied as darkening; for dark colors, as lightening.                                                                                                                                                                                |
+| [asColor](functions/asColor.md)                                             | Safely cast a string to a Color type with runtime validation                                                                                                                                                                                                                                                                                                |
+| [asHexColor](functions/asHexColor.md)                                       | Safely cast a string to a HexColor type with runtime validation                                                                                                                                                                                                                                                                                             |
+| [asRgbaColor](functions/asRgbaColor.md)                                     | Safely cast a string to an RgbaColor type with runtime validation                                                                                                                                                                                                                                                                                           |
+| [asRgbColor](functions/asRgbColor.md)                                       | Safely cast a string to an RgbColor type with runtime validation                                                                                                                                                                                                                                                                                            |
+| [brighten](functions/brighten.md)                                           | Brighten a color for highlight purposes.                                                                                                                                                                                                                                                                                                                    |
+| [bringToTop](functions/bringToTop.md)                                       | Move `el` to the end of `root`'s children. SVG paint order is DOM order, so this is how a shape gets raised to the top of its group. Safe to call every render even when `el` is already last - `appendChild` on an existing child just re-positions it, it doesn't clone or re-trigger insertion.                                                          |
+| [calculateCommentZoomThreshold](functions/calculateCommentZoomThreshold.md) | Calculate optimal zoom threshold for auto-collapse based on comment dimensions                                                                                                                                                                                                                                                                              |
+| [canDetachArrowEnd](functions/canDetachArrowEnd.md)                         | Check if arrow endpoint can be detached from its target                                                                                                                                                                                                                                                                                                     |
+| [canDetachArrowStart](functions/canDetachArrowStart.md)                     | Check if arrow start point can be detached from its source                                                                                                                                                                                                                                                                                                  |
+| [clientToContainerPosition](functions/clientToContainerPosition.md)         | -                                                                                                                                                                                                                                                                                                                                                           |
+| [colorToRgba](functions/colorToRgba.md)                                     | -                                                                                                                                                                                                                                                                                                                                                           |
+| [containerToClientPosition](functions/containerToClientPosition.md)         | Inverse of clientToContainerPosition: turns a point already relative to the container's top-left (e.g. from ogma.view.graphToScreenCoordinates) into viewport-relative clientX/clientY, for code paths that synthesize a MouseEvent-shaped object and hand it to something (like Handler.onDragStart) that normalizes via clientToContainerPosition itself. |
+| [createArrow](functions/createArrow.md)                                     | -                                                                                                                                                                                                                                                                                                                                                           |
+| [createBox](functions/createBox.md)                                         | -                                                                                                                                                                                                                                                                                                                                                           |
+| [createComment](functions/createComment.md)                                 | Create a new Comment annotation                                                                                                                                                                                                                                                                                                                             |
+| [createCommentWithArrow](functions/createCommentWithArrow.md)               | Create a comment with an arrow pointing to a target location                                                                                                                                                                                                                                                                                                |
+| [createPolygon](functions/createPolygon.md)                                 | Create a polygon annotation                                                                                                                                                                                                                                                                                                                                 |
+| [createText](functions/createText.md)                                       | -                                                                                                                                                                                                                                                                                                                                                           |
+| [darken](functions/darken.md)                                               | Darken a color for highlight purposes.                                                                                                                                                                                                                                                                                                                      |
+| [getAnnotationsBounds](functions/getAnnotationsBounds.md)                   | Calculate the bounds of a collection of annotations                                                                                                                                                                                                                                                                                                         |
+| [getArrowEnd](functions/getArrowEnd.md)                                     | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getArrowEndPoints](functions/getArrowEndPoints.md)                         | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getArrowSide](functions/getArrowSide.md)                                   | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getArrowStart](functions/getArrowStart.md)                                 | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getAttachmentPointOnNode](functions/getAttachmentPointOnNode.md)           | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getBbox](functions/getBbox.md)                                             | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getBoxCenter](functions/getBoxCenter.md)                                   | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getBoxPosition](functions/getBoxPosition.md)                               | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getBoxSize](functions/getBoxSize.md)                                       | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getCascadeDeleteIds](functions/getCascadeDeleteIds.md)                     | Ids that removing `id` should take with it: `id` itself, plus every arrow attached to it when it's a comment or text annotation - deleting the anchor takes its connectors along, since a detached comment-arrow has nothing to point at.                                                                                                                   |
+| [getCommentLeftOrphanedBy](functions/getCommentLeftOrphanedBy.md)           | Comments must always keep at least one arrow. Returns the comment's id when deleting `arrowId` would leave it with none, so the caller can block the deletion instead - or `null` when it's safe to proceed.                                                                                                                                                |
+| [getCommentLinkId](functions/getCommentLinkId.md)                           | Get the id of the comment an arrow is connected to, if any.                                                                                                                                                                                                                                                                                                 |
+| [getCommentPosition](functions/getCommentPosition.md)                       | Get the position (center) of a comment                                                                                                                                                                                                                                                                                                                      |
+| [getCommentSize](functions/getCommentSize.md)                               | Get the dimensions of a comment based on its mode                                                                                                                                                                                                                                                                                                           |
+| [getCommentZoomThreshold](functions/getCommentZoomThreshold.md)             | Get the effective zoom threshold for a comment Uses explicit threshold if set, otherwise calculates from dimensions                                                                                                                                                                                                                                         |
+| [getCoordinates](functions/getCoordinates.md)                               | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getEffectiveFontSize](functions/getEffectiveFontSize.md)                   | fontSize * fontScale, the number to actually render/edit at. Shared by the SVG renderer (text.ts) and the live-edit overlay (textArea.ts) so both stay in sync. fontScale absent/undefined is a no-op (×1).                                                                                                                                                 |
+| [getHandleId](functions/getHandleId.md)                                     | -                                                                                                                                                                                                                                                                                                                                                           |
+| [getPolygonBounds](functions/getPolygonBounds.md)                           | Get bounding box of a polygon                                                                                                                                                                                                                                                                                                                               |
+| [getPolygonCenter](functions/getPolygonCenter.md)                           | Get centroid (geometric center) of a polygon                                                                                                                                                                                                                                                                                                                |
+| [hexShortToLong](functions/hexShortToLong.md)                               | -                                                                                                                                                                                                                                                                                                                                                           |
+| [hexToRgba](functions/hexToRgba.md)                                         | Adds alpha channel to a hex color                                                                                                                                                                                                                                                                                                                           |
+| [isAnnotationCollection](functions/isAnnotationCollection.md)               | Helper to check if a feature collection is an annotation collection                                                                                                                                                                                                                                                                                         |
+| [isArrow](functions/isArrow.md)                                             | -                                                                                                                                                                                                                                                                                                                                                           |
+| [isBox](functions/isBox.md)                                                 | -                                                                                                                                                                                                                                                                                                                                                           |
+| [isColor](functions/isColor.md)                                             | Type guard to check if a string is a valid color                                                                                                                                                                                                                                                                                                            |
+| [isComment](functions/isComment.md)                                         | Type guard to check if an annotation is a Comment                                                                                                                                                                                                                                                                                                           |
+| [isCommentArrow](functions/isCommentArrow.md)                               | Check if an arrow is connected to a comment                                                                                                                                                                                                                                                                                                                 |
+| [isHexColor](functions/isHexColor.md)                                       | Type guard to check if a string is a valid hex color                                                                                                                                                                                                                                                                                                        |
+| [isPolygon](functions/isPolygon.md)                                         | -                                                                                                                                                                                                                                                                                                                                                           |
+| [isRgbaColor](functions/isRgbaColor.md)                                     | Type guard to check if a string is a valid RGBA color                                                                                                                                                                                                                                                                                                       |
+| [isRgbColor](functions/isRgbColor.md)                                       | Type guard to check if a string is a valid RGB color                                                                                                                                                                                                                                                                                                        |
+| [isRigidConnector](functions/isRigidConnector.md)                           | Whether a comment's connector line should rigidly follow its attachment point (translate the comment by the same offset) rather than elastically re-anchoring to the nearest point on the comment box.                                                                                                                                                      |
+| [isStickyNote](functions/isStickyNote.md)                                   | Heuristic "is this Text a sticky note" check. Sticky notes are not a distinct annotation type - they're `Text` created via `Control.enableStickyNoteDrawing()` with `defaultStickyNoteStyle` (see `api/drawing.ts`) - so there is no dedicated marker to check yet.                                                                                         |
+| [isText](functions/isText.md)                                               | -                                                                                                                                                                                                                                                                                                                                                           |
+| [parseColor](functions/parseColor.md)                                       | -                                                                                                                                                                                                                                                                                                                                                           |
+| [rgbToRgba](functions/rgbToRgba.md)                                         | Adds alpha channel to an rgb color                                                                                                                                                                                                                                                                                                                          |
+| [scaleGeometry](functions/scaleGeometry.md)                                 | -                                                                                                                                                                                                                                                                                                                                                           |
+| [scalePolygon](functions/scalePolygon.md)                                   | Scale polygon around an origin point                                                                                                                                                                                                                                                                                                                        |
+| [setArrowEnd](functions/setArrowEnd.md)                                     | -                                                                                                                                                                                                                                                                                                                                                           |
+| [setArrowEndPoint](functions/setArrowEndPoint.md)                           | -                                                                                                                                                                                                                                                                                                                                                           |
+| [setArrowStart](functions/setArrowStart.md)                                 | -                                                                                                                                                                                                                                                                                                                                                           |
+| [setBbox](functions/setBbox.md)                                             | -                                                                                                                                                                                                                                                                                                                                                           |
+| [simplifyPolygon](functions/simplifyPolygon.md)                             | Polyline simplification using a combination of the Radial Distance and the Douglas-Peucker algorithms See https://github.com/mourner/simplify-js for more details                                                                                                                                                                                           |
+| [toggleCommentMode](functions/toggleCommentMode.md)                         | Toggle comment mode between collapsed and expanded                                                                                                                                                                                                                                                                                                          |
+| [translatePolygon](functions/translatePolygon.md)                           | Translate (move) a polygon by dx, dy                                                                                                                                                                                                                                                                                                                        |
+| [updateBbox](functions/updateBbox.md)                                       | -                                                                                                                                                                                                                                                                                                                                                           |
+| [updatePolygonBbox](functions/updatePolygonBbox.md)                         | Update bbox for a polygon                                                                                                                                                                                                                                                                                                                                   |
 
 ## References
 
@@ -192,25 +196,25 @@
 
 Renames and re-exports [getBbox](functions/getBbox.md)
 
-***
+---
 
 ### getTextPosition
 
 Renames and re-exports [getBoxPosition](functions/getBoxPosition.md)
 
-***
+---
 
 ### getTextSize
 
 Renames and re-exports [getBoxSize](functions/getBoxSize.md)
 
-***
+---
 
 ### setTextBbox
 
 Renames and re-exports [setBbox](functions/setBbox.md)
 
-***
+---
 
 ### updateTextBbox
 

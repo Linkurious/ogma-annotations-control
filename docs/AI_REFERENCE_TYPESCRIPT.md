@@ -1,7 +1,7 @@
 # Ogma Annotations - TypeScript Reference
 
 > Core TypeScript API, usage patterns, and examples for @linkurious/ogma-annotations
-> Auto-generated: 2026-09-17 | Version: 2.x
+> Auto-generated: 2026-10-12 | Version: 2.x
 
 ---
 
@@ -23,7 +23,6 @@ Before installing Ogma Annotations, you need:
 
 Install the package using your preferred package manager:
 
-
 ```bash [npm]
 npm install -S @linkurious/ogma-annotations
 ```
@@ -35,7 +34,6 @@ yarn add @linkurious/ogma-annotations
 ```bash [pnpm]
 pnpm add @linkurious/ogma-annotations
 ```
-
 
 ## Basic Setup
 
@@ -489,7 +487,6 @@ controller.destroy();
 ogma.destroy();
 ```
 
-
 ## Best Practices
 
 ### 1. One Controller Per Ogma Instance
@@ -903,7 +900,6 @@ controller.add(arrow);
 
 Always use `createCommentWithArrow()` for programmatic creation, as comments require at least one arrow. The arrow automatically points from the target TO the comment and is linked to it.
 
-
 ## Links
 
 Links are a powerful feature that connect arrows to other annotations or graph elements. When you create a link, the arrow automatically follows the linked target. They are encoded within the annotation arrows themselves.
@@ -971,7 +967,6 @@ controller.add(arrow);
 ```
 
 You can link both the start and end points of an arrow by setting both `arrow.properties.link.start` and `arrow.properties.link.end`.
-
 
 ### Breaking Links
 
@@ -1253,7 +1248,6 @@ controller.add(shape);
 
 Polygons use GeoJSON coordinate format: `[[[x1, y1], [x2, y2], ...]]`. Note the triple array nesting - this allows for polygons with holes (not currently supported).
 
-
 ## Creating Comments
 
 Comments combine a text box with an arrow. Use `createCommentWithArrow()` to ensure proper linking.
@@ -1290,7 +1284,6 @@ controller.add(arrow);
 ```
 
 Always use `createCommentWithArrow()` rather than creating comments manually. This ensures the arrow is properly linked to the comment, which is required for comments to work correctly.
-
 
 ## Creating Linked Arrows
 
@@ -1681,7 +1674,6 @@ When polygon drawing is enabled:
 
 Polygons require at least 3 points. The system automatically closes the polygon by connecting the last point to the first.
 
-
 ## Drawing Comments
 
 Enable comment drawing mode with `enableCommentDrawing()`:
@@ -1740,6 +1732,36 @@ When comment drawing is enabled:
 4. User can immediately start typing
 5. User presses Enter or clicks outside to finish
 
+A comment that is still empty when the user clicks away is discarded, together
+with its arrow.
+
+### Restricting where comments can be added
+
+Pass a `canComment` option to allow comments only on some targets. It receives
+`{ type: "node" | "edge" | "annotation" | "void", id?, point }` and returns a
+boolean:
+
+```typescript
+// e.g. nodes and edges only, nothing on empty canvas
+controller.setOptions({
+  canComment: (target) => target.type === "node" || target.type === "edge"
+});
+
+// A click on a denied target creates nothing, and drawing mode stays active
+controller.on("commentDenied", ({ target }) => {
+  toast(`No comments on ${target.type}`);
+});
+
+// Fires while hovering in drawing mode; the cursor turns `not-allowed` on denied
+// targets (set `commentDeniedCursor: false` to indicate it yourself)
+controller.on("commentHover", ({ target, allowed }) => {
+  highlight(target, allowed);
+});
+```
+
+`canComment` runs on mouse move while comment drawing is active, so keep it
+cheap and synchronous.
+
 ## Drawing Sticky Notes
 
 Enable sticky note drawing mode with `enableStickyNoteDrawing()`. A sticky
@@ -1790,8 +1812,8 @@ When sticky note drawing is enabled:
 ## Erasing Annotations
 
 Unlike the `enable*Drawing()` tools, erase mode isn't a one-shot draw - once
-armed with `enableEraseMode()`, every click on an annotation deletes it
-immediately, and it stays armed across multiple clicks until you turn it off.
+enabled with `enableEraseMode()`, every click on an annotation deletes it
+immediately, and it stays active across multiple clicks until you turn it off.
 
 ```typescript
 eraseButton.addEventListener("click", () => {
@@ -1810,13 +1832,12 @@ When erase mode is enabled:
 1. Clicking an annotation deletes it immediately (cascades to a comment's
    linked arrows, same as `remove()`)
 2. Clicking empty space does nothing
-3. Stays active across multiple clicks - no need to re-arm it between deletes
+3. Stays active across multiple clicks - no need to re-enable it between deletes
 4. Turned off by `disableEraseMode()`, or automatically when another drawing
    tool is enabled or `cancelDrawing()` is called
 
 This is a separate workflow from selecting an annotation and clicking a
 trash/delete button - use whichever fits your UI, or offer both.
-
 
 ## Canceling Drawing
 
@@ -2032,7 +2053,6 @@ ogma.events.on("click", (evt) => {
 
 Using custom mouse handling means you're responsible for handling all edge cases, cancellation, and cleanup. For most use cases, use the built-in `enable*Drawing()` methods instead.
 
-
 ## Best Practices
 
 ### 1. Provide Visual Feedback
@@ -2168,7 +2188,9 @@ controller.enableBoxDrawing({ background: "rgba(52,152,219,0.2)" });
 controller.enablePolygonDrawing({ strokeColor: "#27ae60" });
 
 // Comment - click target, auto-positions
-controller.enableCommentDrawing({ commentStyle: { style: { background: "#FFFACD" } } });
+controller.enableCommentDrawing({
+  commentStyle: { style: { background: "#FFFACD" } }
+});
 
 // Cancel
 controller.cancelDrawing();
@@ -2177,13 +2199,39 @@ controller.cancelDrawing();
 ### Programmatic Creation
 
 ```typescript
-import { createArrow, createText, createBox, createPolygon, createCommentWithArrow } from "@linkurious/ogma-annotations";
+import {
+  createArrow,
+  createText,
+  createBox,
+  createPolygon,
+  createCommentWithArrow
+} from "@linkurious/ogma-annotations";
 
-const arrow = createArrow(0, 0, 100, 100, { head: "arrow", strokeColor: "#3498db" });
+const arrow = createArrow(0, 0, 100, 100, {
+  head: "arrow",
+  strokeColor: "#3498db"
+});
 const text = createText(50, 50, 150, 40, "Label", { fontSize: 16 });
 const box = createBox(0, 0, 200, 150, { background: "rgba(52,152,219,0.2)" });
-const polygon = createPolygon([[[0,0], [100,0], [50,100], [0,0]]], { style: { strokeColor: "#27ae60" } });
-const { comment, arrow: commentArrow } = createCommentWithArrow(100, 100, 250, 50, "Note", {});
+const polygon = createPolygon(
+  [
+    [
+      [0, 0],
+      [100, 0],
+      [50, 100],
+      [0, 0]
+    ]
+  ],
+  { style: { strokeColor: "#27ae60" } }
+);
+const { comment, arrow: commentArrow } = createCommentWithArrow(
+  100,
+  100,
+  250,
+  50,
+  "Note",
+  {}
+);
 
 controller.add(arrow);
 controller.add(text);
@@ -2226,7 +2274,10 @@ controller.on("history", ({ canUndo, canRedo }) => {});
 
 ```typescript
 // Save
-localStorage.setItem("annotations", JSON.stringify(controller.getAnnotations()));
+localStorage.setItem(
+  "annotations",
+  JSON.stringify(controller.getAnnotations())
+);
 
 // Load
 const saved = localStorage.getItem("annotations");
@@ -2240,8 +2291,16 @@ if (saved) controller.add(JSON.parse(saved));
 ### Type Guards
 
 ```typescript
-import { isArrow, isText, isBox, isPolygon, isComment } from "@linkurious/ogma-annotations";
-if (isArrow(annotation)) { /* Arrow */ }
+import {
+  isArrow,
+  isText,
+  isBox,
+  isPolygon,
+  isComment
+} from "@linkurious/ogma-annotations";
+if (isArrow(annotation)) {
+  /* Arrow */
+}
 ```
 
 ### Cleanup

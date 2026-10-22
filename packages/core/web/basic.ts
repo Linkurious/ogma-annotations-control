@@ -1,5 +1,5 @@
 import Ogma from "@linkurious/ogma";
-import { Control, createComment } from "../src";
+import { Control, createComment, createCommentWithArrow } from "../src";
 import { createDebugTools } from "./debug";
 import { installBrand } from "./brand";
 import "./style.css";
@@ -19,12 +19,26 @@ await ogma.setGraph({
     { id: 2, attributes: { x: 0, y: 15 } }
   ],
   edges: [
-    { source: 0, target: 1 },
+    { id: "e01", source: 0, target: 1, attributes: { width: 12 } },
     { source: 1, target: 2 },
     { source: 2, target: 0 }
   ]
 });
 await ogma.view.set({ x: 0, y: 0, zoom: 0.5 }, { duration: 0 });
+
+// Comments are not allowed on edges; hover/click feedback shown in #status
+control.setOptions({
+  canComment: (target) => {
+    return target.type !== "edge" || target.id === "e01";
+  }
+});
+const status = document.getElementById("status")!;
+control.on("commentHover", ({ target, allowed }) => {
+  status.textContent = `${target.type}: ${allowed ? "allowed" : "not allowed"}`;
+});
+control.on("commentDenied", ({ target }) => {
+  status.textContent = `Can't comment on ${target.type} - click elsewhere`;
+});
 
 document.getElementById("enable")!.addEventListener("click", () => {
   control.enableCommentDrawing({
@@ -51,6 +65,42 @@ document.getElementById("enable")!.addEventListener("click", () => {
     }
   });
 });
+
+// control.link(arrowId, edge, side, magnet?): re-attach an existing connector
+// to an edge, keeping its id and history. First click adds a comment linked to
+// the edge; later clicks replace the edge (like toggling edge grouping would)
+// and relink the same connector to the new one.
+let edgeComment: ReturnType<typeof createCommentWithArrow> | undefined;
+let edgeId = "e01";
+document.getElementById("link-edge")!.addEventListener("click", () => {
+  if (!edgeComment) {
+    edgeComment = createCommentWithArrow(0, -15, 0, -60, "Linked to an edge");
+    control.add(edgeComment.comment);
+    control.add(edgeComment.arrow);
+  } else {
+    ogma.removeEdge(edgeId);
+    edgeId = `e01-${Date.now()}`;
+    ogma.addEdge({ id: edgeId, source: 0, target: 1 });
+  }
+  control.link(edgeComment.arrow.id, ogma.getEdge(edgeId)!, "end");
+});
+
+// Collapsed comments showing the three icon kinds: default SVG bubble,
+// emoji text, and a custom colorful SVG string.
+const heart =
+  '<svg viewBox="0 0 24 24"><path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11Z" fill="#e91e63"/><circle cx="8.5" cy="9" r="1.5" fill="#fff" opacity=".6"/></svg>';
+[
+  [-60, -40, "Default SVG bubble", undefined],
+  [0, -40, "Emoji icon", "💬"],
+  [60, -40, "Custom colorful SVG", heart]
+].forEach(([x, y, text, iconSymbol]) =>
+  control.add(
+    createComment(x as number, y as number, text as string, {
+      mode: "collapsed",
+      style: { iconSymbol: iconSymbol as string | undefined }
+    })
+  )
+);
 
 // Initialize debug tools
 const debug = createDebugTools(ogma, control);

@@ -1,4 +1,4 @@
-import { Node, type Ogma } from "@linkurious/ogma";
+import { Edge, Node, type Ogma, type Point } from "@linkurious/ogma";
 import EventEmitter from "eventemitter3";
 import { CommentManager } from "./api/comments";
 import { Drawing } from "./api/drawing";
@@ -66,7 +66,10 @@ const defaultOptions: ControllerOptions = {
   minArrowHeight: 20,
   maxArrowHeight: 30,
   isEditable: () => true,
-  isVisible: () => true
+  isVisible: () => true,
+  canComment: () => true,
+  commentDeniedCursor: true,
+  canDetach: () => false
 };
 
 interface RendererMap {
@@ -97,8 +100,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   private updateManager: UpdateManager;
   private commentManager: CommentManager;
 
-  constructor(ogma: Ogma,
-    options: Partial<ControllerOptions> = {}) {
+  constructor(ogma: Ogma, options: Partial<ControllerOptions> = {}) {
     super();
     this.ogma = ogma;
 
@@ -107,13 +109,25 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.store = createStore(mergedOptions);
     this.index = new Index(this.store);
 
-    this.snapping = new Snapping(this.ogma, {
-      detectMargin: options.detectMargin === undefined ? 10 : options.detectMargin,
-      magnetRadius: options.magnetRadius === undefined ? 10 : options.magnetRadius,
-    }, this.index, this.store);
-    this.links = new Links(this.ogma, this.snapping, this.store, (arrow, link) => {
-      this.emit(EVT_LINK, { arrow, link });
-    });
+    this.snapping = new Snapping(
+      this.ogma,
+      {
+        detectMargin:
+          options.detectMargin === undefined ? 10 : options.detectMargin,
+        magnetRadius:
+          options.magnetRadius === undefined ? 10 : options.magnetRadius
+      },
+      this.index,
+      this.store
+    );
+    this.links = new Links(
+      this.ogma,
+      this.snapping,
+      this.store,
+      (arrow, link) => {
+        this.emit(EVT_LINK, { arrow, link });
+      }
+    );
     this.interactions = new InteractionController(
       this.ogma,
       this.store,
@@ -165,15 +179,21 @@ export class Control extends EventEmitter<FeatureEvents> {
         position: (evt as CustomEvent).detail.position
       })
     );
-    this.editor.addEventListener(EVT_DRAG_END, (evt) => this.emit(EVT_DRAG_END, {
-      id: (evt as CustomEvent).detail.id,
-      position: (evt as CustomEvent).detail.position
-    }));
+    this.editor.addEventListener(EVT_DRAG_END, (evt) =>
+      this.emit(EVT_DRAG_END, {
+        id: (evt as CustomEvent).detail.id,
+        position: (evt as CustomEvent).detail.position
+      })
+    );
 
     // Forward click event from interaction controller
-    this.interactions.addEventListener(EVT_CLICK, ((evt: CustomEvent<ClickEvent>) => this.emit(EVT_CLICK, {
-      id: evt.detail.id, position: evt.detail.position
-    })) as unknown as EventListener);
+    this.interactions.addEventListener(EVT_CLICK, ((
+      evt: CustomEvent<ClickEvent>
+    ) =>
+      this.emit(EVT_CLICK, {
+        id: evt.detail.id,
+        position: evt.detail.position
+      })) as unknown as EventListener);
 
     this.store.temporal.subscribe((state) => {
       this.emit(EVT_HISTORY, {
@@ -548,8 +568,8 @@ export class Control extends EventEmitter<FeatureEvents> {
    * ```
    *
    * @param options Drawing options including offsets and styles
-   * @param options.offsetX Manual X offset for comment placement (overrides smart positioning)
-   * @param options.offsetY Manual Y offset for comment placement (overrides smart positioning)
+   * @param options.offsetX Manual X offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
+   * @param options.offsetY Manual Y offset for comment placement, in screen pixels from the click, independent of zoom (overrides smart positioning)
    * @param options.commentStyle Style options for the comment box
    * @param options.arrowStyle Style options for the arrow
    * @returns this for chaining
@@ -607,7 +627,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   /**
    * Enable erase mode: every click on an annotation deletes it immediately.
-   * Stays armed across multiple clicks until `disableEraseMode()` is called,
+   * Stays active across multiple clicks until `disableEraseMode()` is called,
    * or another drawing tool is enabled / `cancelDrawing()` is called.
    *
    * @returns this for chaining
@@ -908,10 +928,7 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events
-      .off(this.onRotate)
-      .off(this.onZoom)
-      .off(this.onLayout);
+    this.ogma.events.off(this.onRotate).off(this.onZoom).off(this.onLayout);
     this.links.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();
@@ -995,10 +1012,25 @@ export class Control extends EventEmitter<FeatureEvents> {
    * @param side
    */
   public link(arrowId: Id, target: Id, side: Side): this;
-  public link(arrowId: Id, target: Id | Node, side: Side = SIDE_END): this {
+  /**
+   * Attach an arrow to an edge at the specified side. Keeps the arrow id and
+   * does not touch history.
+   * @param arrowId
+   * @param targetEdge
+   * @param side
+   * @param magnet position along the edge as `{ x: t, y: 0 }`, t in 0..1
+   * (default: the middle)
+   */
+  public link(arrowId: Id, targetEdge: Edge, side: Side, magnet?: Point): this;
+  public link(
+    arrowId: Id,
+    target: Id | Node | Edge,
+    side: Side = SIDE_END,
+    magnet?: Point
+  ): this {
     const arrow = this.getAnnotation<Arrow>(arrowId);
     if (!arrow) throw new Error(`Arrow with id ${arrowId} not found`);
-    this.editor.getArrowHandler().link(arrow, target, side);
+    this.editor.getArrowHandler().link(arrow, target, side, magnet);
     return this;
   }
 

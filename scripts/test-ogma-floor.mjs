@@ -85,7 +85,9 @@ function swapInFloorVersion() {
     );
   }
   const version = readAliasedVersion();
-  console.log(`\nBacking up the normally-installed @linkurious/ogma to ${BACKUP_DIR}...`);
+  console.log(
+    `\nBacking up the normally-installed @linkurious/ogma to ${BACKUP_DIR}...`
+  );
   rmSync(BACKUP_DIR, { recursive: true, force: true });
   cpSync(TARGET_DIR, BACKUP_DIR, { recursive: true });
 
@@ -101,7 +103,9 @@ function restore() {
     );
     return;
   }
-  console.log("\nRestoring the normally-installed @linkurious/ogma from backup...");
+  console.log(
+    "\nRestoring the normally-installed @linkurious/ogma from backup..."
+  );
   rmSync(TARGET_DIR, { recursive: true, force: true });
   cpSync(BACKUP_DIR, TARGET_DIR, { recursive: true });
   rmSync(BACKUP_DIR, { recursive: true, force: true });

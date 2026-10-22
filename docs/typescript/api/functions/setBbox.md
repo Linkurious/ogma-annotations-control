@@ -1,12 +1,7 @@
 # Function: setBbox()
 
 ```ts
-function setBbox(
-   t, 
-   x, 
-   y, 
-   width, 
-   height): void;
+function setBbox(t, x, y, width, height): void;
 ```
 
 ## Parameters

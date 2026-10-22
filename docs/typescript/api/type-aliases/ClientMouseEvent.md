@@ -12,7 +12,7 @@ type ClientMouseEvent = object;
 clientX: number;
 ```
 
-***
+---
 
 ### clientY
 

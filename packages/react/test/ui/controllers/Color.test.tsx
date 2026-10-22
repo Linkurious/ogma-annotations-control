@@ -41,9 +41,7 @@ describe("ColorController", () => {
         initialColor={DEFAULT_RECENT_COLORS[1]}
       />
     );
-    expect(
-      container.querySelectorAll(".color-circle-primary").length
-    ).toBe(1);
+    expect(container.querySelectorAll(".color-circle-primary").length).toBe(1);
   });
 
   it("does not render the color picker overlay until a swatch is clicked", () => {
@@ -148,12 +146,10 @@ describe("ColorController", () => {
         initialColor={DEFAULT_RECENT_COLORS[0]}
       />
     );
-    expect(
-      container.querySelectorAll(".color-circle-primary").length
-    ).toBe(1);
-    expect(
-      container.querySelectorAll(".color-circle")[0].className
-    ).toContain("color-circle-primary");
+    expect(container.querySelectorAll(".color-circle-primary").length).toBe(1);
+    expect(container.querySelectorAll(".color-circle")[0].className).toContain(
+      "color-circle-primary"
+    );
 
     rerender(
       <ColorController
@@ -162,8 +158,8 @@ describe("ColorController", () => {
         initialColor={DEFAULT_RECENT_COLORS[1]}
       />
     );
-    expect(
-      container.querySelectorAll(".color-circle")[1].className
-    ).toContain("color-circle-primary");
+    expect(container.querySelectorAll(".color-circle")[1].className).toContain(
+      "color-circle-primary"
+    );
   });
 });

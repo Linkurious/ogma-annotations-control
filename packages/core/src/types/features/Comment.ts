@@ -1,7 +1,7 @@
 import { Size } from "@linkurious/ogma";
 import { Point as GeoJSONPoint, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
-import { AnnotationFeature, AnnotationProps } from "./Annotation";
+import { AnnotationFeature, AnnotationProps, Id } from "./Annotation";
 import type { Arrow, ArrowStyles, Extremity } from "./Arrow";
 import { createArrow, defaultArrowStyle } from "./Arrow";
 import { Text, TextStyle, detectText } from "./Text";
@@ -20,7 +20,7 @@ export interface CommentStyle extends TextStyle {
   // Icon styling (collapsed mode)
   /** Background color for collapsed icon (default: "#FFD700") */
   iconColor?: Color;
-  /** Icon to display when collapsed (default: "💬") */
+  /** Icon to display when collapsed (default: built-in SVG message icon; set e.g. "💬" for a text/emoji icon, or an `<svg viewBox=...>` string for a colorful icon; scripts/handlers are stripped) */
   iconSymbol?: string;
   /** Border color for collapsed icon */
   iconBorderColor?: Color;
@@ -99,8 +99,10 @@ export interface CommentProps extends AnnotationProps {
  * Note: Arrows are stored separately in Arrow features.
  * Arrows reference comments via their link.start or link.end properties.
  */
-export interface Comment
-  extends AnnotationFeature<GeoJSONPoint, CommentProps> {}
+export interface Comment extends AnnotationFeature<
+  GeoJSONPoint,
+  CommentProps
+> {}
 
 /**
  * Type guard to check if an annotation is a Comment
@@ -162,7 +164,7 @@ export const defaultCommentStyle: CommentStyle = {
 
   // Icon styling (collapsed mode)
   iconColor: "#FFFACD", // Gold
-  iconSymbol: "💬",
+  // iconSymbol unset = built-in SVG message icon
   iconBorderColor: "#aaa",
   iconBorderWidth: 1,
 
@@ -467,6 +469,8 @@ export function createCommentWithArrow(
   options?: {
     commentStyle?: Partial<CommentProps>;
     arrowStyle?: Partial<ArrowStyles>;
+    commentId?: Id;
+    arrowId?: Id;
   }
 ): {
   comment: Comment;
@@ -479,6 +483,7 @@ export function createCommentWithArrow(
     content,
     options?.commentStyle
   );
+  if (options?.commentId !== undefined) comment.id = options.commentId;
 
   // Create the arrow pointing from target to comment
   const arrowStyles: ArrowStyles = {
@@ -488,6 +493,7 @@ export function createCommentWithArrow(
   };
 
   const arrow = createArrow(commentX, commentY, targetX, targetY, arrowStyles);
+  if (options?.arrowId !== undefined) arrow.id = options.arrowId;
 
   // Link the arrow's end to the comment
   arrow.properties.link = {

@@ -1,7 +1,7 @@
 # Ogma Annotations - React Reference
 
 > React integration with hooks, context provider, and component patterns
-> Auto-generated: 2026-09-17 | Version: 2.x
+> Auto-generated: 2026-10-12 | Version: 2.x
 
 ---
 
@@ -24,7 +24,6 @@ Before installing the React wrapper, you need:
 
 Install both the core annotations package and the React wrapper:
 
-
 ```bash [npm]
 npm install @linkurious/ogma-annotations @linkurious/ogma-annotations-react
 ```
@@ -36,7 +35,6 @@ yarn add @linkurious/ogma-annotations @linkurious/ogma-annotations-react
 ```bash [pnpm]
 pnpm add @linkurious/ogma-annotations @linkurious/ogma-annotations-react
 ```
-
 
 ## Basic Setup
 
@@ -326,7 +324,6 @@ function App() {
 
 The `AnnotationsContextProvider` must be placed **inside** the `Ogma` component, as it depends on the Ogma instance.
 
-
 ## Props
 
 ### annotations (optional)
@@ -457,7 +454,6 @@ setTextStyle({
 ```
 
 When you update the style via `setArrowStyle` or `setTextStyle`, the provider automatically applies the changes to the currently selected annotation!
-
 
 ### History State
 
@@ -664,7 +660,7 @@ The `useAnnotationsContext` hook provides access to all annotation state and met
 Import and use the hook in any component inside the provider:
 
 ```tsx
-import { useAnnotationsContext } from '@linkurious/ogma-annotations-react';
+import { useAnnotationsContext } from "@linkurious/ogma-annotations-react";
 
 function MyComponent() {
   const context = useAnnotationsContext();
@@ -688,8 +684,12 @@ function Toolbar() {
   return (
     <>
       <button onClick={() => editor.enableArrowDrawing({})}>Add Arrow</button>
-      <button onClick={undo} disabled={!canUndo}>Undo</button>
-      <button onClick={redo} disabled={!canRedo}>Redo</button>
+      <button onClick={undo} disabled={!canUndo}>
+        Undo
+      </button>
+      <button onClick={redo} disabled={!canRedo}>
+        Redo
+      </button>
     </>
   );
 }
@@ -702,6 +702,7 @@ The hook returns an object (`IAnnotationsContext`) with the following properties
 ### Core State
 
 #### annotations
+
 - **Type:** `AnnotationCollection`
 - **Description:** All annotations currently in the graph
 
@@ -709,12 +710,13 @@ The hook returns an object (`IAnnotationsContext`) with the following properties
 const { annotations } = useAnnotationsContext();
 
 console.log(annotations.features.length); // Number of annotations
-annotations.features.forEach(annotation => {
+annotations.features.forEach((annotation) => {
   console.log(annotation.id, annotation.properties.type);
 });
 ```
 
 #### editor
+
 - **Type:** `Control`
 - **Description:** The annotations editor (Control instance) for direct access to all methods
 
@@ -733,6 +735,7 @@ const selected = editor.getSelectedAnnotations();
 ### Selection State
 
 #### currentAnnotation
+
 - **Type:** `AnnotationFeature | null`
 - **Description:** The currently selected annotation, or `null` if none selected
 
@@ -740,12 +743,13 @@ const selected = editor.getSelectedAnnotations();
 const { currentAnnotation } = useAnnotationsContext();
 
 if (currentAnnotation) {
-  console.log('Selected:', currentAnnotation.id);
-  console.log('Type:', currentAnnotation.properties.type);
+  console.log("Selected:", currentAnnotation.id);
+  console.log("Type:", currentAnnotation.properties.type);
 }
 ```
 
 #### setCurrentAnnotation
+
 - **Type:** `(annotation: AnnotationFeature | null) => void`
 - **Description:** Manually set the current annotation
 
@@ -764,18 +768,20 @@ setCurrentAnnotation(null);
 ### Arrow Style State
 
 #### arrowStyle
+
 - **Type:** `ArrowStyles`
 - **Description:** Current arrow style for the selected arrow or for new arrows
 
 ```tsx
 const { arrowStyle } = useAnnotationsContext();
 
-console.log(arrowStyle.strokeColor);   // e.g., '#3498db'
-console.log(arrowStyle.strokeWidth);   // e.g., 2
-console.log(arrowStyle.head);          // e.g., 'arrow'
+console.log(arrowStyle.strokeColor); // e.g., '#3498db'
+console.log(arrowStyle.strokeWidth); // e.g., 2
+console.log(arrowStyle.head); // e.g., 'arrow'
 ```
 
 #### setArrowStyle
+
 - **Type:** `(style: ArrowStyles) => void`
 - **Description:** Update the arrow style (automatically applies to selected arrow)
 
@@ -785,7 +791,7 @@ const { arrowStyle, setArrowStyle } = useAnnotationsContext();
 // Change color
 setArrowStyle({
   ...arrowStyle,
-  strokeColor: '#e74c3c'
+  strokeColor: "#e74c3c"
 });
 
 // Change width
@@ -797,38 +803,41 @@ setArrowStyle({
 // Change arrow head
 setArrowStyle({
   ...arrowStyle,
-  head: 'arrow',
-  tail: 'none'
+  head: "arrow",
+  tail: "none"
 });
 ```
 
 When you call `setArrowStyle`, the provider automatically updates the currently selected arrow annotation!
 
-
 #### arrowWidthFactor
+
 - **Type:** `number`
 - **Description:** Width scaling factor for arrows (adjusted based on graph scale)
 
 #### setArrowWidthFactor
+
 - **Type:** `(factor: number) => void`
 - **Description:** Set the arrow width scaling factor
 
 ### Text Style State
 
 #### textStyle
+
 - **Type:** `TextStyle`
 - **Description:** Current text style for the selected text or for new text annotations
 
 ```tsx
 const { textStyle } = useAnnotationsContext();
 
-console.log(textStyle.font);         // e.g., 'Arial'
-console.log(textStyle.fontSize);     // e.g., 16
-console.log(textStyle.color);        // e.g., '#2c3e50'
-console.log(textStyle.background);   // e.g., '#ffffff'
+console.log(textStyle.font); // e.g., 'Arial'
+console.log(textStyle.fontSize); // e.g., 16
+console.log(textStyle.color); // e.g., '#2c3e50'
+console.log(textStyle.background); // e.g., '#ffffff'
 ```
 
 #### setTextStyle
+
 - **Type:** `(style: TextStyle) => void`
 - **Description:** Update the text style (automatically applies to selected text)
 
@@ -838,63 +847,75 @@ const { textStyle, setTextStyle } = useAnnotationsContext();
 // Change font
 setTextStyle({
   ...textStyle,
-  font: 'Arial'
+  font: "Arial"
 });
 
 // Change size and color
 setTextStyle({
   ...textStyle,
   fontSize: 18,
-  color: '#e74c3c'
+  color: "#e74c3c"
 });
 
 // Change background
 setTextStyle({
   ...textStyle,
-  background: '#f0f0f0',
+  background: "#f0f0f0",
   borderRadius: 4,
   padding: 12
 });
 ```
 
 #### textSizeFactor
+
 - **Type:** `number`
 - **Description:** Size scaling factor for text (adjusted based on graph scale)
 
 #### setTextSizeFactor
+
 - **Type:** `(factor: number) => void`
 - **Description:** Set the text size scaling factor
 
 ### History Management
 
 #### canUndo
+
 - **Type:** `boolean`
 - **Description:** Whether undo operation is available
 
 #### canRedo
+
 - **Type:** `boolean`
 - **Description:** Whether redo operation is available
 
 #### undo
+
 - **Type:** `() => boolean`
 - **Description:** Undo the last action, returns `true` if successful
 
 #### redo
+
 - **Type:** `() => boolean`
 - **Description:** Redo the last undone action, returns `true` if successful
 
 #### clearHistory
+
 - **Type:** `() => void`
 - **Description:** Clear the undo/redo history
 
 ```tsx
 function HistoryControls() {
-  const { canUndo, canRedo, undo, redo, clearHistory } = useAnnotationsContext();
+  const { canUndo, canRedo, undo, redo, clearHistory } =
+    useAnnotationsContext();
 
   return (
     <div>
-      <button onClick={undo} disabled={!canUndo}>Undo</button>
-      <button onClick={redo} disabled={!canRedo}>Redo</button>
+      <button onClick={undo} disabled={!canUndo}>
+        Undo
+      </button>
+      <button onClick={redo} disabled={!canRedo}>
+        Redo
+      </button>
       <button onClick={clearHistory}>Clear History</button>
     </div>
   );
@@ -904,27 +925,26 @@ function HistoryControls() {
 ### Annotation Management
 
 #### add
+
 - **Type:** `(annotation: Annotation | AnnotationCollection) => void`
 - **Description:** Add one or more annotations
 
 ```tsx
 const { add } = useAnnotationsContext();
-import { createArrow, createText } from '@linkurious/ogma-annotations';
+import { createArrow, createText } from "@linkurious/ogma-annotations";
 
 // Add single annotation
-add(createArrow(0, 0, 100, 100, { strokeColor: '#3498db' }));
+add(createArrow(0, 0, 100, 100, { strokeColor: "#3498db" }));
 
 // Add multiple annotations
 add({
-  type: 'FeatureCollection',
-  features: [
-    createArrow(0, 0, 100, 100),
-    createText(50, 50, 'Label')
-  ]
+  type: "FeatureCollection",
+  features: [createArrow(0, 0, 100, 100), createText(50, 50, "Label")]
 });
 ```
 
 #### remove
+
 - **Type:** `(annotation: Annotation | AnnotationCollection) => void`
 - **Description:** Remove one or more annotations
 
@@ -941,6 +961,7 @@ remove(all);
 ```
 
 #### select
+
 - **Type:** `(ids: string | string[]) => void`
 - **Description:** Select annotation(s) by ID
 
@@ -948,13 +969,14 @@ remove(all);
 const { select } = useAnnotationsContext();
 
 // Select by ID
-select('annotation-123');
+select("annotation-123");
 
 // Select multiple
-select(['annotation-123', 'annotation-456']);
+select(["annotation-123", "annotation-456"]);
 ```
 
 #### cancelDrawing
+
 - **Type:** `() => void`
 - **Description:** Cancel the current drawing operation
 
@@ -964,19 +986,20 @@ const { cancelDrawing } = useAnnotationsContext();
 // Cancel on Escape key
 React.useEffect(() => {
   const handleKeyDown = (evt: KeyboardEvent) => {
-    if (evt.key === 'Escape') {
+    if (evt.key === "Escape") {
       cancelDrawing();
     }
   };
 
-  document.addEventListener('keydown', handleKeyDown);
-  return () => document.removeEventListener('keydown', handleKeyDown);
+  document.addEventListener("keydown", handleKeyDown);
+  return () => document.removeEventListener("keydown", handleKeyDown);
 }, [cancelDrawing]);
 ```
 
 ### Drawing Methods
 
 #### enableBoxDrawing
+
 - **Type:** `(style?: Partial<BoxStyle>) => void`
 - **Description:** Enable box drawing mode
 
@@ -984,13 +1007,14 @@ React.useEffect(() => {
 const { editor } = useAnnotationsContext();
 
 editor.enableBoxDrawing({
-  background: '#f0f0f0',
+  background: "#f0f0f0",
   borderRadius: 8,
   padding: 12
 });
 ```
 
 #### enablePolygonDrawing
+
 - **Type:** `(style?: Partial<PolygonStyle>) => void`
 - **Description:** Enable polygon drawing mode
 
@@ -998,13 +1022,14 @@ editor.enableBoxDrawing({
 const { editor } = useAnnotationsContext();
 
 editor.enablePolygonDrawing({
-  strokeColor: '#3498db',
+  strokeColor: "#3498db",
   strokeWidth: 2,
-  background: 'rgba(52, 152, 219, 0.2)'
+  background: "rgba(52, 152, 219, 0.2)"
 });
 ```
 
 #### enableCommentDrawing
+
 - **Type:** `(options?) => void`
 - **Description:** Enable comment drawing mode (text with arrow)
 
@@ -1015,19 +1040,19 @@ editor.enableCommentDrawing({
   offsetX: 200,
   offsetY: -150,
   commentStyle: {
-    content: '',
+    content: "",
     style: {
-      color: '#2c3e50',
-      background: '#ffffff',
+      color: "#2c3e50",
+      background: "#ffffff",
       fontSize: 16,
-      font: 'Arial'
+      font: "Arial"
     }
   },
   arrowStyle: {
     style: {
-      strokeColor: '#3498db',
+      strokeColor: "#3498db",
       strokeWidth: 2,
-      head: 'arrow'
+      head: "arrow"
     }
   }
 });
@@ -1038,7 +1063,10 @@ editor.enableCommentDrawing({
 The hook returns `IAnnotationsContext`. Import the type for type safety:
 
 ```tsx
-import { useAnnotationsContext, type IAnnotationsContext } from '@linkurious/ogma-annotations-react';
+import {
+  useAnnotationsContext,
+  type IAnnotationsContext
+} from "@linkurious/ogma-annotations-react";
 
 function MyComponent() {
   const context: IAnnotationsContext = useAnnotationsContext();
@@ -1076,13 +1104,13 @@ function AnnotationsSync() {
 
   // Save to localStorage whenever annotations change
   React.useEffect(() => {
-    localStorage.setItem('annotations', JSON.stringify(annotations));
+    localStorage.setItem("annotations", JSON.stringify(annotations));
   }, [annotations]);
 
   // Or sync with a backend
   React.useEffect(() => {
-    fetch('/api/annotations', {
-      method: 'POST',
+    fetch("/api/annotations", {
+      method: "POST",
       body: JSON.stringify(annotations)
     });
   }, [annotations]);
@@ -1105,10 +1133,7 @@ function DeleteButton() {
   }, [editor, remove]);
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={!currentAnnotation}
-    >
+    <button onClick={handleDelete} disabled={!currentAnnotation}>
       Delete Selected
     </button>
   );
@@ -1122,7 +1147,7 @@ function Toolbar() {
   const { editor, undo, redo, canUndo, canRedo } = useAnnotationsContext();
 
   const handleArrow = React.useCallback(() => {
-    editor.enableArrowDrawing({ strokeColor: '#3498db' });
+    editor.enableArrowDrawing({ strokeColor: "#3498db" });
   }, [editor]);
 
   const handleText = React.useCallback(() => {
@@ -1139,8 +1164,12 @@ function Toolbar() {
       <button onClick={handleText}>Text</button>
       <button onClick={handleBox}>Box</button>
       <span className="separator" />
-      <button onClick={undo} disabled={!canUndo}>Undo</button>
-      <button onClick={redo} disabled={!canRedo}>Redo</button>
+      <button onClick={undo} disabled={!canUndo}>
+        Undo
+      </button>
+      <button onClick={redo} disabled={!canRedo}>
+        Redo
+      </button>
     </div>
   );
 }
@@ -1303,6 +1332,25 @@ function AddCommentButton() {
 }
 ```
 
+#### Restricting where comments can be added
+
+Pass a `canComment` option to allow comments only on some targets. It receives
+`{ type: "node" | "edge" | "annotation" | "void", id?, point }` and returns a
+boolean:
+
+```ts
+editor.setOptions({ canComment: (target) => target.type !== "edge" });
+
+// A click on a denied target creates nothing, and drawing mode stays active
+editor.on("commentDenied", ({ target }) =>
+  toast(`No comments on ${target.type}`)
+);
+
+// Fires while hovering in drawing mode; the cursor turns `not-allowed` on denied
+// targets (disable with `commentDeniedCursor: false` to indicate it yourself)
+editor.on("commentHover", ({ target, allowed }) => highlight(target, allowed));
+```
+
 ### Sticky Note Drawing
 
 A sticky note is a plain, resizable `text` annotation (Miro-style: padded,
@@ -1336,7 +1384,7 @@ function AddStickyNoteButton() {
 
 Unlike the drawing modes above, erase mode isn't a one-shot draw - once
 enabled, every click on an annotation deletes it immediately, and it stays
-armed across multiple clicks until turned off:
+active across multiple clicks until turned off:
 
 ```tsx
 function EraseButton() {
@@ -1681,7 +1729,10 @@ npm install @linkurious/ogma-annotations @linkurious/ogma-annotations-react
 
 ```tsx
 import { Ogma } from "@linkurious/ogma-react";
-import { AnnotationsContextProvider, useAnnotationsContext } from "@linkurious/ogma-annotations-react";
+import {
+  AnnotationsContextProvider,
+  useAnnotationsContext
+} from "@linkurious/ogma-annotations-react";
 import "@linkurious/ogma-annotations/style.css";
 
 function App() {
@@ -1700,22 +1751,36 @@ function App() {
 ```tsx
 function Toolbar() {
   const {
-    editor,              // Control instance
-    annotations,         // AnnotationCollection
-    currentAnnotation,   // Selected | null
-    arrowStyle, setArrowStyle,
-    textStyle, setTextStyle,
-    canUndo, canRedo, undo, redo,
-    add, remove, select, cancelDrawing
+    editor, // Control instance
+    annotations, // AnnotationCollection
+    currentAnnotation, // Selected | null
+    arrowStyle,
+    setArrowStyle,
+    textStyle,
+    setTextStyle,
+    canUndo,
+    canRedo,
+    undo,
+    redo,
+    add,
+    remove,
+    select,
+    cancelDrawing
   } = useAnnotationsContext();
 
   return (
     <div>
-      <button onClick={() => editor.enableArrowDrawing({ head: "arrow" })}>Arrow</button>
+      <button onClick={() => editor.enableArrowDrawing({ head: "arrow" })}>
+        Arrow
+      </button>
       <button onClick={() => editor.enableTextDrawing()}>Text</button>
       <button onClick={() => editor.enableBoxDrawing()}>Box</button>
-      <button onClick={undo} disabled={!canUndo}>Undo</button>
-      <button onClick={redo} disabled={!canRedo}>Redo</button>
+      <button onClick={undo} disabled={!canUndo}>
+        Undo
+      </button>
+      <button onClick={redo} disabled={!canRedo}>
+        Redo
+      </button>
       <button
         onClick={() => remove(editor.getSelectedAnnotations())}
         disabled={!currentAnnotation}
@@ -1730,7 +1795,8 @@ function Toolbar() {
 ### Style Updates (Auto-applied to Selection)
 
 ```tsx
-const { arrowStyle, setArrowStyle, textStyle, setTextStyle } = useAnnotationsContext();
+const { arrowStyle, setArrowStyle, textStyle, setTextStyle } =
+  useAnnotationsContext();
 
 // Changes automatically apply to selected annotation
 setArrowStyle({ ...arrowStyle, strokeColor: "#ff0000" });

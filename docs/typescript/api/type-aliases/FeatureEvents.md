@@ -26,7 +26,7 @@ The annotation added
 
 `void`
 
-***
+---
 
 ### cancelDrawing()
 
@@ -40,7 +40,7 @@ Event trigerred when canceling drawing mode
 
 `void`
 
-***
+---
 
 ### click()
 
@@ -60,7 +60,60 @@ Event triggered when a click completes on an annotation (mouseup without drag)
 
 `void`
 
-***
+---
+
+### commentDenied()
+
+```ts
+commentDenied: (evt) => void;
+```
+
+Event triggered when a comment could not be created because
+`canComment` returned `false` for the clicked target. Comment drawing
+mode stays active.
+
+#### Parameters
+
+##### evt
+
+###### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`void`
+
+---
+
+### commentHover()
+
+```ts
+commentHover: (evt) => void;
+```
+
+Event triggered in comment drawing mode when the target under the cursor
+(or whether a comment is allowed on it) changes.
+
+#### Parameters
+
+##### evt
+
+###### allowed
+
+`boolean`
+
+Result of `canComment` for that target
+
+###### target
+
+[`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`void`
+
+---
 
 ### completeDrawing()
 
@@ -82,7 +135,7 @@ Contains the ID of the completed annotation
 
 `void`
 
-***
+---
 
 ### dragend()
 
@@ -102,7 +155,7 @@ Event triggered when a drag operation ends on an annotation
 
 `void`
 
-***
+---
 
 ### dragstart()
 
@@ -122,7 +175,7 @@ Event triggered when a drag operation starts on an annotation
 
 `void`
 
-***
+---
 
 ### history()
 
@@ -144,7 +197,7 @@ Contains boolean flags for undo/redo availability
 
 `void`
 
-***
+---
 
 ### link()
 
@@ -172,7 +225,7 @@ Contains the arrow and link details
 
 `void`
 
-***
+---
 
 ### remove()
 
@@ -194,7 +247,7 @@ The annotation removed
 
 `void`
 
-***
+---
 
 ### select()
 
@@ -216,7 +269,7 @@ The annotation selected
 
 `void`
 
-***
+---
 
 ### unselect()
 
@@ -238,7 +291,7 @@ The annotation unselected
 
 `void`
 
-***
+---
 
 ### update()
 

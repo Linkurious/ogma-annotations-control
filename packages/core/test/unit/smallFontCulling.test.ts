@@ -7,10 +7,12 @@ import type { AnnotationState } from "../../src/store";
 // `options.minReadableFontSize` - the two new inputs drawContent() reads
 // to decide whether a scalable Text's on-screen font size is too small to
 // render.
-function mockState(overrides: {
-  zoom?: number;
-  minReadableFontSize?: number;
-} = {}): AnnotationState {
+function mockState(
+  overrides: {
+    zoom?: number;
+    minReadableFontSize?: number;
+  } = {}
+): AnnotationState {
   return {
     hoveredFeature: undefined,
     selectedFeatures: [],
@@ -36,7 +38,12 @@ describe("small on-screen font size culling (renderText)", () => {
     // fontSize 10 * zoom 0.1 = 1px on screen, under a 2px threshold.
     const text = createText(0, 0, 200, 100, "Hello there", { fontSize: 10 });
 
-    renderText(root, text, undefined, mockState({ zoom: 0.1, minReadableFontSize: 2 }));
+    renderText(
+      root,
+      text,
+      undefined,
+      mockState({ zoom: 0.1, minReadableFontSize: 2 })
+    );
 
     expect(root.querySelector("text")).toBeNull();
     expect(root.querySelector("rect")).not.toBeNull();
@@ -47,7 +54,12 @@ describe("small on-screen font size culling (renderText)", () => {
     // fontSize 10 * zoom 1 = 10px, well above a 2px threshold.
     const text = createText(0, 0, 200, 100, "Hello there", { fontSize: 10 });
 
-    renderText(root, text, undefined, mockState({ zoom: 1, minReadableFontSize: 2 }));
+    renderText(
+      root,
+      text,
+      undefined,
+      mockState({ zoom: 1, minReadableFontSize: 2 })
+    );
 
     expect(root.querySelector("text")).not.toBeNull();
   });
@@ -65,7 +77,12 @@ describe("small on-screen font size culling (renderText)", () => {
     });
     text.properties.author = "Jane Doe";
 
-    renderText(root, text, undefined, mockState({ zoom: 0.5, minReadableFontSize: 2 }));
+    renderText(
+      root,
+      text,
+      undefined,
+      mockState({ zoom: 0.5, minReadableFontSize: 2 })
+    );
 
     // Content: 10 * 0.5 = 5px, renders.
     expect(root.querySelector("text")).not.toBeNull();
@@ -80,7 +97,12 @@ describe("small on-screen font size culling (renderText)", () => {
       fixedSize: true
     });
 
-    renderText(root, text, undefined, mockState({ zoom: 0.001, minReadableFontSize: 2 }));
+    renderText(
+      root,
+      text,
+      undefined,
+      mockState({ zoom: 0.001, minReadableFontSize: 2 })
+    );
 
     expect(root.querySelector("text")).not.toBeNull();
   });
@@ -104,7 +126,12 @@ describe("small on-screen font size culling (renderText)", () => {
     const root = svgRoot();
     const text = createText(0, 0, 200, 100, "Hello there", { fontSize: 10 });
 
-    renderText(root, text, undefined, mockState({ zoom: 0.001, minReadableFontSize: 0 }));
+    renderText(
+      root,
+      text,
+      undefined,
+      mockState({ zoom: 0.001, minReadableFontSize: 0 })
+    );
 
     expect(root.querySelector("text")).not.toBeNull();
   });
@@ -113,7 +140,12 @@ describe("small on-screen font size culling (renderText)", () => {
     const root = svgRoot();
     const text = createText(0, 0, 200, 100, "Hello there", { fontSize: 10 });
 
-    const g = renderText(root, text, undefined, mockState({ zoom: 1, minReadableFontSize: 2 }));
+    const g = renderText(
+      root,
+      text,
+      undefined,
+      mockState({ zoom: 1, minReadableFontSize: 2 })
+    );
     expect(root.querySelector("text")).not.toBeNull();
 
     renderText(root, text, g, mockState({ zoom: 0.1, minReadableFontSize: 2 }));

@@ -58,22 +58,22 @@ so changes flow through the normal update path (including undo/redo).
 
 ## Options
 
-| Option | Type | Description |
-| --- | --- | --- |
-| `control` | `Control` | The annotation controller to bind to. |
-| `container` | `HTMLElement` _(optional)_ | Element the panel mounts into. Defaults to `document.body`. |
-| `placement` | `PanelPlacement` _(optional)_ | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
-| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`. |
+| Option        | Type                            | Description                                                         |
+| ------------- | ------------------------------- | ------------------------------------------------------------------- |
+| `control`     | `Control`                       | The annotation controller to bind to.                               |
+| `container`   | `HTMLElement` _(optional)_      | Element the panel mounts into. Defaults to `document.body`.         |
+| `placement`   | `PanelPlacement` _(optional)_   | Which screen edge/corner the panel docks to. Defaults to `"right"`. |
+| `orientation` | `PanelOrientation` _(optional)_ | `"vertical"` (default) or `"horizontal"`.                           |
 
 ## Methods
 
-| Method | Description |
-| --- | --- |
-| `show()` | Show the panel. |
-| `hide()` | Hide the panel and close any open color picker. |
-| `setPlacement(placement)` | Change which edge/corner the panel docks to at runtime. |
-| `setOrientation(orientation)` | Switch between vertical and horizontal layout at runtime. |
-| `destroy()` | Detach all event listeners and remove the panel from the DOM. |
+| Method                        | Description                                                   |
+| ----------------------------- | ------------------------------------------------------------- |
+| `show()`                      | Show the panel.                                               |
+| `hide()`                      | Hide the panel and close any open color picker.               |
+| `setPlacement(placement)`     | Change which edge/corner the panel docks to at runtime.       |
+| `setOrientation(orientation)` | Switch between vertical and horizontal layout at runtime.     |
+| `destroy()`                   | Detach all event listeners and remove the panel from the DOM. |
 
 ## Layout
 

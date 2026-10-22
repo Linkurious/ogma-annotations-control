@@ -9,5 +9,5 @@ Hex color string in format #RGB or #RRGGBB
 ## Example
 
 ```ts
-"#fff" | "#ffffff" | "#F0A" | "#FF00AA"
+"#fff" | "#ffffff" | "#F0A" | "#FF00AA";
 ```

@@ -1,7 +1,7 @@
 # Ogma Annotations - React Reference
 
 > React integration with hooks, context provider, and component patterns
-> Auto-generated: 2026-09-17 | Version: 2.x
+> Auto-generated: 2026-10-12 | Version: 2.x
 
 ---
 
@@ -1303,6 +1303,23 @@ function AddCommentButton() {
 }
 ```
 
+#### Restricting where comments can be added
+
+Pass a `canComment` option to allow comments only on some targets. It receives
+`{ type: "node" | "edge" | "annotation" | "void", id?, point }` and returns a
+boolean:
+
+```ts
+editor.setOptions({ canComment: (target) => target.type !== "edge" });
+
+// A click on a denied target creates nothing, and drawing mode stays active
+editor.on("commentDenied", ({ target }) => toast(`No comments on ${target.type}`));
+
+// Fires while hovering in drawing mode; the cursor turns `not-allowed` on denied
+// targets (disable with `commentDeniedCursor: false` to indicate it yourself)
+editor.on("commentHover", ({ target, allowed }) => highlight(target, allowed));
+```
+
 ### Sticky Note Drawing
 
 A sticky note is a plain, resizable `text` annotation (Miro-style: padded,
@@ -1336,7 +1353,7 @@ function AddStickyNoteButton() {
 
 Unlike the drawing modes above, erase mode isn't a one-shot draw - once
 enabled, every click on an annotation deletes it immediately, and it stays
-armed across multiple clicks until turned off:
+active across multiple clicks until turned off:
 
 ```tsx
 function EraseButton() {

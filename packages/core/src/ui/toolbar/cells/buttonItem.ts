@@ -12,15 +12,15 @@ export class ButtonItemCell implements ToolbarCell {
     private ctx: ToolbarCellContext,
     private item: ToolbarButtonItem
   ) {
-    this.element = document.createElement("button");
-    this.element.type = "button";
-    this.element.className = item.danger
+    const element = (this.element = document.createElement("button"));
+    element.type = "button";
+    element.className = item.danger
       ? "oa-toolbar-button oa-toolbar-button-danger"
       : "oa-toolbar-button";
-    this.element.dataset.tooltip = item.title;
-    this.element.setAttribute("aria-label", item.title);
-    this.element.innerHTML = svgIcon(item.icon, 16);
-    this.element.addEventListener("click", this.onClick);
+    element.dataset.tooltip = item.title;
+    element.setAttribute("aria-label", item.title);
+    element.innerHTML = svgIcon(item.icon, 16);
+    element.addEventListener("click", this.onClick);
   }
 
   private onClick = () => {
@@ -28,10 +28,14 @@ export class ButtonItemCell implements ToolbarCell {
   };
 
   public update(annotation: Text): void {
+    const title = this.item.getTitle?.(annotation) ?? this.item.title;
+    const element = this.element;
+    element.dataset.tooltip = title;
+    element.setAttribute("aria-label", title);
     if (!this.item.isActive) return;
     const active = this.item.isActive(annotation);
-    this.element.classList.toggle("active", active);
-    this.element.setAttribute("aria-pressed", String(active));
+    element.classList.toggle("active", active);
+    element.setAttribute("aria-pressed", String(active));
   }
 
   public destroy(): void {

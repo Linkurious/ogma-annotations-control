@@ -1,5 +1,11 @@
-import { Control } from "../Control";
-import { EVT_COMPLETE_DRAWING, EVT_CANCEL_DRAWING, EVT_HISTORY } from "../constants";
+import { Control } from "../../Control";
+import {
+  DEFAULT_COMMENT_OFFSET_X,
+  DEFAULT_COMMENT_OFFSET_Y,
+  EVT_COMPLETE_DRAWING,
+  EVT_CANCEL_DRAWING,
+  EVT_HISTORY
+} from "../../constants";
 import type {
   Arrow,
   ArrowProperties,
@@ -7,9 +13,9 @@ import type {
   CommentProps,
   Polygon,
   Text
-} from "../types";
-import { svgIcon, type IconName } from "./icons";
-import type { PanelPlacement, PanelOrientation } from "./layout";
+} from "../../types";
+import { svgIcon, type IconName } from "../icons";
+import type { PanelPlacement, PanelOrientation } from "../layout";
 
 /** Toolbars default to a bottom-docked horizontal bar, unlike the style
  * panel's right-docked vertical default - the natural "drawing tools"
@@ -137,7 +143,11 @@ export class AnnotationToolbar {
     // getOgma() is only on the real Control - guard it so a minimal fake
     // control (unit tests construct these) doesn't blow up the constructor.
     const ogmaContainer = this.control.getOgma?.()?.getContainer?.();
-    if (!options.container && ogmaContainer && ogmaContainer !== document.body) {
+    if (
+      !options.container &&
+      ogmaContainer &&
+      ogmaContainer !== document.body
+    ) {
       // eslint-disable-next-line no-console
       console.error(
         "[ogma-annotations-control] AnnotationToolbar: no `container` " +
@@ -165,14 +175,18 @@ export class AnnotationToolbar {
     const enabled = options.enabledTypes ?? ALL_DRAWING_TYPES;
     const styles = options.styles ?? {};
 
-    ALL_DRAWING_TYPES.filter((type) => enabled.includes(type)).forEach(
-      (type) => this.root.appendChild(this.drawingButton(type, styles))
+    ALL_DRAWING_TYPES.filter((type) => enabled.includes(type)).forEach((type) =>
+      this.root.appendChild(this.drawingButton(type, styles))
     );
 
     if (enabled.length > 0) this.root.appendChild(this.separator());
 
-    this.undoButton = this.button(null, "undo", "Undo", () => this.control.undo());
-    this.redoButton = this.button(null, "redo", "Redo", () => this.control.redo());
+    this.undoButton = this.button(null, "undo", "Undo", () =>
+      this.control.undo()
+    );
+    this.redoButton = this.button(null, "redo", "Redo", () =>
+      this.control.redo()
+    );
     this.root.appendChild(this.undoButton);
     this.root.appendChild(this.redoButton);
 
@@ -208,7 +222,10 @@ export class AnnotationToolbar {
             this.control.isAnnotationEditable(f.id)
           );
           if (editable.length > 0)
-            this.control.remove({ type: "FeatureCollection", features: editable });
+            this.control.remove({
+              type: "FeatureCollection",
+              features: editable
+            });
         })
       );
     }
@@ -217,7 +234,12 @@ export class AnnotationToolbar {
       this.root.appendChild(this.separator());
       if (options.onJsonExport)
         this.root.appendChild(
-          this.button(null, "download", "Export annotations", options.onJsonExport)
+          this.button(
+            null,
+            "download",
+            "Export annotations",
+            options.onJsonExport
+          )
         );
       if (options.onSvgExport)
         this.root.appendChild(
@@ -252,8 +274,8 @@ export class AnnotationToolbar {
           const commentOverride = styles.comment?.commentStyle;
           const arrowOverride = styles.comment?.arrowStyle;
           this.control.enableCommentDrawing({
-            offsetX: styles.comment?.offsetX ?? 200,
-            offsetY: styles.comment?.offsetY ?? -150,
+            offsetX: styles.comment?.offsetX ?? DEFAULT_COMMENT_OFFSET_X,
+            offsetY: styles.comment?.offsetY ?? DEFAULT_COMMENT_OFFSET_Y,
             commentStyle: {
               content: "",
               ...commentOverride,

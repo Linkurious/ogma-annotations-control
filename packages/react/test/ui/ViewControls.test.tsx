@@ -40,7 +40,9 @@ describe("ViewControls", () => {
 
   it("renders center/rotate buttons", () => {
     const { container } = render(<ViewControls />);
-    expect(container.querySelector('[data-tooltip="Center view"]')).toBeTruthy();
+    expect(
+      container.querySelector('[data-tooltip="Center view"]')
+    ).toBeTruthy();
     expect(
       container.querySelector('[data-tooltip="Rotate clockwise"]')
     ).toBeTruthy();
@@ -51,9 +53,9 @@ describe("ViewControls", () => {
 
   it("exposes a group label and an aria-label on every icon-only button", () => {
     const { container } = render(<ViewControls />);
-    expect(container.querySelector(".view-controls")?.getAttribute("role")).toBe(
-      "group"
-    );
+    expect(
+      container.querySelector(".view-controls")?.getAttribute("role")
+    ).toBe("group");
     expect(
       container.querySelector(".view-controls")?.getAttribute("aria-label")
     ).toBe("View controls");
@@ -66,9 +68,7 @@ describe("ViewControls", () => {
 
   it("moves the view to the extended bounds on center click", () => {
     const { container } = render(<ViewControls />);
-    fireEvent.click(
-      container.querySelector('[data-tooltip="Center view"]')!
-    );
+    fireEvent.click(container.querySelector('[data-tooltip="Center view"]')!);
 
     expect(ogma.view.moveToBounds).toHaveBeenCalledWith("extended-bounds", {
       duration: 200

@@ -70,7 +70,7 @@ const ArrowExtStyleButton = () => {
       onClick={() =>
         setArrowStyle({
           ...arrowStyle,
-          ext: arrowStyle.ext === "none" ? "both" : "none",
+          ext: arrowStyle.ext === "none" ? "both" : "none"
         })
       }
       icon={<DirectionNone />}

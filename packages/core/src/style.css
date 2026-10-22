@@ -2,7 +2,9 @@
   --handle-width: 2px;
   --point-handle-width: calc(3 * var(--handle-width));
   --point-handle-border: 2px;
-  --point-handle-total: calc(var(--point-handle-width) + var(--point-handle-border));
+  --point-handle-total: calc(
+    var(--point-handle-width) + var(--point-handle-border)
+  );
   --handle-color: #38e;
   /* Color for clickable URLs rendered inside text/comment content.
      Defaults to the handle color but can be themed independently. */
@@ -50,7 +52,9 @@ svg text {
 }
 
 .ogma-annotation-text-editor.animate-width {
-  transition: width 0.2s ease-out, left 0.2s ease-out;
+  transition:
+    width 0.2s ease-out,
+    left 0.2s ease-out;
 }
 
 .ogma-annotation-text-editor textarea {
@@ -257,7 +261,7 @@ svg text {
   left: 100%;
 }
 
-.arrow-handle>.handle {
+.arrow-handle > .handle {
   height: var(--point-handle-width);
   width: var(--point-handle-width);
   border-radius: 50%;
@@ -265,13 +269,13 @@ svg text {
   transform: translate(-50%, -50%);
 }
 
-.arrow-handle>.line {
+.arrow-handle > .line {
   height: var(--handle-width);
   border-radius: 0;
   cursor: move;
 }
 
-.arrow-handle>.point {
+.arrow-handle > .point {
   background-color: var(--handle-background);
   border: 2px solid var(--handle-color);
 }
@@ -292,7 +296,7 @@ svg text {
   cursor: pointer;
 }
 
-.annotation-text:hover>rect {
+.annotation-text:hover > rect {
   stroke: var(--handle-color);
 }
 

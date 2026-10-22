@@ -83,8 +83,8 @@ describe("Draw API", () => {
     );
   });
 
-  it("should select the sticky note and arm the same interactive corner-drag as startBox", () => {
-    // Like startBox/startText, this only arms placement - the user (or
+  it("should select the sticky note and start the same interactive corner-drag as startBox", () => {
+    // Like startBox/startText, this only starts placement - the user (or
     // a real mouseup in a browser) still has to complete it, either with
     // a plain click (default size, see TextHandler.applyDefaultSizeIfEmpty)
     // or by dragging one out. See test/e2e/stickyNote.test.ts for coverage

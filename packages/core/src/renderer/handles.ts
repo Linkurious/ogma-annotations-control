@@ -117,7 +117,13 @@ export class Handles extends Renderer<CanvasLayer> {
           state.zoom
         );
         if (editable) {
-          this.renderBoxHandles(feature, ctx, r, hoveredHandle, counterRotation);
+          this.renderBoxHandles(
+            feature,
+            ctx,
+            r,
+            hoveredHandle,
+            counterRotation
+          );
         }
       } else if (isPolygon(feature)) {
         this.renderPolygonHandles(
@@ -240,12 +246,12 @@ export class Handles extends Renderer<CanvasLayer> {
 
     ctx.beginPath();
 
-    if (feature.properties.link?.start?.type !== 'comment') {
+    if (feature.properties.link?.start?.type !== "comment") {
       ctx.moveTo(start.x - startR, start.y - startR);
       ctx.rect(start.x - startR, start.y - startR, startR * 2, startR * 2);
     }
 
-    if (feature.properties.link?.end?.type !== 'comment') {
+    if (feature.properties.link?.end?.type !== "comment") {
       ctx.moveTo(end.x - endR, end.y - endR);
       ctx.rect(end.x - endR, end.y - endR, endR * 2, endR * 2);
     }

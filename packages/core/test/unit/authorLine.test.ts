@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { renderText, DEFAULT_AUTHOR_STYLE } from "../../src/renderer/shapes/text";
+import {
+  renderText,
+  DEFAULT_AUTHOR_STYLE
+} from "../../src/renderer/shapes/text";
 import { createText } from "../../src";
 import type { AnnotationState } from "../../src/store";
 import type { AuthorLineStyle } from "../../src/types";
@@ -159,7 +162,8 @@ describe("author line rendering (renderText)", () => {
     const text = createText(0, 0, 400, 200, "Some note content", {
       showAuthor: true
     });
-    text.properties.author = "Jane Doe - [reach out](https://example.com/contact)";
+    text.properties.author =
+      "Jane Doe - [reach out](https://example.com/contact)";
 
     renderText(root, text, undefined, mockState());
 
@@ -186,6 +190,8 @@ describe("author line rendering (renderText)", () => {
     const tspansA = withoutAuthor.querySelectorAll(".annotation-text tspan");
     const tspansB = withAuthorHidden.querySelectorAll(".annotation-text tspan");
     expect(tspansB.length).toBe(tspansA.length);
-    expect(withAuthorHidden.querySelector(".annotation-text-author")).toBeNull();
+    expect(
+      withAuthorHidden.querySelector(".annotation-text-author")
+    ).toBeNull();
   });
 });

@@ -16,7 +16,7 @@ height: number;
 
 Height of the box
 
-***
+---
 
 ### style?
 
