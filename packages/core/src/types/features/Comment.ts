@@ -1,7 +1,7 @@
 import { Size } from "@linkurious/ogma";
 import { Point as GeoJSONPoint, Geometry } from "geojson";
 import { nanoid as getId } from "nanoid";
-import { AnnotationFeature, AnnotationProps } from "./Annotation";
+import { AnnotationFeature, AnnotationProps, Id } from "./Annotation";
 import type { Arrow, ArrowStyles, Extremity } from "./Arrow";
 import { createArrow, defaultArrowStyle } from "./Arrow";
 import { Text, TextStyle, detectText } from "./Text";
@@ -469,6 +469,8 @@ export function createCommentWithArrow(
   options?: {
     commentStyle?: Partial<CommentProps>;
     arrowStyle?: Partial<ArrowStyles>;
+    commentId?: Id;
+    arrowId?: Id;
   }
 ): {
   comment: Comment;
@@ -481,6 +483,7 @@ export function createCommentWithArrow(
     content,
     options?.commentStyle
   );
+  if (options?.commentId !== undefined) comment.id = options.commentId;
 
   // Create the arrow pointing from target to comment
   const arrowStyles: ArrowStyles = {
@@ -490,6 +493,7 @@ export function createCommentWithArrow(
   };
 
   const arrow = createArrow(commentX, commentY, targetX, targetY, arrowStyles);
+  if (options?.arrowId !== undefined) arrow.id = options.arrowId;
 
   // Link the arrow's end to the comment
   arrow.properties.link = {
