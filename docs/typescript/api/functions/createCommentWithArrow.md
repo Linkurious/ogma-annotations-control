@@ -52,11 +52,19 @@ Text content of the comment
 
 Optional configuration
 
+#### arrowId?
+
+[`Id`](../type-aliases/Id.md)
+
 #### arrowStyle?
 
 `Partial`\<[`ArrowStyles`](../interfaces/ArrowStyles.md)\>
 
 Style options for the arrow
+
+#### commentId?
+
+[`Id`](../type-aliases/Id.md)
 
 #### commentStyle?
 
