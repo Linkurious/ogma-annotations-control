@@ -1,19 +1,28 @@
 import { EVT_UPDATE } from "../../constants";
 import type { Control } from "../../Control";
-import { isStickyNote, isText, type Annotation } from "../../types";
+import {
+  isArrow,
+  isBox,
+  isStickyNote,
+  isText,
+  type Annotation,
+  type Id
+} from "../../types";
 import { attachPanelVisibility } from "../panelVisibility";
-import { AnnotationStyleToolbar } from "./AnnotationStyle";
+import { ArrowStyleToolbar } from "./ArrowStyle";
+import { BoxStyleToolbar, type StrokeStyleToolbarOptions } from "./BoxStyle";
 import { StickyNoteStyleToolbar } from "./StickyNoteStyle";
 import { TextStyleToolbar, type TextStyleToolbarOptions } from "./TextStyle";
 
 /** `fonts`/`fontSizes`/`swatches` (see `TextStyleToolbarOptions`) apply to
- * both the plain-Text and sticky-note pill - `StickyNoteStyleToolbar`
- * currently has no items or options of its own, it's a plain subclass. */
-export interface TextAnnotationToolbarOptions extends TextStyleToolbarOptions {
+ * the plain-Text and sticky-note pills; `strokeSwatches`/`onMoreStrokeColors`
+ * apply to every pill's outline cell (Text, Box, Arrow). */
+export interface TextAnnotationToolbarOptions
+  extends TextStyleToolbarOptions, StrokeStyleToolbarOptions {
   control: Control;
   /**
-   * Whether a selected-but-locked (`isEditable: false`) Text annotation
-   * keeps the toolbar hidden, same as no selection. Defaults to `true`.
+   * Whether a selected-but-locked (`isEditable: false`) annotation keeps the
+   * toolbar hidden, same as no selection. Defaults to `true`.
    * Set to `false` to keep the toolbar open on a locked selection instead
    * (e.g. to keep a lock/unlock button in `items` reachable) - see
    * `attachPanelVisibility`'s `hideWhenNotEditable` for the full contract.
@@ -21,12 +30,28 @@ export interface TextAnnotationToolbarOptions extends TextStyleToolbarOptions {
   hideWhenNotEditable?: boolean;
 }
 
+/** What `TextAnnotationToolbar` needs from whichever pill is mounted. */
+interface StyleToolbarHandle {
+  readonly annotationId: Id;
+  update(annotation: Annotation): void;
+  destroy(): void;
+}
+
+type ToolbarKind = "sticky" | "text" | "box" | "arrow";
+
+function toolbarKindOf(annotation: Annotation): ToolbarKind | null {
+  if (isText(annotation)) return isStickyNote(annotation) ? "sticky" : "text";
+  if (isBox(annotation)) return "box";
+  if (isArrow(annotation)) return "arrow";
+  return null;
+}
+
 /**
- * Floating, per-selection style toolbar for Text annotations (plain text
- * boxes and sticky notes) - the vanilla equivalent of the docked
- * `AnnotationPanel`, but anchored above the selection instead of docked to
- * a screen edge. Ignores non-Text selections (arrow/box/polygon/comment
- * still only get the docked panel, for now).
+ * Floating, per-selection style toolbar - the vanilla equivalent of the
+ * docked `AnnotationPanel`, anchored above the selection instead of docked
+ * to a screen edge. One pill per annotation kind: Text (plain and sticky
+ * note), Box and Arrow. Other kinds (comment, polygon) still only get the
+ * docked panel.
  *
  * Thin by design (`constructor(options)` / `destroy()`, no other public
  * surface) so a future React wrapper can host it the way
@@ -35,15 +60,12 @@ export interface TextAnnotationToolbarOptions extends TextStyleToolbarOptions {
 export class TextAnnotationToolbar {
   private control: Control;
   private options: TextAnnotationToolbarOptions;
-  private current: AnnotationStyleToolbar | null = null;
+  private current: StyleToolbarHandle | null = null;
+  private currentKind: ToolbarKind | null = null;
   private detachVisibility: () => void;
   private handleUpdate = (annotation: Annotation) => {
-    if (
-      this.current &&
-      annotation.id === this.current.annotationId &&
-      isText(annotation)
-    ) {
-      this.current.update(annotation);
+    if (this.current && annotation.id === this.current.annotationId) {
+      this.show(annotation);
     }
   };
 
@@ -61,31 +83,45 @@ export class TextAnnotationToolbar {
   }
 
   private show(annotation: Annotation) {
-    if (!isText(annotation)) {
+    const kind = toolbarKindOf(annotation);
+    if (!kind) {
       this.hide();
       return;
     }
 
-    const Toolbar = isStickyNote(annotation)
-      ? StickyNoteStyleToolbar
-      : TextStyleToolbar;
-
     if (
       this.current &&
-      this.current.annotationId === annotation.id &&
-      this.current instanceof Toolbar
+      this.currentKind === kind &&
+      this.current.annotationId === annotation.id
     ) {
       this.current.update(annotation);
       return;
     }
 
     this.hide();
-    this.current = new Toolbar(this.options, annotation);
+    this.currentKind = kind;
+    this.current = this.createToolbar(annotation);
+  }
+
+  private createToolbar(annotation: Annotation): StyleToolbarHandle | null {
+    if (isText(annotation)) {
+      return isStickyNote(annotation)
+        ? new StickyNoteStyleToolbar(this.options, annotation)
+        : new TextStyleToolbar(this.options, annotation);
+    }
+    if (isBox(annotation)) {
+      return new BoxStyleToolbar(this.options, annotation);
+    }
+    if (isArrow(annotation)) {
+      return new ArrowStyleToolbar(this.options, annotation);
+    }
+    return null;
   }
 
   private hide() {
     this.current?.destroy();
     this.current = null;
+    this.currentKind = null;
   }
 
   public destroy(): void {
