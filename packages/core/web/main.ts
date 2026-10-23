@@ -236,10 +236,9 @@ class App {
     this.annotationPanel = new AnnotationPanel({
       control: this.control,
       container: this.ogma.getContainer()!,
-      // Text/sticky notes are handled by TextAnnotationToolbar (see
-      // setupTextAnnotationToolbar) - excluding "text" here keeps the
-      // docked panel from also popping up for the same selection.
-      enabledTypes: ["arrow", "box", "polygon"]
+      // Text, sticky notes, boxes and arrows' outline/delete are handled by
+      // TextAnnotationToolbar (see setupTextAnnotationToolbar).
+      enabledTypes: ["polygon"]
     });
   }
 
