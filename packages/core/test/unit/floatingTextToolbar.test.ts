@@ -2,9 +2,13 @@ import { Ogma } from "@linkurious/ogma";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   Control,
+  createArrow,
+  createBox,
   createText,
   defaultTextStyle,
   isStickyNote,
+  type Arrow,
+  type Box,
   type Text,
   type AnnotationState
 } from "../../src";
@@ -284,7 +288,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
     cell.update(ctx.getAnnotation());
 
-    const [weightRow] = cell.element.querySelectorAll<HTMLElement>(".oa-toolbar-stroke-row");
+    const [weightRow] = cell.element.querySelectorAll<HTMLElement>(
+      ".oa-toolbar-stroke-row"
+    );
     const [thin, thick] = weightRow.querySelectorAll<HTMLButtonElement>(
       ".oa-toolbar-stroke-option"
     );
@@ -293,14 +299,18 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     expect(thick.classList.contains("active")).toBe(false);
 
     thick.click();
-    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeWidth: STROKE_WIDTH_THICK });
+    expect(ctx.updateStyle).toHaveBeenCalledWith({
+      strokeWidth: STROKE_WIDTH_THICK
+    });
 
     cell.update(ctx.getAnnotation());
     expect(thick.classList.contains("active")).toBe(true);
     expect(thin.classList.contains("active")).toBe(false);
 
     thin.click();
-    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeWidth: STROKE_WIDTH_THIN });
+    expect(ctx.updateStyle).toHaveBeenCalledWith({
+      strokeWidth: STROKE_WIDTH_THIN
+    });
   });
 
   it("StrokeCell's line-style row writes strokeType plain/dashed and reflects the current value", () => {
@@ -309,7 +319,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
     cell.update(ctx.getAnnotation());
 
-    const [, typeRow] = cell.element.querySelectorAll<HTMLElement>(".oa-toolbar-stroke-row");
+    const [, typeRow] = cell.element.querySelectorAll<HTMLElement>(
+      ".oa-toolbar-stroke-row"
+    );
     const [solid, dashed] = typeRow.querySelectorAll<HTMLButtonElement>(
       ".oa-toolbar-stroke-option"
     );
@@ -335,7 +347,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     )!;
     swatch.click();
 
-    expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeColor: STROKE_SWATCHES[0].fill });
+    expect(ctx.updateStyle).toHaveBeenCalledWith({
+      strokeColor: STROKE_SWATCHES[0].fill
+    });
     expect(cell.element.classList.contains("open")).toBe(false);
   });
 
@@ -358,7 +372,10 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const text = createText(0, 0, 100, 50, "Hi", { strokeColor: "#123456" });
     const { ctx } = fakeCellContext(text);
     const onMoreColors = vi.fn();
-    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES, onMoreColors });
+    const cell = new StrokeCell(ctx, {
+      swatches: STROKE_SWATCHES,
+      onMoreColors
+    });
 
     const moreBtn = cell.element.querySelector<HTMLButtonElement>(
       ".oa-toolbar-more-colors"
@@ -366,7 +383,9 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     moreBtn.click();
 
     expect(onMoreColors).toHaveBeenCalledWith(ctx, moreBtn);
-    expect(cell.element.querySelector(".oa-toolbar-more-colors-host")).toBeNull();
+    expect(
+      cell.element.querySelector(".oa-toolbar-more-colors-host")
+    ).toBeNull();
 
     onMoreColors.mock.calls[0][0].updateStyle({ strokeColor: "#654321" });
     expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeColor: "#654321" });
@@ -461,13 +480,15 @@ describe("ui/TextAnnotationToolbar", () => {
 
     expect(document.querySelector('[data-tooltip="Line Type"]')).not.toBeNull();
 
-    const sticky = control.add(
-      createText(0, 0, 160, 160, "", {
-        ...defaultTextStyle,
-        scaleFontOnResize: true,
-        placeholder: "Quick note…"
-      })
-    ).getAnnotations().features[1] as Text;
+    const sticky = control
+      .add(
+        createText(0, 0, 160, 160, "", {
+          ...defaultTextStyle,
+          scaleFontOnResize: true,
+          placeholder: "Quick note…"
+        })
+      )
+      .getAnnotations().features[1] as Text;
     control.select(sticky.id);
     vi.advanceTimersByTime(200);
 
@@ -503,6 +524,36 @@ describe("ui/TextAnnotationToolbar", () => {
     // separator.
     const pill = document.querySelector(".annotation-style-toolbar")!;
     expect(pill.querySelectorAll(".oa-toolbar-separator").length).toBe(4);
+
+    toolbar.destroy();
+  });
+
+  it("shows the outline and delete cells (no text cells) for a selected box", () => {
+    const box = control.add(createBox(0, 0, 100, 50)).getAnnotations()
+      .features[0] as Box;
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(box.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector('[data-tooltip="Line Type"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Bold"]')).toBeNull();
+
+    toolbar.destroy();
+  });
+
+  it("shows the outline and delete cells (no text cells) for a selected arrow", () => {
+    const arrow = control.add(createArrow(0, 0, 100, 0)).getAnnotations()
+      .features[0] as Arrow;
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(arrow.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector('[data-tooltip="Line Type"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Delete"]')).not.toBeNull();
+    expect(document.querySelector('[data-tooltip="Bold"]')).toBeNull();
 
     toolbar.destroy();
   });

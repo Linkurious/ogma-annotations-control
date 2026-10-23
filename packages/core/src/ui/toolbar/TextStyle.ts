@@ -1,4 +1,4 @@
-import { defaultTextStyle } from "../../types";
+import { defaultTextStyle, type Text } from "../../types";
 import { getEffectiveFontSize } from "../../utils/utils";
 import {
   AnnotationStyleToolbar,
@@ -6,7 +6,7 @@ import {
 } from "./AnnotationStyle";
 import { ColorCell, type ColorCellOptions } from "./cells/color";
 import { StrokeCell, type StrokeCellOptions } from "./cells/stroke";
-import type { ToolbarCellContext } from "./cells/contract";
+import type { ToolbarAnnotation, ToolbarCellContext } from "./cells/contract";
 import type { ToolbarDropdownOption, ToolbarItem } from "./cells/types";
 import { STICKY_SWATCHES, STROKE_SWATCHES, type Swatch } from "./swatches";
 
@@ -56,7 +56,7 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
   /** Same as `onMoreColors`, but for the outline cell's "More colors…"
    * (`strokeColor` instead of `background`). See
    * `StrokeCellOptions.onMoreColors`. */
-  onMoreStrokeColors?: StrokeCellOptions["onMoreColors"];
+  onMoreStrokeColors?: StrokeCellOptions<ToolbarAnnotation>["onMoreColors"];
   /**
    * Full control over the pill's contents, beyond `fonts`/`fontSizes`/
    * `swatches`/`onMoreColors`: called with the built-in item list (color,
@@ -85,7 +85,10 @@ export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
  * The built-in items are declarative `ToolbarItem`s (see `cells/types.ts`),
  * built from `this.options` - override `fonts`/`fontSizes`/`swatches`/
  * `onMoreColors` at construction to reconfigure them without subclassing. */
-export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOptions> {
+export class TextStyleToolbar extends AnnotationStyleToolbar<
+  Text,
+  TextStyleToolbarOptions
+> {
   /** Whether the outline (`StrokeCell`) group is included - `true` here,
    * overridden to `false` by `StickyNoteStyleToolbar` (a sticky note's
    * borderless look is the point of that preset, so its own outline isn't
@@ -163,8 +166,9 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
               kind: "custom",
               id: "outline",
               build: (c) =>
-                new StrokeCell(c, {
+                new StrokeCell<Text>(c, {
                   swatches: strokeSwatches,
+                  defaults: defaultTextStyle,
                   onMoreColors: onMoreStrokeColors
                 })
             }

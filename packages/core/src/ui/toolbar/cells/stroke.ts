@@ -1,10 +1,14 @@
 import { createRgbaColorPicker, type RgbaColorPicker } from "../../colorPicker";
 import { rgbaToString } from "../../color";
 import { parseColor } from "../../../utils/utils";
-import { defaultTextStyle, type Text } from "../../../types";
+import type { Text } from "../../../types";
 import type { Swatch } from "../swatches";
 import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
-import type { ToolbarCell, ToolbarCellContext } from "./contract";
+import type {
+  ToolbarAnnotation,
+  ToolbarCell,
+  ToolbarCellContext
+} from "./contract";
 
 /** Preset values the thin/thick buttons write to `strokeWidth` - a compact
  * stand-in for the docked `AnnotationPanel`'s 1-20 slider, sized for a pill
@@ -18,18 +22,21 @@ export const STROKE_WIDTH_THICK = 4;
  * itself has no `strokeColor`. */
 const FALLBACK_STROKE_COLOR = "#000000";
 
-export interface StrokeCellOptions {
+export interface StrokeCellOptions<A extends ToolbarAnnotation> {
   /** Color-grid palette for the outline-color row - defaults to
    * `STROKE_SWATCHES` (`STICKY_SWATCHES` without "transparent", which
    * doesn't make sense for a stroke - see that constant's own doc). */
   swatches: Swatch[];
+  /** Values shown when the annotation has no explicit `strokeWidth` /
+   * `strokeType` - each annotation type has its own default style. */
+  defaults: { strokeWidth?: number; strokeType?: string };
   /**
    * Bring your own color picker: called instead of opening the built-in
    * `vanilla-colorful` popover when "More colors…" is clicked - same
    * contract as `ColorCellOptions.onMoreColors`, just for `strokeColor`
    * instead of `background`.
    */
-  onMoreColors?: (ctx: ToolbarCellContext, anchor: HTMLElement) => void;
+  onMoreColors?: (ctx: ToolbarCellContext<A>, anchor: HTMLElement) => void;
 }
 
 /** Small inline preview line, reused for both the line-style row's two
@@ -63,7 +70,9 @@ function weightIcon(thick: boolean): string {
  * option list), just three stacked sections - thickness, line style, color
  * - instead of one swatch grid.
  */
-export class StrokeCell implements ToolbarCell {
+export class StrokeCell<
+  A extends ToolbarAnnotation = Text
+> implements ToolbarCell<A> {
   public readonly element: HTMLElement;
   private dropdown: ToolbarDropdown;
   private triggerIcon: HTMLElement;
@@ -74,8 +83,8 @@ export class StrokeCell implements ToolbarCell {
   private morePickerHost: HTMLElement | null = null;
 
   constructor(
-    private ctx: ToolbarCellContext,
-    private options: StrokeCellOptions
+    private ctx: ToolbarCellContext<A>,
+    private options: StrokeCellOptions<A>
   ) {
     this.dropdown = createToolbarDropdown("Line Type", "");
     this.element = this.dropdown.element;
@@ -176,7 +185,8 @@ export class StrokeCell implements ToolbarCell {
     this.morePickerHost.className = "oa-toolbar-more-colors-host";
     this.morePicker = createRgbaColorPicker();
     const current =
-      this.ctx.getAnnotation().properties.style?.strokeColor || FALLBACK_STROKE_COLOR;
+      this.ctx.getAnnotation().properties.style?.strokeColor ||
+      FALLBACK_STROKE_COLOR;
     this.morePicker.color = parseColor(current);
     this.morePicker.addEventListener("color-changed", (event) => {
       this.ctx.updateStyle({ strokeColor: rgbaToString(event.detail.value) });
@@ -197,13 +207,15 @@ export class StrokeCell implements ToolbarCell {
     return el;
   }
 
-  public update(annotation: Text): void {
+  public update(annotation: A): void {
     const style = annotation.properties.style || {};
-    const width = style.strokeWidth ?? defaultTextStyle.strokeWidth ?? 0;
-    const type = style.strokeType ?? defaultTextStyle.strokeType ?? "plain";
+    const width = style.strokeWidth ?? this.options.defaults.strokeWidth ?? 0;
+    const type =
+      style.strokeType ?? this.options.defaults.strokeType ?? "plain";
 
     const thickActive =
-      Math.abs(width - STROKE_WIDTH_THICK) < Math.abs(width - STROKE_WIDTH_THIN);
+      Math.abs(width - STROKE_WIDTH_THICK) <
+      Math.abs(width - STROKE_WIDTH_THIN);
     this.weightButtons.forEach((btn, i) => {
       const isThickButton = i === 1;
       const active = isThickButton ? thickActive : !thickActive;

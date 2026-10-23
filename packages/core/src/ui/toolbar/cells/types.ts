@@ -1,6 +1,10 @@
 import type { Text } from "../../../types";
 import type { IconName } from "../../icons";
-import type { ToolbarCell, ToolbarCellContext } from "./contract";
+import type {
+  ToolbarAnnotation,
+  ToolbarCell,
+  ToolbarCellContext
+} from "./contract";
 
 /**
  * Declarative description of one toolbar entry - what `TextStyleToolbar`/
@@ -21,13 +25,13 @@ import type { ToolbarCell, ToolbarCellContext } from "./contract";
  * sizes, swatches - each with a shipped default, all overridable), rather
  * than hardcoding specific cell classes/values.
  */
-export type ToolbarItem =
-  | ToolbarButtonItem
-  | ToolbarDropdownItem
+export type ToolbarItem<A extends ToolbarAnnotation = Text> =
+  | ToolbarButtonItem<A>
+  | ToolbarDropdownItem<A>
   | ToolbarSeparatorItem
-  | ToolbarCustomItem;
+  | ToolbarCustomItem<A>;
 
-export interface ToolbarButtonItem {
+export interface ToolbarButtonItem<A extends ToolbarAnnotation = Text> {
   kind: "button";
   /** Stable identifier for a built-in item (e.g. `"bold"`, `"delete"`) -
    * lets a `TextStyleToolbarOptions.items` transform address one by
@@ -39,12 +43,12 @@ export interface ToolbarButtonItem {
   /** Tooltip label, shown on hover via the existing `data-tooltip` CSS. */
   title: string;
   /** Dynamic tooltip - overrides `title` per annotation when set. */
-  getTitle?: (annotation: Text) => string;
+  getTitle?: (annotation: A) => string;
   icon: IconName;
-  action: (ctx: ToolbarCellContext) => void;
+  action: (ctx: ToolbarCellContext<A>) => void;
   /** Toggle state - button gets the `.active` class when this returns
    * true. Omit for a plain action button (e.g. Delete). */
-  isActive?: (annotation: Text) => boolean;
+  isActive?: (annotation: A) => boolean;
   /** Red-on-hover styling, used by Delete. */
   danger?: boolean;
 }
@@ -62,18 +66,18 @@ export interface ToolbarDropdownOption {
   style?: Partial<CSSStyleDeclaration>;
 }
 
-export interface ToolbarDropdownItem {
+export interface ToolbarDropdownItem<A extends ToolbarAnnotation = Text> {
   kind: "dropdown";
   /** See `ToolbarButtonItem.id`. */
   id?: string;
   title: string;
   options: ToolbarDropdownOption[];
-  getValue: (annotation: Text) => ToolbarDropdownValue;
-  onSelect: (value: ToolbarDropdownValue, ctx: ToolbarCellContext) => void;
+  getValue: (annotation: A) => ToolbarDropdownValue;
+  onSelect: (value: ToolbarDropdownValue, ctx: ToolbarCellContext<A>) => void;
   /** Trigger label shown when closed - defaults to the selected option's
    * `label`. Override for e.g. font (always shows "Aa", not the font name)
    * or size (shows the live effective number even between presets). */
-  getLabel?: (value: ToolbarDropdownValue, annotation: Text) => string;
+  getLabel?: (value: ToolbarDropdownValue, annotation: A) => string;
 }
 
 export interface ToolbarSeparatorItem {
@@ -85,9 +89,9 @@ export interface ToolbarSeparatorItem {
   id?: string;
 }
 
-export interface ToolbarCustomItem {
+export interface ToolbarCustomItem<A extends ToolbarAnnotation = Text> {
   kind: "custom";
   /** See `ToolbarButtonItem.id`. */
   id?: string;
-  build: (ctx: ToolbarCellContext) => ToolbarCell;
+  build: (ctx: ToolbarCellContext<A>) => ToolbarCell<A>;
 }
