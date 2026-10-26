@@ -588,14 +588,18 @@ export class LinkSync {
       // Stale registry entry: arrow no longer in state.features.
       if (!arrow) return;
 
-      // Annotation target not loaded yet (arrow arrived before its annotation
-      // in the same import). Leave the arrow as stored instead of crashing.
+      // Target not available yet or gone: a node removed without a
+      // `removeNodes` event (e.g. setGraph) has no xyr entry, and an annotation
+      // may not be loaded yet (arrow arrived before it in the same import).
+      // Leave the arrow as stored instead of crashing.
       // ponytail: skipped arrow is not recomputed later; add a retry when the target lands.
-      const isMissing = (link: typeof start) =>
-        !!link &&
-        link.targetType !== TARGET_TYPES.NODE &&
-        link.targetType !== TARGET_TYPES.EDGE &&
-        !state.getFeature(link.target);
+      const isMissing = (link: typeof start) => {
+        if (!link) return false;
+        if (link.targetType === TARGET_TYPES.NODE)
+          return !xyr[nodeIdToIndex.get(link.target)!];
+        if (link.targetType === TARGET_TYPES.EDGE) return false;
+        return !state.getFeature(link.target);
+      };
       if (isMissing(start) || isMissing(end)) return;
 
       let startPoint = arrow.geometry.coordinates[0];
