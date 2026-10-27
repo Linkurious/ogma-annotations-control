@@ -18,4 +18,26 @@ describe("link sync on load", () => {
     const loaded = control.getAnnotation<Arrow>(arrow.id)!;
     expect(loaded.geometry.coordinates[0]).toEqual([100, 100]);
   });
+
+  it("does not throw on recompute when a linked node is replaced by setGraph", () => {
+    const ogma = createOgma();
+    ogma.addNode({ id: "n0", attributes: { x: 100, y: 100, radius: 10 } });
+    const control = new Control(ogma);
+
+    const arrow: Arrow = createArrow(0, 0, 10, 10);
+    arrow.properties.link = {
+      start: { id: "n0", side: "start", type: "node", magnet: { x: 0, y: 0 } }
+    } as Arrow["properties"]["link"];
+    control.add(arrow);
+
+    // setGraph drops n0 without firing removeNodes, leaving a stale registry entry
+    ogma.setGraph({
+      nodes: [{ id: "n1", attributes: { x: 0, y: 0, radius: 5 } }],
+      edges: []
+    } as Parameters<typeof ogma.setGraph>[0]);
+
+    // Full recompute, as triggered by layoutEnd / graph load
+    expect(() => control.links.update()).not.toThrow();
+    expect(control.getAnnotation<Arrow>(arrow.id)).toBeDefined();
+  });
 });
