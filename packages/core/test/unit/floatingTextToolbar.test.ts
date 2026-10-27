@@ -4,6 +4,7 @@ import {
   Control,
   createArrow,
   createBox,
+  createCommentWithArrow,
   createText,
   defaultTextStyle,
   isStickyNote,
@@ -447,6 +448,31 @@ describe("ui/TextAnnotationToolbar", () => {
       // headless mode
     }
     container.remove();
+  });
+
+  it("hides the arrow pill for an arrow attached to a comment", () => {
+    const { comment, arrow } = createCommentWithArrow(0, 0, 50, 50);
+    control.add(comment);
+    control.add(arrow);
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(arrow.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector(".annotation-style-toolbar")).toBeNull();
+    toolbar.destroy();
+  });
+
+  it("shows the arrow pill for a plain arrow", () => {
+    const added = control.add(createArrow(0, 0, 100, 0)).getAnnotations()
+      .features[0] as Arrow;
+
+    const toolbar = new TextAnnotationToolbar({ control });
+    control.select(added.id);
+    vi.advanceTimersByTime(200);
+
+    expect(document.querySelector(".annotation-style-toolbar")).not.toBeNull();
+    toolbar.destroy();
   });
 
   it("shows the plain-Text pill, author cell included, for a non-sticky Text", () => {

@@ -3,9 +3,11 @@ import type { Control } from "../../Control";
 import {
   isArrow,
   isBox,
+  isComment,
   isStickyNote,
   isText,
   type Annotation,
+  type Arrow,
   type Id
 } from "../../types";
 import { attachPanelVisibility } from "../panelVisibility";
@@ -82,9 +84,19 @@ export class TextAnnotationToolbar {
     this.control.on(EVT_UPDATE, this.handleUpdate);
   }
 
+  /** An arrow attached to a comment at either end is a comment's own
+   * connector, so it gets no floating style pill. */
+  private isCommentArrow(arrow: Arrow): boolean {
+    const ends = [arrow.properties.link?.start, arrow.properties.link?.end];
+    return ends.some((end) => {
+      const target = end && this.control.getAnnotation(end.id);
+      return !!target && isComment(target);
+    });
+  }
+
   private show(annotation: Annotation) {
     const kind = toolbarKindOf(annotation);
-    if (!kind) {
+    if (!kind || (isArrow(annotation) && this.isCommentArrow(annotation))) {
       this.hide();
       return;
     }
