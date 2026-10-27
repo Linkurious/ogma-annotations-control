@@ -696,6 +696,24 @@ input:checked + .toggle-slider:before {
   box-shadow: var(--oa-toolbar-shadow);
 }
 
+/* Placed below the anchor when there is no room above it (see
+   `AnnotationStyleToolbar.placePill`). */
+.annotation-style-toolbar.is-below {
+  transform: translate(-50%, 0);
+  animation-name: oa-toolbar-pop-in-below;
+}
+
+@keyframes oa-toolbar-pop-in-below {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .annotation-style-toolbar {
     animation: none;

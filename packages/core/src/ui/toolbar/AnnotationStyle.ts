@@ -16,6 +16,8 @@ import type { ToolbarItem } from "./cells/types";
  * `getAnchor`. Matches the Figma export's ~12px anchor gap. */
 const ANCHOR_GAP = 12;
 
+type PillSide = "top" | "bottom";
+
 export interface AnnotationStyleToolbarOptions {
   control: Control;
 }
@@ -112,9 +114,16 @@ export abstract class AnnotationStyleToolbar<
       position: this.getAnchor(annotation),
       scaled: false
     });
+    this.placePill(annotation);
 
+    this.ogma.events.on("viewChanged", this.onViewChanged);
     document.addEventListener("click", this.documentClickHandler);
   }
+
+  private onViewChanged = () => {
+    const annotation = this.control.getAnnotation<A>(this.annotationId);
+    if (annotation) this.placePill(annotation);
+  };
 
   /** The toolbar's entries, in order - implemented by each concrete
    * toolbar. Declarative (`ToolbarItem[]`) rather than pre-built cells, so a
@@ -162,25 +171,39 @@ export abstract class AnnotationStyleToolbar<
     });
   }
 
-  /**
-   * Top-center of the annotation's box, in graph space, offset outward by
-   * `ANCHOR_GAP` (screen-constant, so divided by zoom) and rotated by the
-   * global annotation-rotation angle - the same `ctx.rotate(rotation)`
-   * transform `Handles.renderOutline` applies to a Text box's outline, so
-   * the pill tracks the box exactly as it visually rotates.
-   * `fixedSize` only applies to Text (its height is screen-constant).
-   */
-  private getAnchor(annotation: A): { x: number; y: number } {
+  /** Point the pill is centered on (graph space) and the half-extent of the
+   * annotation around it. Default: the box center and half its height.
+   * `fixedSize` only applies to Text (its height is screen-constant). */
+  protected getAnchorBox(annotation: A): {
+    center: { x: number; y: number };
+    halfHeight: number;
+  } {
     const zoom = this.control.getZoom();
-    const rotation = this.control.getRotation();
     const isFixedSize =
       isText(annotation) && annotation.properties.style?.fixedSize === true;
 
     let { height } = getBoxSize(annotation);
     if (isFixedSize) height /= zoom;
 
-    const center = getBoxCenter(annotation);
-    const localY = -(height / 2 + ANCHOR_GAP / zoom);
+    return { center: getBoxCenter(annotation), halfHeight: height / 2 };
+  }
+
+  /**
+   * Anchor point on the `side` of the annotation, in graph space, offset
+   * outward by `ANCHOR_GAP` (screen-constant, so divided by zoom) and rotated
+   * by the global annotation-rotation angle - the same `ctx.rotate(rotation)`
+   * transform `Handles.renderOutline` applies to a Text box's outline, so
+   * the pill tracks the box exactly as it visually rotates.
+   */
+  private getAnchor(
+    annotation: A,
+    side: PillSide = "top"
+  ): { x: number; y: number } {
+    const zoom = this.control.getZoom();
+    const rotation = this.control.getRotation();
+    const { center, halfHeight } = this.getAnchorBox(annotation);
+    const direction = side === "top" ? -1 : 1;
+    const localY = direction * (halfHeight + ANCHOR_GAP / zoom);
     const sin = Math.sin(rotation);
     const cos = Math.cos(rotation);
 
@@ -190,16 +213,63 @@ export abstract class AnnotationStyleToolbar<
     };
   }
 
+  /**
+   * Chooses the side (above or below the anchor) and horizontal shift that
+   * keep the pill inside the Ogma container. Prefers above; flips below only
+   * when above does not fit and below does. Horizontal overflow is removed
+   * by shifting the pill, not by moving the anchor. Skipped (defaults to
+   * above) while the pill has no layout size.
+   */
+  private placePill(annotation: A): void {
+    const top = this.getAnchor(annotation, "top");
+    const bottom = this.getAnchor(annotation, "bottom");
+    const container = this.ogma.getContainer();
+    const width = this.root.offsetWidth;
+    const height = this.root.offsetHeight;
+
+    if (!container || !width || !height) {
+      this.setSide("top", top, 0);
+      return;
+    }
+
+    const screenTop = this.ogma.view.graphToScreenCoordinates(top);
+    const screenBottom = this.ogma.view.graphToScreenCoordinates(bottom);
+    const fitsAbove = screenTop.y - height >= 0;
+    const fitsBelow = screenBottom.y + height <= container.clientHeight;
+    const side: PillSide = fitsAbove || !fitsBelow ? "top" : "bottom";
+
+    const screenX = (side === "top" ? screenTop : screenBottom).x;
+    const left = screenX - width / 2;
+    const right = left + width;
+    let shift = 0;
+    if (left < 0) shift = -left;
+    else if (right > container.clientWidth)
+      shift = container.clientWidth - right;
+
+    this.setSide(side, side === "top" ? top : bottom, shift);
+  }
+
+  private setSide(
+    side: PillSide,
+    position: { x: number; y: number },
+    shift: number
+  ) {
+    this.root.classList.toggle("is-below", side === "bottom");
+    this.root.style.marginLeft = `${shift}px`;
+    this.overlay.setPosition(position);
+  }
+
   /** Refreshes every cell and repositions the pill for `annotation` -
    * called after a select, an own-cell edit, or an external update to the
    * same annotation. Does not rebuild cells; the host recreates the whole
    * instance when the annotation identity/kind changes. */
   public update(annotation: A): void {
     this.cells.forEach((cell) => cell.update(annotation));
-    this.overlay.setPosition(this.getAnchor(annotation));
+    this.placePill(annotation);
   }
 
   public destroy(): void {
+    this.ogma.events.off(this.onViewChanged);
     document.removeEventListener("click", this.documentClickHandler);
     this.cells.forEach((cell) => cell.destroy());
     this.overlay.destroy();

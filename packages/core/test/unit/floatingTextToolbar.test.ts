@@ -26,6 +26,7 @@ import {
   STROKE_WIDTH_THICK
 } from "../../src/ui";
 import type { ToolbarCellContext } from "../../src/ui/toolbar/cells/contract";
+import { ArrowStyleToolbar } from "../../src/ui/toolbar/ArrowStyle";
 import type {
   ToolbarButtonItem,
   ToolbarDropdownItem
@@ -673,6 +674,119 @@ describe("ui/TextAnnotationToolbar", () => {
     expect(tooltips[0]).toBe("Lock");
     expect(tooltips).not.toContain("Delete");
 
+    toolbar.destroy();
+  });
+});
+
+describe("ui/toolbar placement (AnnotationStyleToolbar)", () => {
+  type Point = { x: number; y: number };
+  const PILL_WIDTH = 200;
+  const PILL_HEIGHT = 40;
+  const CONTAINER_WIDTH = 600;
+  const CONTAINER_HEIGHT = 600;
+
+  let ogma: Ogma;
+  let control: Control;
+  let container: HTMLDivElement;
+  let placements: Point[];
+  let restoreOffsets: () => void;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    ogma = new Ogma({ container, options: { renderer: null } });
+    control = new Control(ogma);
+
+    // Record every overlay position the toolbar sets, so tests can read the
+    // final placement (Overlay has no getter).
+    placements = [];
+    const addOverlay = ogma.layers.addOverlay.bind(ogma.layers);
+    vi.spyOn(ogma.layers, "addOverlay").mockImplementation((opts) => {
+      placements.push(opts.position);
+      const overlay = addOverlay(opts);
+      const setPosition = overlay.setPosition.bind(overlay);
+      overlay.setPosition = (p) => {
+        placements.push(p);
+        return setPosition(p);
+      };
+      return overlay;
+    });
+
+    // jsdom has no layout: stub pill and container sizes, and make the view
+    // transform the identity so screen = graph coordinates.
+    const pillOffsets = {
+      offsetWidth: PILL_WIDTH,
+      offsetHeight: PILL_HEIGHT
+    };
+    const originals = Object.getOwnPropertyDescriptors(HTMLElement.prototype);
+    Object.defineProperties(HTMLElement.prototype, {
+      offsetWidth: { configurable: true, get: () => pillOffsets.offsetWidth },
+      offsetHeight: { configurable: true, get: () => pillOffsets.offsetHeight }
+    });
+    Object.defineProperties(container, {
+      clientWidth: { configurable: true, value: CONTAINER_WIDTH },
+      clientHeight: { configurable: true, value: CONTAINER_HEIGHT }
+    });
+    vi.spyOn(ogma.view, "graphToScreenCoordinates").mockImplementation(
+      (p: Point) => ({ x: p.x, y: p.y })
+    );
+    restoreOffsets = () => {
+      Object.defineProperties(HTMLElement.prototype, {
+        offsetWidth: originals.offsetWidth,
+        offsetHeight: originals.offsetHeight
+      });
+    };
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    restoreOffsets();
+    try {
+      control.destroy();
+    } catch {
+      // headless mode
+    }
+    try {
+      ogma.destroy();
+    } catch {
+      // headless mode
+    }
+    container.remove();
+  });
+
+  const mount = (arrow: Arrow) => {
+    const added = control.add(arrow).getAnnotations().features[0] as Arrow;
+    const toolbar = new ArrowStyleToolbar({ control }, added);
+    return {
+      toolbar,
+      pill: document.querySelector<HTMLElement>(".annotation-style-toolbar")!
+    };
+  };
+
+  it("anchors an arrow's pill above the midpoint of its line", () => {
+    const { toolbar } = mount(createArrow(300, 300, 400, 400));
+    const zoom = control.getZoom();
+
+    expect(placements.at(-1)!.x).toBeCloseTo(350);
+    expect(placements.at(-1)!.y).toBeCloseTo(350 - 12 / zoom);
+    toolbar.destroy();
+  });
+
+  it("flips the pill below the anchor when there is no room above", () => {
+    const { toolbar, pill } = mount(createArrow(200, 20, 300, 20));
+    const zoom = control.getZoom();
+
+    expect(pill.classList.contains("is-below")).toBe(true);
+    expect(placements.at(-1)!.y).toBeCloseTo(20 + 12 / zoom);
+    toolbar.destroy();
+  });
+
+  it("shifts the pill horizontally so it stays inside the container", () => {
+    const { toolbar, pill } = mount(createArrow(0, 300, 0, 400));
+
+    // Midpoint x = 0, pill is 200px wide, so its left edge is at -100.
+    expect(pill.classList.contains("is-below")).toBe(false);
+    expect(pill.style.marginLeft).toBe("100px");
     toolbar.destroy();
   });
 });

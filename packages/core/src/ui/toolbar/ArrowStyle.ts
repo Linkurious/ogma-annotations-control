@@ -15,6 +15,15 @@ export class ArrowStyleToolbar extends AnnotationStyleToolbar<
     return "Arrow style toolbar";
   }
 
+  /** Midpoint of the line's first and last points, so the pill sits on the
+   * line rather than above the bounding box's top edge. */
+  protected getAnchorBox(annotation: Arrow) {
+    const coords = annotation.geometry.coordinates;
+    const [x0, y0] = coords[0];
+    const [x1, y1] = coords[coords.length - 1];
+    return { center: { x: (x0 + x1) / 2, y: (y0 + y1) / 2 }, halfHeight: 0 };
+  }
+
   protected getItems(): ToolbarItem<Arrow>[] {
     const strokeSwatches = this.options.strokeSwatches ?? STROKE_SWATCHES;
     const onMoreColors = this.options.onMoreStrokeColors;
