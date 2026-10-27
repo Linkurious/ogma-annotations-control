@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-10-12 | Version: 2.x
+> Auto-generated: 2026-10-22 | Version: 2.x
 
 ---
 
@@ -870,6 +870,44 @@ Attach an arrow to an annotation at the specified side
 
 `this`
 
+#### Call Signature
+
+```ts
+link(
+   arrowId, 
+   targetEdge, 
+   side, 
+   magnet?): this;
+```
+
+Attach an arrow to an edge at the specified side. Keeps the arrow id and
+does not touch history.
+
+##### Parameters
+
+###### arrowId
+
+[`Id`](../type-aliases/Id.md)
+
+###### targetEdge
+
+`Edge`
+
+###### side
+
+[`Side`](../type-aliases/Side.md)
+
+###### magnet?
+
+`Point`
+
+position along the edge as `{ x: t, y: 0 }`, t in 0..1
+(default: the middle)
+
+##### Returns
+
+`this`
+
 ***
 
 ### listenerCount()
@@ -1181,6 +1219,22 @@ canComment: (target) => boolean;
 ###### target
 
 [`CommentTarget`](../type-aliases/CommentTarget.md)
+
+###### Returns
+
+`boolean`
+
+##### canDetach()
+
+```ts
+canDetach: (comment) => boolean;
+```
+
+###### Parameters
+
+###### comment
+
+[`Comment`](../interfaces/Comment.md)
 
 ###### Returns
 
@@ -3529,11 +3583,19 @@ Text content of the comment
 
 Optional configuration
 
+#### arrowId?
+
+[`Id`](../type-aliases/Id.md)
+
 #### arrowStyle?
 
 `Partial`\<[`ArrowStyles`](../interfaces/ArrowStyles.md)\>
 
 Style options for the arrow
+
+#### commentId?
+
+[`Id`](../type-aliases/Id.md)
 
 #### commentStyle?
 
@@ -4276,6 +4338,34 @@ applies to changing this after the fact.
 ##### target
 
 [`CommentTarget`](CommentTarget.md)
+
+#### Returns
+
+`boolean`
+
+***
+
+### canDetach()
+
+```ts
+canDetach: (comment) => boolean;
+```
+
+Called to decide whether a comment may be detached from the node, edge
+or annotation it points at. Defaults to always `false`. When it returns
+`false`, dragging the connector's tip or body away from its target is
+refused, and deleting the target (node, edge, text, box, polygon)
+deletes the comment and its connector. When it returns `true`, the
+connector can be dragged off, and removing the target leaves the comment
+in place with a free connector end.
+
+Keep this cheap and synchronous. Same reactivity note as `isEditable`.
+
+#### Parameters
+
+##### comment
+
+[`Comment`](../interfaces/Comment.md)
 
 #### Returns
 

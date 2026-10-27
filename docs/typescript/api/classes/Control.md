@@ -870,6 +870,44 @@ Attach an arrow to an annotation at the specified side
 
 `this`
 
+#### Call Signature
+
+```ts
+link(
+   arrowId,
+   targetEdge,
+   side,
+   magnet?): this;
+```
+
+Attach an arrow to an edge at the specified side. Keeps the arrow id and
+does not touch history.
+
+##### Parameters
+
+###### arrowId
+
+[`Id`](../type-aliases/Id.md)
+
+###### targetEdge
+
+`Edge`
+
+###### side
+
+[`Side`](../type-aliases/Side.md)
+
+###### magnet?
+
+`Point`
+
+position along the edge as `{ x: t, y: 0 }`, t in 0..1
+(default: the middle)
+
+##### Returns
+
+`this`
+
 ---
 
 ### listenerCount()
@@ -1181,6 +1219,22 @@ canComment: (target) => boolean;
 ###### target
 
 [`CommentTarget`](../type-aliases/CommentTarget.md)
+
+###### Returns
+
+`boolean`
+
+##### canDetach()
+
+```ts
+canDetach: (comment) => boolean;
+```
+
+###### Parameters
+
+###### comment
+
+[`Comment`](../interfaces/Comment.md)
 
 ###### Returns
 

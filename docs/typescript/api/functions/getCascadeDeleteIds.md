@@ -1,7 +1,7 @@
 # Function: getCascadeDeleteIds()
 
 ```ts
-function getCascadeDeleteIds(features, id): Set<Id>;
+function getCascadeDeleteIds(features, id, canDetach): Set<Id>;
 ```
 
 Ids that removing `id` should take with it: `id` itself, plus every arrow
@@ -22,6 +22,10 @@ The full feature map (pre-deletion)
 [`Id`](../type-aliases/Id.md)
 
 The id being removed
+
+### canDetach
+
+(`comment`) => `boolean`
 
 ## Returns
 
