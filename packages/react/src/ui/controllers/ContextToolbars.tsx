@@ -29,7 +29,7 @@ function useVanillaToolbar<P>(
     if (!editor) return;
     const toolbar = new Toolbar({ ...optionsRef.current, control: editor });
     return () => toolbar.destroy();
-  }, [editor]);
+  }, [editor, Toolbar]);
 }
 
 export type ContextToolbarsControllerProps = Omit<
