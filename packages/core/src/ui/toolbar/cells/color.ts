@@ -1,62 +1,62 @@
-import { createRgbaColorPicker, type RgbaColorPicker } from "../../colorPicker";
-import { defaultTextStyle, type Text } from "../../../types";
-import { rgbaToString } from "../../color";
-import { parseColor } from "../../../utils/utils";
+import type { Box, Text } from "../../../types";
 import type { Swatch } from "../swatches";
-import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
 import type { ToolbarCell, ToolbarCellContext } from "./contract";
+import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
+import { SwatchPicker, type ColorHistory } from "./swatchPicker";
 
-export interface ColorCellOptions {
+/** Annotations with a `background` style. */
+export type FillAnnotation = Text | Box;
+
+export interface ColorCellOptions<A extends FillAnnotation = Text> {
   /** Fixed swatch-grid palette - defaults to `STICKY_SWATCHES`
-   * (`TextStyleToolbar`'s `swatches` option), overridable per instance. */
+   * (the toolbars' `swatches` option), overridable per instance. */
   swatches: Swatch[];
+  /** Custom colors shown after `swatches`, filled by the "+" button. */
+  history: ColorHistory;
+  /** Shown when the annotation has no explicit `background` - each
+   * annotation type has its own default style. */
+  defaults: { background?: string };
   /**
-   * Called instead of opening the built-in `vanilla-colorful` popover when
-   * "More colors…" is clicked - use this to hand off to your own color
-   * picker (a native `<input type="color">`, a design-system component,
-   * whatever) instead of the bundled one. Read the current color via
-   * `ctx.getAnnotation().properties.style?.background`, and call
+   * Called instead of opening the built-in `vanilla-colorful` picker when
+   * "+" is clicked - use this to hand off to your own color picker (a
+   * native `<input type="color">`, a design-system component, whatever).
+   * Read the current color via
+   * `ctx.getAnnotation().properties.style?.background`, call
    * `ctx.updateStyle({ background: yourPickedColor })` (as many times as
-   * you like, e.g. live while the user drags in your own picker) to apply
-   * it - same `ToolbarCellContext` every other cell action gets.
-   * `anchor` is the "More colors…" button itself, there to position your
-   * own popover against if you want to anchor it the same place the
-   * built-in one would have opened. This toolbar's own popover closes
-   * right before this is called either way.
+   * you like, e.g. live while the user drags) to apply it, and
+   * `addSwatch(color)` to keep it in the custom swatches. `anchor` is the
+   * "+" button, to position your own popover against. This toolbar's own
+   * dropdown closes right before this is called.
    */
-  onMoreColors?: (ctx: ToolbarCellContext, anchor: HTMLElement) => void;
+  onMoreColors?: (
+    ctx: ToolbarCellContext<A>,
+    anchor: HTMLElement,
+    addSwatch: (color: string) => void
+  ) => void;
 }
 
 /**
- * Note-color cell - the toolbar's one hand-built ("custom") item, per its
- * own edge-case shape (a swatch grid opening a secondary popover, not a
- * flat option list a `DropdownItemCell` could render). Edits `background`
- * (the note's fill - the single most visible "color" of a Text/sticky
- * note, and what the Figma swatch grid's colors are for), not `color` (the
- * text color, already covered by the docked `AnnotationPanel`'s separate
- * Color/Background sections).
+ * Background-color cell for Text, sticky notes and Boxes - edits
+ * `background` (the fill, the single most visible "color" of those), not
+ * `color` (the text color, covered by the docked `AnnotationPanel`).
  *
- * Primary UI is the `swatches` grid, matching the Figma dropdown export. A
- * "More colors…" cell at the end opens the existing `vanilla-colorful`
- * picker (`colorPicker.ts`) as a secondary popover, so this doesn't
- * reimplement a full color picker - it wraps the one `AnnotationPanel`
- * already uses - unless the host supplies `onMoreColors`, in which case
- * that's called instead and the built-in picker never gets built at all.
+ * The dropdown is a `SwatchPicker`: the fixed `swatches` grid, then custom
+ * colors and a "+" that opens the existing `vanilla-colorful` picker
+ * (`colorPicker.ts`) - or the host's own via `onMoreColors`.
  */
-export class ColorCell implements ToolbarCell {
+export class ColorCell<
+  A extends FillAnnotation = Text
+> implements ToolbarCell<A> {
   public readonly element: HTMLElement;
   private dropdown: ToolbarDropdown;
   private swatch: HTMLElement;
-  private more: HTMLButtonElement;
-  private morePicker: RgbaColorPicker | null = null;
-  private morePickerHost: HTMLElement | null = null;
+  private picker: SwatchPicker;
 
   constructor(
-    private ctx: ToolbarCellContext,
-    private options: ColorCellOptions
+    private ctx: ToolbarCellContext<A>,
+    private options: ColorCellOptions<A>
   ) {
-    const { swatches } = options;
-    this.dropdown = createToolbarDropdown("Color", "");
+    this.dropdown = createToolbarDropdown("Color", "", ctx.getBounds);
     this.element = this.dropdown.element;
     this.element.classList.add("oa-toolbar-color-cell");
 
@@ -69,80 +69,32 @@ export class ColorCell implements ToolbarCell {
         this.dropdown.element.querySelector(".oa-toolbar-dropdown-label")
       );
 
-    const grid = document.createElement("div");
-    grid.className = "oa-toolbar-swatch-grid";
-    swatches.forEach((s) => {
-      const cell = document.createElement("button");
-      cell.type = "button";
-      cell.className = "oa-toolbar-swatch-cell";
-      cell.classList.toggle(
-        "oa-toolbar-swatch-cell-transparent",
-        s.fill === "transparent"
-      );
-      cell.title = s.fill;
-      cell.setAttribute(
-        "aria-label",
-        s.fill === "transparent" ? "No background" : `Background ${s.fill}`
-      );
-      cell.style.setProperty("--oa-swatch-fill", s.fill);
-      cell.style.setProperty("--oa-swatch-stroke", s.stroke);
-      cell.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.pick(s.fill);
-        this.dropdown.close();
-      });
-      grid.appendChild(cell);
+    const { onMoreColors } = options;
+    this.picker = new SwatchPicker({
+      swatches: options.swatches,
+      history: options.history,
+      label: (c) => (c === "transparent" ? "No background" : `Background ${c}`),
+      getCurrent: () => this.current(this.ctx.getAnnotation()),
+      onPick: (color) => this.ctx.updateStyle({ background: color }),
+      onDone: () => this.dropdown.close(),
+      onResize: () => this.dropdown.reposition(),
+      onMore: onMoreColors
+        ? (anchor, addSwatch) => onMoreColors(this.ctx, anchor, addSwatch)
+        : undefined
     });
-    this.dropdown.panel.appendChild(grid);
-
-    this.more = document.createElement("button");
-    this.more.type = "button";
-    this.more.className = "oa-toolbar-more-colors";
-    this.more.textContent = "More colors…";
-    this.more.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.openMorePicker();
-    });
-    this.dropdown.panel.appendChild(this.more);
+    this.dropdown.panel.appendChild(this.picker.element);
   }
 
-  private pick(color: string) {
-    this.ctx.updateStyle({ background: color });
+  private current(annotation: A): string {
+    return (
+      annotation.properties.style?.background ||
+      this.options.defaults.background ||
+      "transparent"
+    );
   }
 
-  private openMorePicker() {
-    if (this.options.onMoreColors) {
-      this.dropdown.close();
-      this.options.onMoreColors(this.ctx, this.more);
-      return;
-    }
-    if (this.morePickerHost) {
-      this.closeMorePicker();
-      return;
-    }
-    this.morePickerHost = document.createElement("div");
-    this.morePickerHost.className = "oa-toolbar-more-colors-host";
-    this.morePicker = createRgbaColorPicker();
-    const current =
-      this.ctx.getAnnotation().properties.style?.background ||
-      defaultTextStyle.background!;
-    this.morePicker.color = parseColor(current);
-    this.morePicker.addEventListener("color-changed", (event) => {
-      this.pick(rgbaToString(event.detail.value));
-    });
-    this.morePickerHost.appendChild(this.morePicker);
-    this.dropdown.panel.appendChild(this.morePickerHost);
-  }
-
-  private closeMorePicker() {
-    this.morePickerHost?.remove();
-    this.morePickerHost = null;
-    this.morePicker = null;
-  }
-
-  public update(annotation: Text): void {
-    const current =
-      annotation.properties.style?.background || defaultTextStyle.background!;
+  public update(annotation: A): void {
+    const current = this.current(annotation);
     this.swatch.style.setProperty("--oa-swatch-fill", current);
     this.swatch.classList.toggle(
       "oa-toolbar-swatch-transparent",
@@ -151,6 +103,6 @@ export class ColorCell implements ToolbarCell {
   }
 
   public destroy(): void {
-    this.closeMorePicker();
+    this.picker.destroy();
   }
 }

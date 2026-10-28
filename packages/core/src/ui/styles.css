@@ -516,7 +516,7 @@ input:checked + .toggle-slider:before {
 
 /* Small inset button - used for every plain toolbar action/toggle
    (AnnotationToolbar's drawing/undo/redo/erase/delete buttons,
-   TextAnnotationToolbar's Bold/Delete/author-toggle cells, a dropdown's
+   the context toolbars' Bold/Delete/author-toggle cells, a dropdown's
    trigger). `position: relative` doubles as the tooltip's anchor. */
 .oa-toolbar-button {
   position: relative;
@@ -582,7 +582,7 @@ input:checked + .toggle-slider:before {
    scoped and an unscoped copy both matched the same element and fought
    over properties neither set (see the git history on this block for
    that). Dark pill + pointer triangle, matching the Figma "Sticky Note
-   Toolbar" spec `TextAnnotationToolbar`'s cells were originally built
+   Toolbar" spec the context toolbars' cells were originally built
    against. */
 .oa-toolbar [data-tooltip] {
   position: relative;
@@ -631,7 +631,7 @@ input:checked + .toggle-slider:before {
   opacity: 1;
 }
 
-/* --- Floating text-annotation toolbar (TextAnnotationToolbar) ---
+/* --- Floating context toolbars (ContextToolbar) ---
    Anchored above the selected Text/sticky-note annotation via an Ogma
    overlay layer, not docked like `.annotation-panel`/`.annotation-toolbar`
    above. `.annotation-style-toolbar-anchor` is the element handed to
@@ -661,8 +661,8 @@ input:checked + .toggle-slider:before {
 }
 
 /* Slide-up-and-fade on appear. A fresh `.annotation-style-toolbar` element
-   is created every time the pill (re)appears (see `AnnotationStyleToolbar`
-   - `TextAnnotationToolbar` destroys and recreates it, never reuses one
+   is created every time the pill (re)appears (see `ContextToolbar`
+   - it destroys and recreates it, never reuses one
    across a hide/show), so this just replays naturally on each mount - no
    JS needed. Only animates `transform`/`opacity`, which are exclusively
    this element's own (Ogma only ever touches its parent
@@ -697,7 +697,7 @@ input:checked + .toggle-slider:before {
 }
 
 /* Placed below the anchor when there is no room above it (see
-   `AnnotationStyleToolbar.placePill`). */
+   `ContextToolbar`'s `placePill`). */
 .annotation-style-toolbar.is-below {
   transform: translate(-50%, 0);
   animation-name: oa-toolbar-pop-in-below;
@@ -749,12 +749,19 @@ input:checked + .toggle-slider:before {
   position: absolute;
   top: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%);
+  /* --oa-popover-shift: set by `fitPopover` to stay inside the canvas. */
+  transform: translateX(calc(-50% + var(--oa-popover-shift, 0px)));
   background: var(--oa-toolbar-bg);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   padding: 8px;
   z-index: 1;
+}
+
+/* Flipped above the trigger by `fitPopover` - no room below. */
+.oa-toolbar-dropdown-panel.is-up {
+  top: auto;
+  bottom: calc(100% + 8px);
 }
 
 .oa-toolbar-dropdown.open .oa-toolbar-dropdown-panel {
@@ -838,22 +845,31 @@ input:checked + .toggle-slider:before {
   background-color: #fff;
 }
 
-.oa-toolbar-more-colors {
-  display: block;
-  width: 100%;
+/* Custom colors row (`SwatchPicker`) - "+"-added colors, then the "+"
+   itself, under the fixed swatch grid. */
+.oa-toolbar-swatch-grid-custom {
   margin-top: 8px;
-  border: none;
+  padding-top: 8px;
   border-top: 1px solid var(--oa-toolbar-divider, #ccc);
-  background: transparent;
-  cursor: pointer;
-  padding: 8px 4px 0;
-  font-size: 13px;
-  color: var(--oa-muted-color, #666);
-  text-align: center;
 }
 
-.oa-toolbar-more-colors:hover {
+.oa-toolbar-swatch-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 2px;
+  border: none;
+  background: transparent;
+  color: var(--oa-muted-color, #666);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.oa-toolbar-swatch-add:hover {
   color: var(--oa-text-color, #333);
+  background: var(--oa-control-bg, #eee);
 }
 
 .oa-toolbar-more-colors-host {

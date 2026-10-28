@@ -7,8 +7,8 @@ import type {
 } from "./contract";
 
 /**
- * Declarative description of one toolbar entry - what `TextStyleToolbar`/
- * `StickyNoteStyleToolbar`'s `getItems()` returns. A generic renderer turns
+ * Declarative description of one toolbar entry - what a `ContextToolbar`'s
+ * `defaultItems()` returns. A generic renderer turns
  * each item into a `ToolbarCell`:
  *
  * - `"button"` -> `ButtonItemCell` (Bold, Delete, the author toggle - any
@@ -21,9 +21,10 @@ import type {
  *   opening a secondary popover, not a flat option list).
  *
  * This is what makes the built-in toolbar configurable from the outside:
- * `getItems()` builds this list from `TextStyleToolbarOptions` (fonts, font
- * sizes, swatches - each with a shipped default, all overridable), rather
- * than hardcoding specific cell classes/values.
+ * `defaultItems()` builds this list from the toolbar's options (fonts, font
+ * sizes, swatches - each with a shipped default, all overridable), and
+ * `options.items` can rewrite it, rather than hardcoding specific cell
+ * classes/values.
  */
 export type ToolbarItem<A extends ToolbarAnnotation = Text> =
   | ToolbarButtonItem<A>
@@ -34,7 +35,7 @@ export type ToolbarItem<A extends ToolbarAnnotation = Text> =
 export interface ToolbarButtonItem<A extends ToolbarAnnotation = Text> {
   kind: "button";
   /** Stable identifier for a built-in item (e.g. `"bold"`, `"delete"`) -
-   * lets a `TextStyleToolbarOptions.items` transform address one by
+   * lets a `ContextToolbarOptions.items` transform address one by
    * `id` (`filter`/`find`) instead of by array position, so it keeps
    * working if the built-in list's order or length changes in a later
    * version. Not read by the toolbar itself; unset on your own items,

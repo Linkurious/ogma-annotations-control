@@ -1,14 +1,11 @@
-import { createRgbaColorPicker, type RgbaColorPicker } from "../../colorPicker";
-import { rgbaToString } from "../../color";
-import { parseColor } from "../../../utils/utils";
-import type { Text } from "../../../types";
+import type { Arrow, Box, Text } from "../../../types";
 import type { Swatch } from "../swatches";
 import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
-import type {
-  ToolbarAnnotation,
-  ToolbarCell,
-  ToolbarCellContext
-} from "./contract";
+import { SwatchPicker, type ColorHistory } from "./swatchPicker";
+import type { ToolbarCell, ToolbarCellContext } from "./contract";
+
+/** Annotations with a `strokeWidth`/`strokeType`/`strokeColor` style. */
+export type StrokeAnnotation = Text | Box | Arrow;
 
 /** Preset values the thin/thick buttons write to `strokeWidth` - a compact
  * stand-in for the docked `AnnotationPanel`'s 1-20 slider, sized for a pill
@@ -16,27 +13,33 @@ import type {
 export const STROKE_WIDTH_THIN = 1;
 export const STROKE_WIDTH_THICK = 4;
 
-/** Fallback outline color, read back by the "More colors…" picker and
+/** Fallback outline color, read back by the "+" color picker and
  * matching the text renderer's own fallback (`renderer/shapes/text.ts`:
  * `rect.setAttribute("stroke", strokeColor || "black")`) - `defaultTextStyle`
  * itself has no `strokeColor`. */
 const FALLBACK_STROKE_COLOR = "#000000";
 
-export interface StrokeCellOptions<A extends ToolbarAnnotation> {
+export interface StrokeCellOptions<A extends StrokeAnnotation> {
   /** Color-grid palette for the outline-color row - defaults to
    * `STROKE_SWATCHES` (`STICKY_SWATCHES` without "transparent", which
    * doesn't make sense for a stroke - see that constant's own doc). */
   swatches: Swatch[];
+  /** Custom colors shown after `swatches`, filled by the "+" button. */
+  history: ColorHistory;
   /** Values shown when the annotation has no explicit `strokeWidth` /
    * `strokeType` - each annotation type has its own default style. */
   defaults: { strokeWidth?: number; strokeType?: string };
   /**
    * Bring your own color picker: called instead of opening the built-in
-   * `vanilla-colorful` popover when "More colors…" is clicked - same
+   * `vanilla-colorful` popover when "+" is clicked - same
    * contract as `ColorCellOptions.onMoreColors`, just for `strokeColor`
    * instead of `background`.
    */
-  onMoreColors?: (ctx: ToolbarCellContext<A>, anchor: HTMLElement) => void;
+  onMoreColors?: (
+    ctx: ToolbarCellContext<A>,
+    anchor: HTMLElement,
+    addSwatch: (color: string) => void
+  ) => void;
 }
 
 /** Small inline preview line, reused for both the line-style row's two
@@ -57,36 +60,33 @@ function weightIcon(thick: boolean): string {
 }
 
 /**
- * Outline (border) style cell for a plain Text annotation's floating pill -
+ * Outline (border) style cell for the Text, Box and Arrow context toolbars -
  * `strokeWidth` (as a thin/thick preset pair, not the docked panel's
  * slider), `strokeType` ("plain"/"dashed") and `strokeColor`. See the Figma
  * "Annotation Toolbar" export's "Line Type" dropdown.
  *
- * Not offered on sticky notes - `StickyNoteStyleToolbar` drops it (a
- * borderless look is the point of the sticky-note preset); see
- * `TextStyleToolbar.includeOutlineCell`.
+ * Not offered on sticky notes - `StickyNoteContextToolbar` drops it (a
+ * borderless look is the point of the sticky-note preset).
  *
  * Same "custom" shape as `ColorCell` (a popover with more than a flat
  * option list), just three stacked sections - thickness, line style, color
  * - instead of one swatch grid.
  */
 export class StrokeCell<
-  A extends ToolbarAnnotation = Text
+  A extends StrokeAnnotation = Text
 > implements ToolbarCell<A> {
   public readonly element: HTMLElement;
   private dropdown: ToolbarDropdown;
   private triggerIcon: HTMLElement;
   private weightButtons: HTMLButtonElement[] = [];
   private typeButtons: HTMLButtonElement[] = [];
-  private more!: HTMLButtonElement;
-  private morePicker: RgbaColorPicker | null = null;
-  private morePickerHost: HTMLElement | null = null;
+  private picker: SwatchPicker;
 
   constructor(
     private ctx: ToolbarCellContext<A>,
     private options: StrokeCellOptions<A>
   ) {
-    this.dropdown = createToolbarDropdown("Line Type", "");
+    this.dropdown = createToolbarDropdown("Line Type", "", ctx.getBounds);
     this.element = this.dropdown.element;
     this.element.classList.add("oa-toolbar-stroke-cell");
 
@@ -141,64 +141,22 @@ export class StrokeCell<
     this.dropdown.panel.appendChild(typeRow);
     this.dropdown.panel.appendChild(this.divider());
 
-    const grid = document.createElement("div");
-    grid.className = "oa-toolbar-swatch-grid";
-    this.options.swatches.forEach((s) => {
-      const cell = document.createElement("button");
-      cell.type = "button";
-      cell.className = "oa-toolbar-swatch-cell";
-      cell.title = s.fill;
-      cell.setAttribute("aria-label", `Outline color ${s.fill}`);
-      cell.style.setProperty("--oa-swatch-fill", s.fill);
-      cell.style.setProperty("--oa-swatch-stroke", s.stroke);
-      cell.addEventListener("click", (e) => {
-        e.stopPropagation();
-        this.ctx.updateStyle({ strokeColor: s.fill });
-        this.dropdown.close();
-      });
-      grid.appendChild(cell);
+    const { onMoreColors } = options;
+    this.picker = new SwatchPicker({
+      swatches: options.swatches,
+      history: options.history,
+      label: (c) => `Outline color ${c}`,
+      getCurrent: () =>
+        this.ctx.getAnnotation().properties.style?.strokeColor ||
+        FALLBACK_STROKE_COLOR,
+      onPick: (color) => this.ctx.updateStyle({ strokeColor: color }),
+      onDone: () => this.dropdown.close(),
+      onResize: () => this.dropdown.reposition(),
+      onMore: onMoreColors
+        ? (anchor, addSwatch) => onMoreColors(this.ctx, anchor, addSwatch)
+        : undefined
     });
-    this.dropdown.panel.appendChild(grid);
-
-    this.more = document.createElement("button");
-    this.more.type = "button";
-    this.more.className = "oa-toolbar-more-colors";
-    this.more.textContent = "More colors…";
-    this.more.addEventListener("click", (e) => {
-      e.stopPropagation();
-      this.openMorePicker();
-    });
-    this.dropdown.panel.appendChild(this.more);
-  }
-
-  private openMorePicker() {
-    if (this.options.onMoreColors) {
-      this.dropdown.close();
-      this.options.onMoreColors(this.ctx, this.more);
-      return;
-    }
-    if (this.morePickerHost) {
-      this.closeMorePicker();
-      return;
-    }
-    this.morePickerHost = document.createElement("div");
-    this.morePickerHost.className = "oa-toolbar-more-colors-host";
-    this.morePicker = createRgbaColorPicker();
-    const current =
-      this.ctx.getAnnotation().properties.style?.strokeColor ||
-      FALLBACK_STROKE_COLOR;
-    this.morePicker.color = parseColor(current);
-    this.morePicker.addEventListener("color-changed", (event) => {
-      this.ctx.updateStyle({ strokeColor: rgbaToString(event.detail.value) });
-    });
-    this.morePickerHost.appendChild(this.morePicker);
-    this.dropdown.panel.appendChild(this.morePickerHost);
-  }
-
-  private closeMorePicker() {
-    this.morePickerHost?.remove();
-    this.morePickerHost = null;
-    this.morePicker = null;
+    this.dropdown.panel.appendChild(this.picker.element);
   }
 
   private divider(): HTMLElement {
@@ -235,6 +193,6 @@ export class StrokeCell<
   }
 
   public destroy(): void {
-    this.closeMorePicker();
+    this.picker.destroy();
   }
 }

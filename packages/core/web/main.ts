@@ -5,7 +5,7 @@ import { Ogma } from "@linkurious/ogma";
 import {
   AnnotationPanel,
   AnnotationToolbar,
-  TextAnnotationToolbar
+  ContextToolbars
 } from "@linkurious/ogma-annotations/ui";
 import "@linkurious/ogma-annotations/ui/styles.css";
 import { Control, AnnotationCollection, getAnnotationsBounds } from "../src";
@@ -22,7 +22,7 @@ class App {
   // @ts-expect-error Used for debugging
   private annotationToolbar: AnnotationToolbar | null = null;
   // @ts-expect-error Used for debugging
-  private textAnnotationToolbar: TextAnnotationToolbar | null = null;
+  private contextToolbars: ContextToolbars | null = null;
   private buttons: {
     centerView: HTMLButtonElement;
     rotateCW: HTMLButtonElement;
@@ -91,7 +91,7 @@ class App {
     this.setupKeyboardShortcuts();
     this.setupAnnotationPanel();
     this.setupAnnotationToolbar();
-    this.setupTextAnnotationToolbar();
+    this.setupContextToolbars();
   }
 
   private setupControlListeners() {
@@ -236,8 +236,8 @@ class App {
     this.annotationPanel = new AnnotationPanel({
       control: this.control,
       container: this.ogma.getContainer()!,
-      // Text, sticky notes, boxes and arrows' outline/delete are handled by
-      // TextAnnotationToolbar (see setupTextAnnotationToolbar).
+      // Text, sticky notes, boxes and arrows are handled by
+      // ContextToolbars (see setupContextToolbars).
       enabledTypes: ["polygon"]
     });
   }
@@ -252,13 +252,12 @@ class App {
     });
   }
 
-  /** Floating, per-selection style pill for Text annotations and sticky
-   * notes - anchored above the selection instead of docked like
-   * `AnnotationPanel`. `setupAnnotationPanel` excludes "text" from the
-   * docked panel's `enabledTypes` so the two don't both show for the same
-   * selection. */
-  private setupTextAnnotationToolbar() {
-    this.textAnnotationToolbar = new TextAnnotationToolbar({
+  /** Floating, per-selection style pills for Text, sticky notes, boxes and
+   * arrows - anchored to the selection instead of docked like
+   * `AnnotationPanel`. `setupAnnotationPanel` limits the docked panel to
+   * polygons so the two don't both show for the same selection. */
+  private setupContextToolbars() {
+    this.contextToolbars = new ContextToolbars({
       control: this.control
     });
   }

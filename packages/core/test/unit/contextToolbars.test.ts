@@ -5,11 +5,15 @@ import {
   createArrow,
   createBox,
   createCommentWithArrow,
+  createPolygon,
   createText,
+  isPolygon,
   defaultTextStyle,
   isStickyNote,
+  type Annotation,
   type Arrow,
   type Box,
+  type Polygon,
   type Text,
   type AnnotationState
 } from "../../src";
@@ -19,19 +23,29 @@ import {
   STROKE_SWATCHES,
   DEFAULT_TOOLBAR_FONTS,
   TextAnnotationToolbar,
+  ContextToolbars,
+  ArrowContextToolbar,
+  BoxContextToolbar,
+  ContextToolbar,
+  deleteItem,
   ButtonItemCell,
   DropdownItemCell,
   ColorCell,
   StrokeCell,
   STROKE_WIDTH_THIN,
-  STROKE_WIDTH_THICK
+  STROKE_WIDTH_THICK,
+  createColorHistory,
+  MAX_CUSTOM_SWATCHES,
+  SwatchPicker,
+  colorHistoryFor
 } from "../../src/ui";
 import type { ToolbarCellContext } from "../../src/ui/toolbar/cells/contract";
-import { ArrowStyleToolbar } from "../../src/ui/toolbar/ArrowStyle";
 import type {
   ToolbarButtonItem,
-  ToolbarDropdownItem
+  ToolbarDropdownItem,
+  ToolbarItem
 } from "../../src/ui/toolbar/cells/types";
+import { fitPopover } from "../../src/ui/toolbar/cells/dropdown";
 
 /** Minimal fake `AnnotationState` covering only what `renderText`/`renderBox`
  * read - no need to spin up a real store for a pure rendering test. */
@@ -209,7 +223,11 @@ describe("ui/toolbar/cells - generic item renderers", () => {
   it("ColorCell gives the transparent swatch a checkerboard marker class and picks it correctly", () => {
     const text = createText(0, 0, 100, 50, "Hi", { background: "#FFE49B" });
     const { ctx } = fakeCellContext(text);
-    const cell = new ColorCell(ctx, { swatches: STICKY_SWATCHES });
+    const cell = new ColorCell(ctx, {
+      swatches: STICKY_SWATCHES,
+      history: createColorHistory(),
+      defaults: {}
+    });
 
     const cells = cell.element.querySelectorAll<HTMLButtonElement>(
       ".oa-toolbar-swatch-cell"
@@ -243,13 +261,17 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     );
   });
 
-  it("ColorCell's built-in 'More colors…' popover opens for a transparent background instead of throwing (regression: parseColor didn't recognize transparent/none)", () => {
+  it("ColorCell's built-in '+' color picker opens for a transparent background instead of throwing (regression: parseColor didn't recognize transparent/none)", () => {
     const text = createText(0, 0, 100, 50, "Hi", { background: "transparent" });
     const { ctx } = fakeCellContext(text);
-    const cell = new ColorCell(ctx, { swatches: STICKY_SWATCHES });
+    const cell = new ColorCell(ctx, {
+      swatches: STICKY_SWATCHES,
+      history: createColorHistory(),
+      defaults: {}
+    });
 
     const moreBtn = cell.element.querySelector<HTMLButtonElement>(
-      ".oa-toolbar-more-colors"
+      ".oa-toolbar-swatch-add"
     )!;
 
     expect(() => moreBtn.click()).not.toThrow();
@@ -264,15 +286,21 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const onMoreColors = vi.fn();
     const cell = new ColorCell(ctx, {
       swatches: STICKY_SWATCHES,
+      history: createColorHistory(),
+      defaults: {},
       onMoreColors
     });
 
     const moreBtn = cell.element.querySelector<HTMLButtonElement>(
-      ".oa-toolbar-more-colors"
+      ".oa-toolbar-swatch-add"
     )!;
     moreBtn.click();
 
-    expect(onMoreColors).toHaveBeenCalledWith(ctx, moreBtn);
+    expect(onMoreColors).toHaveBeenCalledWith(
+      ctx,
+      moreBtn,
+      expect.any(Function)
+    );
     // The built-in vanilla-colorful popover must not have been built.
     expect(
       cell.element.querySelector(".oa-toolbar-more-colors-host")
@@ -287,7 +315,11 @@ describe("ui/toolbar/cells - generic item renderers", () => {
   it("StrokeCell's thickness row writes the thin/thick strokeWidth presets and reflects the closer preset as active", () => {
     const text = createText(0, 0, 100, 50, "Hi", { strokeWidth: 0 });
     const { ctx } = fakeCellContext(text);
-    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    const cell = new StrokeCell(ctx, {
+      swatches: STROKE_SWATCHES,
+      history: createColorHistory(),
+      defaults: {}
+    });
     cell.update(ctx.getAnnotation());
 
     const [weightRow] = cell.element.querySelectorAll<HTMLElement>(
@@ -318,7 +350,11 @@ describe("ui/toolbar/cells - generic item renderers", () => {
   it("StrokeCell's line-style row writes strokeType plain/dashed and reflects the current value", () => {
     const text = createText(0, 0, 100, 50, "Hi", { strokeType: "plain" });
     const { ctx } = fakeCellContext(text);
-    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    const cell = new StrokeCell(ctx, {
+      swatches: STROKE_SWATCHES,
+      history: createColorHistory(),
+      defaults: {}
+    });
     cell.update(ctx.getAnnotation());
 
     const [, typeRow] = cell.element.querySelectorAll<HTMLElement>(
@@ -341,7 +377,11 @@ describe("ui/toolbar/cells - generic item renderers", () => {
   it("StrokeCell's swatch grid writes strokeColor and closes the dropdown", () => {
     const text = createText(0, 0, 100, 50, "Hi");
     const { ctx } = fakeCellContext(text);
-    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    const cell = new StrokeCell(ctx, {
+      swatches: STROKE_SWATCHES,
+      history: createColorHistory(),
+      defaults: {}
+    });
     cell.element.classList.add("open");
 
     const swatch = cell.element.querySelector<HTMLButtonElement>(
@@ -355,13 +395,17 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     expect(cell.element.classList.contains("open")).toBe(false);
   });
 
-  it("StrokeCell's built-in 'More colors…' popover opens without throwing", () => {
+  it("StrokeCell's built-in '+' color picker opens without throwing", () => {
     const text = createText(0, 0, 100, 50, "Hi", { strokeColor: "#123456" });
     const { ctx } = fakeCellContext(text);
-    const cell = new StrokeCell(ctx, { swatches: STROKE_SWATCHES });
+    const cell = new StrokeCell(ctx, {
+      swatches: STROKE_SWATCHES,
+      history: createColorHistory(),
+      defaults: {}
+    });
 
     const moreBtn = cell.element.querySelector<HTMLButtonElement>(
-      ".oa-toolbar-more-colors"
+      ".oa-toolbar-swatch-add"
     )!;
 
     expect(() => moreBtn.click()).not.toThrow();
@@ -376,15 +420,21 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     const onMoreColors = vi.fn();
     const cell = new StrokeCell(ctx, {
       swatches: STROKE_SWATCHES,
+      history: createColorHistory(),
+      defaults: {},
       onMoreColors
     });
 
     const moreBtn = cell.element.querySelector<HTMLButtonElement>(
-      ".oa-toolbar-more-colors"
+      ".oa-toolbar-swatch-add"
     )!;
     moreBtn.click();
 
-    expect(onMoreColors).toHaveBeenCalledWith(ctx, moreBtn);
+    expect(onMoreColors).toHaveBeenCalledWith(
+      ctx,
+      moreBtn,
+      expect.any(Function)
+    );
     expect(
       cell.element.querySelector(".oa-toolbar-more-colors-host")
     ).toBeNull();
@@ -393,7 +443,7 @@ describe("ui/toolbar/cells - generic item renderers", () => {
     expect(ctx.updateStyle).toHaveBeenCalledWith({ strokeColor: "#654321" });
   });
 
-  it("real Text/StickyNote item lists (via TextStyleToolbar) expose bold/author/delete/font tooltips", () => {
+  it("real Text/StickyNote item lists (via TextContextToolbar) expose bold/author/delete/font tooltips", () => {
     // Exercised end-to-end (real tooltips in the mounted pill) in the
     // ui/TextAnnotationToolbar block below - this just checks the default
     // font list includes the requested monospace option.
@@ -403,7 +453,97 @@ describe("ui/toolbar/cells - generic item renderers", () => {
   });
 });
 
-describe("ui/TextAnnotationToolbar", () => {
+describe("ui/toolbar/cells/swatchPicker", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  const mount = (onMore?: SwatchPickerOptionsLike["onMore"]) => {
+    const history = createColorHistory();
+    const onPick = vi.fn();
+    const picker = new SwatchPicker({
+      swatches: STROKE_SWATCHES,
+      history,
+      label: (c) => c,
+      getCurrent: () => "#000000",
+      onPick,
+      onDone: vi.fn(),
+      onResize: vi.fn(),
+      onMore
+    });
+    const custom = () =>
+      Array.from(
+        picker.element.querySelectorAll<HTMLButtonElement>(
+          ".oa-toolbar-swatch-grid-custom .oa-toolbar-swatch-cell"
+        )
+      ).map((b) => b.title);
+    const add = () =>
+      picker.element.querySelector<HTMLButtonElement>(
+        ".oa-toolbar-swatch-add"
+      )!;
+    return { picker, history, onPick, custom, add };
+  };
+
+  it("history keeps newest first, no duplicates, at most the limit", () => {
+    const history = createColorHistory(3);
+    ["#1", "#2", "#3", "#1", "#4"].forEach((c) => history.add(c));
+    expect(history.get()).toEqual(["#4", "#1", "#3"]);
+    expect(createColorHistory().get()).toEqual([]);
+    expect(MAX_CUSTOM_SWATCHES).toBe(5);
+  });
+
+  it("'+' opens the picker; the color settles into the custom swatches", () => {
+    const { picker, onPick, custom, add } = mount();
+    expect(custom()).toEqual([]);
+
+    add().click();
+    const el = picker.element.querySelector(
+      ".oa-toolbar-more-colors-host"
+    )!.firstElementChild!;
+    const change = (r: number) =>
+      el.dispatchEvent(
+        new CustomEvent("color-changed", {
+          detail: { value: { r, g: 0, b: 0, a: 1 } }
+        })
+      );
+    change(10);
+    change(20);
+    expect(onPick).toHaveBeenCalledTimes(2);
+    expect(custom()).toEqual([]); // not while dragging
+
+    vi.advanceTimersByTime(500);
+    expect(custom()).toHaveLength(1);
+    expect(custom()[0]).toBe(onPick.mock.calls[1][0]);
+    picker.destroy();
+  });
+
+  it("custom swatches apply when clicked, and the '+' stays last", () => {
+    const { picker, history, onPick, add } = mount();
+    history.add("#abcdef");
+    const swatch = picker.element.querySelector<HTMLButtonElement>(
+      '.oa-toolbar-swatch-grid-custom [title="#abcdef"]'
+    )!;
+    swatch.click();
+    expect(onPick).toHaveBeenCalledWith("#abcdef");
+    expect(add().parentElement!.lastElementChild).toBe(add());
+    picker.destroy();
+  });
+
+  it("onMore gets an addSwatch callback instead of the built-in picker", () => {
+    const onMore = vi.fn();
+    const { picker, custom, add } = mount(onMore);
+    add().click();
+    expect(
+      picker.element.querySelector(".oa-toolbar-more-colors-host")
+    ).toBeNull();
+    onMore.mock.calls[0][1]("#123456");
+    expect(custom()).toEqual(["#123456"]);
+    picker.destroy();
+  });
+});
+
+type SwatchPickerOptionsLike = ConstructorParameters<typeof SwatchPicker>[0];
+
+describe("ui/ContextToolbars", () => {
   let ogma: Ogma;
   let control: Control;
   let container: HTMLDivElement;
@@ -477,7 +617,7 @@ describe("ui/TextAnnotationToolbar", () => {
 
   it("shows the plain-Text pill, author cell included, for a non-sticky Text", () => {
     // The author-visibility toggle used to be a sticky-note-only cell (see
-    // `StickyNoteStyleToolbar`); it now lives on the base `TextStyleToolbar`
+    // `StickyNoteContextToolbar`); it now lives on `TextContextToolbar`
     // so any Text annotation - sticky note or not - can show an author line.
     const added = control.add(
       createText(0, 0, 100, 50, "Hello", { fontSize: 18 })
@@ -546,7 +686,7 @@ describe("ui/TextAnnotationToolbar", () => {
     // and Size sharing a group with no divider between them - means
     // exactly 4 separators. Not 3 (the author toggle landing with no
     // divider on one side) or 5 (two stacked before Delete), both of which
-    // the off-by-one in StickyNoteStyleToolbar's insertion index used to
+    // the off-by-one in the sticky toolbar's old insertion index used to
     // produce depending on which side of the split kept the pre-existing
     // separator.
     const pill = document.querySelector(".annotation-style-toolbar")!;
@@ -702,9 +842,246 @@ describe("ui/TextAnnotationToolbar", () => {
 
     toolbar.destroy();
   });
+
+  const selectAndWait = (id: string | number) => {
+    control.select(id);
+    vi.advanceTimersByTime(200);
+  };
+  const pill = () => document.querySelector(".annotation-style-toolbar");
+  const pillTooltips = () =>
+    Array.from(
+      document.querySelectorAll(".annotation-style-toolbar [data-tooltip]")
+    ).map((el) => el.getAttribute("data-tooltip"));
+
+  it("ContextToolbars: `box: false` turns off the box pill only", () => {
+    const box = control.add(createBox(0, 0, 100, 50)).getAnnotations()
+      .features[0] as Box;
+    const text = control.add(createText(200, 0, 100, 50, "Hi")).getAnnotations()
+      .features[1] as Text;
+
+    const toolbars = new ContextToolbars({ control, box: false });
+    selectAndWait(box.id);
+    expect(pill()).toBeNull();
+    selectAndWait(text.id);
+    expect(pill()).not.toBeNull();
+    toolbars.destroy();
+  });
+
+  it("ContextToolbars: per-type `items` applies to that type", () => {
+    const arrow = control.add(createArrow(0, 0, 100, 0)).getAnnotations()
+      .features[0] as Arrow;
+    const box = control.add(createBox(0, 100, 100, 50)).getAnnotations()
+      .features[1] as Box;
+
+    const toolbars = new ContextToolbars({
+      control,
+      arrow: { items: (d) => d.filter((i) => i.id !== "delete") }
+    });
+    selectAndWait(arrow.id);
+    expect(pillTooltips()).not.toContain("Delete");
+    selectAndWait(box.id);
+    expect(pillTooltips()).toContain("Delete");
+    toolbars.destroy();
+  });
+
+  it("BoxContextToolbar alone shows only for boxes", () => {
+    const box = control.add(createBox(0, 0, 100, 50)).getAnnotations()
+      .features[0] as Box;
+    const text = control.add(createText(200, 0, 100, 50, "Hi")).getAnnotations()
+      .features[1] as Text;
+
+    const toolbar = new BoxContextToolbar({ control });
+    selectAndWait(text.id);
+    expect(pill()).toBeNull();
+    selectAndWait(box.id);
+    expect(pill()).not.toBeNull();
+    toolbar.destroy();
+    expect(pill()).toBeNull();
+  });
+
+  it("Box pill has a background Color cell; custom colors are shared across pills", () => {
+    const [box, text] = control
+      .add(createBox(0, 0, 100, 50))
+      .add(createText(200, 0, 100, 50, "Hi"))
+      .getAnnotations().features as [Box, Text];
+    const toolbars = new ContextToolbars({ control });
+
+    selectAndWait(box.id);
+    expect(pillTooltips()).toEqual(["Color", "Line Type", "Delete"]);
+    const boxSwatch = document.querySelector<HTMLButtonElement>(
+      '.oa-toolbar-color-cell .oa-toolbar-swatch-cell[title="#FFE49B"]'
+    )!;
+    boxSwatch.click();
+    expect(
+      (control.getAnnotation(box.id) as Box).properties.style?.background
+    ).toBe("#FFE49B");
+
+    // "+"-added colors live per Control, so they show on other pills too.
+    const customOf = () =>
+      Array.from(
+        document.querySelectorAll(
+          ".oa-toolbar-color-cell .oa-toolbar-swatch-grid-custom .oa-toolbar-swatch-cell"
+        )
+      ).map((b) => b.getAttribute("title"));
+    colorHistoryFor(control).add("#0a0b0c");
+    expect(customOf()).toEqual(["#0a0b0c"]);
+    selectAndWait(text.id);
+    expect(customOf()).toEqual(["#0a0b0c"]);
+    toolbars.destroy();
+  });
+
+  it("all toolbars share one selection watcher per Control", () => {
+    const on = vi.spyOn(control, "on");
+    const selectListeners = () =>
+      on.mock.calls.filter(([evt]) => evt === "select").length;
+
+    const toolbars = new ContextToolbars({ control });
+    expect(selectListeners()).toBe(1);
+
+    // Torn down with its last subscriber, recreated for the next one.
+    toolbars.destroy();
+    const box = control.add(createBox(0, 0, 100, 50)).getAnnotations()
+      .features[0] as Box;
+    const boxToolbar = new BoxContextToolbar({ control });
+    expect(selectListeners()).toBe(2);
+    selectAndWait(box.id);
+    expect(pill()).not.toBeNull();
+    boxToolbar.destroy();
+  });
+
+  it("`filter` narrows which annotations of the type get the pill", () => {
+    const [a, b] = control
+      .add(createBox(0, 0, 100, 50))
+      .add(createBox(200, 0, 100, 50))
+      .getAnnotations().features as Box[];
+
+    const toolbar = new BoxContextToolbar({
+      control,
+      filter: (box) => box.id === a.id
+    });
+    selectAndWait(b.id);
+    expect(pill()).toBeNull();
+    selectAndWait(a.id);
+    expect(pill()).not.toBeNull();
+    toolbar.destroy();
+  });
+
+  it("`includeCommentArrows` shows the pill on a comment's arrow", () => {
+    const { comment, arrow } = createCommentWithArrow(0, 0, 50, 50);
+    control.add(comment);
+    control.add(arrow);
+
+    const toolbar = new ArrowContextToolbar({
+      control,
+      includeCommentArrows: true
+    });
+    selectAndWait(arrow.id);
+    expect(pill()).not.toBeNull();
+    toolbar.destroy();
+  });
+
+  it("per-type `hideWhenNotEditable` overrides the top-level one", () => {
+    const box = control.add(createBox(0, 0, 100, 50)).getAnnotations()
+      .features[0] as Box;
+    control.setOptions({ isEditable: () => false });
+
+    const hidden = new ContextToolbars({ control });
+    selectAndWait(box.id);
+    expect(pill()).toBeNull();
+    hidden.destroy();
+    control.unselect();
+
+    const shown = new ContextToolbars({
+      control,
+      box: { hideWhenNotEditable: false }
+    });
+    selectAndWait(box.id);
+    expect(pill()).not.toBeNull();
+    shown.destroy();
+  });
+
+  it("ContextToolbar can be extended for other kinds (polygon)", () => {
+    class PolygonToolbar extends ContextToolbar<Polygon> {
+      protected matches(a: Annotation): a is Polygon {
+        return isPolygon(a);
+      }
+      protected defaultItems(): ToolbarItem<Polygon>[] {
+        return [deleteItem()];
+      }
+    }
+    const polygon = control
+      .add(
+        createPolygon([
+          [
+            [0, 0],
+            [100, 0],
+            [100, 100]
+          ]
+        ])
+      )
+      .getAnnotations().features[0] as Polygon;
+
+    const toolbar = new PolygonToolbar({ control });
+    selectAndWait(polygon.id);
+    expect(pillTooltips()).toEqual(["Delete"]);
+    toolbar.destroy();
+  });
 });
 
-describe("ui/toolbar placement (AnnotationStyleToolbar)", () => {
+describe("ui/toolbar/cells/dropdown fitPopover", () => {
+  const rect = (left: number, top: number, width: number, height: number) =>
+    new DOMRect(left, top, width, height);
+  const setup = (panelRect: DOMRect, triggerRect: DOMRect) => {
+    const trigger = document.createElement("button");
+    const panel = document.createElement("div");
+    trigger.getBoundingClientRect = () => triggerRect;
+    panel.getBoundingClientRect = () => panelRect;
+    return { trigger, panel };
+  };
+  const bounds = rect(0, 0, 500, 500);
+  const shiftOf = (panel: HTMLElement) =>
+    panel.style.getPropertyValue("--oa-popover-shift");
+
+  it("leaves a panel that fits as is", () => {
+    const { trigger, panel } = setup(
+      rect(100, 140, 200, 100),
+      rect(150, 100, 32, 32)
+    );
+    fitPopover(trigger, panel, bounds);
+    expect(panel.classList.contains("is-up")).toBe(false);
+    expect(shiftOf(panel)).toBe("0px");
+  });
+
+  it("flips above when it overflows below and fits above", () => {
+    const { trigger, panel } = setup(
+      rect(100, 440, 200, 100),
+      rect(150, 400, 32, 32)
+    );
+    fitPopover(trigger, panel, bounds);
+    expect(panel.classList.contains("is-up")).toBe(true);
+  });
+
+  it("stays below when it fits neither way", () => {
+    const { trigger, panel } = setup(
+      rect(100, 90, 200, 450),
+      rect(150, 50, 32, 32)
+    );
+    fitPopover(trigger, panel, bounds);
+    expect(panel.classList.contains("is-up")).toBe(false);
+  });
+
+  it("shifts sideways to stay inside", () => {
+    const left = setup(rect(-40, 140, 200, 100), rect(0, 100, 32, 32));
+    fitPopover(left.trigger, left.panel, bounds);
+    expect(shiftOf(left.panel)).toBe("40px");
+
+    const right = setup(rect(400, 140, 200, 100), rect(480, 100, 32, 32));
+    fitPopover(right.trigger, right.panel, bounds);
+    expect(shiftOf(right.panel)).toBe("-100px");
+  });
+});
+
+describe("ui/toolbar placement (ContextToolbar)", () => {
   type Point = { x: number; y: number };
   const PILL_WIDTH = 200;
   const PILL_HEIGHT = 40;
@@ -718,6 +1095,7 @@ describe("ui/toolbar placement (AnnotationStyleToolbar)", () => {
   let restoreOffsets: () => void;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     container = document.createElement("div");
     document.body.appendChild(container);
     ogma = new Ogma({ container, options: { renderer: null } });
@@ -765,6 +1143,7 @@ describe("ui/toolbar placement (AnnotationStyleToolbar)", () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     restoreOffsets();
     try {
@@ -782,7 +1161,9 @@ describe("ui/toolbar placement (AnnotationStyleToolbar)", () => {
 
   const mount = (arrow: Arrow) => {
     const added = control.add(arrow).getAnnotations().features[0] as Arrow;
-    const toolbar = new ArrowStyleToolbar({ control }, added);
+    const toolbar = new ArrowContextToolbar({ control });
+    control.select(added.id);
+    vi.advanceTimersByTime(200);
     return {
       toolbar,
       pill: document.querySelector<HTMLElement>(".annotation-style-toolbar")!

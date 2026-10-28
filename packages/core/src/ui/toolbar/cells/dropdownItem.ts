@@ -20,7 +20,7 @@ export class DropdownItemCell<
     private ctx: ToolbarCellContext<A>,
     private item: ToolbarDropdownItem<A>
   ) {
-    this.dropdown = createToolbarDropdown(item.title, "");
+    this.dropdown = createToolbarDropdown(item.title, "", ctx.getBounds);
     this.element = this.dropdown.element;
 
     item.options.forEach((option) => {

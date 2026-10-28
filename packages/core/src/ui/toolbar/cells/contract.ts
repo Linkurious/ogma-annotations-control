@@ -1,8 +1,10 @@
-import type { Arrow, Box, Text } from "../../../types";
+import type { Annotation, Text } from "../../../types";
 
-/** Annotations a floating style toolbar can edit - each has its own
- * `properties.style` shape, read through `ToolbarStyle<A>`. */
-export type ToolbarAnnotation = Text | Box | Arrow;
+/** Annotations a context toolbar can edit - any kind, each with its own
+ * `properties.style` shape, read through `ToolbarStyle<A>`. Built-in
+ * toolbars exist for Text, Box and Arrow; extend `ContextToolbar` for the
+ * others. */
+export type ToolbarAnnotation = Annotation;
 
 export type ToolbarStyle<A extends ToolbarAnnotation> = NonNullable<
   A["properties"]["style"]
@@ -23,11 +25,14 @@ export interface ToolbarCellContext<A extends ToolbarAnnotation = Text> {
   updateStyle(patch: Partial<ToolbarStyle<A>>): void;
   /** Removes the annotation via `control.remove`. */
   deleteAnnotation(): void;
+  /** Screen-space (`getBoundingClientRect`) area popovers must stay
+   * inside: the Ogma container clipped to the window viewport. */
+  getBounds(): DOMRect;
 }
 
 /**
  * One button/control in the floating toolbar's pill. `element` is inserted
- * directly into the pill's DOM by `AnnotationStyleToolbar`; a divider is
+ * directly into the pill's DOM by `ContextToolbar`; a divider is
  * inserted after every cell but the last.
  */
 export interface ToolbarCell<A extends ToolbarAnnotation = Text> {
