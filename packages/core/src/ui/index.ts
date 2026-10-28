@@ -45,6 +45,8 @@ export { StickyNoteContextToolbar } from "./toolbar/StickyNoteContextToolbar";
 export type { StickyNoteContextToolbarOptions } from "./toolbar/StickyNoteContextToolbar";
 export { BoxContextToolbar } from "./toolbar/BoxContextToolbar";
 export type { BoxContextToolbarOptions } from "./toolbar/BoxContextToolbar";
+export { PolygonContextToolbar } from "./toolbar/PolygonContextToolbar";
+export type { PolygonContextToolbarOptions } from "./toolbar/PolygonContextToolbar";
 export { ArrowContextToolbar } from "./toolbar/ArrowContextToolbar";
 export type { ArrowContextToolbarOptions } from "./toolbar/ArrowContextToolbar";
 // Deprecated pre-`ContextToolbar` names.

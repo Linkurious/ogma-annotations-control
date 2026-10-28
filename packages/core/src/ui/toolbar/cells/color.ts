@@ -1,11 +1,11 @@
-import type { Box, Text } from "../../../types";
+import type { Box, Polygon, Text } from "../../../types";
 import type { Swatch } from "../swatches";
 import type { ToolbarCell, ToolbarCellContext } from "./contract";
 import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
 import { SwatchPicker, type ColorHistory } from "./swatchPicker";
 
 /** Annotations with a `background` style. */
-export type FillAnnotation = Text | Box;
+export type FillAnnotation = Text | Box | Polygon;
 
 export interface ColorCellOptions<A extends FillAnnotation = Text> {
   /** Fixed swatch-grid palette - defaults to `STICKY_SWATCHES`

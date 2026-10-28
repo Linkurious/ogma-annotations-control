@@ -103,10 +103,10 @@ export default function App() {
               padding: 12
             }}
           />
-          {/* Text, sticky notes, boxes and arrows are handled by
+          {/* Text, sticky notes, boxes, polygons and arrows are handled by
               ContextToolbarsController below - excluding them here keeps the
               docked panel from also popping up for the same selection. */}
-          <AnnotationPanelController enabledTypes={["comment", "polygon"]} />
+          <AnnotationPanelController enabledTypes={["comment"]} />
           <ContextToolbarsController {...contextToolbars} />
         </AnnotationsContextProvider>
       </Ogma>

@@ -38,8 +38,8 @@ export type ContextToolbarsControllerProps = Omit<
 >;
 
 /**
- * Turnkey floating context (style) toolbars for Text, sticky notes, boxes
- * and arrows - same per-type options as the vanilla `ContextToolbars`
+ * Turnkey floating context (style) toolbars for Text, sticky notes, boxes,
+ * polygons and arrows - same per-type options as the vanilla `ContextToolbars`
  * (`box={false}` turns one off). Drop it inside an
  * `AnnotationsContextProvider`, same as {@link AnnotationPanelController}.
  */

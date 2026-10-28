@@ -8,6 +8,10 @@ import {
   BoxContextToolbar,
   type BoxContextToolbarOptions
 } from "./BoxContextToolbar";
+import {
+  PolygonContextToolbar,
+  type PolygonContextToolbarOptions
+} from "./PolygonContextToolbar";
 import type { ToolbarCellContext } from "./cells/contract";
 import type { StrokeAnnotation, StrokeCellOptions } from "./cells/stroke";
 import type { ToolbarItem } from "./cells/types";
@@ -31,12 +35,13 @@ export interface ContextToolbarsOptions {
   text?: PerType<TextContextToolbarOptions>;
   stickyNote?: PerType<StickyNoteContextToolbarOptions>;
   box?: PerType<BoxContextToolbarOptions>;
+  polygon?: PerType<PolygonContextToolbarOptions>;
   arrow?: PerType<ArrowContextToolbarOptions>;
 }
 
 /**
  * Sets up a context (style) toolbar for every annotation type at once -
- * Text, Sticky note, Box and Arrow (comments have none). Each type is on
+ * Text, Sticky note, Box, Polygon and Arrow (comments have none). Each type is on
  * by default; pass `false` to turn one off, or an options object to
  * configure it:
  *
@@ -51,7 +56,7 @@ export interface ContextToolbarsOptions {
  *
  * Equivalent to constructing the per-type classes
  * (`TextContextToolbar`, `StickyNoteContextToolbar`, `BoxContextToolbar`,
- * `ArrowContextToolbar`) yourself.
+ * `PolygonContextToolbar`, `ArrowContextToolbar`) yourself.
  */
 export class ContextToolbars {
   private toolbars: { destroy(): void }[] = [];
@@ -62,6 +67,7 @@ export class ContextToolbars {
     text = {},
     stickyNote = {},
     box = {},
+    polygon = {},
     arrow = {}
   }: ContextToolbarsOptions) {
     const base = { control, hideWhenNotEditable };
@@ -71,6 +77,8 @@ export class ContextToolbars {
         new StickyNoteContextToolbar({ ...base, ...stickyNote })
       );
     if (box) this.toolbars.push(new BoxContextToolbar({ ...base, ...box }));
+    if (polygon)
+      this.toolbars.push(new PolygonContextToolbar({ ...base, ...polygon }));
     if (arrow)
       this.toolbars.push(new ArrowContextToolbar({ ...base, ...arrow }));
   }
@@ -113,6 +121,7 @@ export class TextAnnotationToolbar extends ContextToolbars {
       text: { ...text, ...stroke },
       stickyNote: text,
       box: stroke,
+      polygon: stroke,
       arrow: stroke
     });
   }

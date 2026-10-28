@@ -236,9 +236,9 @@ class App {
     this.annotationPanel = new AnnotationPanel({
       control: this.control,
       container: this.ogma.getContainer()!,
-      // Text, sticky notes, boxes and arrows are handled by
+      // Text, sticky notes, boxes, polygons and arrows are handled by
       // ContextToolbars (see setupContextToolbars).
-      enabledTypes: ["polygon"]
+      enabledTypes: []
     });
   }
 
@@ -252,10 +252,10 @@ class App {
     });
   }
 
-  /** Floating, per-selection style pills for Text, sticky notes, boxes and
-   * arrows - anchored to the selection instead of docked like
-   * `AnnotationPanel`. `setupAnnotationPanel` limits the docked panel to
-   * polygons so the two don't both show for the same selection. */
+  /** Floating, per-selection style pills for Text, sticky notes, boxes,
+   * polygons and arrows - anchored to the selection instead of docked like
+   * `AnnotationPanel`. `setupAnnotationPanel` excludes them so the two
+   * don't both show for the same selection. */
   private setupContextToolbars() {
     this.contextToolbars = new ContextToolbars({
       control: this.control

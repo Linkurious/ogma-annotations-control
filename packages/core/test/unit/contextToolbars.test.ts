@@ -1000,6 +1000,31 @@ describe("ui/ContextToolbars", () => {
     shown.destroy();
   });
 
+  it("ContextToolbars: polygons get Color, Outline and Delete; `polygon: false` opts out", () => {
+    const polygon = control
+      .add(
+        createPolygon([
+          [
+            [0, 0],
+            [100, 0],
+            [100, 100]
+          ]
+        ])
+      )
+      .getAnnotations().features[0] as Polygon;
+
+    const off = new ContextToolbars({ control, polygon: false });
+    selectAndWait(polygon.id);
+    expect(pill()).toBeNull();
+    off.destroy();
+    control.unselect();
+
+    const on = new ContextToolbars({ control });
+    selectAndWait(polygon.id);
+    expect(pillTooltips()).toEqual(["Color", "Line Type", "Delete"]);
+    on.destroy();
+  });
+
   it("ContextToolbar can be extended for other kinds (polygon)", () => {
     class PolygonToolbar extends ContextToolbar<Polygon> {
       protected matches(a: Annotation): a is Polygon {

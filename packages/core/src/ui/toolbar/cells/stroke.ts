@@ -1,11 +1,11 @@
-import type { Arrow, Box, Text } from "../../../types";
+import type { Arrow, Box, Polygon, Text } from "../../../types";
 import type { Swatch } from "../swatches";
 import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
 import { SwatchPicker, type ColorHistory } from "./swatchPicker";
 import type { ToolbarCell, ToolbarCellContext } from "./contract";
 
 /** Annotations with a `strokeWidth`/`strokeType`/`strokeColor` style. */
-export type StrokeAnnotation = Text | Box | Arrow;
+export type StrokeAnnotation = Text | Box | Polygon | Arrow;
 
 /** Preset values the thin/thick buttons write to `strokeWidth` - a compact
  * stand-in for the docked `AnnotationPanel`'s 1-20 slider, sized for a pill

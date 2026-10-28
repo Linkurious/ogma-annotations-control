@@ -12,13 +12,14 @@ rotates with the graph) instead of docked to a screen edge like the
 | Text        | `TextContextToolbar`       | Color, Font, Font size, Bold, Outline, Show author, Delete     |
 | Sticky note | `StickyNoteContextToolbar` | Color, Font, Font size, Bold, Show author, Delete (no Outline) |
 | Box         | `BoxContextToolbar`        | Color, Outline, Delete                                         |
+| Polygon     | `PolygonContextToolbar`    | Color, Outline, Delete                                         |
 | Arrow       | `ArrowContextToolbar`      | Outline, Delete (comment connectors excluded by default)       |
 
 ![Text context toolbar](/ui/context-toolbar-text.png)
 ![Sticky-note context toolbar](/ui/context-toolbar-sticky.png)
 ![Arrow outline dropdown](/ui/context-toolbar-arrow-outline.png)
 
-Comments and polygons have no built-in toolbar — see
+Comments have no built-in toolbar — see
 [Toolbars for other annotation kinds](#toolbars-for-other-annotation-kinds).
 
 ## Installation
@@ -126,7 +127,7 @@ const toolbars = new ContextToolbars({
   `DEFAULT_TOOLBAR_FONT_SIZES` (`[12, 14, 16, 18, 24, 32, 48, 64]`).
 - **`swatches`** — `{ fill, stroke }` pairs for the color cell's swatch
   grid (`fill` becomes the annotation's `background`; `stroke` is the
-  swatch's ring color). Defaults to `STICKY_SWATCHES`. Boxes take the same
+  swatch's ring color). Defaults to `STICKY_SWATCHES`. Boxes and polygons take the same
   option.
 
 ## Custom colors
@@ -230,6 +231,7 @@ new TextContextToolbar({
 | `text`                | `false \| TextContextToolbarOptions`       | Plain Text pill. Omitted = defaults, `false` = off. |
 | `stickyNote`          | `false \| StickyNoteContextToolbarOptions` | Sticky-note pill.                                   |
 | `box`                 | `false \| BoxContextToolbarOptions`        | Box pill.                                           |
+| `polygon`             | `false \| PolygonContextToolbarOptions`    | Polygon pill.                                       |
 | `arrow`               | `false \| ArrowContextToolbarOptions`      | Arrow pill.                                         |
 
 (Per-type objects omit `control`, which comes from the top level. A
@@ -251,14 +253,14 @@ per-type `hideWhenNotEditable` overrides the top-level one.)
 | ---------------------- | ---------------------- | -------------------------------------------------------------------------- |
 | `includeCommentArrows` | `boolean` _(optional)_ | Also show the pill on an arrow attached to a comment. Defaults to `false`. |
 
-### Outline (Text, Box, Arrow)
+### Outline (Text, Box, Polygon, Arrow)
 
 | Option               | Type                                            | Description                                            |
 | -------------------- | ----------------------------------------------- | ------------------------------------------------------ |
 | `strokeSwatches`     | `Swatch[]` _(optional)_                         | Outline cell's palette. Defaults to `STROKE_SWATCHES`. |
 | `onMoreStrokeColors` | `(ctx, anchor, addSwatch) => void` _(optional)_ | Your own picker for the outline cell's **+**.          |
 
-### Background color (Text, sticky note, Box)
+### Background color (Text, sticky note, Box, Polygon)
 
 | Option         | Type                                            | Description                                          |
 | -------------- | ----------------------------------------------- | ---------------------------------------------------- |
@@ -511,9 +513,9 @@ default items are. Selection, placement and `items`/`filter`/
 
 ```ts
 import {
-  isPolygon,
+  isComment,
   type Annotation,
-  type Polygon
+  type Comment
 } from "@linkurious/ogma-annotations";
 import {
   ContextToolbar,
@@ -521,16 +523,16 @@ import {
   type ToolbarItem
 } from "@linkurious/ogma-annotations/ui";
 
-class PolygonContextToolbar extends ContextToolbar<Polygon> {
-  protected matches(a: Annotation): a is Polygon {
-    return isPolygon(a);
+class CommentContextToolbar extends ContextToolbar<Comment> {
+  protected matches(a: Annotation): a is Comment {
+    return isComment(a);
   }
-  protected defaultItems(): ToolbarItem<Polygon>[] {
+  protected defaultItems(): ToolbarItem<Comment>[] {
     return [deleteItem()];
   }
 }
 
-new PolygonContextToolbar({ control });
+new CommentContextToolbar({ control });
 ```
 
 All context toolbars on one `Control` share a single selection watcher, so
