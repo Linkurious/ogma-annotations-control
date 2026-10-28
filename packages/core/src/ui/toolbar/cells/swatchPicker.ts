@@ -110,16 +110,15 @@ export class SwatchPicker {
     this.element.appendChild(grid);
 
     this.customGrid = document.createElement("div");
-    this.customGrid.className =
-      "oa-toolbar-swatch-grid oa-toolbar-swatch-grid-custom";
-    this.element.appendChild(this.customGrid);
+    this.customGrid.className = "oa-toolbar-swatch-grid-custom";
+    grid.appendChild(this.customGrid);
 
     this.add = document.createElement("button");
     this.add.type = "button";
     this.add.className = "oa-toolbar-swatch-add";
     this.add.title = "Custom color";
     this.add.setAttribute("aria-label", "Custom color");
-    this.add.innerHTML = svgIcon("plus", 16);
+    this.add.innerHTML = svgIcon("plus", 12);
     this.add.addEventListener("click", (e) => {
       e.stopPropagation();
       this.openPicker();

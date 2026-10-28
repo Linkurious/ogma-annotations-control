@@ -845,20 +845,18 @@ input:checked + .toggle-slider:before {
   background-color: #fff;
 }
 
-/* Custom colors row (`SwatchPicker`) - "+"-added colors, then the "+"
-   itself, under the fixed swatch grid. */
+/* Custom colors (`SwatchPicker`) - "+"-added colors, then the "+" itself,
+   flow inline after the fixed swatches in the same grid. */
 .oa-toolbar-swatch-grid-custom {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--oa-toolbar-divider, #ccc);
+  display: contents;
 }
 
+/* Same 28px cell + 20px circle as `.oa-toolbar-swatch-cell`, dashed. */
 .oa-toolbar-swatch-add {
   width: 28px;
   height: 28px;
-  border-radius: 2px;
   border: none;
-  background: transparent;
+  background: #fff;
   color: var(--oa-muted-color, #666);
   cursor: pointer;
   display: flex;
@@ -867,9 +865,26 @@ input:checked + .toggle-slider:before {
   padding: 0;
 }
 
+.oa-toolbar-swatch-add::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px dashed currentColor;
+}
+
+.oa-toolbar-swatch-add {
+  position: relative;
+}
+
+.oa-toolbar-swatch-add svg {
+  width: 12px;
+  height: 12px;
+}
+
 .oa-toolbar-swatch-add:hover {
   color: var(--oa-text-color, #333);
-  background: var(--oa-control-bg, #eee);
 }
 
 .oa-toolbar-more-colors-host {
