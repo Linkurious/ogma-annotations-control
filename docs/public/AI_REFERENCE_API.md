@@ -1,7 +1,7 @@
 # Ogma Annotations - API Reference
 
 > Complete API reference: Control class, interfaces, factory functions, types, and events
-> Auto-generated: 2026-10-27 | Version: 2.x
+> Auto-generated: 2026-10-30 | Version: 2.x
 
 ---
 
@@ -667,7 +667,7 @@ getOgma(): Ogma;
 ```
 
 The underlying Ogma instance this controller was created with. Needed by
-UI built on top of `Control`'s public API (e.g. `TextAnnotationToolbar`)
+UI built on top of `Control`'s public API (e.g. `ContextToolbar`)
 that must mount its own `ogma.layers.addOverlay(...)` layer rather than
 going through a renderer/handler internal to `Control`.
 
@@ -685,7 +685,7 @@ getRotation(): number;
 
 Current global annotation-rotation angle (radians) - see
 `TextStyle`/`Handles`' `counterRotation`. Needed alongside `getZoom()` by
-`TextAnnotationToolbar` to anchor its pill above a (possibly rotated)
+`ContextToolbar` to anchor its pill above a (possibly rotated)
 Text box's world-space bounds.
 
 #### Returns
@@ -732,7 +732,7 @@ A FeatureCollection of selected annotations
 getZoom(): number;
 ```
 
-Current zoom level - needed by `TextAnnotationToolbar` to convert a
+Current zoom level - needed by `ContextToolbar` to convert a
 `fixedSize` Text annotation's screen-pixel dimensions back to graph
 units for its anchor-point math (same conversion `Handles` does).
 
@@ -2339,7 +2339,7 @@ optional showAuthor: boolean;
 ```
 
 Whether to render `properties.author` as a one-line, ellipsis-truncated
-signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+signature at the bottom of the box. Toggled by `TextContextToolbar`'s
 author-visibility cell. No-op when `properties.author` is unset or
 blank. Hidden (≡ false) by default.
 
@@ -3060,7 +3060,7 @@ optional showAuthor: boolean;
 ```
 
 Whether to render `properties.author` as a one-line, ellipsis-truncated
-signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+signature at the bottom of the box. Toggled by `TextContextToolbar`'s
 author-visibility cell. No-op when `properties.author` is unset or
 blank. Hidden (≡ false) by default.
 

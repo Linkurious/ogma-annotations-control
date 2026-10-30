@@ -163,7 +163,7 @@ optional showAuthor: boolean;
 ```
 
 Whether to render `properties.author` as a one-line, ellipsis-truncated
-signature at the bottom of the box. Toggled by `TextStyleToolbar`'s
+signature at the bottom of the box. Toggled by `TextContextToolbar`'s
 author-visibility cell. No-op when `properties.author` is unset or
 blank. Hidden (≡ false) by default.
 
