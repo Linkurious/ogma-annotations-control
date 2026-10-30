@@ -1,7 +1,7 @@
 import Ogma from "@linkurious/ogma";
 import { Control, createText, defaultTextStyle } from "../src";
 import {
-  TextAnnotationToolbar,
+  ContextToolbars,
   type ToolbarCell,
   type ToolbarCellContext,
   type ToolbarItem
@@ -12,7 +12,7 @@ import { installBrand } from "./brand";
 import "./style.css";
 
 // Runnable version of the "lock button" worked example from
-// docs/typescript/ui-components/floating-text-toolbar.md - featuring that
+// docs/typescript/ui-components/context-toolbars.md - featuring that
 // doc's follow-up placement variant (Lock next to Delete, found by `id`,
 // rather than prepended ahead of Color).
 
@@ -101,23 +101,31 @@ control.add(
 
 await ogma.view.set({ x: 0, y: 0, zoom: 1 }, { duration: 0 });
 
-const toolbar = new TextAnnotationToolbar({
+// Lock goes next to Delete, found by `id`. Same transform for plain text
+// and sticky notes; boxes and arrows keep their default pills.
+const withLock = (
+  defaultItems: ToolbarItem[],
+  ctx: ToolbarCellContext
+): ToolbarItem[] => {
+  const lockItem: ToolbarItem = {
+    kind: "custom",
+    id: "lock",
+    build: () => new LockCell(ctx)
+  };
+  const deleteIndex = defaultItems.findIndex((i) => i.id === "delete");
+  return [
+    ...defaultItems.slice(0, deleteIndex), // …showAuthor, plus the separator right before Delete
+    lockItem,
+    { kind: "separator" },
+    ...defaultItems.slice(deleteIndex) // Delete itself
+  ];
+};
+
+const toolbar = new ContextToolbars({
   control,
   hideWhenNotEditable: false,
-  items: (defaultItems, ctx) => {
-    const lockItem: ToolbarItem = {
-      kind: "custom",
-      id: "lock",
-      build: () => new LockCell(ctx)
-    };
-    const deleteIndex = defaultItems.findIndex((i) => i.id === "delete");
-    return [
-      ...defaultItems.slice(0, deleteIndex), // …showAuthor, plus the separator right before Delete
-      lockItem,
-      { kind: "separator" },
-      ...defaultItems.slice(deleteIndex) // Delete itself
-    ];
-  }
+  text: { items: withLock },
+  stickyNote: { items: withLock }
 });
 
 Object.assign(window, { ogma, control, toolbar, locked });

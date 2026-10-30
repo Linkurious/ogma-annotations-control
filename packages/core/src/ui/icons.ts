@@ -12,6 +12,7 @@
 
 export type IconName =
   | "chevron-down"
+  | "plus"
   | "x"
   | "arrow-left"
   | "arrow-right"
@@ -42,6 +43,7 @@ export type IconName =
 /** Inner SVG markup for each icon (paths only; no <svg> wrapper). */
 export const ICON_PATHS: Record<IconName, string> = {
   "chevron-down": '<path d="m6 9 6 6 6-6"/>',
+  plus: '<path d="M5 12h14"/><path d="M12 5v14"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   "arrow-left": '<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
   "arrow-right": '<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',

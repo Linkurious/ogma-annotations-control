@@ -10,7 +10,7 @@ import { svgIcon } from "../../icons";
  * implementation rather than fighting that CSS.
  *
  * Open/close state is just the `open` class on `element`. Outside-click
- * closing is handled once, centrally, by `AnnotationStyleToolbar`; closing
+ * closing is handled once, centrally, by `ContextToolbar`; closing
  * a dropdown when a *sibling* dropdown opens (mutual exclusivity within one
  * pill) is handled here, at open-time, since that's local to this trigger's
  * own click and doesn't need the host toolbar involved.
@@ -27,11 +27,50 @@ export interface ToolbarDropdown {
   /** The popover panel - append option elements into this. */
   panel: HTMLElement;
   close(): void;
+  /** Re-fits the open panel inside the bounds - call after changing its
+   * size while open (e.g. expanding an inline color picker). */
+  reposition(): void;
 }
+
+/** Gap between trigger and panel - matches `top: calc(100% + 8px)` in
+ * `styles.css`. */
+const PANEL_GAP = 8;
+
+/**
+ * Keeps an open `panel` inside `bounds`: flips it above the trigger when it
+ * overflows below and fits above, and shifts it sideways (via
+ * `--oa-popover-shift`) to remove horizontal overflow.
+ * ponytail: no max-height/scroll when it fits neither above nor below -
+ * add if very tall panels in very short canvases show up.
+ */
+export function fitPopover(
+  trigger: HTMLElement,
+  panel: HTMLElement,
+  bounds: DOMRect
+): void {
+  panel.classList.remove("is-up");
+  panel.style.setProperty("--oa-popover-shift", "0px");
+
+  const rect = panel.getBoundingClientRect();
+  const fitsBelow = rect.bottom <= bounds.bottom;
+  const fitsAbove =
+    trigger.getBoundingClientRect().top - PANEL_GAP - rect.height >= bounds.top;
+  if (!fitsBelow && fitsAbove) panel.classList.add("is-up");
+
+  let shift = 0;
+  if (rect.left < bounds.left) shift = bounds.left - rect.left;
+  else if (rect.right > bounds.right) shift = bounds.right - rect.right;
+  panel.style.setProperty("--oa-popover-shift", `${shift}px`);
+}
+
+const viewportBounds = () =>
+  new DOMRect(0, 0, window.innerWidth, window.innerHeight);
 
 export function createToolbarDropdown(
   tooltip: string,
-  initialLabel: string
+  initialLabel: string,
+  /** Area to keep the open panel inside - defaults to the window viewport. */
+  getBounds?: () => DOMRect
 ): ToolbarDropdown {
   const element = document.createElement("div");
   element.className = "oa-toolbar-dropdown";
@@ -70,6 +109,11 @@ export function createToolbarDropdown(
     setExpanded(false);
   };
 
+  const reposition = () => {
+    if (!element.classList.contains("open")) return;
+    fitPopover(trigger, panel, getBounds?.() ?? viewportBounds());
+  };
+
   trigger.addEventListener("click", (e) => {
     e.stopPropagation();
     const willOpen = !element.classList.contains("open");
@@ -90,6 +134,7 @@ export function createToolbarDropdown(
       });
     element.classList.toggle("open", willOpen);
     setExpanded(willOpen);
+    reposition();
   });
 
   element.appendChild(trigger);
@@ -99,6 +144,7 @@ export function createToolbarDropdown(
     element,
     panel,
     close,
+    reposition,
     setLabel: (text: string) => {
       label.textContent = text;
       trigger.setAttribute("aria-label", `${tooltip}: ${text || initialLabel}`);

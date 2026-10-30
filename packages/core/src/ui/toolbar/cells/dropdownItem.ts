@@ -1,20 +1,26 @@
 import type { Text } from "../../../types";
 import { createToolbarDropdown, type ToolbarDropdown } from "./dropdown";
-import type { ToolbarCell, ToolbarCellContext } from "./contract";
+import type {
+  ToolbarAnnotation,
+  ToolbarCell,
+  ToolbarCellContext
+} from "./contract";
 import type { ToolbarDropdownItem } from "./types";
 
 /** Renders a `ToolbarDropdownItem` - the generic cell behind Font family
  * and Font size (anything that's "pick one of a list"). */
-export class DropdownItemCell implements ToolbarCell {
+export class DropdownItemCell<
+  A extends ToolbarAnnotation = Text
+> implements ToolbarCell<A> {
   public readonly element: HTMLElement;
   private dropdown: ToolbarDropdown;
   private optionElements: HTMLButtonElement[] = [];
 
   constructor(
-    private ctx: ToolbarCellContext,
-    private item: ToolbarDropdownItem
+    private ctx: ToolbarCellContext<A>,
+    private item: ToolbarDropdownItem<A>
   ) {
-    this.dropdown = createToolbarDropdown(item.title, "");
+    this.dropdown = createToolbarDropdown(item.title, "", ctx.getBounds);
     this.element = this.dropdown.element;
 
     item.options.forEach((option) => {
@@ -35,7 +41,7 @@ export class DropdownItemCell implements ToolbarCell {
     });
   }
 
-  public update(annotation: Text): void {
+  public update(annotation: A): void {
     const value = this.item.getValue(annotation);
     const option = this.item.options.find((o) => o.value === value);
     const label = this.item.getLabel

@@ -1,13 +1,20 @@
-import { defaultTextStyle } from "../../types";
-import { getEffectiveFontSize } from "../../utils/utils";
 import {
-  AnnotationStyleToolbar,
-  type AnnotationStyleToolbarOptions
-} from "./AnnotationStyle";
-import { ColorCell, type ColorCellOptions } from "./cells/color";
-import type { ToolbarCellContext } from "./cells/contract";
+  defaultTextStyle,
+  isStickyNote,
+  isText,
+  type Annotation,
+  type Text
+} from "../../types";
+import { getEffectiveFontSize } from "../../utils/utils";
 import type { ToolbarDropdownOption, ToolbarItem } from "./cells/types";
-import { STICKY_SWATCHES, type Swatch } from "./swatches";
+import {
+  colorItem,
+  ContextToolbar,
+  deleteItem,
+  outlineItem,
+  type FillToolbarOptions,
+  type StrokeToolbarOptions
+} from "./ContextToolbar";
 
 /** Font options offered by the Font-family cell. Real font names need the
  * actual webfont loaded by the host page to render as shown (e.g. the demo
@@ -38,56 +45,37 @@ export const DEFAULT_TOOLBAR_FONTS: ToolbarDropdownOption[] = [
  * `AnnotationPanel`'s font-size slider (8-72). */
 export const DEFAULT_TOOLBAR_FONT_SIZES = [12, 14, 16, 18, 24, 32, 48, 64];
 
-export interface TextStyleToolbarOptions extends AnnotationStyleToolbarOptions {
+export interface TextContextToolbarOptions
+  extends FillToolbarOptions<Text>, StrokeToolbarOptions<Text> {
   /** Font-family cell options - defaults to `DEFAULT_TOOLBAR_FONTS`. */
   fonts?: ToolbarDropdownOption[];
   /** Font-size cell presets - defaults to `DEFAULT_TOOLBAR_FONT_SIZES`. */
   fontSizes?: number[];
-  /** Color cell's swatch-grid palette - defaults to `STICKY_SWATCHES`. */
-  swatches?: Swatch[];
-  /** Bring your own color picker: called instead of opening the built-in
-   * `vanilla-colorful` popover when the color cell's "More colors…" is
-   * clicked. See `ColorCellOptions.onMoreColors` for the full contract. */
-  onMoreColors?: ColorCellOptions["onMoreColors"];
-  /**
-   * Full control over the pill's contents, beyond `fonts`/`fontSizes`/
-   * `swatches`/`onMoreColors`: called with the built-in item list (color,
-   * font, font size, bold, show-author, delete - each with a stable `id`,
-   * see `ToolbarButtonItem.id`) and returns what actually renders. Add,
-   * remove, reorder or replace freely -
-   * `defaultItems.filter((i) => i.id !== "delete")` drops Delete,
-   * `[{ kind: "custom", build: () => new MyCell(ctx) }, ...defaultItems]`
-   * prepends a cell - same power as subclassing and overriding
-   * `getItems()`, as a plain option instead. Defaults to the identity
-   * function (`defaultItems` unchanged).
-   */
-  items?: (
-    defaultItems: ToolbarItem[],
-    ctx: ToolbarCellContext
-  ) => ToolbarItem[];
 }
 
-/** Floating style pill for a Text annotation (plain text box or sticky
- * note): Color, Font family, Font size, Bold, Show author, Delete - see the
- * Figma "Sticky Note Toolbar" export (alignment cell dropped for v1).
- * `StickyNoteStyleToolbar` extends this with no items of its own for now.
- *
- * The built-in items are declarative `ToolbarItem`s (see `cells/types.ts`),
- * built from `this.options` - override `fonts`/`fontSizes`/`swatches`/
- * `onMoreColors` at construction to reconfigure them without subclassing. */
-export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOptions> {
-  protected getItems(ctx: ToolbarCellContext): ToolbarItem[] {
-    const fonts = this.options.fonts ?? DEFAULT_TOOLBAR_FONTS;
-    const fontSizes = this.options.fontSizes ?? DEFAULT_TOOLBAR_FONT_SIZES;
-    const swatches = this.options.swatches ?? STICKY_SWATCHES;
-    const onMoreColors = this.options.onMoreColors;
+/** Floating style toolbar for plain Text annotations (not sticky notes -
+ * see `StickyNoteContextToolbar`): Color, Font family, Font size, Bold,
+ * Outline, Show author, Delete. */
+export class TextContextToolbar extends ContextToolbar<
+  Text,
+  TextContextToolbarOptions
+> {
+  protected matches(annotation: Annotation): annotation is Text {
+    return isText(annotation) && !isStickyNote(annotation);
+  }
 
-    const defaultItems: ToolbarItem[] = [
-      {
-        kind: "custom",
-        id: "color",
-        build: (c) => new ColorCell(c, { swatches, onMoreColors })
-      },
+  protected label(): string {
+    return "Text style toolbar";
+  }
+
+  protected defaultItems(): ToolbarItem<Text>[] {
+    const {
+      fonts = DEFAULT_TOOLBAR_FONTS,
+      fontSizes = DEFAULT_TOOLBAR_FONT_SIZES
+    } = this.options;
+
+    return [
+      colorItem(this.options, defaultTextStyle),
       { kind: "separator" },
       {
         kind: "dropdown",
@@ -132,6 +120,8 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
           c.updateStyle({ fontWeight: isBold ? "normal" : "bold" });
         }
       },
+      { kind: "separator", id: "outline-separator" },
+      outlineItem(this.options, defaultTextStyle),
       { kind: "separator" },
       {
         kind: "button",
@@ -149,16 +139,7 @@ export class TextStyleToolbar extends AnnotationStyleToolbar<TextStyleToolbarOpt
         }
       },
       { kind: "separator" },
-      {
-        kind: "button",
-        id: "delete",
-        title: "Delete",
-        icon: "trash",
-        danger: true,
-        action: (c) => c.deleteAnnotation()
-      }
+      deleteItem()
     ];
-
-    return this.options.items?.(defaultItems, ctx) ?? defaultItems;
   }
 }

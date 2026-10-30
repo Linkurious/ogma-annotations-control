@@ -9,8 +9,7 @@
  * `"text"` since they're different buttons to create), this one is about
  * which *already-selected annotation's data type* to react to - a sticky
  * note is still just `"text"` here, same as any other Text annotation,
- * since the docked panel (and, for Text specifically, the floating
- * `TextAnnotationToolbar`) don't have a separate UI for it.
+ * since the docked panel doesn't have a separate UI for it.
  */
 import {
   isArrow,

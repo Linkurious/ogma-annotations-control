@@ -1,16 +1,22 @@
 import type { Text } from "../../../types";
 import { svgIcon } from "../../icons";
-import type { ToolbarCell, ToolbarCellContext } from "./contract";
+import type {
+  ToolbarAnnotation,
+  ToolbarCell,
+  ToolbarCellContext
+} from "./contract";
 import type { ToolbarButtonItem } from "./types";
 
 /** Renders a `ToolbarButtonItem` - the generic cell behind Bold, Delete,
  * and the author-visibility toggle (any simple action/toggle button). */
-export class ButtonItemCell implements ToolbarCell {
+export class ButtonItemCell<
+  A extends ToolbarAnnotation = Text
+> implements ToolbarCell<A> {
   public readonly element: HTMLButtonElement;
 
   constructor(
-    private ctx: ToolbarCellContext,
-    private item: ToolbarButtonItem
+    private ctx: ToolbarCellContext<A>,
+    private item: ToolbarButtonItem<A>
   ) {
     const element = (this.element = document.createElement("button"));
     element.type = "button";
@@ -27,7 +33,7 @@ export class ButtonItemCell implements ToolbarCell {
     this.item.action(this.ctx);
   };
 
-  public update(annotation: Text): void {
+  public update(annotation: A): void {
     const title = this.item.getTitle?.(annotation) ?? this.item.title;
     const element = this.element;
     element.dataset.tooltip = title;

@@ -16,18 +16,51 @@ export type {
   DeleteMode
 } from "./toolbar/Annotation";
 
-export { TextAnnotationToolbar } from "./toolbar/FloatingText";
-export type { TextAnnotationToolbarOptions } from "./toolbar/FloatingText";
-export { AnnotationStyleToolbar } from "./toolbar/AnnotationStyle";
-export type { AnnotationStyleToolbarOptions } from "./toolbar/AnnotationStyle";
 export {
-  TextStyleToolbar,
+  ContextToolbars,
+  TextAnnotationToolbar
+} from "./toolbar/ContextToolbars";
+export type {
+  ContextToolbarsOptions,
+  TextAnnotationToolbarOptions
+} from "./toolbar/ContextToolbars";
+export {
+  ContextToolbar,
+  deleteItem,
+  colorItem,
+  outlineItem
+} from "./toolbar/ContextToolbar";
+export type {
+  ContextToolbarOptions,
+  FillToolbarOptions,
+  StrokeToolbarOptions
+} from "./toolbar/ContextToolbar";
+export {
+  TextContextToolbar,
   DEFAULT_TOOLBAR_FONTS,
   DEFAULT_TOOLBAR_FONT_SIZES
-} from "./toolbar/TextStyle";
-export type { TextStyleToolbarOptions } from "./toolbar/TextStyle";
-export { StickyNoteStyleToolbar } from "./toolbar/StickyNoteStyle";
-export { STICKY_SWATCHES } from "./toolbar/swatches";
+} from "./toolbar/TextContextToolbar";
+export type { TextContextToolbarOptions } from "./toolbar/TextContextToolbar";
+export { StickyNoteContextToolbar } from "./toolbar/StickyNoteContextToolbar";
+export type { StickyNoteContextToolbarOptions } from "./toolbar/StickyNoteContextToolbar";
+export { BoxContextToolbar } from "./toolbar/BoxContextToolbar";
+export type { BoxContextToolbarOptions } from "./toolbar/BoxContextToolbar";
+export { PolygonContextToolbar } from "./toolbar/PolygonContextToolbar";
+export type { PolygonContextToolbarOptions } from "./toolbar/PolygonContextToolbar";
+export { ArrowContextToolbar } from "./toolbar/ArrowContextToolbar";
+export type { ArrowContextToolbarOptions } from "./toolbar/ArrowContextToolbar";
+// Deprecated pre-`ContextToolbar` names.
+/** @deprecated Use `ContextToolbar`. */
+export { ContextToolbar as AnnotationStyleToolbar } from "./toolbar/ContextToolbar";
+/** @deprecated Use `ContextToolbarOptions`. */
+export type { ContextToolbarOptions as AnnotationStyleToolbarOptions } from "./toolbar/ContextToolbar";
+/** @deprecated Use `TextContextToolbar`. */
+export { TextContextToolbar as TextStyleToolbar } from "./toolbar/TextContextToolbar";
+/** @deprecated Use `TextContextToolbarOptions`. */
+export type { TextContextToolbarOptions as TextStyleToolbarOptions } from "./toolbar/TextContextToolbar";
+/** @deprecated Use `StickyNoteContextToolbar`. */
+export { StickyNoteContextToolbar as StickyNoteStyleToolbar } from "./toolbar/StickyNoteContextToolbar";
+export { STICKY_SWATCHES, STROKE_SWATCHES } from "./toolbar/swatches";
 export type { Swatch } from "./toolbar/swatches";
 export type { ToolbarCell, ToolbarCellContext } from "./toolbar/cells/contract";
 export type {
@@ -41,7 +74,26 @@ export type {
 export { ButtonItemCell } from "./toolbar/cells/buttonItem";
 export { DropdownItemCell } from "./toolbar/cells/dropdownItem";
 export { ColorCell } from "./toolbar/cells/color";
-export type { ColorCellOptions } from "./toolbar/cells/color";
+export type { ColorCellOptions, FillAnnotation } from "./toolbar/cells/color";
+export {
+  SwatchPicker,
+  createColorHistory,
+  colorHistoryFor,
+  MAX_CUSTOM_SWATCHES
+} from "./toolbar/cells/swatchPicker";
+export type {
+  ColorHistory,
+  SwatchPickerOptions
+} from "./toolbar/cells/swatchPicker";
+export {
+  StrokeCell,
+  STROKE_WIDTH_THIN,
+  STROKE_WIDTH_THICK
+} from "./toolbar/cells/stroke";
+export type {
+  StrokeCellOptions,
+  StrokeAnnotation
+} from "./toolbar/cells/stroke";
 
 export * from "./config";
 export * from "./color";
