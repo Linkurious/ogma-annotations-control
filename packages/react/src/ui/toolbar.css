@@ -82,7 +82,7 @@
 
 /* Tooltips: no rules here - `.add-menu`/`.view-controls [data-tooltip]` are
    styled by the shared block in core's `ui/styles.css` (`@import`ed above),
-   the same one `AnnotationToolbar`/`TextAnnotationToolbar` use, so every
+   the same one `AnnotationToolbar`/`ContextToolbars` use, so every
    toolbar in both packages looks and behaves identically instead of each
    carrying its own near-duplicate (and previously, briefly, conflicting)
    copy. `[tooltip-position="left"/"right"]` was dead CSS - no component in

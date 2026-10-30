@@ -19,7 +19,7 @@ export { Icon } from "./Icon";
 export type { IconProps } from "./Icon";
 
 // AnnotationPanelController, useAnnotationPanel, and
-// TextAnnotationToolbarController live in ./controllers now (dropped the
+// ContextToolbarsController live in ./controllers now (dropped the
 // redundant "Controller" suffix from their file names since the directory
 // name already says so).
 export * from "./controllers";

@@ -169,8 +169,8 @@ export default defineConfig({
                   link: "/typescript/ui-components/toolbar"
                 },
                 {
-                  text: "Floating Text Toolbar",
-                  link: "/typescript/ui-components/floating-text-toolbar"
+                  text: "Context Toolbars",
+                  link: "/typescript/ui-components/context-toolbars"
                 }
               ]
             },

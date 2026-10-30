@@ -66,9 +66,8 @@ export interface AnnotationPanelOptions {
   /**
    * Which selected-annotation types the panel responds to. Defaults to all
    * five (`["arrow", "text", "box", "comment", "polygon"]`). Exclude
-   * `"text"` once you've adopted `TextAnnotationToolbar` for Text
-   * annotations and sticky notes, so the two don't show at once for the
-   * same selection.
+   * the types `ContextToolbars` covers (text, box, arrow) once you've
+   * adopted it, so the two don't show at once for the same selection.
    */
   enabledTypes?: PanelAnnotationType[];
   /**

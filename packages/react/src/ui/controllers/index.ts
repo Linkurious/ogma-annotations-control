@@ -9,5 +9,11 @@ export {
   useAnnotationPanel
 } from "./AnnotationPanel";
 export type { AnnotationPanelControllerProps } from "./AnnotationPanel";
-export { TextAnnotationToolbarController } from "./TextAnnotationToolbar";
-export type { TextAnnotationToolbarControllerProps } from "./TextAnnotationToolbar";
+export {
+  ContextToolbarsController,
+  TextAnnotationToolbarController
+} from "./ContextToolbars";
+export type {
+  ContextToolbarsControllerProps,
+  TextAnnotationToolbarControllerProps
+} from "./ContextToolbars";

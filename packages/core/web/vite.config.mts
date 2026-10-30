@@ -19,6 +19,20 @@ const htmlEntries = Object.fromEntries(
 export default defineConfig({
   base: "./",
   root: resolve(__dirname),
+  // Demos import `@linkurious/ogma-annotations/ui`, which otherwise resolves
+  // to the built `dist/` (stale until `npm run build`). Point it at source.
+  resolve: {
+    alias: [
+      {
+        find: /^@linkurious\/ogma-annotations\/ui\/styles\.css$/,
+        replacement: resolve(__dirname, "..", "src", "ui", "styles.css")
+      },
+      {
+        find: /^@linkurious\/ogma-annotations\/ui$/,
+        replacement: resolve(__dirname, "..", "src", "ui", "index.ts")
+      }
+    ]
+  },
   // Bind all interfaces so Vite detects a port already held on 0.0.0.0
   // (localhost binds succeed on macOS even when 5173 is taken) and falls forward
   server: {

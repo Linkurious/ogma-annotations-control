@@ -18,9 +18,9 @@ import { AnnotationPanel } from "../AnnotationPanel";
  * {@link AnnotationPanelController} component which wires it up for you.
  *
  * `enabledTypes` mirrors the vanilla `AnnotationPanel`'s option of the same
- * name (defaults to all five kinds) - exclude `"text"` once you've adopted
- * `TextAnnotationToolbarController` for Text annotations and sticky notes,
- * so the two don't show at once for the same selection.
+ * name (defaults to all five kinds) - exclude the types
+ * `ContextToolbarsController` covers (text, box, arrow) once you've adopted
+ * it, so the two don't show at once for the same selection.
  */
 export function useAnnotationPanel(
   enabledTypes: PanelAnnotationType[] = ALL_PANEL_ANNOTATION_TYPES
@@ -71,9 +71,9 @@ export interface AnnotationPanelControllerProps {
   orientation?: PanelOrientation;
   /**
    * Which selected-annotation types the panel responds to. Defaults to all
-   * five. Exclude `"text"` once you've adopted
-   * `TextAnnotationToolbarController` for Text annotations and sticky
-   * notes.
+   * five. Exclude the types
+   * `ContextToolbarsController` covers (text, box, arrow) once you've
+   * adopted it.
    */
   enabledTypes?: PanelAnnotationType[];
 }

@@ -4,13 +4,31 @@ import { EdgeStyle, NodeStyle, Ogma } from "@linkurious/ogma-react";
 import React from "react";
 import {
   AnnotationPanelController,
-  TextAnnotationToolbarController
+  ContextToolbarsController,
+  type ContextToolbarsControllerProps
 } from "@linkurious/ogma-annotations-react/ui";
 import { Controls } from "./components/Controls";
 import { AnnotationsContextProvider } from "@linkurious/ogma-annotations-react";
 import pkg from "../../package.json";
 
 import "./App.css";
+
+// Per-type toolbar customization: sticky notes ("quick notes") drop the
+// Show/Hide author toggle, every other type keeps its defaults. Built-in
+// items have stable ids ("color", "font", "fontSize", "bold", "showAuthor",
+// "delete", ...), so filter by id rather than by position. Defined outside
+// the component: the controller reads its options once, on mount.
+const contextToolbars: ContextToolbarsControllerProps = {
+  stickyNote: {
+    items: (defaultItems) =>
+      defaultItems.filter(
+        (item, i, all) =>
+          item.id !== "showAuthor" &&
+          // and the divider that preceded it
+          !(item.kind === "separator" && all[i + 1]?.id === "showAuthor")
+      )
+  }
+};
 
 async function loadGraph() {
   const graph = await OgmaLib.parse.jsonFromUrl("./graph.json");
@@ -85,13 +103,11 @@ export default function App() {
               padding: 12
             }}
           />
-          {/* Text/sticky notes are handled by TextAnnotationToolbarController
-              below - excluding "text" here keeps the docked panel from also
-              popping up for the same selection. */}
-          <AnnotationPanelController
-            enabledTypes={["arrow", "box", "comment", "polygon"]}
-          />
-          <TextAnnotationToolbarController />
+          {/* Text, sticky notes, boxes, polygons and arrows are handled by
+              ContextToolbarsController below - excluding them here keeps the
+              docked panel from also popping up for the same selection. */}
+          <AnnotationPanelController enabledTypes={["comment"]} />
+          <ContextToolbarsController {...contextToolbars} />
         </AnnotationsContextProvider>
       </Ogma>
     </div>
