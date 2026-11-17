@@ -786,6 +786,12 @@ input:checked + .toggle-slider:before {
   background: var(--oa-control-bg, #eee);
 }
 
+/* The current value (Font size, Font family) - `aria-selected` is kept in
+   sync by DropdownItemCell.update(). */
+.oa-toolbar-dropdown-option[aria-selected="true"] {
+  font-weight: 700;
+}
+
 /* Color cell */
 .oa-toolbar-swatch {
   --oa-swatch-fill: #fff;
