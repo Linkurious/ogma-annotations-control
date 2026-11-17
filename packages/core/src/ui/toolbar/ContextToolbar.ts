@@ -1,5 +1,6 @@
 import type { Ogma, Overlay } from "@linkurious/ogma";
 import type { Control } from "../../Control";
+import { LAYERS } from "../../constants";
 import { isText, type Annotation, type Id } from "../../types";
 import { getBoxCenter, getBoxSize } from "../../utils/utils";
 import { ButtonItemCell } from "./cells/buttonItem";
@@ -320,11 +321,18 @@ class ToolbarPill<A extends ToolbarAnnotation> {
     // screen size regardless of zoom (same reasoning TextArea documents for
     // fixedSize text). Position stays graph-space either way; Ogma keeps it
     // synced through pan/zoom on its own, same as every other Overlay.
-    this.overlay = this.ogma.layers.addOverlay({
-      element: this.anchor,
-      position: this.getAnchor(annotation),
-      scaled: false
-    });
+    // An explicit layer index keeps the overlay out of Ogma 6.1's shared,
+    // transformed `.ogma-overlay-group` batch wrapper: that wrapper makes a
+    // stacking context, which would trap this toolbar's z-index below the
+    // Handles/Shapes layers and leave its dropdowns unclickable.
+    this.overlay = this.ogma.layers.addOverlay(
+      {
+        element: this.anchor,
+        position: this.getAnchor(annotation),
+        scaled: false
+      },
+      LAYERS.TOOLBAR
+    );
     this.placePill(annotation);
 
     this.ogma.events.on("viewChanged", this.onViewChanged);
