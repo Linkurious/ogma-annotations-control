@@ -117,6 +117,46 @@ describe("Comments", () => {
     expect((await getCommentResult(session)).hasComment).toBe(true);
   }, 10000);
 
+  it("selects an existing comment instead of commenting on the node behind it", async () => {
+    const pos = await session.page.evaluate(() => {
+      editor.enableCommentDrawing({
+        offsetX: 50,
+        offsetY: -50,
+        ...demoStyles.comment
+      });
+      return screenToPage({ x: 0, y: -50 });
+    });
+    await drawComment(session, pos, "note");
+
+    // Put a node right under the comment, then deselect it
+    const commentPos = await session.page.evaluate(async () => {
+      const comment = editor
+        .getAnnotations()
+        .features.find((f) => f.properties.type === "comment")!;
+      const [x, y] = (comment.geometry as Point).coordinates;
+      await ogma.addNode({ id: "under", attributes: { x, y } });
+      editor.unselect();
+      return { id: comment.id, ...screenToPage({ x, y }) };
+    });
+
+    // Comment mode again, click where comment and node overlap
+    await session.page.evaluate(() => {
+      editor.enableCommentDrawing();
+    });
+    await session.page.mouse.move(commentPos.x, commentPos.y);
+    await session.page.mouse.down();
+    await session.page.mouse.up();
+
+    const result = await session.page.evaluate(() => ({
+      comments: editor
+        .getAnnotations()
+        .features.filter((f) => f.properties.type === "comment").length,
+      selected: editor.getSelectedAnnotations().features.map((f) => f.id)
+    }));
+    expect(result.comments).toBe(1);
+    expect(result.selected).toEqual([commentPos.id]);
+  }, 15000);
+
   it("discards an empty comment (and its arrow) when the user clicks away", async () => {
     const pos = await session.page.evaluate(() => {
       editor.enableCommentDrawing({
