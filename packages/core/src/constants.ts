@@ -20,6 +20,7 @@ export const EVT_CANCEL_DRAWING = "cancelDrawing";
 export const EVT_COMPLETE_DRAWING = "completeDrawing";
 export const EVT_UPDATE = "update";
 export const EVT_LINK = "link";
+export const EVT_UNLINK = "unlink";
 export const EVT_HISTORY = "history";
 export const EVT_COMMENT_DENIED = "commentDenied";
 export const EVT_COMMENT_HOVER = "commentHover";
