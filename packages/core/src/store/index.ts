@@ -6,12 +6,14 @@ import { createStore as createVanillaStore } from "zustand/vanilla";
 import { DEFAULT_EDIT_ICON, DEFAULT_SEND_ICON } from "../constants";
 import {
   getCascadeDeleteIds,
+  shouldDeleteOnTargetRemoved,
   getCommentLeftOrphanedBy
 } from "../handlers/comment/helpers";
 import {
   Annotation,
   Comment,
   CommentTarget,
+  TargetRemovedAction,
   AuthorLineStyle,
   Bounds,
   ControllerOptions,
@@ -129,6 +131,7 @@ export interface AnnotationState {
     canComment: (target: CommentTarget) => boolean;
     commentDeniedCursor: boolean;
     canDetach: (comment: Comment) => boolean;
+    onTargetRemoved?: (comment: Comment) => TargetRemovedAction;
   };
 
   setOptions: (options: Partial<AnnotationState["options"]>) => void;
@@ -228,7 +231,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
             isVisible: initialOptions?.isVisible ?? (() => true),
             canComment: initialOptions?.canComment ?? (() => true),
             commentDeniedCursor: initialOptions?.commentDeniedCursor ?? true,
-            canDetach: initialOptions?.canDetach ?? (() => false)
+            canDetach: initialOptions?.canDetach ?? (() => false),
+            onTargetRemoved: initialOptions?.onTargetRemoved
           },
 
           setOptions: (newOptions) =>
@@ -268,10 +272,8 @@ export const createStore = (initialOptions?: Partial<ControllerOptions>) => {
               }
 
               // Deleting a comment (or text) also deletes all its arrows.
-              const toDelete = getCascadeDeleteIds(
-                features,
-                id,
-                state.options.canDetach
+              const toDelete = getCascadeDeleteIds(features, id, (comment) =>
+                shouldDeleteOnTargetRemoved(state.options, comment)
               );
 
               // All or nothing - refuse the whole delete if the cascade reaches a non-editable annotation.

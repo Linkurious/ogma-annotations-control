@@ -53,7 +53,8 @@ export class Links {
     ogma: Ogma,
     snapping: Snapping,
     store: Store,
-    onLinkCreated?: (arrow: Arrow, link: Link) => void
+    onLinkCreated?: (arrow: Arrow, link: Link) => void,
+    onUnlink?: (arrow: Arrow, link: Link) => void
   ) {
     this.store = store;
     this.snapping = snapping;
@@ -64,7 +65,8 @@ export class Links {
       store,
       this.registry,
       this.geometry,
-      this.updatedItems
+      this.updatedItems,
+      onUnlink
     );
 
     this.store.subscribe((state) => state.features, this.onAddArrow);

@@ -141,15 +141,33 @@ export type ControllerOptions = {
    * Called to decide whether a comment may be detached from the node, edge
    * or annotation it points at. Defaults to always `false`. When it returns
    * `false`, dragging the connector's tip or body away from its target is
-   * refused, and deleting the target (node, edge, text, box, polygon)
-   * deletes the comment and its connector. When it returns `true`, the
-   * connector can be dragged off, and removing the target leaves the comment
-   * in place with a free connector end.
+   * refused. When it returns `true`, the connector can be dragged off.
+   *
+   * Unless `onTargetRemoved` is set, it also decides what happens when the
+   * target is removed: `false` deletes the comment and its connector, `true`
+   * keeps the comment with a free connector end.
    *
    * Keep this cheap and synchronous. Same reactivity note as `isEditable`.
    */
   canDetach: (comment: Comment) => boolean;
+
+  /**
+   * Called when the node, edge or annotation a comment points at is removed,
+   * to decide what happens to the comment: `'delete'` removes it with its
+   * connector, `'detach'` keeps it and frees the connector end (an `unlink`
+   * event is emitted). Unlike `canDetach`, it does not affect dragging, so
+   * a comment can be undraggable yet survive its target being removed
+   * (e.g. comments on groups that get recreated).
+   *
+   * Defaults to `canDetach(comment) ? 'detach' : 'delete'`.
+   *
+   * Keep this cheap and synchronous. Same reactivity note as `isEditable`.
+   */
+  onTargetRemoved?: (comment: Comment) => TargetRemovedAction;
 };
+
+/** What happens to a comment when its target is removed. */
+export type TargetRemovedAction = "delete" | "detach";
 
 /**
  * What a comment is being attached to: a graph node, a graph edge, another
