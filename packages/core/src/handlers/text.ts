@@ -303,6 +303,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   ) {
     const style = original.properties.style;
     if (!style?.scaleFontOnResize) return style;
+    const state = this.store.getState();
     if (width <= 0 || height <= 0 || newWidth <= 0 || newHeight <= 0)
       return style;
     const incremental = Math.sqrt((newWidth / width) * (newHeight / height));
@@ -318,8 +319,8 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     if (incremental < 1) {
       const text = original as Text;
       if (
-        isTextTruncated(text, width, height, current) ||
-        !isTextTruncated(text, newWidth, newHeight, current)
+        isTextTruncated(text, width, height, current, state) ||
+        !isTextTruncated(text, newWidth, newHeight, current, state)
       )
         return style;
       // Largest scale in [MIN, current) that fits (bisection; fits is
@@ -328,7 +329,7 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
       let hi = current;
       for (let i = 0; i < 12; i++) {
         const mid = (lo + hi) / 2;
-        if (isTextTruncated(text, newWidth, newHeight, mid)) hi = mid;
+        if (isTextTruncated(text, newWidth, newHeight, mid, state)) hi = mid;
         else lo = mid;
       }
       return { ...style, fontScale: lo };
@@ -338,19 +339,20 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
     // as far as it still fits (no "…"), up to twice the box's growth rate so
     // it catches up on ticks that were spent revealing text.
     const text = original as Text;
-    if (isTextTruncated(text, newWidth, newHeight, current)) return style;
+    if (isTextTruncated(text, newWidth, newHeight, current, state))
+      return style;
     const target = Math.min(
       MAX_FONT_SCALE,
       current * incremental * incremental
     );
     if (target <= current) return style;
     let fontScale = target;
-    if (isTextTruncated(text, newWidth, newHeight, target)) {
+    if (isTextTruncated(text, newWidth, newHeight, target, state)) {
       let lo = current;
       let hi = target;
       for (let i = 0; i < 12; i++) {
         const mid = (lo + hi) / 2;
-        if (isTextTruncated(text, newWidth, newHeight, mid)) hi = mid;
+        if (isTextTruncated(text, newWidth, newHeight, mid, state)) hi = mid;
         else lo = mid;
       }
       fontScale = lo;

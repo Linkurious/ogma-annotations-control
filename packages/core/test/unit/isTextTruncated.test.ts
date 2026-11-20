@@ -35,4 +35,18 @@ describe("isTextTruncated", () => {
   it("always allows at least one line", () => {
     expect(isTextTruncated(note("a"), 300, 1, 1)).toBe(false);
   });
+
+  it("reserves room for the author line, clear of the content", () => {
+    const t = createText(0, 0, 300, 200, "a\nb\nc\nd", {
+      fontSize: 18,
+      padding: 10,
+      showAuthor: true
+    });
+    t.properties.author = "Someone";
+    // 4 lines (86.4) + 2*padding fits in 110 without an author line...
+    expect(isTextTruncated(note("a\nb\nc\nd"), 300, 110, 1)).toBe(false);
+    // ...but the author line (padding + its own line height + gap) does not.
+    expect(isTextTruncated(t, 300, 110, 1)).toBe(true);
+    expect(isTextTruncated(t, 300, 160, 1)).toBe(false);
+  });
 });
