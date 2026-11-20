@@ -208,6 +208,13 @@ function resolveAuthorStyle(
 // below), never to place the author line itself.
 const AUTHOR_GAP = 4;
 
+/** Space kept free below the content block: just `padding` normally, or -
+ * with an author line (`authorSpan` = getAuthorReservedHeight, which already
+ * includes `padding`) - the author line's span plus AUTHOR_GAP above it. */
+function contentBottomReserve(padding: number, authorSpan: number): number {
+  return authorSpan > 0 ? authorSpan + AUTHOR_GAP : padding;
+}
+
 /** Vertical span (graph units, or screen px for `fixedSize` text), measured
  * up from the box's *bottom edge*, that the author line occupies when
  * shown - 0 when `style.showAuthor` is off, there's no author text, or the
@@ -390,6 +397,44 @@ function truncateToOneLine(
   return lines[0].text.trimEnd() + "…";
 }
 
+/** True when `annotation`'s content, wrapped for a `width`x`height` box at
+ * `fontScale`, has more lines than fit (i.e. drawContent would add "…").
+ * Mirrors drawContent's wrap/line-count math (incl. the author line). */
+export function isTextTruncated(
+  annotation: Text,
+  width: number,
+  height: number,
+  fontScale: number | undefined,
+  state?: AnnotationState
+): boolean {
+  const content = annotation.properties.content || "";
+  if (!content) return false;
+  const {
+    fontSize = defaultTextStyle.fontSize,
+    font = defaultTextStyle.font,
+    padding = 0,
+    fontWeight
+  } = annotation.properties.style || {};
+  const size = getEffectiveFontSize(fontSize, fontScale);
+  const lineHeight = size * TEXT_LINE_HEIGHT;
+  const fontString =
+    `${fontWeight === "bold" ? "bold " : ""}${size}px ${font}`.replace(
+      /(px)+/g,
+      "px"
+    );
+  const { measureText } = extractMarkdownLinks(content);
+  const prepared = prepareWithSegments(measureText, fontString, {
+    whiteSpace: "pre-wrap",
+    wordBreak: "normal"
+  });
+  const { lines } = layoutWithLines(prepared, width - padding * 2, lineHeight);
+  const authorSpan = getAuthorReservedHeight(annotation, state);
+  const maxHeight =
+    height - padding - contentBottomReserve(padding, authorSpan);
+  const maxLineCount = Math.max(1, Math.floor(maxHeight / lineHeight));
+  return lines.length > maxLineCount;
+}
+
 /**
  * @function draw
  * @param annotation the annotation to draw
@@ -471,12 +516,17 @@ function drawContent(
   const authorLineHeight = renderAuthorLine
     ? authorFontSize * TEXT_LINE_HEIGHT
     : 0;
-  const authorReserved = renderAuthorLine ? authorLineHeight + AUTHOR_GAP : 0;
 
   // Tiny box + author line can push this to <= 0; maxLineCount's own
   // Math.max(1, ...) floor below still guarantees content gets at least
   // one line, at the cost of overlapping the author line in that edge case.
-  const maxHeight = height - padding - authorReserved;
+  const maxHeight =
+    height -
+    padding -
+    contentBottomReserve(
+      padding,
+      renderAuthorLine ? padding + authorLineHeight : 0
+    );
 
   const content = annotation.properties.content || "";
 

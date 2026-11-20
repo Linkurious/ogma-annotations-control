@@ -11,6 +11,7 @@ import {
   handleDetectionThreshold,
   handleRadius
 } from "../constants";
+import { isTextTruncated } from "../renderer/shapes/text";
 import { Store } from "../store";
 import {
   Box,
@@ -302,13 +303,60 @@ export class TextHandler extends Handler<Text | Comment, Handle> {
   ) {
     const style = original.properties.style;
     if (!style?.scaleFontOnResize) return style;
+    const state = this.store.getState();
     if (width <= 0 || height <= 0 || newWidth <= 0 || newHeight <= 0)
       return style;
     const incremental = Math.sqrt((newWidth / width) * (newHeight / height));
-    const fontScale = Math.min(
+    const current = style.fontScale ?? 1;
+    // Widening only (side-edge drag): keep the font, just let the text
+    // rewrap into the wider box.
+    if (newWidth > width && Math.abs(newHeight - height) < 1e-6) return style;
+    // Shrinking, rule: text that fit keeps fitting. The font stays put while
+    // the text still fits the smaller box, and only shrinks - by just enough
+    // - once it would be cut. Text that was already truncated is left alone
+    // (it just truncates more), so the font never shrinks "for" a box that
+    // was already too small.
+    if (incremental < 1) {
+      const text = original as Text;
+      if (
+        isTextTruncated(text, width, height, current, state) ||
+        !isTextTruncated(text, newWidth, newHeight, current, state)
+      )
+        return style;
+      // Largest scale in [MIN, current) that fits (bisection; fits is
+      // monotonic enough in font size for this).
+      let lo = MIN_FONT_SCALE;
+      let hi = current;
+      for (let i = 0; i < 12; i++) {
+        const mid = (lo + hi) / 2;
+        if (isTextTruncated(text, newWidth, newHeight, mid, state)) hi = mid;
+        else lo = mid;
+      }
+      return { ...style, fontScale: lo };
+    }
+    // Growing: while the text is still cut at the current font, hold it and
+    // let the text reflow into the extra room. Once it fits, grow the font
+    // as far as it still fits (no "…"), up to twice the box's growth rate so
+    // it catches up on ticks that were spent revealing text.
+    const text = original as Text;
+    if (isTextTruncated(text, newWidth, newHeight, current, state))
+      return style;
+    const target = Math.min(
       MAX_FONT_SCALE,
-      Math.max(MIN_FONT_SCALE, (style.fontScale ?? 1) * incremental)
+      current * incremental * incremental
     );
+    if (target <= current) return style;
+    let fontScale = target;
+    if (isTextTruncated(text, newWidth, newHeight, target, state)) {
+      let lo = current;
+      let hi = target;
+      for (let i = 0; i < 12; i++) {
+        const mid = (lo + hi) / 2;
+        if (isTextTruncated(text, newWidth, newHeight, mid, state)) hi = mid;
+        else lo = mid;
+      }
+      fontScale = lo;
+    }
     return { ...style, fontScale };
   }
 
