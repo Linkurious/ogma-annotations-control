@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Sticky toolbar overlay stacking</title>
+    <style>
+      #graph-container {
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+      }
+      .hint {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        z-index: 1;
+        font: 13px/1.4 sans-serif;
+        color: #444;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 8px 12px;
+        max-width: 340px;
+      }
+      .hint code {
+        background: #f3f3f3;
+        padding: 0 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hint">
+      <b id="version"></b><br />
+      Select the sticky note, open the font size / font / color dropdowns and
+      click an option. It should be clickable and render above the note and its
+      handles.<br />
+      Switch Ogma: <a href="?ogma=5">5.3.12</a> |
+      <a href="?ogma=6">6.1.1</a>.<br />
+      Overlay batch wrapper: <b id="batched"></b>
+    </div>
+    <div id="graph-container"></div>
+    <script type="module" src="./sticky-toolbar-overlay.ts"></script>
+  </body>
+</html>

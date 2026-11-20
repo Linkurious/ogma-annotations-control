@@ -33,7 +33,8 @@ export const handleRadius = 3; // pixels
 export const LAYERS = {
   SHAPES: 1,
   EDITOR: 2,
-  HANDLES: 3
+  HANDLES: 3,
+  TOOLBAR: 4
 };
 
 export const SIDE_START = "start" as const;
