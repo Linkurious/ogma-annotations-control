@@ -33,7 +33,8 @@ import {
   createBox,
   createComment,
   createPolygon,
-  createText
+  createText,
+  isComment
 } from "../types";
 import { findPlace } from "../utils/place-finder";
 import { clientToContainerPosition } from "../utils/utils";
@@ -263,6 +264,17 @@ export class Drawing {
         this.pendingDrawingListener = null;
 
         const { x, y } = this.ogma.view.screenToGraphCoordinates(evt);
+
+        // A click on an existing comment selects it, even when a node sits
+        // underneath (snapping would otherwise resolve to the node and start
+        // a new comment on it).
+        const hit = this.interactions.detect(x, y);
+        if (hit && isComment(hit)) {
+          this.stopCommentHover();
+          this.control.select(hit.id);
+          return;
+        }
+
         let offsetX = options.offsetX;
         let offsetY = options.offsetY;
 
