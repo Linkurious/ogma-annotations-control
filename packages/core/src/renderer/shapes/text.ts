@@ -390,6 +390,45 @@ function truncateToOneLine(
   return lines[0].text.trimEnd() + "…";
 }
 
+/** True when `annotation`'s content, wrapped for a `width`x`height` box at
+ * `fontScale`, has more lines than fit (i.e. drawContent would add "…").
+ * Mirrors drawContent's wrap/line-count math.
+ * ponytail: ignores the author-line reserve (only makes it report "fits"
+ * slightly early); share drawContent's maxHeight if that ever matters. */
+export function isTextTruncated(
+  annotation: Text,
+  width: number,
+  height: number,
+  fontScale: number | undefined
+): boolean {
+  const content = annotation.properties.content || "";
+  if (!content) return false;
+  const {
+    fontSize = defaultTextStyle.fontSize,
+    font = defaultTextStyle.font,
+    padding = 0,
+    fontWeight
+  } = annotation.properties.style || {};
+  const size = getEffectiveFontSize(fontSize, fontScale);
+  const lineHeight = size * TEXT_LINE_HEIGHT;
+  const fontString =
+    `${fontWeight === "bold" ? "bold " : ""}${size}px ${font}`.replace(
+      /(px)+/g,
+      "px"
+    );
+  const { measureText } = extractMarkdownLinks(content);
+  const prepared = prepareWithSegments(measureText, fontString, {
+    whiteSpace: "pre-wrap",
+    wordBreak: "normal"
+  });
+  const { lines } = layoutWithLines(prepared, width - padding * 2, lineHeight);
+  const maxLineCount = Math.max(
+    1,
+    Math.floor((height - padding * 2) / lineHeight)
+  );
+  return lines.length > maxLineCount;
+}
+
 /**
  * @function draw
  * @param annotation the annotation to draw
@@ -476,7 +515,8 @@ function drawContent(
   // Tiny box + author line can push this to <= 0; maxLineCount's own
   // Math.max(1, ...) floor below still guarantees content gets at least
   // one line, at the cost of overlapping the author line in that edge case.
-  const maxHeight = height - padding - authorReserved;
+  const maxHeight =
+    height - padding - (renderAuthorLine ? authorReserved : padding);
 
   const content = annotation.properties.content || "";
 

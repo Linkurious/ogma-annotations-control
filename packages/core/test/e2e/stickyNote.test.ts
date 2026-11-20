@@ -344,6 +344,210 @@ describe("Sticky notes", () => {
     expect(secondFontScale).toBeGreaterThan(afterFirstResize.fontScale!);
   }, 15000);
 
+  it("grows to reveal truncated text before scaling the font", async () => {
+    const setup = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.view.locateGraph();
+      createEditor();
+      await ogma.view.setZoom(1);
+      const text = createText(
+        -80,
+        -80,
+        160,
+        160,
+        Array(40).fill("overflowing words").join(" "),
+        { fontSize: 18, scaleFontOnResize: true }
+      );
+      editor.add(text);
+      editor.select(text.id);
+      return {
+        id: text.id,
+        center: screenToPage({ x: 0, y: 0 }),
+        corner: screenToPage({ x: 80, y: 80 })
+      };
+    });
+    await session.page.waitForTimeout(150);
+    const dx = setup.corner.x - setup.center.x;
+    const dy = setup.corner.y - setup.center.y;
+    await session.page.mouse.move(setup.corner.x, setup.corner.y);
+    await session.page.mouse.down();
+    await session.page.mouse.move(
+      setup.corner.x + dx * 0.1,
+      setup.corner.y + dy * 0.1,
+      { steps: 3 }
+    );
+    // ~1.5x: far too small for 40 repetitions to fit at 18px.
+    await session.page.mouse.move(
+      setup.center.x + dx * 1.5,
+      setup.center.y + dy * 1.5,
+      { steps: 10 }
+    );
+    await session.page.mouse.up();
+
+    const after = await session.page.evaluate((id) => {
+      const note = editor
+        .getAnnotations()
+        .features.find((f) => f.id === id) as any;
+      return {
+        width: note?.properties?.width,
+        fontScale: note?.properties?.style?.fontScale
+      };
+    }, setup.id);
+
+    expect(after.width).toBeGreaterThan(160);
+    expect(after.fontScale ?? 1).toBe(1);
+  }, 15000);
+
+  it("on shrink keeps the font until the text would be cut, then shrinks it", async () => {
+    const setup = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.view.locateGraph();
+      createEditor();
+      await ogma.view.setZoom(1);
+      const text = createText(-80, -80, 160, 160, "Hello there, sticky note", {
+        fontSize: 18,
+        scaleFontOnResize: true
+      });
+      editor.add(text);
+      editor.select(text.id);
+      return text.id;
+    });
+    const shrinkTo = async (factor: number) => {
+      await session.page.waitForTimeout(150);
+      const g = await session.page.evaluate((id) => {
+        const n = editor
+          .getAnnotations()
+          .features.find((f) => f.id === id) as any;
+        const [cx, cy] = n.geometry.coordinates;
+        const { width, height } = n.properties;
+        return {
+          center: screenToPage({ x: cx, y: cy }),
+          corner: screenToPage({ x: cx + width / 2, y: cy + height / 2 })
+        };
+      }, setup);
+      const dx = g.corner.x - g.center.x;
+      const dy = g.corner.y - g.center.y;
+      await session.page.mouse.move(g.corner.x, g.corner.y);
+      await session.page.mouse.down();
+      await session.page.mouse.move(
+        g.corner.x - dx * 0.05,
+        g.corner.y - dy * 0.05,
+        {
+          steps: 3
+        }
+      );
+      await session.page.mouse.move(
+        g.center.x + dx * factor,
+        g.center.y + dy * factor,
+        { steps: 10 }
+      );
+      await session.page.mouse.up();
+      return session.page.evaluate((id) => {
+        const n = editor
+          .getAnnotations()
+          .features.find((f) => f.id === id) as any;
+        return n.properties.style.fontScale ?? 1;
+      }, setup);
+    };
+
+    // Still fits: font untouched.
+    expect(await shrinkTo(0.8)).toBe(1);
+    // Now too small for the text: font shrinks.
+    expect(await shrinkTo(-0.3)).toBeLessThan(1);
+  }, 20000);
+
+  it("only rewraps text when widening via a side edge", async () => {
+    const setup = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.view.locateGraph();
+      createEditor();
+      await ogma.view.setZoom(1);
+      const text = createText(-80, -80, 160, 160, "Hello there, sticky note", {
+        fontSize: 18,
+        scaleFontOnResize: true
+      });
+      editor.add(text);
+      editor.select(text.id);
+      return {
+        id: text.id,
+        center: screenToPage({ x: 0, y: 0 }),
+        edge: screenToPage({ x: 80, y: 0 })
+      };
+    });
+    await session.page.waitForTimeout(150);
+    const dx = setup.edge.x - setup.center.x;
+    await session.page.mouse.move(setup.edge.x, setup.edge.y);
+    await session.page.mouse.down();
+    await session.page.mouse.move(setup.edge.x + dx * 0.1, setup.edge.y, {
+      steps: 3
+    });
+    await session.page.mouse.move(setup.center.x + dx * 2, setup.edge.y, {
+      steps: 10
+    });
+    await session.page.mouse.up();
+    const after = await session.page.evaluate((id) => {
+      const n = editor
+        .getAnnotations()
+        .features.find((f) => f.id === id) as any;
+      return { w: n.properties.width, fs: n.properties.style.fontScale ?? 1 };
+    }, setup.id);
+    expect(after.w).toBeGreaterThan(160);
+    expect(after.fs).toBe(1);
+  }, 15000);
+
+  it("after revealing truncated text, keeps scaling the font without truncating", async () => {
+    const setup = await session.page.evaluate(async () => {
+      createOgma({});
+      await ogma.view.locateGraph();
+      createEditor();
+      await ogma.view.setZoom(1);
+      const text = createText(
+        -80,
+        -80,
+        160,
+        160,
+        Array(6).fill("overflowing words").join(" "),
+        { fontSize: 18, scaleFontOnResize: true }
+      );
+      editor.add(text);
+      editor.select(text.id);
+      return {
+        id: text.id,
+        center: screenToPage({ x: 0, y: 0 }),
+        corner: screenToPage({ x: 80, y: 80 })
+      };
+    });
+    await session.page.waitForTimeout(150);
+    const dx = setup.corner.x - setup.center.x;
+    const dy = setup.corner.y - setup.center.y;
+    await session.page.mouse.move(setup.corner.x, setup.corner.y);
+    await session.page.mouse.down();
+    await session.page.mouse.move(
+      setup.corner.x + dx * 0.1,
+      setup.corner.y + dy * 0.1,
+      { steps: 3 }
+    );
+    await session.page.mouse.move(
+      setup.center.x + dx * 3,
+      setup.center.y + dy * 3,
+      { steps: 20 }
+    );
+    await session.page.mouse.up();
+    const after = await session.page.evaluate((id) => {
+      const n = editor
+        .getAnnotations()
+        .features.find((f) => f.id === id) as any;
+      return {
+        fs: n.properties.style.fontScale ?? 1,
+        ellipsis: Array.from(
+          document.querySelectorAll(".annotation-text tspan")
+        ).some((t) => t.textContent?.includes("…"))
+      };
+    }, setup.id);
+    expect(after.fs).toBeGreaterThan(1);
+    expect(after.ellipsis).toBe(false);
+  }, 20000);
+
   it("renders, toggles, truncates, and links the author line", async () => {
     // Placed directly via createText/editor.add (see the resize test above
     // for why - avoids the click/drag placement gesture's auto-edit
