@@ -32,7 +32,14 @@ ogma.addNodes([
 ]);
 const groupNode = {
   id: "g1",
-  attributes: { x: 350, y: 0, radius: 40, color: "#ffd9a0" }
+  attributes: {
+    x: 280,
+    y: 60,
+    radius: 30,
+    color: "#ffd9a0",
+    text: "group g1",
+    innerStroke: { color: "#e08a00", width: 3 }
+  }
 };
 ogma.addNode(groupNode);
 ogma.addEdge({
@@ -103,10 +110,10 @@ function attachComment(
 attachComment("On node n1", 100, -140, { id: "n1", type: "node" }, -200, 0);
 attachComment("On node n2", 200, -140, { id: "n2", type: "node" }, 100, 0);
 attachComment("On edge e1", -50, -160, { id: "e1", type: "edge" }, -50, 0);
-attachComment("On group g1", 350, -140, { id: "g1", type: "node" }, 350, 0);
+attachComment("On group g1", 330, -200, { id: "g1", type: "node" }, 280, 60);
 attachComment("On box", 200, 220, { id: box.id, type: "box" }, 100, 150);
 
-await ogma.view.set({ x: 0, y: 0, zoom: 1 }, { duration: 0 });
+await ogma.view.set({ x: 50, y: 0, zoom: 0.8 }, { duration: 0 });
 
 // Relink after a regroup: `unlink` tells us which connector lost its target.
 const pending = new Set<string | number>();
