@@ -170,6 +170,7 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.ogma.events
       .on("rotate", this.onRotate)
       .on("zoom", this.onZoom)
+      .on("viewChanged", this.onViewChanged)
       .on("layoutEnd", this.onLayout);
 
     // Forward drag events from editor to Control
@@ -259,6 +260,11 @@ export class Control extends EventEmitter<FeatureEvents> {
 
     // Auto-collapse/expand comments based on zoom threshold
     this.commentManager.updateCommentModesForZoom(zoom);
+  };
+
+  // `view.moveTo` changes zoom without firing `zoom`; catch it here.
+  private onViewChanged = () => {
+    if (this.store.getState().zoom !== this.ogma.view.getZoom()) this.onZoom();
   };
 
   private onLayout = () => {
@@ -928,7 +934,11 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events.off(this.onRotate).off(this.onZoom).off(this.onLayout);
+    this.ogma.events
+      .off(this.onRotate)
+      .off(this.onZoom)
+      .off(this.onViewChanged)
+      .off(this.onLayout);
     this.links.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();
