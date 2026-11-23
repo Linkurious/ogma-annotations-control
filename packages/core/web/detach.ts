@@ -139,7 +139,8 @@ async function toggleGrouping() {
     await grouping.disable();
   } else {
     await grouping.enable();
-    pending.forEach((id) => control.link(id, GROUP_ID, "end"));
+    const group = ogma.getNode(GROUP_ID)!;
+    pending.forEach((id) => control.link(id, group, "end"));
     pending.clear();
   }
 }
