@@ -167,6 +167,7 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
+    this.lastZoom = this.ogma.view.getZoom();
     this.ogma.events
       .on("rotate", this.onRotate)
       .on("zoom", this.onZoom)
@@ -254,8 +255,10 @@ export class Control extends EventEmitter<FeatureEvents> {
   private onRotate = () =>
     this.store.getState().setRotation(this.ogma.view.getAngle());
 
+  private lastZoom = 0;
+
   private onZoom = () => {
-    const zoom = this.ogma.view.getZoom();
+    const zoom = (this.lastZoom = this.ogma.view.getZoom());
     this.store.getState().setZoom(zoom);
 
     // Auto-collapse/expand comments based on zoom threshold
@@ -264,7 +267,7 @@ export class Control extends EventEmitter<FeatureEvents> {
 
   // `view.moveTo` changes zoom without firing `zoom`; catch it here.
   private onViewChanged = () => {
-    if (this.store.getState().zoom !== this.ogma.view.getZoom()) this.onZoom();
+    if (this.lastZoom !== this.ogma.view.getZoom()) this.onZoom();
   };
 
   private onLayout = () => {
