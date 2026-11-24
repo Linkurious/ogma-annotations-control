@@ -58,7 +58,7 @@ export class Links {
   ) {
     this.store = store;
     this.snapping = snapping;
-    this.registry = new LinkIndex(ogma, store, onLinkCreated);
+    this.registry = new LinkIndex(ogma, store, onLinkCreated, onUnlink);
     this.geometry = new LinkGeometry(ogma, store);
     this.sync = new LinkSync(
       ogma,

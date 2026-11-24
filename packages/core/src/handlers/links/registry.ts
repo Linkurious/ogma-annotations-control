@@ -13,6 +13,7 @@ import type {
 } from "../../types";
 import { isArrow, isPolygon } from "../../types";
 import { getPolygonBounds } from "../../utils/utils";
+import { getAnchorComment } from "../comment/helpers";
 
 export type LinksByArrowId = Map<Id, { start?: Id; end?: Id }>;
 
@@ -65,12 +66,15 @@ export class LinkIndex {
   private ogma: Ogma;
   private store: Store;
   private onLinkCreated?: (arrow: Arrow, link: Link) => void;
+  private onUnlink?: (arrow: Arrow, link: Link) => void;
 
   constructor(
     ogma: Ogma,
     store: Store,
-    onLinkCreated?: (arrow: Arrow, link: Link) => void
+    onLinkCreated?: (arrow: Arrow, link: Link) => void,
+    onUnlink?: (arrow: Arrow, link: Link) => void
   ) {
+    this.onUnlink = onUnlink;
     this.ogma = ogma;
     this.store = store;
     this.onLinkCreated = onLinkCreated;
@@ -268,8 +272,12 @@ export class LinkIndex {
           if (!link) continue;
           const arrow = state.getFeature(link.arrow) as Arrow;
           // modify the object if passed
-          if (arrow) this.remove(arrow, link.side);
-          else {
+          if (arrow) {
+            this.remove(arrow, link.side);
+            // A surviving comment connector lost its annotation target.
+            if (getAnchorComment(arrow, newFeatures))
+              this.onUnlink?.(arrow, link);
+          } else {
             // otherwise remove by id (happens when deleting the arrow from the state)
             this.remove(link.arrow, link.side);
           }

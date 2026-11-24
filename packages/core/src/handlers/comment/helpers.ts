@@ -182,10 +182,13 @@ export function getCascadeDeleteIds(
       if (!isArrow(f)) return;
       const link = f.properties.link;
       if (link?.end?.id !== current && link?.start?.id !== current) return;
-      if (isAnchor) toDelete.add(f.id);
-      // A comment connector pointing at a deleted target can't stay
-      // attached: take the comment along unless it may be detached.
       const comment = getAnchorComment(f, features);
+      // A connector of *another* comment pointing at this anchor follows
+      // the removal policy: kept (and detached) when its comment may
+      // survive. The anchor's own connectors always go with it.
+      const incoming = !!comment && comment.id !== current;
+      if (isAnchor && !incoming) toDelete.add(f.id);
+      // Take the comment along unless it may be detached.
       if (comment && shouldDelete(comment)) queue.push(comment.id);
     });
   }

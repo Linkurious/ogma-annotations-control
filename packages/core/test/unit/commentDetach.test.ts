@@ -1,7 +1,13 @@
 import { Ogma } from "@linkurious/ogma";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createOgma } from "./utils";
-import { Arrow, Control, createBox, createCommentWithArrow } from "../../src";
+import {
+  Arrow,
+  Control,
+  createBox,
+  createCommentWithArrow,
+  createText
+} from "../../src";
 
 describe("canDetach", () => {
   let ogma: Ogma;
@@ -245,6 +251,47 @@ describe("canDetach", () => {
       ogma.removeNode("n1");
 
       expect(fired).toBe(0);
+    });
+
+    it("emits unlink when an annotation target is removed and the comment is kept", () => {
+      const box = createBox(0, 0, 50, 50);
+      control = new Control(ogma, { onTargetRemoved: () => "detach" });
+      control.add(box);
+      const { comment, arrow } = createCommentWithArrow(0, 0, 100, 100, "note");
+      arrow.properties.link = {
+        ...arrow.properties.link,
+        end: { side: "end", id: box.id, type: "box", magnet: { x: 0, y: 0 } }
+      };
+      control.add(comment);
+      control.add(arrow);
+      const events: Array<{ arrow: Arrow; link: any }> = [];
+      control.on("unlink", (e) => events.push(e));
+
+      control.remove(box);
+
+      expect(events).toHaveLength(1);
+      expect(events[0].arrow.id).toBe(arrow.id);
+      expect(events[0].link.target).toBe(box.id);
+    });
+
+    it("keeps a comment connector when its text target is removed and the comment may detach", () => {
+      const text = createText(0, 0, 50, 50, "target");
+      control = new Control(ogma, { onTargetRemoved: () => "detach" });
+      control.add(text);
+      const { comment, arrow } = createCommentWithArrow(0, 0, 100, 100, "note");
+      arrow.properties.link = {
+        ...arrow.properties.link,
+        end: { side: "end", id: text.id, type: "text", magnet: { x: 0, y: 0 } }
+      };
+      control.add(comment);
+      control.add(arrow);
+
+      control.remove(text);
+
+      expect(control.getAnnotation(comment.id)).toBeDefined();
+      const a = control.getAnnotation<Arrow>(arrow.id)!;
+      expect(a).toBeDefined();
+      expect(a.properties.link?.end).toBeUndefined();
     });
   });
 });
