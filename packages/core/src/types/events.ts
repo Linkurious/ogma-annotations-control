@@ -6,6 +6,7 @@ import {
   EVT_ADD,
   EVT_REMOVE,
   EVT_LINK,
+  EVT_UNLINK,
   EVT_UPDATE,
   EVT_CANCEL_DRAWING,
   EVT_HISTORY,
@@ -94,6 +95,14 @@ export type FeatureEvents = {
    * @param evt Contains the arrow and link details
    */
   [EVT_LINK]: (evt: { arrow: Arrow; link: Link }) => void;
+  /**
+   * Event trigerred when a comment connector is unlinked because its target
+   * (node, edge) was removed and `onTargetRemoved` resolved to `'detach'`.
+   * Not fired when the comment is deleted instead.
+   * @param evt Contains the arrow (already unlinked) and the removed link,
+   * whose `side` tells which end got freed
+   */
+  [EVT_UNLINK]: (evt: { arrow: Arrow; link: Link }) => void;
   /**
    * Event trigerred when history state changes (after undo/redo operations)
    * @param evt Contains boolean flags for undo/redo availability

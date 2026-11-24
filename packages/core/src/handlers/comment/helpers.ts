@@ -4,6 +4,7 @@ import {
   Arrow,
   Comment,
   Id,
+  TargetRemovedAction,
   isArrow,
   isComment,
   isText
@@ -135,6 +136,23 @@ export function isArrowTargetLocked(
 }
 
 /**
+ * True when `comment` must be deleted because the target its connector
+ * points at was removed. Uses `onTargetRemoved`, falling back to
+ * `canDetach` when it isn't set.
+ */
+export function shouldDeleteOnTargetRemoved(
+  options: {
+    canDetach: (comment: Comment) => boolean;
+    onTargetRemoved?: (comment: Comment) => TargetRemovedAction;
+  },
+  comment: Comment
+): boolean {
+  return options.onTargetRemoved
+    ? options.onTargetRemoved(comment) === "delete"
+    : !options.canDetach(comment);
+}
+
+/**
  * Ids that removing `id` should take with it: `id` itself, plus every arrow
  * attached to it when it's a comment or text annotation - deleting the
  * anchor takes its connectors along, since a detached comment-arrow has
@@ -147,7 +165,7 @@ export function isArrowTargetLocked(
 export function getCascadeDeleteIds(
   features: Record<Id, Annotation>,
   id: Id,
-  canDetach: (comment: Comment) => boolean = () => false
+  shouldDelete: (comment: Comment) => boolean = () => true
 ): Set<Id> {
   const toDelete = new Set<Id>();
   const queue: Id[] = [id];
@@ -164,11 +182,14 @@ export function getCascadeDeleteIds(
       if (!isArrow(f)) return;
       const link = f.properties.link;
       if (link?.end?.id !== current && link?.start?.id !== current) return;
-      if (isAnchor) toDelete.add(f.id);
-      // A comment connector pointing at a deleted target can't stay
-      // attached: take the comment along unless it may be detached.
       const comment = getAnchorComment(f, features);
-      if (comment && !canDetach(comment)) queue.push(comment.id);
+      // A connector of *another* comment pointing at this anchor follows
+      // the removal policy: kept (and detached) when its comment may
+      // survive. The anchor's own connectors always go with it.
+      const incoming = !!comment && comment.id !== current;
+      if (isAnchor && !incoming) toDelete.add(f.id);
+      // Take the comment along unless it may be detached.
+      if (comment && shouldDelete(comment)) queue.push(comment.id);
     });
   }
 

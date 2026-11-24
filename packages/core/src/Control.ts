@@ -19,6 +19,7 @@ import {
   EVT_UNSELECT,
   EVT_UPDATE,
   EVT_LINK,
+  EVT_UNLINK,
   SIDE_END,
   DEFAULT_EDIT_ICON
 } from "./constants";
@@ -126,6 +127,9 @@ export class Control extends EventEmitter<FeatureEvents> {
       this.store,
       (arrow, link) => {
         this.emit(EVT_LINK, { arrow, link });
+      },
+      (arrow, link) => {
+        this.emit(EVT_UNLINK, { arrow, link });
       }
     );
     this.interactions = new InteractionController(

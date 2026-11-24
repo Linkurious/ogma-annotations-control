@@ -53,18 +53,20 @@ export class Links {
     ogma: Ogma,
     snapping: Snapping,
     store: Store,
-    onLinkCreated?: (arrow: Arrow, link: Link) => void
+    onLinkCreated?: (arrow: Arrow, link: Link) => void,
+    onUnlink?: (arrow: Arrow, link: Link) => void
   ) {
     this.store = store;
     this.snapping = snapping;
-    this.registry = new LinkIndex(ogma, store, onLinkCreated);
+    this.registry = new LinkIndex(ogma, store, onLinkCreated, onUnlink);
     this.geometry = new LinkGeometry(ogma, store);
     this.sync = new LinkSync(
       ogma,
       store,
       this.registry,
       this.geometry,
-      this.updatedItems
+      this.updatedItems,
+      onUnlink
     );
 
     this.store.subscribe((state) => state.features, this.onAddArrow);

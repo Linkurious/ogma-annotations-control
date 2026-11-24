@@ -10,7 +10,10 @@ import type {
 } from "@linkurious/ogma";
 import { LinkGeometry } from "./geometry";
 import { LinkIndex, type LinksByArrowId } from "./registry";
-import { getAnchorComment } from "../comment/helpers";
+import {
+  getAnchorComment,
+  shouldDeleteOnTargetRemoved
+} from "../comment/helpers";
 import {
   getRigidComment,
   getRigidFollowComment,
@@ -18,7 +21,7 @@ import {
 } from "../comment/follow";
 import { SIDE_END, SIDE_START, TARGET_TYPES } from "../../constants";
 import { Store } from "../../store";
-import type { Arrow, Id, Annotation, DeepPartial } from "../../types";
+import type { Arrow, Id, Annotation, DeepPartial, Link } from "../../types";
 import { isText, isComment } from "../../types";
 import { getArrowSide, throttle, updateBbox } from "../../utils/utils";
 import { mul, subtract } from "../../utils/vec";
@@ -78,13 +81,17 @@ export class LinkSync {
   // branch - the exact set to clear on the way back out.
   private lastGeoOverlayIds: Id[] = [];
 
+  private onUnlink?: (arrow: Arrow, link: Link) => void;
+
   constructor(
     ogma: Ogma,
     store: Store,
     index: LinkIndex,
     geometry: LinkGeometry,
-    updatedItems: Set<Id>
+    updatedItems: Set<Id>,
+    onUnlink?: (arrow: Arrow, link: Link) => void
   ) {
+    this.onUnlink = onUnlink;
     this.ogma = ogma;
     this.store = store;
     this.index = index;
@@ -446,7 +453,8 @@ export class LinkSync {
   };
 
   /**
-   * Comments whose `canDetach` is false are deleted along with their
+   * Comments for which `onTargetRemoved` says `delete` (by default, those
+   * whose `canDetach` is false) are deleted along with their
    * connector; every other link is detached as described above.
    */
   private onRemoveTargets(removedIds: Id[], linksByTarget: Map<Id, Set<Id>>) {
@@ -454,6 +462,7 @@ export class LinkSync {
     const state = this.store.getState();
     const updates: Record<Id, Arrow> = {};
     const commentsToDelete = new Set<Id>();
+    const unlinked: Array<[Arrow, Link]> = [];
 
     removedIds.forEach((targetId) => {
       const linkIds = linksByTarget.get(targetId);
@@ -468,7 +477,7 @@ export class LinkSync {
         const arrow = updates[arrowId] ?? (state.getFeature(arrowId) as Arrow);
         if (!arrow) return;
         const comment = getAnchorComment(arrow, state.features);
-        if (comment && !state.options.canDetach(comment)) {
+        if (comment && shouldDeleteOnTargetRemoved(state.options, comment)) {
           commentsToDelete.add(comment.id);
           return;
         }
@@ -481,6 +490,7 @@ export class LinkSync {
         };
         this.index.remove(clone, link.side);
         updates[arrowId] = clone;
+        if (comment) unlinked.push([clone, link]);
       });
     });
 
@@ -495,6 +505,7 @@ export class LinkSync {
         state.updateFeatures(remaining as Record<Id, Partial<Annotation>>);
       }
     });
+    unlinked.forEach(([arrow, link]) => this.onUnlink?.(arrow, link));
   }
 
   private commit = () => {
