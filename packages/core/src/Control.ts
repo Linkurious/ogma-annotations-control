@@ -167,7 +167,10 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
+    // Store starts at angle 0; sync with the real camera. Zoom is deliberately
+    // not synced here: doing so breaks the comment-drag e2e (see PR notes).
     this.lastZoom = this.ogma.view.getZoom();
+    this.onRotate();
     this.ogma.events
       .on("rotate", this.onRotate)
       .on("zoom", this.onZoom)
@@ -252,8 +255,12 @@ export class Control extends EventEmitter<FeatureEvents> {
     );
   }
 
-  private onRotate = () =>
-    this.store.getState().setRotation(this.ogma.view.getAngle());
+  private lastAngle = 0;
+
+  private onRotate = () => {
+    this.lastAngle = this.ogma.view.getAngle();
+    this.store.getState().setRotation(this.lastAngle);
+  };
 
   private lastZoom = 0;
 
@@ -265,8 +272,9 @@ export class Control extends EventEmitter<FeatureEvents> {
     this.commentManager.updateCommentModesForZoom(zoom);
   };
 
-  // `view.moveTo` changes zoom without firing `zoom`; catch it here.
+  // `view.moveTo` can change zoom/angle without firing `zoom`/`rotate`.
   private onViewChanged = () => {
+    if (this.lastAngle !== this.ogma.view.getAngle()) this.onRotate();
     if (this.lastZoom !== this.ogma.view.getZoom()) this.onZoom();
   };
 
