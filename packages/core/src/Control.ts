@@ -171,9 +171,14 @@ export class Control extends EventEmitter<FeatureEvents> {
   }
 
   private setupEvents() {
+    // Store starts at angle 0; sync with the real camera. Zoom is deliberately
+    // not synced here: doing so breaks the comment-drag e2e (see PR notes).
+    this.lastZoom = this.ogma.view.getZoom();
+    this.onRotate();
     this.ogma.events
       .on("rotate", this.onRotate)
       .on("zoom", this.onZoom)
+      .on("viewChanged", this.onViewChanged)
       .on("layoutEnd", this.onLayout);
 
     // Forward drag events from editor to Control
@@ -254,15 +259,27 @@ export class Control extends EventEmitter<FeatureEvents> {
     );
   }
 
-  private onRotate = () =>
-    this.store.getState().setRotation(this.ogma.view.getAngle());
+  private lastAngle = 0;
+
+  private onRotate = () => {
+    this.lastAngle = this.ogma.view.getAngle();
+    this.store.getState().setRotation(this.lastAngle);
+  };
+
+  private lastZoom = 0;
 
   private onZoom = () => {
-    const zoom = this.ogma.view.getZoom();
+    const zoom = (this.lastZoom = this.ogma.view.getZoom());
     this.store.getState().setZoom(zoom);
 
     // Auto-collapse/expand comments based on zoom threshold
     this.commentManager.updateCommentModesForZoom(zoom);
+  };
+
+  // `view.moveTo` can change zoom/angle without firing `zoom`/`rotate`.
+  private onViewChanged = () => {
+    if (this.lastAngle !== this.ogma.view.getAngle()) this.onRotate();
+    if (this.lastZoom !== this.ogma.view.getZoom()) this.onZoom();
   };
 
   private onLayout = () => {
@@ -932,7 +949,11 @@ export class Control extends EventEmitter<FeatureEvents> {
    * Destroy the controller and its elements
    */
   public destroy() {
-    this.ogma.events.off(this.onRotate).off(this.onZoom).off(this.onLayout);
+    this.ogma.events
+      .off(this.onRotate)
+      .off(this.onZoom)
+      .off(this.onViewChanged)
+      .off(this.onLayout);
     this.links.destroy();
     Object.values(this.renderers).forEach((r) => r.destroy());
     this.interactions.destroy();
